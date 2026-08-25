@@ -1,9 +1,7 @@
-# Quy ước cấu trúc & đặt tên file — Dự án P-034
+# Quy ước cấu trúc & đặt tên file 
 
 > Tài liệu này dành cho **cả team**, đặc biệt là những bạn lần đầu làm việc với FastAPI.
 > Đọc xong bạn sẽ trả lời được: *"Code này viết vào file nào, đặt tên gì, để ở thư mục nào?"*
->
-> - Muốn hiểu **luồng chạy** của 1 request → đọc [HUONG_DAN_LUONG_CODE.md](HUONG_DAN_LUONG_CODE.md)
 > - Muốn biết **quy ước đặt file** → đọc file này
 
 ---
@@ -35,8 +33,9 @@ Ba file đó chính là công thức ở [mục 5](#5--công-thức-thêm-1-api-
 ## 1. Bản đồ toàn dự án
 
 ```
-P-034/
-├── src/                        # 🐍 BACKEND (FastAPI + LangGraph)
+HVNH_HUB/
+|
+├── backend/src/                        # 🐍 BACKEND (FastAPI + LangGraph)
 │   ├── main.py                 #   Điểm khởi động app — CHỈ lắp ráp, không viết logic
 │   ├── config.py               #   Đọc biến môi trường từ .env
 │   │
