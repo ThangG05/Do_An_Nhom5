@@ -12,7 +12,7 @@ cd backend -> uvicorn src.main:app --reload --port 8000 (chạy be)
 Các tài liệu hướng dẫn style fe ở trong doc
 
 setup môi trường
-cd backend
 python -m venv .venv
 .venv\Scripts\activate
+cd backend 
 pip install -r requirements.txt
