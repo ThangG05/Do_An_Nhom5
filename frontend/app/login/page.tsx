@@ -8,18 +8,21 @@ export default function Login() {
         <Link className="login-back" href="/">
           ← Quay lại
         </Link>
-        {/* <div className="login-brand">
-          <span>BAV</span>
-          <strong>HVNH Hub</strong>
-        </div> */}
-        {/* <p className="eyebrow">Chào mừng trở lại</p> */}
+        <div className="auth-brand-header">
+          <img
+            src="/assets/logo.png"
+            alt="HVNH Hub Logo"
+            className="auth-brand-logo"
+          />
+          <h2 className="auth-brand-title">HVNH Hub</h2>
+        </div>
         <h1 id="login-title">Đăng nhập</h1>
         <p className="login-intro">
           Sử dụng email Học viện để tiếp tục vào cộng đồng HVNH.
         </p>
         <LoginForm />
         <p className="login-register">
-          Chưa có tài khoản? <Link href="/">Đăng ký ngay</Link>
+          Chưa có tài khoản? <Link href="/signup">Đăng ký ngay</Link>
         </p>
       </section>
     </main>

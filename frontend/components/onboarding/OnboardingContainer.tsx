@@ -65,12 +65,12 @@ function OnboardingProgress({
 function AvatarOrbit({ kind }: { kind: string }) {
     if (kind === "splash") {
         return (
-            <div className="splash-mark-wrap" aria-label="Logo BAV">
-                <div className="bav-mark">
-                    <strong>BAV</strong>
-                    <span>✦</span>
-                    <small>1961</small>
-                </div>
+            <div className="onboarding-brand-logo-wrap" aria-label="Logo BAV">
+                <img
+                    src="/assets/logo.png"
+                    alt="HVNH Hub - BAV Logo"
+                    className="onboarding-brand-logo"
+                />
             </div>
         );
     }

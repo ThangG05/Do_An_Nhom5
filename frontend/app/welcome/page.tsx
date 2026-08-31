@@ -15,10 +15,11 @@ export default function WelcomePage() {
         <p className="welcome-kicker">HVNH Hub / Welcome</p>
         <div className="welcome-content">
           <div className="welcome-visual" aria-hidden="true">
-            <div className="welcome-visual-core">
+            <div className="welcome-visual-core" style={{ background: 'transparent' }}>
               <img
-                src="https://api.dicebear.com/9.x/fun-emoji/svg?seed=Welcome"
-                alt=""
+                src="/assets/logo.png"
+                alt="HVNH Hub Logo"
+                style={{ width: '80px', height: 'auto', objectFit: 'contain' }}
               />
             </div>
             {decorations.map((decoration) => (

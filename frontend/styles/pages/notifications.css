@@ -1,0 +1,53 @@
+/* ==========================================================================
+   PAGE-SPECIFIC STYLES: NOTIFICATIONS WORKSPACE
+   ========================================================================== */
+
+.notifications-workspace-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+.notifications-header-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 40, 85, 0.04);
+}
+
+.notifications-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.notifications-main-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #002855;
+}
+
+.notifications-filter-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.notif-item-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 16px 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: all 0.2s ease;
+}
+
+.notif-item-card.unread {
+  background: #f8fafc;
+  border-left: 4px solid #002855;
+}
