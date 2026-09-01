@@ -1,0 +1,80 @@
+/* ==========================================================================
+   PAGE-SPECIFIC STYLES: SPECIALIZED GROUPS WORKSPACE
+   ========================================================================== */
+
+.group-community-page-full {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+.group-header-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 40, 85, 0.04);
+}
+
+.group-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.group-badge-pill {
+  background: #f0f4f8;
+  color: #002855;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.group-main-title {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #002855;
+  letter-spacing: -0.02em;
+}
+
+.group-main-desc {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.group-nav-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.group-tab-item {
+  padding: 12px 20px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  background: transparent;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  transition: all 0.2s ease;
+}
+
+.group-tab-item:hover {
+  color: #002855;
+}
+
+.group-tab-item.active {
+  color: #002855;
+  border-bottom-color: #002855;
+}
