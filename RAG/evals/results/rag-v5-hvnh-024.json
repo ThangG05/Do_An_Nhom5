@@ -1,0 +1,38 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 0,
+  "citation_accuracy": 0.0,
+  "refusal_accuracy": 0.0,
+  "latency": {
+    "mean_ms": 13780.0,
+    "p50_ms": 13780,
+    "p95_ms": 13780,
+    "max_ms": 13780
+  },
+  "results": [
+    {
+      "id": "hvnh-024",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "7490becf-7dde-4428-9678-6e96e1dee039",
+      "message_id": "f82d12cb-c0cb-4d30-9c29-5a0799795e82",
+      "question": "Thông báo thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026/2027 áp dụng cho những sinh viên nào?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Thông báo áp dụng cho sinh viên ngành Công nghệ thông tin và Hệ thống thông tin quản lý đủ điều kiện thực tập, làm đồ án tốt nghiệp đợt 1 năm 2026/2027.",
+      "latency_ms": 13780,
+      "retrieved_contexts": [],
+      "citations": []
+    }
+  ]
+}

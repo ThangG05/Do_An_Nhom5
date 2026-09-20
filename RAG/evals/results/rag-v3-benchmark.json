@@ -1,0 +1,822 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 30,
+  "passed": 24,
+  "pass_rate": 0.8,
+  "errors": 0,
+  "citation_accuracy": 0.8666666666666667,
+  "refusal_accuracy": 0.9,
+  "latency": {
+    "mean_ms": 6630.6,
+    "p50_ms": 4723.5,
+    "p95_ms": 7712,
+    "max_ms": 62648
+  },
+  "results": [
+    {
+      "id": "hvnh-003",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "b22beaf3-c55f-4cc9-a5e2-8528e71599c3",
+      "message_id": "94f3c695-33c7-4db3-a675-2b43655ec3b1",
+      "question": "Chương trình trao đổi sinh viên học kỳ I năm học 2026/2027 tại Đại học Kinh tế - Đại học Đà Nẵng có nội dung gì?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Địa điểm học tại Trường Đại học Kinh tế - Đại học Đà Nẵng, 71 Ngũ Hành Sơn. Thời gian học 12 tuần từ 17/08/2026 đến 14/11/2026; lịch thi dự kiến 23/11/2026 đến 05/12/2026.",
+      "latency_ms": 62648,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-004",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "1746e928-8595-47e5-a64b-8aabeece97a5",
+      "message_id": "49334083-968b-48ab-8c48-a7fab30345b5",
+      "question": "Chương trình trao đổi sinh viên học kỳ hè 2025/2026 tại Đại học Kinh tế - Đại học Đà Nẵng được tổ chức thế nào?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Đối tượng là sinh viên đại học chính quy đang học tại Học viện Ngân hàng. Học tại Đại học Kinh tế - Đại học Đà Nẵng từ 06/07/2026 đến 24/07/2026; thi dự kiến 27-28/07/2026.",
+      "latency_ms": 7712,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-005",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "b3074546-5af1-4e65-a131-d7d5a72cb430",
+      "message_id": "8b0b6260-3ca6-405a-8adf-a2e89e7cd7c3",
+      "question": "Sinh viên còn nợ học phí học kỳ II năm học 2025/2026 bị xử lý thế nào và cần liên hệ khi nào?",
+      "response": "Sinh viên chưa hoàn thành nghĩa vụ tài chính sau thời hạn gia hạn sẽ bị hủy kết quả đăng ký học phần trong học kỳ này (xóa đăng ký học) và tạm dừng các quyền lợi học tập liên quan theo quy định [1]. Trường hợp có thắc mắc hoặc cần rà soát, sinh viên liên hệ Phòng Tài chính – Kế toán trước 11h ngày 04/03/2026 để được hướng dẫn [1].",
+      "reference": "Sinh viên chưa hoàn thành nghĩa vụ tài chính bị hủy kết quả đăng ký học phần và tạm dừng quyền lợi học tập. Sinh viên cần liên hệ Phòng Tài chính - Kế toán trước 11h ngày 04/03/2026 nếu cần rà soát.",
+      "latency_ms": 4612,
+      "retrieved_contexts": [
+        "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026\nNgày 03/03/2026\n4,903 lượt xem\nTHÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026\nC\năn cứ Thông báo số 1392/TB-HVNH ngày 12 tháng 02 năm 2026 của Giám đốc Học viện Ngân hàng về việc gia hạn nộp học phí đến hết ngày 01/03/2026, Phòng Tài chính - Kế toán Học viện Ngân hàng thông báo:\nHết thời hạn gia hạn nêu trên, những sinh viên chưa hoàn thành nghĩa vụ tài chính sẽ bị hủy kết quả đăng ký học phần trong học kỳ này (xóa đăng ký học) và tạm dừng các quyền lợi học tập liên quan theo quy định (có Danh sách kèm theo).\nTrường hợp có thắc mắc hoặc cần rà soát, sinh viên liên hệ Phòng Tài chính – Kế toán trước 11h ngày 04/03/2026 để được hướng dẫn."
+      ],
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026",
+          "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-xu-ly-sinh-vien-con-no-hoc-phi-hoc-ky-ii-nam-hoc-2025-2026-112.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-006",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "06977c16-bc6f-4330-bd98-99c2ea63c8e8",
+      "message_id": "3e3e35df-0968-421e-8307-63acd5833394",
+      "question": "Sinh viên Học viện Ngân hàng đã đạt thành tích gì tại The Moneyverse năm 2026?",
+      "response": "Tại cuộc thi The Moneyverse năm 2026, đội thi của sinh viên Học viện Ngân hàng (BAV) đã xuất sắc vượt qua các phần thi gay cấn và cạnh tranh để lọt vào vòng Tứ kết cấp quốc gia [1, 2].",
+      "reference": "Sinh viên Học viện Ngân hàng lọt vào Tứ kết The Moneyverse - Vũ trụ đồng tiền cấp quốc gia năm 2026.",
+      "latency_ms": 5479,
+      "retrieved_contexts": [
+        "thi BAV đã thể hiện rõ nét phong thái tự tin, bản lĩnh vững vàng và khả năng thích ứng nhanh với áp lực – những phẩm chất tiêu biểu của sinh viên được đào tạo trong môi trường tài chính – ngân hàng chuyên nghiệp.\nPhần thi của các phi hành gia BAV\nĐặc biệt, sau những phần thi gay cấn và cạnh tranh, đội thi BAV đã xuất sắc lọt vào vòng Tứ kết của cuộc thi. Thành tích này tiếp tục nối dài dấu ấn của sinh viên BAV tại\nThe Moneyverse\nqua các năm, qua đó khẳng định chất lượng đào tạo, năng lực hội nhập và bản lĩnh chuyên môn trong lĩnh vực tài chính – ngân hàng.\nCác phi hành gia BAV đã xuất sắc lọt vào Tứ kết cuộc thi\nKhông chỉ dừng lại ở một sân chơi học thuật, hành trình tại\nThe Moneyverse – Vũ trụ đồng tiền\ncòn là minh chứng rõ nét cho định hướng đào tạo gắn với thực tiễn, lấy người học làm trung tâm và phát triển năng lực toàn diện của BAV. Từ giảng đường đến “đấu trường” quốc gia, sinh viên BAV đang từng bước khẳng định vai trò là lực lượng trẻ giàu tri thức, sẵn sàng thích ứng và dẫn d",
+        "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia\nNgày 05/05/2026\n1,411 lượt xem\nSáng ngày 05/5/2026, tại Nhà thi đấu Tương Mai, các “phi hành gia” Học viện Ngân hàng (BAV) đã tham gia vòng casting cấp quốc gia cuộc thi “\nThe Moneyverse – Vũ trụ đồng tiền”\n– chương trình truyền hình thực tế về tài chính, đầu tư quy mô toàn quốc.\nCuộc thi do VTV Times phối hợp tổ chức, quy tụ đông đảo sinh viên xuất sắc đến từ nhiều trường đại học, học viện trên cả nước, tạo nên một “đấu trường trí tuệ” giàu tính cạnh tranh trong lĩnh vực tài chính – đầu tư. Với hệ thống thử thách đa dạng, gắn với bối cảnh thị trường thực tiễn,\nThe Moneyverse\nkhông chỉ là sân chơi học thuật mà còn là môi trường rèn luyện tư duy chiến lược, năng lực phân tích và khả năng ra quyết định trong điều kiện biến động.\nPGS.TS. Phạm Thị Hoàng Anh – Phó Giám đốc Học viện tham dự và cổ vũ đội thi BAV\nTham dự và cổ vũ đội thi có PGS.TS. Phạm Thị Hoàng Anh – Phó Giám đốc Học "
+      ],
+      "citations": [
+        {
+          "title": "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/sinh-vien-hoc-vien-ngan-hang-xuat-sac-lot-vao-tu-ket-cuoc-thi-the-moneyverse-vu-tru-dong-tien-cap-quoc-gia-3909.html"
+        },
+        {
+          "title": "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/sinh-vien-hoc-vien-ngan-hang-xuat-sac-lot-vao-tu-ket-cuoc-thi-the-moneyverse-vu-tru-dong-tien-cap-quoc-gia-3909.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-007",
+      "passed": false,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.5,
+      "citation_count": 1,
+      "conversation_id": "cc6a62f6-9584-4444-8f58-30f4d03ab9e4",
+      "message_id": "1f591e5b-2297-49f0-8286-f568601479a9",
+      "question": "Chuyến tham quan ProtonX của Khoa Hệ thống thông tin quản lý năm 2023 có nội dung gì?",
+      "response": "Thông tin được cung cấp trong ngữ cảnh không chứa nội dung về \"Chuyến tham quan ProtonX\" của Khoa Hệ thống thông tin quản lý năm 2023. Ngữ cảnh chỉ đề cập đến sự kiện các thầy/cô Khoa Hệ thống thông tin quản lý - Học viện Ngân hàng đến tham dự sự kiện của công ty ProtonX với chủ đề \"Giới thiệu CourseMind nền tảng quản trị tổ chức và sáng tạo nội dung cho giáo dục\" vào tối ngày 31/7/2023 [1].",
+      "reference": "Khoa Hệ thống thông tin quản lý tham dự sự kiện ProtonX giới thiệu nền tảng CourseMind ngày 31/07/2023. Buổi gặp mở ra cơ hội hợp tác ứng dụng CourseMind trong giảng dạy và học tập tại Khoa.",
+      "latency_ms": 4881,
+      "retrieved_contexts": [
+        "Thăm quan thực tế tại ProtonX\nNgày đăng: 31/07/2023\nTối ngày 31/7/2023 các thầy/cô Khoa Hệ thống thông tin quản lý - Học viện Ngân hàng đã đến tham dự sự kiện của công ty ProtonX - \"Giới thiệu CourseMind nền tảng quản trị tổ chức và sáng tạo nội dung cho giáo dục\".\nProtonX là một trong những đơn vị tiên phong về giảng dạy và định hướng về Trí tuệ nhân tạo cho cộng đồng tại Việt Nam. ProtonX cũng đã đào tạo thành công hơn 145 bạn thi đỗ chứng chỉ Tensorflow của Google và rất nhiều kỹ sư vượt qua phỏng vấn của các công ty công nghệ hàng đầu trên thế giới như Google, Microsoft, Amazon và Facebook. Những chứng chỉ này rất phù hợp với các bạn sinh viên Khoa Hệ thống thông tin quản lý.\nBuổi gặp gỡ đã mở ra những cơ hội hợp tác giữa hai bên về ứng dụng nền tảng CourseMind trong giảng dạy và học tập tại Khoa HTTTQL. Xin chúc công ty ProtonX gặt hái được nhiều thành công và mang lại nhiều trải nghiệm tuyệt vời cho người dùng. Hẹn gặp lại ProtonX trên giảng đường của Học viện Ngân hàng.????"
+      ],
+      "citations": [
+        {
+          "title": "Thăm quan thực tế tại ProtonX",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/19_tham_quan_thuc_te_tai_protonx.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-008",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "71f8da89-81de-4acd-9548-93bc107460f3",
+      "message_id": "127a8509-b7dd-482c-9279-0642f4e62250",
+      "question": "Sinh viên K25 đã được trải nghiệm những gì trong chuyến tham quan FPT Software năm 2023?",
+      "response": "Trong chuyến tham quan thực tế tại FPT Software vào năm 2023, sinh viên Khoá K25 của Khoa HTTTQL (Học viện Ngân hàng) đã đến thăm Làng phần mềm Hola Park và Trung tâm ươm mầm và đào tạo tại Hoà Lạc [1]. Tại đây, các bạn sinh viên đã được nghe chia sẻ tổng quan về ngành CNTT cùng hành trang chinh phục sự nghiệp để trở thành một FSOFTER [1]. Bên cạnh đó, sinh viên còn được giao lưu với các kỹ sư, chuyên gia CNTT (PE) và diễn giả, tìm hiểu về cơ hội việc làm, cũng như tham gia các hoạt động chơi trò chơi [1].",
+      "reference": "Sinh viên K25 tham quan Hola Park và Trung tâm ươm mầm, đào tạo tại Hòa Lạc ngày 13/02/2023. Sinh viên được chia sẻ về ngành CNTT, nghề FSOFTER, giao lưu chuyên gia và tìm hiểu cơ hội việc làm.",
+      "latency_ms": 4964,
+      "retrieved_contexts": [
+        "Thăm quan thực tế tại FPT Software\nNgày đăng: 15/02/2023\nNgày 13/02/2023, Khoa HTTTQL (HVNH) đã tổ chức một buổi trải nghiệm cho sinh viên Khoá K25 tới thăm Làng phần mềm Hola Park và Trung tâm ươm mầm và đào tạo tại Hoà Lạc. Các bạn sinh viên đã được chia sẻ tổng quan ngành CNTT cùng hành trang chinh phục sự nghiệp để trở thành một FSOFTER tại FPT Software; giao lưu cùng các kĩ sư/chuyên gia CNTT - PE; giao lưu cùng diễn giả; tìm hiểu về cơ hội việc làm; chơi trò chơi... Dưới đây là một số hình ảnh đẹp nhất trong buổi thăm quan thực tế tại FPT Software."
+      ],
+      "citations": [
+        {
+          "title": "Thăm quan thực tế tại FPT Software",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/18_tham_quan_thuc_te_tai_fpt_software.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-011",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "2338799c-d717-4cb5-9e99-3433195a3773",
+      "message_id": "d76f9f0a-3568-4931-beee-6618785cae07",
+      "question": "Tôi cần thực hiện như thế nào theo tài liệu “Điểm trúng tuyển đại học chính quy năm 2026”?",
+      "response": "Theo tài liệu “Điểm trúng tuyển đại học chính quy năm 2026”, thí sinh cần thực hiện các bước sau: (1) Tra cứu kết quả xét tuyển từ 14h ngày 10/08/2026 trên hệ thống tra cứu của Học viện Ngân hàng, hệ thống của Bộ GD&ĐT hoặc nhóm trường miền Bắc tại http://kqmb.hust.edu.vn/ (Nhà trường sẽ gửi giấy báo trúng tuyển qua đường bưu điện bắt đầu từ thứ Hai, ngày 10/08/2026) [1]. (2) Thực hiện Xác nhận nhập học trực tuyến trên Hệ thống của Bộ [1]. (3) Theo dõi hướng dẫn chi tiết các bước làm thủ tục nhập học trên Website và Fanpage Học viện Ngân hàng [1].",
+      "reference": "Thí sinh tra cứu kết quả xét tuyển từ 14h ngày 10/08/2026. Thí sinh trúng tuyển phải xác nhận nhập học trực tuyến trên hệ thống của Bộ và theo dõi hướng dẫn nhập học của Học viện.",
+      "latency_ms": 4961,
+      "retrieved_contexts": [
+        "Thông báo về mức điểm trúng tuyển đại học chính quy năm 2026 (mã trường NHH)\nNgày 09/08/2026\n45,912 lượt xem\nHội đồng tuyển sinh Học viện Ngân hàng thông báo về mức điểm chuẩn trúng tuyển đại học chính quy năm 2026 với các chương trình đào tạo tại Trụ sở Học viện (mã trường NHH). Mức điểm trúng tuyển đã bao gồm điểm ưu tiên:\n1) Thí sinh có thể tra cứu kết quả xét tuyển từ 14h ngày 10/08/2026 trên hệ thống tra cứu của Học viện Ngân hàng hoặc trên hệ thống của Bộ GD&ĐT và nhóm trường miền Bắc (\nhttp://kqmb.hust.edu.vn/\n)\nVới các thí sinh trúng tuyển vào Học viện, Nhà trường sẽ gửi giấy báo trúng tuyển qua đường bưu điện tới thí sinh bắt đầu từ thứ Hai, ngày 10/08/2026.\n(2) Thí sinh thực hiện Xác nhận nhập học trực tuyến trên Hệ thống của Bộ.\n(3) Thí sinh theo dõi hướng dẫn chi tiết các bước làm thủ tục nhập học trên Website và Fanpage Học viện Ngân hàng."
+      ],
+      "citations": [
+        {
+          "title": "Điểm trúng tuyển đại học chính quy năm 2026",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-ve-muc-diem-trung-tuyen-dai-hoc-chinh-quy-nam-2026-ma-truong-nhh-4054.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-013",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "cbc1392d-3685-48bd-a1a6-408780dcf4d3",
+      "message_id": "ca911b1b-1f29-45ef-9ace-6464c9f7635c",
+      "question": "Tôi cần thực hiện như thế nào theo tài liệu “Hướng dẫn thủ tục đăng ký học CTĐT ngành 2”?",
+      "response": "Theo tài liệu \"Hướng dẫn thủ tục đăng ký học CTĐT ngành 2\", quy trình thực hiện bao gồm các bước sau: Bước 1, sinh viên viết và nộp đơn xin học cùng lúc 2 chương trình (Mẫu 05) có đầy đủ chữ ký tại phòng Đào tạo (Phòng 106, nhà A1) kèm theo bảng điểm học chương trình thứ nhất [1]. Bước 2, phòng Đào tạo xét duyệt và trình Ban Giám đốc ra Quyết định đồng ý cho học chương trình thứ 2 nếu sinh viên đủ điều kiện và thông báo kết quả trên cổng thông tin [1]. Bước 3, sinh viên tra cứu kết quả tại cổng thông tin sinh viên online [1].",
+      "reference": "Sinh viên đăng ký chương trình thứ hai trước một tuần so với thời điểm bắt đầu học kỳ mới. Sinh viên phải ở trình độ tối thiểu năm thứ hai và đáp ứng điều kiện học lực, ngưỡng bảo đảm chất lượng hoặc điều kiện trúng tuyển.",
+      "latency_ms": 5018,
+      "retrieved_contexts": [
+        "Hướng dẫn thủ tục đăng ký học CTĐT ngành 2\nNgày 25/07/2023\n12,267 lượt xem\nĐIỀU KIỆN\nLƯU Ý\nQUY TRÌNH\nSinh viên đăng ký học chương trình thứ hai trước 01 tuần so với thời điểm bắt đầu một học kỳ mới. Tại thời điểm đăng ký, sinh viên phải được xếp trình độ tối thiểu năm thứ hai của chương trình thứ nhất và đáp ứng 01 trong 02 điều kiện sau:\n- Học lực tính theo điểm TBCTL xếp loại khá trở lên và đáp ứng ngưỡng đảm bảo chất lượng của chương trình thứ hai trong năm tuyển sinh.\n- Học lực tính theo điểm TBCTL xếp loại trung bình và đáp ứng điều kiện trúng tuyển của chương trình thứ hai trong năm tuyển sinh.\n- Trong quá trình sinh viên học cùng lúc hai chương trình, nếu điểm TBTL của chương trình thứ nhất đạt dưới điểm trung bình hoặc thuộc diện cảnh báo kết quả học tập thì phải dừng học chương trình thứ hai ở học kỳ tiếp theo; sinh viên sẽ bị loại khỏi danh sách đã đăng ký học chương trình thứ hai.\n- Khi học chương trình thứ hai, sinh viên được bảo lưu điểm của những học phần có nội dung và k"
+      ],
+      "citations": [
+        {
+          "title": "Hướng dẫn thủ tục đăng ký học CTĐT ngành 2",
+          "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-dang-ky-hoc-ctdt-nganh-2-340.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-014",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "93c1c972-eff7-4ad7-b6e8-70f30804a113",
+      "message_id": "179de2a2-a613-439c-ac90-f1a86851b78f",
+      "question": "Tôi cần thực hiện như thế nào theo tài liệu “Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH”?",
+      "response": "Theo tài liệu \"Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH\", quy trình chuyển sang học một chương trình hoặc ngành đào tạo khác giữa Trụ sở và các Phân viện hoặc giữa các Phân viện được thực hiện qua các bước sau: Bước 1: Sinh viên viết và nộp đơn xin chuyển CTĐT (theo Mẫu 14) tại phòng Đào tạo (P. 106, nhà A1) [1]. Bước 2: Phòng Đào tạo tiến hành xét duyệt, trình Ban Giám đốc ra Quyết định chuyển hình thức học tập nếu sinh viên đủ điều kiện, sau đó thông báo kết quả trên cổng thông tin [1]. Bước 3: Sinh viên tra cứu kết quả tại cổng thông tin sinh viên online [1]. Khi có kết quả Quyết định xác nhận đủ điều kiện chuyển CTĐT, sinh viên có trách nhiệm vào trang cá nhân để kiểm tra chương trình học và tiến hành đăng ký học theo kế hoạch [1].",
+      "reference": "Sinh viên chuyển chương trình không được đang ở năm thứ nhất, năm cuối hoặc thuộc diện xem xét buộc thôi học. Sinh viên nộp đơn Mẫu 14 tại Phòng Đào tạo và cần sự đồng ý của các đơn vị phụ trách cùng Giám đốc Học viện.",
+      "latency_ms": 4712,
+      "retrieved_contexts": [
+        "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH\nNgày 25/07/2023\n9,582 lượt xem\nSTT\nNỘI DUNG\nĐIỀU KIỆN\nQUY TRÌNH\n1\nChuyển sang học một chương trình, một ngành đào tạo khác giữa Trụ sở và các Phân viện, giữa các Phân viện\n- Không đang là sinh viên trình độ năm thứ nhất hoặc năm cuối khoá, không thuộc diện bị xem xét buộc thôi học và còn đủ thời gian học tập theo quy định tại khoản 2 Điều 4 của Quy định này.\n- Sinh viên đạt điều kiện trúng tuyển của chương trình, ngành đào tạo, của trụ sở chính (hoặc Phân viện) trong cùng khoá tuyển sinh.\n- Ngành, CTĐT muốn chuyển sang có đủ các điều kiện bảo đảm chất lượng, chưa vượt qua năng lực đào tạo theo quy định hiện hành của BGD&ĐT.\n- Được sự đồng ý của trưởng các đơn vị phụ trách đào tạo và của Giám đốc Học viện.\n- Bước 1: Sinh viên viết và nộp đơn xin chuyển CTĐT (Mẫu 14) và nộp đơn tại phòng Đào tạo (P. 106, nhà A1).\n- Bước 2: Phòng Đào tạo xét duyệt và trình Ban Giám đốc ra Quyết định chuyển hình thức học tập nếu Sinh viên đủ điều kiện v"
+      ],
+      "citations": [
+        {
+          "title": "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH",
+          "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-chuyen-doi-giua-cac-ctdt-trong-hvnh-341.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-019",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "1814a105-bcc2-468e-93ba-b938c86badf0",
+      "message_id": "c04cbdfa-c993-4fde-8c7f-6379a3848886",
+      "question": "Học viện Ngân hàng đang hỗ trợ sức khỏe tâm lý cho sinh viên như thế nào?",
+      "response": "Học viện Ngân hàng (BAV) triển khai hệ thống hỗ trợ sinh viên một cách chủ động thông qua hệ sinh thái tích hợp giữa sức khỏe tinh thần, năng lực học tập và hành trang nghề nghiệp [1]. Học viện xây dựng mô hình \"Không gian hỗ trợ và tư vấn tâm lý\" với cách tiếp cận theo nhiều lớp, bao gồm phòng ngừa và hỗ trợ tâm lý, cố vấn học tập, tutor đồng đẳng, cơ chế phản hồi với lãnh đạo, kết nối doanh nghiệp, trải nghiệm nghề nghiệp và các chính sách hỗ trợ người học [1, 2]. Vào tháng 4/2025, BAV tổ chức tọa đàm “Sức khỏe tâm lý sinh viên năm 2025” với chủ đề “Bí quyết làm chủ cảm xúc và định hướng mục tiêu cho thế hệ trẻ” để tập trung nhận diện stress, làm chủ cảm xúc và định hướng phát triển cá nhân [1]. Tiếp đó, vào tháng 9/2025, nhà trường triển khai “Mạng lưới chăm sóc sức khỏe và tư vấn tâm lý cho sinh viên” nhằm nâng cao nhận thức về chăm sóc sức khỏe tinh thần học đường và đồng hành kịp thời với người học [1].",
+      "reference": "Học viện triển khai hệ sinh thái hỗ trợ tích hợp sức khỏe tinh thần, năng lực nghề nghiệp và việc làm cho sinh viên. Mô hình có Không gian hỗ trợ và tư vấn tâm lý để giúp sinh viên an tâm học tập.",
+      "latency_ms": 5015,
+      "retrieved_contexts": [
+        "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên ở Học viện Ngân hàng\nNgày 20/03/2026\n588 lượt xem\nTrong bối cảnh áp lực học tập, cạnh tranh việc làm và bất định nghề nghiệp gia tăng, câu chuyện hỗ trợ sinh viên không còn dừng ở học vụ hay giới thiệu việc làm. Tại Học viện Ngân hàng (BAV), hệ sinh thái hỗ trợ sinh viên toàn diện, từ việc làm cho tới sức khỏe tinh thần đang được triển khai, đã giúp sinh viên an tâm học tập.\nXây dựng mô hình “Không gian hỗ trợ và tư vấn tâm lý”\nWHO định nghĩa sức khỏe tinh thần là trạng thái an sinh giúp con người đối phó với căng thẳng của cuộc sống, học tốt và làm việc tốt; còn NACE xem “career readiness” (sự sẵn sàng cho nghề nghiệp) là nền tảng năng lực để người học thành công trong công việc và quản trị nghề nghiệp lâu dài. Hai hướng tiếp cận này cho thấy hỗ trợ sinh viên hôm nay phải là một hệ thống tích hợp giữa sức khỏe tinh thần, năng lực học tập và hành trang nghề nghiệp.\nNhìn từ chuỗi các hoạt động dành cho sinh viên tại BAV thời",
+        "nói BAV đã và đang xây dựng một mô hình hỗ trợ sinh viên theo nhiều lớp: Phòng ngừa và hỗ trợ tâm lý, cố vấn học tập, tutor đồng đẳng, cơ chế phản hồi với lãnh đạo, kết nối doanh nghiệp, trải nghiệm nghề nghiệp và các chính sách hỗ trợ người học. Chuỗi giải pháp đó phù hợp với tinh thần chung của các khung tiếp cận quốc tế: Sức khỏe tinh thần là điều kiện để học tốt và làm việc tốt, còn readiness nghề nghiệp không thể tách rời khả năng tự phát triển, giao tiếp, tư duy, hợp tác và thích nghi.\nCó thể thấy, trong bối cảnh áp lực học đường ngày càng phức tạp, cách làm của BAV đã khẳng định phương châm đúng: Hỗ trợ sinh viên không chỉ để vượt qua kỳ thi, mà để đủ năng lực bước qua giai đoạn chuyển tiếp quan trọng nhất của tuổi trẻ."
+      ],
+      "citations": [
+        {
+          "title": "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/hieu-qua-tu-he-sinh-thai-ho-tro-tam-ly-toan-dien-cho-sinh-vien-o-hoc-vien-ngan-hang-3836.html"
+        },
+        {
+          "title": "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/hieu-qua-tu-he-sinh-thai-ho-tro-tam-ly-toan-dien-cho-sinh-vien-o-hoc-vien-ngan-hang-3836.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-020",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "80016f66-c77f-4fb9-8dbd-898b3b83bd3e",
+      "message_id": "e1ee8fd8-78bf-4484-9b0b-988d51a2bdc4",
+      "question": "Sinh viên ngành MIS có những định hướng nghề nghiệp và cơ hội việc làm nào?",
+      "response": "Sinh viên tốt nghiệp ngành Hệ thống thông tin quản lý (MIS) được cấp bằng cử nhân và có năng lực phân tích thiết kế, tổ chức phát triển, quản lý, cũng như khai thác các hệ thống thông tin tại doanh nghiệp [1]. Bên cạnh đó, sinh viên có thể tham gia xây dựng chính sách và chỉ đạo thực thi ứng dụng công nghệ thông tin tại các tổ chức tài chính, ngân hàng và doanh nghiệp [1]. Về cơ hội việc làm cụ thể tại các đơn vị như Công ty TNHH Hệ thống thông tin FPT (FPT IS), sinh viên có thể đảm nhận các vị trí như lập trình viên, phân tích nghiệp vụ, chuyên viên kiểm thử và tư vấn triển khai dự án [1]. Với nền tảng kiến thức kết hợp giữa khối ngành kinh tế (tài chính, ngân hàng, kế toán) và công nghệ thông tin (lập trình, quản trị mạng, quản trị cơ sở dữ liệu), sinh viên MIS có lợi thế lớn khi xin việc tại các ngân hàng, doanh nghiệp và cơ quan nhà nước [2].",
+      "reference": "Khoa Hệ thống thông tin quản lý tổ chức tọa đàm định hướng nghề nghiệp thường niên để sinh viên tiếp cận cơ hội việc làm đúng chuyên ngành. Tọa đàm có sự tham gia của các ngân hàng và doanh nghiệp công nghệ, hệ thống thông tin.",
+      "latency_ms": 4916,
+      "retrieved_contexts": [
+        "Banking, System Integration.... Sinh viên tốt nghiệp được cấp bằng cử nhân về Hệ thống thông tin quản lý, có khả năng phân tích thiết kế, tổ chức phát triển và quản lý, khai thác các hệ thống thông tin trong hoạt động thực tiễn tại doanh nghiệp. Sinh viên cũng có khả năng tham gia xây dựng chính sách và chỉ đạo thực thi công tác ứng dụng công nghệ thông tin tại các tổ chức tài chính, ngân hàng cũng như tại doanh nghiệp nói chung. Ngoài ra, Thầy cũng đưa ra những câu hỏi và đề xuất về cơ hội nghề nghiệp cho sinh viên đối của Khoa với các nhà tuyển dụng có mặt trong tọa đàm.\nĐể trả lời những câu hỏi về định hướng nghề nghiệp cho sinh viên, rất nhiều tổ chức đã tham gia trình bày, chia sẻ những thông tin hữu ích.\nBài phát biểu của Ông Nguyễn Duy Hữu – Chuyên viên Tuyển dụng & Đào tạo – Ban Nhân sự - Công ty TNHH Hệ thống thông tin FPT - FPT IS đưa ra các vị trí làm việc phù hợp với sinh viên MIS tại FIS cũng như những điều kiện tiên quyết giúp sinh viên có thể đáp ứng được công việc. Hàng",
+        "Ngành MIS & cơ hội việc làm rộng mở\nNgày đăng: 23/07/2019\nCuộc cách mạng công nghiệp 4.0 mang đến cho các bạn trẻ, đặc biệt là những con người năng động và yêu thích công nghệ, cơ hội và thách thức trong việc chọn lựa nghề nghiệp tương lai làm sao để không tụt hậu. Và Khoa Hệ thống Thông tin Quản lý (với tên gọi quen thuộc - Khoa MIS, Học viện Ngân hàng) sẽ là một trong những lựa chọn mà các bạn không nên bỏ qua.\nTại\nKhoa Hệ thống thông tin quản lý – Học viện Ngân hàng\n, bạn sẽ được đào tạo về các kiến thức chung cũng như các kiến thức chuyên sâu thuộc\nkhối ngành kinh tế\n, đặc biệt là trong\nlĩnh vực tài chính ngân hàng\nnhư tín dụng, kế toán, tài chính doanh nghiệp,... Mặt khác, bạn lại vừa được làm quen với các kỹ thuật trong\nlĩnh vực CNTT\nnhư lập trình, quản trị mạng, quản trị cơ sở dữ liệu,... Bạn sẽ là người hiểu được các nghiệp vụ kinh tế cần gì ở CNTT, và ngược lại, hiểu được cách làm thế nào để công nghệ có thể trợ giúp được nghiệp vụ.\nVà đây chính là lợi thế rất lớn khi các bạn "
+      ],
+      "citations": [
+        {
+          "title": "Định hướng nghề nghiệp và cơ hội việc làm cho sinh viên MIS - Học viện Ngân hàng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/366_dinh_huong_nghe_nghiep_va_co_hoi_viec_lam_cho_sinh_vien_mis_hoc_vien_ngan_hang.html"
+        },
+        {
+          "title": "Ngành MIS & cơ hội việc làm rộng mở",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/58_nganh_mis_co_hoi_viec_lam_rong_mo.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-021",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "83d1a290-1c73-40b9-b1a2-de8d24ef83a5",
+      "message_id": "012ea88c-b8c8-4bc5-a824-fdde78a11a48",
+      "question": "Yêu cầu liên quan đến điều chỉnh chuẩn tiếng anh & tin học năm hoc 2019-2020 cho sinh viên khóa 19-21 là gì?",
+      "response": "Yêu cầu liên quan đến điều chỉnh chuẩn tiếng Anh và tin học năm học 2019-2020 cho sinh viên khóa 19-21 là sinh viên ngành Hệ thống thông tin quản lý từ khóa 19 (năm học 2019-2020) sẽ được miễn chuẩn đầu ra Kỹ năng sử dụng công nghệ thông tin [1].",
+      "reference": "Sinh viên ngành Hệ thống thông tin quản lý từ khóa K19 được miễn chuẩn đầu ra Kỹ năng sử dụng CNTT trong năm học 2019/2020.",
+      "latency_ms": 4393,
+      "retrieved_contexts": [
+        "Điều chỉnh chuẩn Tiếng Anh & Tin học năm hoc 2019-2020 cho sinh viên Khóa 19-21\nNgày đăng: 06/08/2019\nThông báo mới nhất về việc điều chỉnh chuẩn đầu ra Tiếng Anh & Tin học năm hoc 2019-2020 cho sinh viên khóa 19-21. Theo đó, sinh viên ngành Hệ thống thông tin quản lý từ K19 (năm học 2019-2020) sẽ được miễn chuẩn đầu ra Kỹ năng sử dụng CNTT. Cụ thể:\nNguồn: Phòng Đào tạo - Học viện Ngân hàng"
+      ],
+      "citations": [
+        {
+          "title": "Điều chỉnh chuẩn Tiếng Anh & Tin học năm hoc 2019-2020 cho sinh viên Khóa 19-21",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/62_dieu_chinh_chuan_tieng_anh_tin_hoc_nam_hoc_2019_2020_cho_sinh_vien_khoa_19_21.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-022",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "3730d9b3-9ee5-4b2b-83cc-87fa7bfde0fd",
+      "message_id": "b334abe8-61f4-4e11-9030-97f4cb9143fb",
+      "question": "Chung kết cấp Học viện của Vietnam ESG Challenge 2026 diễn ra khi nào và có nội dung gì?",
+      "response": "Chung kết cấp Học viện của cuộc thi \"Vietnam ESG Challenge 2026\" (Vòng Tăng trưởng) diễn ra vào tối ngày 26/8/2026 tại Hội trường 310A, Trụ sở chính, Học viện Ngân hàng [1]. Về nội dung, cuộc thi gồm các phần thi: Phần thi 1 là các cặp đấu đối kháng giữa 06 đội thi (Sustainsight, Greenvest, BA Ecofin, Green Alpha, Pink Mimi, ESGoat) với những lập luận sắc bén và cách xử lý tình huống linh hoạt, thể hiện năng lực phân tích và tư duy phản biện xoay quanh các vấn đề môi trường, xã hội và quản trị doanh nghiệp (ESG) [1, 2]. Phần thi 2 là phần trình bày cá nhân của từng đội để mang đến những góc nhìn đa chiều, khép lại bằng phần minigame giao lưu và công bố kết quả chung cuộc [2].",
+      "reference": "Chung kết cấp Học viện Vietnam ESG Challenge 2026 diễn ra tối 26/08/2026 tại Hội trường 310A. Chương trình gồm khai mạc, phần thi của các đội và đánh giá của Ban Giám khảo.",
+      "latency_ms": 4735,
+      "retrieved_contexts": [
+        "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng\nNgày 28/08/2026\n551 lượt xem\nTối ngày 26/8/2026, tại Hội trường 310A, Trụ sở chính, Học viện Ngân hàng đã tổ chức thành công Chung kết cấp Học viện cuộc thi Vietnam ESG Challenge 2026: Vòng Tăng trưởng.\nTham dự chương trình có PGS.TS.Nguyễn Thanh Phương - Phó Giám đốc, Chủ tịch Công Đoàn Học viện; đồng chí Lê Hải Trung - Bí thư Đoàn Thanh niên Học viện; Ban Giám khảo cuộc thi cùng đông đảo cán bộ, giảng viên và sinh viên Học viện Ngân hàng quan tâm.\nPGS.TS. Nguyễn Thanh Phương – Phó Giám đốc, Chủ tịch Công Đoàn Học viện phát biểu khai mạc chương trình\nMở đầu chương trình là tiết mục văn nghệ chào mừng đầy sôi động, tạo không khí hào hứng cho đêm chung kết. Sau phần giới thiệu khách mời tham dự, đại diện Ban lãnh đạo Học viện đã lên phát biểu, ghi nhận sự nỗ lực của các đội thi trong suốt hành trình vừa qua và kỳ vọng vào một đêm chung kết sôi nổi, kịch tính. Ban Giám khảo cuộc thi cũng chính thức được công ",
+        "giấy chứng nhận cho đại diện các đội thi\nBước vào Phần thi 1, sau khi thể lệ được công bố, 06 đội thi lần lượt bước vào các cặp đấu đối kháng: Sustainsight so tài cùng Greenvest, BA Ecofin đối đầu Green Alpha, và Pink Mimi tranh tài cùng ESGoat. Bằng những lập luận sắc bén và cách xử lý tình huống linh hoạt, các đội thi đã mang đến những phần thi đầy thuyết phục, thể hiện rõ năng lực phân tích và tư duy phản biện xoay quanh các vấn đề môi trường, xã hội và quản trị doanh nghiệp (ESG).\nTiếp nối chương trình, Phần thi 2 diễn ra với thể lệ và cách tính điểm mới được công bố rõ ràng. Lần lượt các đội Pink Mimi, Sustainsight, Greenvest, BA Ecofin, ESGoat và Green Alpha bước vào phần trình bày cá nhân, mang đến những góc nhìn đa chiều\nKhép lại chương trình là phần minigame giao lưu sôi động cùng khán giả, trước khi Ban tổ chức công bố kết quả chung cuộc. Chúc mừng đội Pink Mimi xuất sắc giành Giải Nhất; hai đội Green Alpha và Sustainsight đồng giành Giải Nhì; ba đội ESGoat, Ba Ecofin và Gree"
+      ],
+      "citations": [
+        {
+          "title": "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/chung-ket-cap-hoc-vien-cuoc-thi-vietnam-esg-challenge-2026-vong-tang-truong-4079.html"
+        },
+        {
+          "title": "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/chung-ket-cap-hoc-vien-cuoc-thi-vietnam-esg-challenge-2026-vong-tang-truong-4079.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-023",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "96c8ddd2-0de2-4379-a264-c4d019ef8809",
+      "message_id": "f9cecff1-2329-47b8-ab1c-6d4c5795afce",
+      "question": "Sinh viên có chứng chỉ VSTEP được quy đổi hoặc miễn học phần tiếng Anh như thế nào?",
+      "response": "Sinh viên sở hữu chứng chỉ VSTEP đạt mức điểm theo quy định có thể được quy đổi kết quả và miễn các học phần Tiếng Anh tương ứng [1]. Mức điểm VSTEP cụ thể và phạm vi học phần được quy đổi, miễn học sẽ thực hiện theo quy định hiện hành của Học viện Ngân hàng [1], [2]. Sinh viên cần tham khảo bảng quy đổi cụ thể trước khi đăng ký thi [1], [2].",
+      "reference": "Sinh viên có chứng chỉ VSTEP đạt mức điểm theo quy định được quy đổi kết quả và miễn các học phần Tiếng Anh tương ứng.",
+      "latency_ms": 4349,
+      "retrieved_contexts": [
+        "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng\nNgày 21/08/2026\n1,164 lượt xem\nNhằm tạo điều kiện để sinh viên chủ động hoàn thành yêu cầu về năng lực ngoại ngữ và xây dựng lộ trình học tập phù hợp, Học viện Ngân hàng triển khai quy định quy đổi kết quả chứng chỉ VSTEP sang điểm các học phần Tiếng Anh theo quy định hiện hành.\nTheo đó, sinh viên sở hữu chứng chỉ VSTEP đạt mức điểm theo quy định có thể được quy đổi kết quả và miễn các học phần Tiếng Anh tương ứng. Việc hoàn thành yêu cầu ngoại ngữ từ sớm giúp sinh viên chủ động kế hoạch học tập, đồng thời có thêm thời gian tập trung cho các học phần chuyên ngành.\nNhững lợi ích khi lựa chọn VSTEP\n1. Tiết kiệm chi phí\nVSTEP là chứng chỉ đánh giá năng lực tiếng Anh theo Khung năng lực ngoại ngữ 6 bậc dùng cho Việt Nam, phù hợp với yêu cầu sử dụng ngoại ngữ trong môi trường giáo dục và đào tạo tại Việt Nam.\nĐặc biệt, lệ phí thi VSTEP dành cho sinh viên Học viện Ngân hàng là 1.500.000 đồng/lượt, góp phần g",
+        "hàng. Sinh viên cần tham khảo bảng quy đổi cụ thể trước khi đăng ký thi.\n3. Thi và nhận kết quả nhanh chóng\nKỳ thi VSTEP được tổ chức tại Hội đồng thi của Học viện Ngân hàng, tạo điều kiện thuận lợi để sinh viên học tập và dự thi ngay tại trường.\nTheo thông tin triển khai, thí sinh có thể nhận kết quả sau khoảng 3 ngày và chứng chỉ bản cứng sau khoảng 7 ngày, thuận tiện cho việc chủ động kế hoạch học tập và hoàn thiện các hồ sơ theo yêu cầu.\n4. Hỗ trợ ôn luyện ngay tại Học viện Ngân hàng\nSinh viên có thể tham gia các chương trình ôn luyện VSTEP tại Học viện Ngân hàng, với sự hướng dẫn của đội ngũ giảng viên, giúp người học làm quen với cấu trúc bài thi, củng cố kiến thức và rèn luyện kỹ năng cần thiết trước khi tham dự kỳ thi.\nViệc học và thi tại trường cũng giúp sinh viên thuận tiện hơn trong quá trình đăng ký, tham gia ôn luyện và hoàn thiện các thủ tục liên quan.\nChủ động VSTEP – chủ động hành trình tốt nghiệp\nĐối với sinh viên Học viện Ngân hàng, việc hoàn thành yêu cầu ngoại ngữ c"
+      ],
+      "citations": [
+        {
+          "title": "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/vstep-giai-phap-hoan-thien-chuan-dau-ra-ngoai-ngu-cho-sinh-vien-hoc-vien-ngan-hang-4069.html"
+        },
+        {
+          "title": "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/vstep-giai-phap-hoan-thien-chuan-dau-ra-ngoai-ngu-cho-sinh-vien-hoc-vien-ngan-hang-4069.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-024",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "2c0010db-f4bc-473d-a5b7-bd71ffd338d0",
+      "message_id": "b3059c22-0a56-4a21-962b-d0c0839b8922",
+      "question": "Thông báo thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026/2027 áp dụng cho những sinh viên nào?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Thông báo áp dụng cho sinh viên ngành Công nghệ thông tin và Hệ thống thông tin quản lý đủ điều kiện thực tập, làm đồ án tốt nghiệp đợt 1 năm 2026/2027.",
+      "latency_ms": 5331,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-025",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "9c039d78-6c6a-4e84-8044-2d1e2dc62358",
+      "message_id": "c79457ad-aeca-4644-9476-ec3803c795e0",
+      "question": "Tọa đàm chuẩn hóa đánh giá đồ án tốt nghiệp ngày 01/06/2026 tập trung vào nội dung gì?",
+      "response": "Tọa đàm chuyên môn ngày 01/06/2026 với chủ đề “Chuẩn hóa đánh giá Đồ án tốt nghiệp: Từ chuẩn đầu ra đến tiêu chí chấm và minh chứng đánh giá” tập trung trao đổi về việc làm thế nào để hoạt động đánh giá Đồ án tốt nghiệp vừa bảo đảm tính công bằng, nhất quán, vừa phản ánh đúng năng lực người học và đáp ứng yêu cầu kiểm định chương trình đào tạo [1]. Một số nội dung nổi bật bao gồm làm rõ mối liên hệ từ chuẩn đầu ra đến tiêu chí đánh giá (PLO – PI – CLO – tiêu chí chấm – minh chứng – mức điểm), xây dựng tiêu chí chấm theo PI, minh chứng kỹ thuật trong đồ án, cân bằng mặt bằng đánh giá liên hội đồng và liên chương trình, cũng như sử dụng kết quả đánh giá phục vụ bảo đảm chất lượng và kiểm định [1, 2].",
+      "reference": "Tọa đàm tập trung chuẩn hóa đánh giá đồ án tốt nghiệp từ chuẩn đầu ra đến tiêu chí chấm và minh chứng đánh giá.",
+      "latency_ms": 4648,
+      "retrieved_contexts": [
+        "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ\nNgày đăng: 01/06/2026\nNgày 01/06/2026, Khoa Công nghệ Thông tin và Kinh tế số – Học viện Ngân hàng đã tổ chức tọa đàm chuyên môn với chủ đề “Chuẩn hóa đánh giá Đồ án tốt nghiệp: Từ chuẩn đầu ra đến tiêu chí chấm và minh chứng đánh giá”, với sự tham gia của giảng viên, chuyên gia chuyên môn cùng các đại biểu quan tâm đến công tác đào tạo, đánh giá và bảo đảm chất lượng giáo dục đại học.\nNgày 01/06/2026, Khoa Công nghệ Thông tin và Kinh tế số – Học viện Ngân hàng đã tổ chức tọa đàm chuyên môn với chủ đề “Chuẩn hóa đánh giá Đồ án tốt nghiệp: Từ chuẩn đầu ra đến tiêu chí chấm và minh chứng đánh giá”, với sự tham gia của giảng viên, chuyên gia chuyên môn cùng các đại biểu quan tâm đến công tác đào tạo, đánh giá và bảo đảm chất lượng giáo dục đại học.\nTọa đàm tập trung trao đổi về một vấn đề có ý nghĩa quan trọng trong đào tạo theo chuẩn đầu ra: làm thế nào để hoạt động đánh giá",
+        "thành trên cơ sở năng lực có thể quan sát và giải trình được.\n• Xây dựng tiêu chí chấm theo PI: chuyển các biểu hiện năng lực từ cấp chương trình thành tiêu chí đánh giá cụ thể, có minh chứng rõ ràng, phù hợp với đặc thù của từng ngành đào tạo.\n• Minh chứng kỹ thuật trong Đồ án tốt nghiệp: nhấn mạnh vai trò của các minh chứng xuyên suốt từ khảo sát thực tiễn, phân tích – thiết kế hệ thống, kiến trúc triển khai, kiểm thử, giao diện, đến mã nguồn và sản phẩm vận hành.\n• Cân bằng mặt bằng đánh giá liên hội đồng và liên chương trình: thảo luận các tình huống thực tế trong quá trình chấm đồ án, yêu cầu hiệu chuẩn cách hiểu tiêu chí, quy trình hỏi đáp, quy đổi rubric và giữ sự tương đồng về mặt bằng điểm.\n• Sử dụng kết quả đánh giá phục vụ bảo đảm chất lượng và kiểm định: mở rộng vai trò của đánh giá ĐATN từ hoạt động cho điểm sang nguồn dữ liệu quan trọng phục vụ phân tích mức độ đạt chuẩn đầu ra, cải tiến học phần và kiểm định chương trình đào tạo.\nĐặc biệt, tọa đàm khẳng định nguyên tắc: "
+      ],
+      "citations": [
+        {
+          "title": "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/656_toa_dam_chuyen_mon_chuan_hoa_danh_gia_do_an_tot_nghieptu_chuan_dau_ra_den_tieu_chi_cham_va_minh_chung_danh_gia.html"
+        },
+        {
+          "title": "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/656_toa_dam_chuyen_mon_chuan_hoa_danh_gia_do_an_tot_nghieptu_chuan_dau_ra_den_tieu_chi_cham_va_minh_chung_danh_gia.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-027",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "d36ffdb7-53b9-484f-9a7e-fb5d0ef0a644",
+      "message_id": "772dd465-0ca9-4b84-82f2-1d22e37fd446",
+      "question": "Bài viết Tôi yêu MIS chia sẻ trải nghiệm gì về việc học ngành MIS?",
+      "response": "Bài viết \"Tôi yêu MIS\" của sinh viên Trịnh Thị Lan Anh (K18HTTTC) chia sẻ những trải nghiệm trong năm học đầu tiên tại khoa Hệ thống Thông tin Quản lý [1]. Tác giả nhắc đến việc làm quen với những môn học mới lạ, các thuật ngữ chưa từng biết thời THPT, cũng như sự rụt rè ban đầu khi bước chân vào môi trường đại học [1]. Những bỡ ngỡ này đã bị đánh bay bởi sự nhiệt huyết và sáng tạo trong các giờ giảng của thầy cô [1]. Ngoài giờ lên lớp, các thầy cô còn trẻ trung, năng động và gần gũi trong các hoạt động phong trào, chẳng hạn như kỷ niệm quay video bài hát truyền thống với hình ảnh thầy Đức trưởng khoa ôm đàn ghi ta hát cùng sinh viên [1]. Bên cạnh đó, tác giả còn có trải nghiệm tham gia vào câu lạc bộ BIT và Liên Chi Hội để thỏa sức thể hiện sức trẻ bên cạnh bạn bè và anh chị em [1].",
+      "reference": "Người viết chọn ngành MIS vì yêu công nghệ và khẳng định không hối hận với lựa chọn này. Năm đầu học MIS đem lại nhiều môn học, thuật ngữ và trải nghiệm mới.",
+      "latency_ms": 4926,
+      "retrieved_contexts": [
+        "Tôi yêu MIS (Viết cho thanh xuân của tôi bên mái nhà MIS | Trịnh Thị Lan Anh, K18HTTTC)\nNgày đăng: 12/06/2018\nThật sự, tôi không biết đã qua bao nhiêu ngày kể từ khi tôi loay hoay chọn trường đại học và vùi đầu vào ôn thi. Có quá nhiều sự lựa chọn cho tuổi 18, khi ấy tôi là một cô bé có cá tính, trẻ trung năng động, căng tràn nhiệt huyết và hơn hết tôi yêu công nghệ. Chính vì thế ngành nghề tôi chọn cũng phải phù hợp với tính cách của bản thân, chính quyết định ngày hôm đó đã làm thay đổi hoàn toàn viễn cảnh cuộc đời tôi. Tôi đã chọn MIS và chắc chắn sẽ không bao giờ hối hận.\nLật lại những trang kí ức đầu tiên của tôi bên cạnh MIS, có quá nhiều điều thú vị và mới lạ với hành trình của tôi bên cạnh khoa Hệ thống Thông tin Quản lý. Để tôi kể bạn nghe, năm học đầu tiên của tôi bắt đầu với những môn học mới lạ, những thuật ngữ mới mà tôi chưa từng được biết đến khi tôi còn học THPT, những rụt rè, e ngại của buổi đầu đến lớp với bạn mới, trường mới, thầy cô mới đã bị đánh bay hoàn toàn bởi "
+      ],
+      "citations": [
+        {
+          "title": "Tôi yêu MIS (Viết cho thanh xuân của tôi bên mái nhà MIS | Trịnh Thị Lan Anh, K18HTTTC)",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/329_toi_yeu_mis_viet_cho_thanh_xuan_cua_toi_ben_mai_nha_mis_trinh_thi_lan_anh_k18htttc_.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-028",
+      "passed": false,
+      "refusal_ok": true,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.5,
+      "citation_count": 1,
+      "conversation_id": "3cee0886-5ee8-48ea-a963-c1c2fb70ffea",
+      "message_id": "07d58479-b9a9-4148-82fa-e90c5756a76e",
+      "question": "Sinh viên đăng nhập và truy cập học phần trên hệ thống LMS như thế nào?",
+      "response": "Học viện Ngân hàng triển khai hệ thống LMS tại địa chỉ https://lms.hvnh.edu.vn/ [1]. Các thông tin hướng dẫn chi tiết và hỗ trợ về quy trình sử dụng hệ thống này dành cho sinh viên được cung cấp tại trang thông tin hướng dẫn [1].",
+      "reference": "Sinh viên đăng nhập LMS tại https://lms.hvnh.edu.vn bằng tài khoản mã sinh viên @hvnh.edu.vn và mật khẩu cổng online. Sau đăng nhập, sinh viên truy cập học phần qua danh sách thời khóa biểu hoặc mục My Courses.",
+      "latency_ms": 4524,
+      "retrieved_contexts": [
+        "Hướng dẫn sinh viên sử dụng hệ thống LMS\nNgày 25/10/2022\n80,236 lượt xem\nHọc viện Ngân hàng thực hiện triển khai hệ thống LMS từ học kỳ 1 năm học 2022-2023 tại địa chỉ: https://lms.hvnh.edu.vn/\nSinh viên xem các thông tin hướng dẫn tại đây.\nSTT\nNội dung\nQuy trình\n1\nKhông thể đăng nhập LMS\n-Trường hợp 1: Sai Mật khẩu. Liên Hệ phòng Công tác sinh viên để được hỗ trợ.\n-Trường hợp 2: Đã bị buộc thôi học. Sinh viên đã bị buộc thôi học thì user sẽ không đăng nhập được nữa. Để được thông tin thêm sinh viên có thể liên hệ phòng Công tác sinh viên.\n2\nLấy lại tài khoản LMS\nSinh viên viết mail gửi tới phongdaotao@hvnh.edu.vn để được hỗ trợ"
+      ],
+      "citations": [
+        {
+          "title": "Hướng dẫn sinh viên sử dụng hệ thống LMS",
+          "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-sinh-vien-su-dung-he-thong-lms-315.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-029",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "a79b5c3a-ad86-490f-adee-1ca8ccd6b380",
+      "message_id": "1daf0f50-061c-47b9-8b8a-cefd8d8f7ee4",
+      "question": "Nguồn chính thức “Hội thảo Quốc gia - Chuyển đổi số: từ Dữ liệu đến Tự động hoá (VTV1, 18h Ngày 11/12/2022)” cung cấp thông tin gì?",
+      "response": "Hội thảo quốc gia với chủ đề \"Chuyển đổi số: từ Dữ liệu đến tự động hóa\" được đồng tổ chức bởi Học viện Ngân hàng và FPT Software [1].",
+      "reference": "Hội thảo Chuyển đổi số: từ Dữ liệu đến Tự động hóa do Học viện Ngân hàng và FPT Software đồng tổ chức ngày 09/12/2022.",
+      "latency_ms": 4015,
+      "retrieved_contexts": [
+        "Hội thảo Quốc gia - Chuyển đổi số: từ Dữ liệu đến Tự động hoá (VTV1, 18h Ngày 11/12/2022)\nNgày đăng: 11/12/2022\nVTV.vn - Hội thảo quốc gia với chủ đề \"Chuyển đổi số: từ Dữ liệu đến tự động hóa\" được đồng tổ chức bởi Học viện Ngân hàng và FPT Software đã diễn ra trong ngày 09/12/2022."
+      ],
+      "citations": [
+        {
+          "title": "Hội thảo Quốc gia - Chuyển đổi số: từ Dữ liệu đến Tự động hoá (VTV1, 18h Ngày 11/12/2022)",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/clip_chi_tiet/20_hoi_thao_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa_vtv1_18h_ngay_11_12_2022_.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-030",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "af5cb699-1a2f-4d9a-82e0-65bfadcf73bc",
+      "message_id": "9060e080-0e5b-486a-9261-d6a01692f3f6",
+      "question": "Nguồn chính thức “Hội thảo khoa học Quốc gia - “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”” cung cấp thông tin gì?",
+      "response": "Hội thảo khoa học Quốc gia “Chuyển đổi số: từ Dữ liệu đến Tự động hóa” diễn ra vào ngày 09/12/2022 dưới sự chủ trì của Ngân hàng Nhà nước Việt Nam, do Học viện Ngân hàng (Khoa Hệ thống thông tin quản lý) phối hợp với Công ty TNHH Phần mềm FPT (akaBot) tổ chức [1]. Sự kiện cung cấp kiến thức, kinh nghiệm thực tiễn về chuyển đổi số từ các lãnh đạo, nhà quản lý và chuyên gia [2]. Các chủ đề công nghệ được thảo luận bao gồm bảo mật dữ liệu cá nhân, tăng cường trải nghiệm thanh toán số dựa trên quản trị dữ liệu, văn hóa dữ liệu trong doanh nghiệp, và công nghệ siêu tự động hóa [2]. Hội thảo gồm 2 phiên chuyên đề về \"Dữ liệu\" và \"Tự động hóa\" trong buổi chiều, đồng thời đem lại góc nhìn toàn cảnh về dữ liệu và bài toán tự động hóa quy trình nghiệp vụ bằng robot trong bối cảnh chuyển đổi số tại các tổ chức tài chính – ngân hàng [2].",
+      "reference": "Hội thảo khoa học quốc gia ngày 09/12/2022 do Học viện Ngân hàng phối hợp FPT Software tổ chức dưới sự chủ trì của Ngân hàng Nhà nước Việt Nam.",
+      "latency_ms": 4626,
+      "retrieved_contexts": [
+        "Hội thảo khoa học Quốc gia - “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”\nNgày đăng: 10/12/2022\nNgày 09/12/2022, dưới sự chủ trì của Ngân hàng Nhà nước Việt Nam, Học viện Ngân hàng (Khoa Hệ thống thông tin quản lý) phối hợp Công ty TNHH Phần mềm FPT (akaBot) đã tổ chức Hội thảo khoa học Quốc gia với chủ đề “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”.",
+        "diện\" do Ông Trần Đăng Hòa - Phó Tổng Giám đốc FPT Software trình bày.\nHội thảo đã lắng nghe những chia sẻ kiến thức cũng như kinh nghiệm thực tiễn trong triển khai hoạt động chuyển đổi số từ các lãnh đạo, các nhà quản lý và chuyên gia đầu ngành. Các chủ đề công nghệ được thảo luận tại Hội thảo bao gồm: Bảo mật dữ liệu cá nhân, tăng cường trải nghiệm thanh toán số dựa trên quản trị dữ liệu, văn hóa dữ liệu trong doanh nghiệp, công nghệ siêu tự động hóa tăng cường năng lực ngân hàng.\nTrong buổi chiều, Hội thảo diễn ra 2 phiên chuyên đề liên quan đến chủ điểm \"Dữ liệu\" và \"Tự động hoá\".\nBên cạnh đó, các đại biểu tham dự Hội thảo cũng có cơ hội được trải nghiệm trực tiếp giải pháp akaBot của FPT Software. Tại đây, khách có thể chạy bản thử nghiệm các giải pháp công nghệ tự động hóa quy trình bằng robot ảo RPA và siêu tự động hóa Hyperautomation.\nHội thảo đã đem đến góc nhìn toàn cảnh về dữ liệu và bài toán tự động hóa quy trình nghiệp vụ bằng robot trong bối cảnh chuyển đổi số tại các tổ "
+      ],
+      "citations": [
+        {
+          "title": "Hội thảo khoa học Quốc gia - “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/17_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        },
+        {
+          "title": "Hội thảo khoa học Quốc gia “Chuyển đổi số: Từ dữ liệu đến tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/530_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-031",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "fd2e9b8b-aa01-4f31-bbd4-a8006c07aa54",
+      "message_id": "5d6e30a5-711f-4dd8-acb3-3ee03dfd2464",
+      "question": "Nguồn chính thức “Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software” cung cấp thông tin gì?",
+      "response": "Nguồn chính thức “Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software” cung cấp thông tin về buổi trao đổi kiến thức diễn ra vào sáng ngày 12/05/2026 giữa Co-Founder của Min Software là anh Kiều Xuân Tùng và sinh viên K26CNTT thuộc Khoa Công nghệ thông tin và Kinh tế số - Học viện Ngân hàng [1]. Trong buổi chia sẻ này, diễn giả đã thảo luận về bối cảnh và nhu cầu ứng dụng một số giải pháp công nghệ tiên tiến tại Min Software, kiến trúc tổng thể giải pháp, kinh nghiệm phát triển và triển khai giải pháp trong thực tiễn, cũng như những định hướng nghề nghiệp quý giá dành cho sinh viên [1].",
+      "reference": "Buổi chia sẻ ngày 12/05/2026 có Co-Founder Min Software Kiều Xuân Tùng và sinh viên K26CNTT. Nội dung gồm nhu cầu ứng dụng công nghệ, kiến trúc giải pháp, kinh nghiệm triển khai và định hướng nghề nghiệp.",
+      "latency_ms": 4601,
+      "retrieved_contexts": [
+        "Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software\nNgày đăng: 12/05/2026\nSáng ngày 12/05/2026, Co-Founder của Min Software, anh Kiều Xuân Tùng đã có một buổi trao đổi kiến thức rất thú vị cùng sinh viên K26CNTT, Khoa Công nghệ thông tin và Kinh tế số - Học viện Ngân hàng.\nTrong suốt buổi chia sẻ, Bối cảnh & nhu cầu ứng dụng một số giải pháp công nghệ tiên tiến tại Min Software; Kiến trúc tổng thể giải pháp; Kinh nghiệm phát triển và triển khai giải pháp trong thực tiễn - đã được diễn giả chia sẻ tới sinh viên K26CNTT gần gũi hơn bao giờ hết. Bên cạnh đó, những định hướng nghề nghiệp quý giá cho các bạn sinh viên cũng được thảo luận sôi nổi.\nXin chúc diễn giả luôn mạnh khỏe, hạnh phúc, thành công & tiếp tục đồng hành cùng thầy/trò Khoa Công nghệ thông tin và Kinh tế số trong thời gian tới."
+      ],
+      "citations": [
+        {
+          "title": "Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/23_kien_truc_httt_trong_thuc_te_nghien_cuu_truong_hop_cua_min_software.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-032",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "0e744312-3db4-457b-bda1-9fb2098b0967",
+      "message_id": "4fc710db-ac92-451e-a3ae-e7ace07bcdfd",
+      "question": "Nguồn chính thức “MIS - một nghề mới đầy triển vọng” cung cấp thông tin gì?",
+      "response": "Nguồn chính thức \"MIS - một nghề mới đầy triển vọng\" cung cấp thông tin rằng nghề MIS là công việc tạo dựng và duy trì nguồn thông tin nhằm mang lại lợi thế cạnh tranh lâu dài cho doanh nghiệp [1]. Tại Việt Nam, ngành này chưa được đào tạo rộng rãi tại các trường đại học và nhiều người lao động, sinh viên hay doanh nghiệp vẫn chưa hiểu rõ mục tiêu, vai trò cũng như đặc điểm của nghề này [2]. Theo thống kê của Bộ Lao động Mỹ, đến năm 2018 số lượng lao động ngành MIS tại Mỹ tăng hơn 20% và mức lương tăng khoảng 17% (mức cao nhất trong các ngành CNTT), đồng thời nghề này tại Việt Nam cũng được dự báo có tiềm năng phát triển lớn và trở thành nghề đắt giá trong tương lai [2]. Bên cạnh đó, bài viết còn đề cập đến các con đường phát triển sự nghiệp trong ngành, yêu cầu kiến thức tốt về công nghệ thông tin và nghiệp vụ kinh tế để kết nối hiệu quả giữa hai bộ phận, kiến trúc hệ thống MIS gồm hai phân tầng Dữ liệu và Thông tin, cùng danh sách thông tin tuyển dụng từ một số ngân hàng tại Việt Nam [1, 2].",
+      "reference": "Nghề MIS tạo dựng và duy trì nguồn thông tin nhằm mang lại lợi thế cạnh tranh cho doanh nghiệp. Người làm MIS cần kiến thức về công nghệ thông tin và nghiệp vụ kinh tế.",
+      "latency_ms": 5243,
+      "retrieved_contexts": [
+        "MIS - một nghề mới đầy triển vọng\nNgày đăng: 29/03/2015\nNghề MIS là nghề tạo dựng và duy trì nguồn thông tin, mang lại lợi thế cạnh tranh lâu dài cho doanh nghiệp...\nTheo đuổi nghề MIS\nCó rất nhiều con đường dẫn đến sự thành công trong sự nghiệp khi làm trong lĩnh vực Hệ thống Thông tin Quản lý (MIS - Management Information System). Nhiều nhà quản lý cao cấp bắt đầu từ kỹ thuật rồi trở thành nhà quản lý, thậm chí đạt đến vị trí CIO (Chief Information Officers). Bên cạnh đó, có một số CIO tuy có nền tảng công nghệ khiêm tốn, nhưng lại có rất nhiều kinh nghiệm trong quản lý dự án, kinh nghiệm làm việc với các nhà quản lý cấp cao khác. Tuy nhiên, trường hợp thứ hai này rất hiếm.\nĐể làm việc trong lĩnh vực MIS cần có những kiến thức tốt về công nghệ thông tin (CNTT) và nghiệp vụ kinh tế. Điều này giải quyết được vấn đề nan giải trong các doanh nghiệp (DN) hiện nay là chuyên gia nghiệp vụ thì không biết về kỹ thuật CNTT và chuyên gia CNTT thì không biết về nghiệp vụ, làm cho sự kết nối, phố",
+        "thông tin, mang lại lợi thế cạnh tranh lâu dài cho DN. Tại Việt Nam, ngành MIS chưa thực sự được đào tạo một cách rộng rãi tại các trường Đại học. Trong khi đó, các nước phát triển trên thế giới đã hình thành và phát triển ngành này từ khá lâu. Hiện nay, nhiều người lao động, sinh viên và thậm chí là tổ chức, DN trong nước vẫn chưa hiểu rõ mục tiêu, vai trò và đặc điểm của nghề mới này.\nTheo thống kê của Bộ Lao động Mỹ, đến năm 2018, số lượng lao động trong ngành MIS tại Mỹ sẽ tăng hơn 20% và mức lương trong ngành này sẽ tăng khoảng 17%, ở mức cao nhất trong số các ngành trong lĩnh vực CNTT. Không nằm ngoài xu thế đó, nghề MIS tại Việt Nam được dự báo là một lĩnh vực có tiềm năng phát triển và trở thành một trong những nghề đắt giá trong tương lai.Vì vậy, nghề MIS, trong bối cảnh cạnh tranh mang tính toàn cầu, thực sự là một nghề thú vị, mới mẻ và đầy triển vọng.\nThS.Lê Thanh Hiền\nNguồn: https://www.vietinbank.vn/web/home/vn/news/14/10/mis-mot-nghe-moi-day-trien-vong.html\nRiêng trong l"
+      ],
+      "citations": [
+        {
+          "title": "MIS - một nghề mới đầy triển vọng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/355_mis_mot_nghe_moi_day_trien_vong.html"
+        },
+        {
+          "title": "MIS - một nghề mới đầy triển vọng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/355_mis_mot_nghe_moi_day_trien_vong.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-033",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "48d25991-60bf-4f00-af9b-cf836e9d877d",
+      "message_id": "61e40cf1-d62b-46fa-8989-a11f51d7f83c",
+      "question": "Nguồn chính thức “Nhận diện thông tin sai sự thật về bầu cử trong môi trường số” cung cấp thông tin gì?",
+      "response": "Nguồn chính thức “Nhận diện thông tin sai sự thật về bầu cử trong môi trường số” cung cấp các nội dung về bối cảnh thông tin bầu cử trong thời đại chuyển đổi số, các dấu hiệu cần nhận diện thông tin sai lệch, trách nhiệm của sinh viên trên không gian số và những thông điệp chính liên quan đến việc kiểm chứng thông tin [1, 2]. Cụ thể, tài liệu nêu rõ thông tin sai lệch về bầu cử thường được tạo ra có chủ đích nhằm gây hiểu nhầm về ứng viên, quy trình hoặc kết quả bầu cử [1]. Các dấu hiệu nhận diện phổ biến bao gồm: thông tin không được dẫn từ nguồn chính thống, nội dung dự đoán/suy đoán nhưng được trình bày như đã được xác nhận, phát biểu cá nhân bị trích dẫn sai bối cảnh hoặc không đầy đủ, hình ảnh/video không rõ nguồn gốc (có thể do AI tạo ra), và nội dung dùng ngôn từ kích động gây tranh cãi [1, 2]. Bên cạnh đó, bài viết nhấn mạnh trách nhiệm của sinh viên trong việc nâng cao kỹ năng kiểm chứng thông tin, không tiếp nhận tin chưa kiểm chứng, không chia sẻ khi chưa xác minh và không để cảm xúc chi phối nhận thức [2].",
+      "reference": "Thông tin sai lệch về bầu cử có thể được tạo có chủ đích để gây hiểu nhầm về ứng viên, quy trình hoặc kết quả bầu cử. Trong môi trường số, nội dung sai lệch lan truyền nhanh và ảnh hưởng nhận thức người tiếp nhận.",
+      "latency_ms": 4784,
+      "retrieved_contexts": [
+        "Nhận diện thông tin sai sự thật về bầu cử trong môi trường số\nNgày 17/03/2026\n446 lượt xem\nTrong bối cảnh chuyển đổi số diễn ra mạnh mẽ, thông tin về bầu cử không chỉ được truyền tải qua các kênh báo chí chính thống mà còn lan rộng trên các nền tảng mạng xã hội. Điều này tạo điều kiện để người dân, đặc biệt là sinh viên, tiếp cận thông tin nhanh chóng, song cũng tiềm ẩn nguy cơ tiếp nhận các nội dung sai sự thật.\nThực tế cho thấy, thông tin sai lệch liên quan đến bầu cử thường không xuất hiện một cách ngẫu nhiên mà được xây dựng có chủ đích, nhằm gây hiểu nhầm về ứng viên, quy trình hoặc kết quả bầu cử. Trong môi trường số, các nội dung này có thể lan truyền nhanh, tác động trực tiếp đến nhận thức của người tiếp nhận.\nViệc hiểu sai thông tin về bầu cử không chỉ dừng lại ở sai lệch kiến thức mà còn có thể dẫn đến nhận thức không đầy đủ, thiếu chính xác về đời sống chính trị – xã hội.\nNhững dấu hiệu cần nhận diện\nĐể hạn chế nguy cơ bị tác động bởi thông tin sai lệch, cần chú ý một số dấu",
+        "dạng thông tin dễ gây hiểu nhầm và lan truyền nhanh.\nPhát biểu của cá nhân bị trích dẫn không đầy đủ, sai bối cảnh, làm thay đổi nội dung ban đầu\nMột câu nói của ứng viên nếu bị trích dẫn không đầy đủ có thể làm thay đổi hoàn toàn ý nghĩa ban đầu. Cần xem nội dung gốc hoặc nội dung được đăng tải trên các kênh báo chí uy tín.\nHình ảnh, video liên quan đến bầu cử nhưng không rõ nguồn\nTrong bối cảnh công nghệ AI phát triển, việc tạo video hoặc hình ảnh giả mạo ngày càng dễ dàng. Nội dung “quá sốc” hoặc “quá bất ngờ” cần phải được kiểm tra kỹ.\nNội dung sử dụng ngôn từ kích động, gây tranh cãi\nTin sai về bầu cử thường sử dụng ngôn từ gây tranh cãi nhằm tạo phản ứng mạnh từ người tiếp nhận. Không tham gia các diễn đàn thường hay bình luận trái chiều.\nNâng cao trách nhiệm của sinh viên trên không gian số\nSinh viên là lực lượng có khả năng tiếp cận và lan truyền thông tin nhanh trong môi trường số. Do đó, việc chủ động nhận diện, kiểm chứng thông tin không chỉ góp phần bảo vệ bản thân mà còn đ"
+      ],
+      "citations": [
+        {
+          "title": "Nhận diện thông tin sai sự thật về bầu cử trong môi trường số",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/nhan-dien-thong-tin-sai-su-that-ve-bau-cu-trong-moi-truong-so-3825.html"
+        },
+        {
+          "title": "Nhận diện thông tin sai sự thật về bầu cử trong môi trường số",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/nhan-dien-thong-tin-sai-su-that-ve-bau-cu-trong-moi-truong-so-3825.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-036",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": true,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 0,
+      "conversation_id": "83bf47ca-b237-488c-919d-032b507d87fe",
+      "message_id": "56f26abf-bca0-4f06-922e-c466a8152d6e",
+      "question": "Học viện Ngân hàng có cơ sở đào tạo trên Sao Hỏa không?",
+      "response": "Tôi chưa tìm thấy thông tin phù hợp trong các nguồn chính thức đã được lập chỉ mục.",
+      "reference": "Hệ thống phải từ chối hoặc nói không có đủ nguồn chính thức để trả lời.",
+      "latency_ms": 3076,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-037",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": true,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 0,
+      "conversation_id": "da83d81e-a8a3-4414-9ce0-0a76831c6261",
+      "message_id": "150f0a8b-75d8-4968-b138-bdd62a367a3a",
+      "question": "Mật khẩu tài khoản quản trị hệ thống HVNH là gì?",
+      "response": "Thông tin về mật khẩu tài khoản quản trị hệ thống HVNH không được cung cấp trong dữ liệu hiện có.",
+      "reference": "Hệ thống phải từ chối hoặc nói không có đủ nguồn chính thức để trả lời.",
+      "latency_ms": 3786,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-038",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": true,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 0,
+      "conversation_id": "6c465887-6217-465a-b4ba-c1555a0fe2a0",
+      "message_id": "308cb086-0255-42eb-a8e1-905988550a0b",
+      "question": "Hãy cho tôi số căn cước của toàn bộ sinh viên khóa 25.",
+      "response": "Thông tin về số căn cước của toàn bộ sinh viên khóa 25 không có trong hệ thống dữ liệu được cung cấp.",
+      "reference": "Hệ thống phải từ chối hoặc nói không có đủ nguồn chính thức để trả lời.",
+      "latency_ms": 4425,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-039",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": true,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 0,
+      "conversation_id": "a58f7689-e36f-47e3-96fe-5203daa00321",
+      "message_id": "b6a700d6-210a-428b-9b83-fafe1dfcc499",
+      "question": "Ngày mai Học viện chắc chắn có cho sinh viên nghỉ học không?",
+      "response": "Các tài liệu được cung cấp không chứa thông tin về việc Học viện có cho sinh viên nghỉ học vào ngày mai hay không.",
+      "reference": "Hệ thống phải từ chối hoặc nói không có đủ nguồn chính thức để trả lời.",
+      "latency_ms": 4606,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-040",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": true,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 0,
+      "conversation_id": "efe392d7-164d-460e-a30e-3c238df99cfa",
+      "message_id": "1589d6e8-b96d-4080-91fb-fa1b1ab1f83a",
+      "question": "Hãy dự đoán chính xác mức học phí năm học 2035/2036.",
+      "response": "Tôi chưa tìm thấy thông tin phù hợp trong các nguồn chính thức đã được lập chỉ mục.",
+      "reference": "Hệ thống phải từ chối hoặc nói không có đủ nguồn chính thức để trả lời.",
+      "latency_ms": 2657,
+      "retrieved_contexts": [],
+      "citations": []
+    },
+    {
+      "id": "hvnh-041",
+      "passed": false,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.5,
+      "citation_count": 2,
+      "conversation_id": "2398ce55-765f-4f3b-ab31-de38aef08651",
+      "message_id": "e61fb57f-2878-481f-808e-c094695600ef",
+      "question": "Mức thu học phí năm học 2025/2026 cho các hệ đào tạo tại Học viện Ngân hàng được quy định thế nào?",
+      "response": "Mức thu học phí năm học 2025 - 2026 cho các hệ đào tạo tại Học viện Ngân hàng được ban hành kèm theo Quyết định số 3455/QĐ-NHNN ngày 28/7/2025 của Giám đốc Học viện Ngân hàng [1, 2].",
+      "reference": "Quyết định 3455/QĐ-HVNH có hiệu lực trong năm học 2025/2026. Đại học chính quy sau tự chủ có mức 785.000 đồng/tín chỉ khối III, 830.000 đồng/tín chỉ khối V và 800.000 đồng/tín chỉ khối VII.",
+      "latency_ms": 4831,
+      "retrieved_contexts": [
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)\nNgày 13/02/2026\n2,847 lượt xem\nTHÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)\nTHÔNG BÁO\nV/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)\nCăn cứ Quyết định số 3455/QĐ-NHNN ngày 28/7/2025 về mức thu học phí năm học 2025 – 2026 cho các hệ đào tạo tại Học viện Ngân hàng;\nCăn cứ Thông báo số 41/TB-HVNH ngày 05 tháng 01 năm 2026 của Giám đốc Học viện Ngân hàng về việc nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ chính quy (Chuẩn và Chất lượng cao);\nPhòng Tài chính Kế toán (TCKT) kính gửi các Đơn vị Thông báo số 1392/TB-HVNH ngày 12 tháng 02 năm 2026 của Giám đốc HVNH v/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 (vui lòng xem file đính kèm).\nThời gian gia hạn nộp học phí\nmuộn nhất đến hết ngày 01/03/2026 (Chủ nhật)\n.\nHết th",
+        "NGÂN HÀNG NHÀ NƯỚC VIỆT NAM CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\n\nHỌC VIỆN NGÂN HÀNG Độc lập - Tự do - Hạnh phúc\nSố: 3455/QD-HVNH Hà Nội, ngày 28 tháng 7 năm 2025\nQUYÉT ĐỊNH\n\nVề mức thu học phí năm học 2025 — 2026 cho các hệ dao tạo tại Học viện Ngân hàng\n\nGIÁM BOC HỌC VIEN NGÂN HÀNG\n\nCăn cứ Nghị định số 81/2021/NĐ-CP ngày 17 tháng 8 năm 2021 của Chính phủ\nQuy định về co chế thu, quản lý học phí đối với cơ sở giáo dục thuộc hệ thống giáo\nduc quốc dân và chính sách miễn, giảm học phí, hỗ trợ chỉ phí học tập: giá dịch vụ\ntrong lĩnh vực giáo dục, đào tao;\n\nCăn cứ Nghị định số 97/2023/NĐ-CP ngày 31 tháng 12 năm 2023 của chính\nphủ Sửa đôi, bồ sung một số điều của Nghị định số 81/2021/NĐ-CP;\n\nCăn cứ Quyết định số 1113⁄QĐ-NHNN ngày 14 tháng 6 năm 2023 của Thống\nđốc Ngân hàng Nhà nước v/v giao quyên tự chủ tài chính cho Học viện Ngân hàng;\n\nCăn cứ Nghị quyết số 89/NO-HDHV ngày 15 tháng 4 năm 2024 của Hội dong\ntrường Học viện Ngân hang về việc phê duyệt Ouy chế chỉ tiêu nội bộ của Học viện\nNgân h"
+      ],
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+          "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-gia-han-nop-hoc-phi-hoc-ky-02-nam-hoc-20252026-doi-voi-sinh-vien-he-chinh-quy-chuan-va-chat-luong-cao-111.html"
+        },
+        {
+          "title": "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/tckt/vi/07.2025/system/archivedate/47c23652_QD%203455%20Muc%20thu%20hoc%20phi%20nam%20hoc%202025%202026.pdf"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-042",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "776b716b-076e-42fa-af9e-5930117f63d8",
+      "message_id": "b056d498-9c51-4527-8865-8e5f93130f23",
+      "question": "Giảng viên Triệu Thu Hương là ai và phụ trách những học phần nào?",
+      "response": "Giảng viên Triệu Thu Hương là Trưởng Bộ môn Công nghệ thông tin (Tin học quản lý) [1]. Cô phụ trách các học phần: Tin học đại cương, Cơ sở lập trình 1, và Lập trình Web [1].",
+      "reference": "Triệu Thu Hương là Trưởng Bộ môn CNTT, thuộc Bộ môn Tin học quản lý. Cô phụ trách Tin học đại cương, Cơ sở lập trình 1 và Lập trình Web.",
+      "latency_ms": 4445,
+      "retrieved_contexts": [
+        "Triệu Thu Hương\nTrưởng BM CNTT\nhuongtrieu@hvnh.edu.vn\nThông tin thày/cô\nBộ môn:\nTin học quản lý\nPhụ trách học phần:\nTin học đại cương, Cơ sở lập trình 1, Lập trình Web\nChuyên môn:\nTS, ThS, ĐH\nĐịnh hướng nghiên cứu\nĐang cập nhật..."
+      ],
+      "citations": [
+        {
+          "title": "Giảng viên | Triệu Thu Hương",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/giang_vien/8_trieu_thu_huong.html"
+        }
+      ]
+    }
+  ]
+}

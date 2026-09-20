@@ -1,0 +1,60 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 9487.0,
+    "p50_ms": 9487,
+    "p95_ms": 9487,
+    "max_ms": 9487
+  },
+  "results": [
+    {
+      "id": "hvnh-041",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 4,
+      "conversation_id": "422e61e9-3db4-4ce2-b092-fe260d2840b2",
+      "message_id": "f4b7652f-d2d8-4e19-a02a-52fd2ab0acca",
+      "question": "Mức thu học phí năm học 2025/2026 cho các hệ đào tạo tại Học viện Ngân hàng được quy định thế nào?",
+      "response": "Theo Quyết định số 3455/QĐ-NHNN ngày 28/7/2025, mức thu học phí năm học 2025 - 2026 tại Học viện Ngân hàng được quy định cho từng hệ đào tạo cụ thể [1], [2]. Đối với đào tạo đại học chính quy khóa tuyển sinh trước tự chủ tài chính (trước 01/7/2023), học phí các khối ngành II, V và VII lần lượt là 470.000 đồng/tín chỉ, 540.000 đồng/tín chỉ và 500.000 đồng/tín chỉ [2]. Các khóa tuyển sinh sau tự chủ tài chính (từ 01/7/2023) có mức học phí khối ngành II là 785.000 đồng/tín chỉ, khối ngành V là 830.000 đồng/tín chỉ và khối ngành VII là 800.000 đồng/tín chỉ [2]. Chương trình đại học chính quy từ xa có mức thu 600.000 đồng/tín chỉ [2]. Đào tạo Thạc sĩ có mức thu 1.000.000 đồng/tín chỉ và Tiến sĩ là 20.000.000 đồng/học kỳ [3], [4].",
+      "reference": "Quyết định 3455/QĐ-HVNH có hiệu lực trong năm học 2025/2026. Đại học chính quy sau tự chủ có mức 785.000 đồng/tín chỉ khối III, 830.000 đồng/tín chỉ khối V và 800.000 đồng/tín chỉ khối VII.",
+      "latency_ms": 9487,
+      "retrieved_contexts": [
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)\nNgày 13/02/2026\n2,874 lượt xem\nTHÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)\nTHÔNG BÁO\nV/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)\nCăn cứ Quyết định số 3455/QĐ-NHNN ngày 28/7/2025 về mức thu học phí năm học 2025 – 2026 cho các hệ đào tạo tại Học viện Ngân hàng;\nCăn cứ Thông báo số 41/TB-HVNH ngày 05 tháng 01 năm 2026 của Giám đốc Học viện Ngân hàng về việc nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ chính quy (Chuẩn và Chất lượng cao);\nPhòng Tài chính Kế toán (TCKT) kính gửi các Đơn vị Thông báo số 1392/TB-HVNH ngày 12 tháng 02 năm 2026 của Giám đốc HVNH v/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 (vui lòng xem file đính kèm).\nThời gian gia hạn nộp học phí\nmuộn nhất đến hết ngày 01/03/2026 (Chủ nhật)\n.\nHết th",
+        "lực trong năm học 2025 - 2026. Các quy định\ntrước đây trái với Quyết định này đều bãi bỏ.\n\nĐiều 3. Chánh Văn phòng, Trưởng phòng Tài chính - Kế toán và Trưởng các\nđơn vị tại Học viện Ngân hàng chịu trách nhiệm thi hành Quyết định này ./.\n\nNoi nhận:\n- Như Điều 3;\n- Lưu: VT, TCKT.\n\n~ * L\nPham Thị Hoàng ?\n\n{OC PHÍ NĂM HỌC 2025 - 2026 CHO CÁC HỆ ĐÀO TẠO\nTẠI HỌC VIỆN NGÂN HÀNG\nQuyết định số 3455/OD-HVNH ngày 28 tháng 7 năm 2025\n\ncủa Giám đóc Học viện Ngân hàng)\n\nI. ĐÀO TẠO CHÍNH QUY\n1. Chương trình đào tạo (CTĐT) đại học chính quy\n1.1. Các khóa tuyển sinh trước tự chủ tài chính (rước 01/7/2023)\n- Các CTĐT thuộc Khối ngành II !: 470.000 đồng/tín chi (tương đương\n\n7.950.000 đồng/học kỳ)\n\n- Các CTĐT thuộc Khối ngành V?: 540.000 đồng/tín chỉ (tương đương\n9.250.000 đồng/học kỳ)\n\n- Các CTĐT thuộc Khối ngành VII : 500.000 đồng/tín chỉ (tương đương\n§.450.000 đồng/học kỳ)\n1.2. Các khóa tuyển sinh sau tự chủ tài chính (từ 01/7/2023)\n\n- Các CTĐT thuộc Khối ngành II: 785.000 đồng/tín chỉ (tương đương\n1",
+        "của HVNH:\n+ Môn học bằng Tiếng Việt: 750.000 đồng/tín chỉ; -\n+ Môn học bằng Tiếng Anh: 1:250.000 đồng/tín chỉ.\n- Tổ chức học lại các môn theo chương trinh’cta CityU: Theo thỏa thuận đối tác.\n4. Chương trình cử nhân định hướng Nhật Bản\n4.1. Học phí\n- Khóa J04: 13.500.000 đồng/học kỳ\n- Khóa J05: + CTĐT thuộc Khối ngành II: 18.250.000 đồng/học kỳ\n+ CTĐT thuộc Khối ngành V: 19.000.000 đồng/học kỳ\n~ Khóa J06: + CTĐT thuộc Khối ngành III: 20.750.000 đồng/học kỳ\n+ CTĐT thuộc Khối ngành V: 21.500.000 đồng/học kỳ\n- Khóa 107: + CTDT thuộc Khối ngành III: 20.750.000 đồng/học ky\n+ CTĐT thuộc Khối ngành V: 21.500.000 đồng/học kỳ\n4.2. Thi lại, học lại\n- Tổ chức thi lại Tiếng Nhật: 700.000 đồng/lần/sinh viên (bao gồm 04 kỹ năng).\nĐối với sinh viên thi lại riêng từng kỹ năng: 175.000 đồng/kỹ năng/sinh viên.\n- Tổ chức học lại môn chuyên ngành thuộc học phần định hướng: 1.250.000\n\nđồng/ tín chỉ.\n\n5. Chương trình Thạc sĩ liên kết Đại học West of England, Anh Quốc\n- Mức học phí: — 230.000.000 đồng/khóa họ",
+        "Tiến sĩ: 20.000.000 đồng/học kỳ.\n2. Học lại\n- Đảo tạo Thạc sĩ: 1.000.000 đồng/tín chỉ.\n- Đào tạo Tiến sĩ: 1.330.000 đồng/tín chỉ.\nVI. ĐÀO TẠO LƯU HỌC SINH LÀO\n1. Đào tạo đại học: Học phí bằng học phí đại học chính quy khóa mới sau tự chủ tài chính\n\ntrong nước\n- Các CTĐT thuộc Khối ngành III: 785.000 đồng/tín chỉ\n- Các CTĐT thuộc Khối ngành V: 830.000 đồng/tín chi\n- Các CTĐT thuộc Khối ngành VII: 800.000 đồng/tín chỉ\n2. Đào tạo sau đại học: Bằng học phí sau đại học khóa mới sau tự chủ tài chính trong\nnước\n2.1. Học phí\n\n- Đào tạo Thạc sĩ: 1.000.000 đồng/tín chỉ (tương đương 15.000.000 đồng/học kỳ)\n- Đào tạo Tiến sĩ: 20.000.000 đồng/học kỳ.\n2.2. Học lại\n- Đào tạo Thạc sĩ: 1.000.000 đồng/tín chỉ.\n- Đào tạo Tiến sĩ: 1.330.000 đồng/tín chỉ.\nVIL ĐÀO TAO DOI TƯỢNG KHAC (Các trường đại học khác gửi học)\n- Mức học phí bằng học phí sinh viên Học viện khóa mới sau tự chủ tài chính.\nVII. CÁC LỚP THEO NHU CAU NGƯỜI HỌC\n1. Học phí học kỳ hè theo nhu cầu người học\n- Các CTĐT đại học chính quy thuộc Kh"
+      ],
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+          "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-gia-han-nop-hoc-phi-hoc-ky-02-nam-hoc-20252026-doi-voi-sinh-vien-he-chinh-quy-chuan-va-chat-luong-cao-111.html"
+        },
+        {
+          "title": "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/tckt/vi/07.2025/system/archivedate/47c23652_QD%203455%20Muc%20thu%20hoc%20phi%20nam%20hoc%202025%202026.pdf"
+        },
+        {
+          "title": "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/tckt/vi/07.2025/system/archivedate/47c23652_QD%203455%20Muc%20thu%20hoc%20phi%20nam%20hoc%202025%202026.pdf"
+        },
+        {
+          "title": "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/tckt/vi/07.2025/system/archivedate/47c23652_QD%203455%20Muc%20thu%20hoc%20phi%20nam%20hoc%202025%202026.pdf"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GroupHeader from "@/components/group/GroupHeader";
@@ -10,33 +9,21 @@ import EventsCardMatrix from "@/components/group/EventsCardMatrix";
 import CreatePostModal from "@/components/post/CreatePostModal";
 import { useCommunityGroup } from "@/hooks/useCommunityGroup";
 import { useCreatePost } from "@/hooks/useCreatePost";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 export default function MarketCommunityPage() {
-  const [checked, setChecked] = useState(false);
   const router = useRouter();
+  const dialog = useDialog();
 
   const communityState = useCommunityGroup();
   const createPostState = useCreatePost();
-
-  useEffect(() => {
-    if (
-      window.sessionStorage.getItem("hvnh-hub-mock-authenticated") !== "true"
-    ) {
-      router.replace("/login");
-      return;
-    }
-    setChecked(true);
-  }, [router]);
-
-  if (!checked)
-    return <main className="home-loading" aria-label="Đang tải trang hội nhóm" />;
 
   const handleMessageSeller = (sellerName: string) => {
     router.push("/messages");
   };
 
   const handleContactLandlord = (name: string, phone: string) => {
-    alert(`Liên hệ chủ nhà/người cho thuê: ${name} (${phone})`);
+    dialog.notify({title:`Liên hệ ${name}`,message:phone,tone:'default'});
   };
 
   return (
@@ -47,7 +34,7 @@ export default function MarketCommunityPage() {
           data={communityState.headerData}
           activeTab={communityState.activeTab}
           onTabChange={communityState.setActiveTab}
-          onToggleJoin={communityState.toggleJoinGroup}
+          onToggleJoin={() => router.push("/groups")}
           onOpenCreateModal={() => {
             if (communityState.activeTab === "market")
               createPostState.openModal("market");
@@ -61,6 +48,13 @@ export default function MarketCommunityPage() {
 
         {/* Dynamic Card Matrix Views */}
         <div className="group-content-area" style={{ marginTop: "24px" }}>
+          {communityState.loading && <p className="live-empty">Đang tải dữ liệu cộng đồng…</p>}
+          {communityState.error && (
+            <div className="admin-error">
+              <span>{communityState.error}</span>
+              <button type="button" onClick={() => void communityState.refetch()}>Thử lại</button>
+            </div>
+          )}
           {communityState.activeTab === "market" && (
             <MarketCardMatrix
               items={communityState.marketItems}

@@ -1,0 +1,45 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 9017.0,
+    "p50_ms": 9017,
+    "p95_ms": 9017,
+    "max_ms": 9017
+  },
+  "results": [
+    {
+      "id": "hvnh-003",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "bd28f025-50ac-432e-8a02-962ef0f83305",
+      "message_id": "ddc6793a-16bd-459e-ba6d-2199cfca697b",
+      "question": "Chương trình trao đổi sinh viên học kỳ I năm học 2026/2027 tại Đại học Kinh tế - Đại học Đà Nẵng có nội dung gì?",
+      "response": "Nội dung chương trình trao đổi sinh viên học kỳ I năm học 2026/2027 tại Trường Đại học Kinh tế - Đại học Đà Nẵng bao gồm địa điểm học tập tại số 71 Ngũ Hành Sơn, Phường Ngũ Hành Sơn, TP. Đà Nẵng [1]. Thời gian học tập kéo dài 12 tuần từ ngày 17/8/2026 đến ngày 14/11/2026, với lịch thi dự kiến từ ngày 23/11/2026 đến 05/12/2026 [1].",
+      "reference": "Địa điểm học tại Trường Đại học Kinh tế - Đại học Đà Nẵng, 71 Ngũ Hành Sơn. Thời gian học 12 tuần từ 17/08/2026 đến 14/11/2026; lịch thi dự kiến 23/11/2026 đến 05/12/2026.",
+      "latency_ms": 9017,
+      "retrieved_contexts": [
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng\nNgày 17/07/2026\n1,811 lượt xem\nTrên cơ sở thỏa thuận hợp tác giữa Trường Đại học Kinh tế - Đại học Đà Nẵng (ĐHKT) và các cơ sở đào tạo trong nước (Trường đối tác),Học viện Ngân hàng trân trọng thông báo về việc tổ chức chương trình trao đổi sinh viên trong học kỳ I năm học 2026-2027 như sau:\n1. Nội dung chương trình:\n- Địa điểm học tập: Trường Đại học Kinh tế - Đại học Đà Nẵng, 71 Ngũ Hành Sơn, Phường Ngũ Hành Sơn, TP. Đà Nẵng.\n- Thời gian: 12 tuần, từ 17/8/2026 - 14/11/2026\n- Lịch thi (dự kiến): 23/11/2026 - 05/12/2026\nDanh sách học phần: xem tại\nhttps://tinyurl.com/DSHPKYI262\n7\n2. Hồ sơ, thủ tục\nBước 1.\nSinh viên có nhu cầu nộp hồ sơ đăng ký tham gia chương trình trao để được xét và cử đi học. Hồ sơ gồm có:\n- Đơn đề nghị tham gia chương trình trao đổi sinh viên (file đính kèm);\n- Căn cước công dân (bản sao công chứng);\n* Sinh viên chọn đăng ký các lớp giảng dạy"
+      ],
+      "citations": [
+        {
+          "title": "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/thong-bao-tuyen-sinh-chuong-trinh-trao-doi-sinh-vien-hoc-ky-i-nam-hoc-20262027-tai-truong-dai-hoc-kinh-te-dai-hoc-da-nang-4040.html"
+        }
+      ]
+    }
+  ]
+}

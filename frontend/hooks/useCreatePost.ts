@@ -42,7 +42,7 @@ export interface UseCreatePostReturn {
 }
 
 export function useCreatePost(
-  onPostCreated?: (newPost: Post) => void
+  onPostCreated?: (payload: CreatePostPayload) => Promise<Post | null>
 ): UseCreatePostReturn {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState("");
@@ -119,15 +119,18 @@ export function useCreatePost(
     const newMedia: PostMedia[] = fileArray.map((file, idx) => ({
       id: `${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
       url: URL.createObjectURL(file),
-      type: file.type.startsWith("video/") ? "video" : "image",
+      type: file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("image/") ? "image" : "file",
       name: file.name,
       size: file.size,
+      file,
+      uploadProgress: 0,
+      uploadStatus: "pending",
     }));
     setMediaList((prev) => [...prev, ...newMedia]);
   }, []);
 
   const removeMedia = useCallback((id: string) => {
-    setMediaList((prev) => prev.filter((m) => m.id !== id));
+    setMediaList((prev) => {const removed=prev.find(item=>item.id===id);if(removed?.url.startsWith('blob:'))URL.revokeObjectURL(removed.url);return prev.filter((m) => m.id !== id);});
   }, []);
 
   const submitPost = useCallback(async (): Promise<Post | null> => {
@@ -140,9 +143,6 @@ export function useCreatePost(
     setError(null);
 
     try {
-      // Simulate backend API call with delay
-      await new Promise((res) => setTimeout(res, 800));
-
       const payload: CreatePostPayload = {
         content: content.trim(),
         category,
@@ -153,33 +153,12 @@ export function useCreatePost(
         marketListing: category === "market" ? marketListing : undefined,
         roomListing: category === "roommate" ? roomListing : undefined,
         eventListing: category === "event" ? eventListing : undefined,
+        onUploadProgress: (mediaId, progress, status, uploadError, uploadedMediaId) => setMediaList(previous => previous.map(item => item.id === mediaId ? {...item, uploadProgress: progress, uploadStatus: status, uploadError, uploadedMediaId: uploadedMediaId||item.uploadedMediaId} : item)),
       };
 
-      const createdPost: Post = {
-        id: `post-${Date.now()}`,
-        author: {
-          id: "usr-current",
-          name: "Sinh viên HVNH",
-          avatar: "SV",
-          role: "Sinh viên K25",
-          isVerified: true,
-        },
-        createdAt: "Vừa xong",
-        content: payload.content,
-        category: payload.category,
-        privacy: payload.privacy,
-        media: payload.media,
-        likesCount: 0,
-        commentsCount: 0,
-        isLiked: false,
-        marketListing: payload.marketListing,
-        roomListing: payload.roomListing,
-        eventListing: payload.eventListing,
-      };
-
-      if (onPostCreated) {
-        onPostCreated(createdPost);
-      }
+      if (!onPostCreated) throw new Error("Chưa cấu hình API đăng bài.");
+      const createdPost = await onPostCreated(payload);
+      if (!createdPost) throw new Error("Đăng bài không thành công.");
 
       resetForm();
       closeModal();

@@ -43,7 +43,10 @@ export default function OwnProfilePage() {
     setListingsCategory,
     updateBio,
     updateProfile,
+    updateAvatar,
+    updateCover,
     handleFriendAction,
+    unfriendById,
     handleCreatePost,
     refetchData,
   } = useProfile();
@@ -92,7 +95,7 @@ export default function OwnProfilePage() {
         onTabChange={setActiveTab}
         onOpenEditModal={() => setIsEditModalOpen(true)}
         onFriendAction={handleFriendAction}
-        onUpdateAvatarPhoto={(newAvatarUrl) => updateProfile({ avatar: newAvatarUrl })}
+        onUpdateAvatarPhoto={() => setIsEditModalOpen(true)}
       />
 
       {/* Main Profile Body Content Area */}
@@ -113,6 +116,8 @@ export default function OwnProfilePage() {
                 listings={listings}
                 onSeeAllListings={setActiveTab}
               />
+              <ProfilePhotosWidget photos={photos} onSeeAllPhotos={setActiveTab} />
+              <ProfileFriendsWidget friends={friends} friendsCount={profile.friendsCount} onSeeAllFriends={setActiveTab} />
             </aside>
 
             {/* Right Column (Timeline Feed: 65%) */}
@@ -140,6 +145,14 @@ export default function OwnProfilePage() {
           />
         )}
 
+        {activeTab === 'friends' && (
+          <ProfileFriendsTab friends={friends} isOwnProfile={isOwnProfile} searchQuery={friendsSearch} filter={friendsFilter} onSearchChange={setFriendsSearch} onFilterChange={setFriendsFilter} onUnfriend={unfriendById} />
+        )}
+
+        {activeTab === 'photos' && (
+          <ProfilePhotosTab photos={photos} subTab={photosSubTab} onSubTabChange={setPhotosSubTab} />
+        )}
+
         {/* 3. My Listings Tab Sub-View */}
         {activeTab === 'listings' && (
           <ProfileListingsTab
@@ -157,6 +170,8 @@ export default function OwnProfilePage() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onSave={updateProfile}
+        onUploadAvatar={updateAvatar}
+        onUploadCover={updateCover}
       />
     </div>
   );

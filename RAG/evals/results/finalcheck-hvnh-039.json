@@ -1,0 +1,38 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 8018.0,
+    "p50_ms": 8018,
+    "p95_ms": 8018,
+    "max_ms": 8018
+  },
+  "results": [
+    {
+      "id": "hvnh-039",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": true,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 0,
+      "conversation_id": "e53904e3-bb7f-4808-9a4b-2b4045567aff",
+      "message_id": "5c192636-d8ed-4ddc-b47f-219d672391cf",
+      "question": "Ngày mai Học viện chắc chắn có cho sinh viên nghỉ học không?",
+      "response": "Tôi chưa tìm thấy thông tin phù hợp trong các nguồn chính thức đã được lập chỉ mục.",
+      "reference": "Hệ thống phải từ chối hoặc nói không có đủ nguồn chính thức để trả lời.",
+      "latency_ms": 8018,
+      "retrieved_contexts": [],
+      "citations": []
+    }
+  ]
+}

@@ -17,9 +17,10 @@ import {
   fetchUserPhotos,
   fetchUserListings,
   updateUserProfile,
+  uploadProfileAvatar,
+  uploadProfileCover,
   updateFriendshipStatus,
   createProfilePost,
-  CURRENT_USER_MOCK,
 } from '@/lib/api';
 
 export interface UseProfileReturn {
@@ -51,7 +52,10 @@ export interface UseProfileReturn {
   setListingsCategory: (category: string) => void;
   updateBio: (newBio: string) => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  updateAvatar: (file: File, caption: string, visibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => Promise<void>;
+  updateCover: (file: File) => Promise<void>;
   handleFriendAction: (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => Promise<void>;
+  unfriendById: (friendId: string) => Promise<void>;
   handleCreatePost: (payload: CreatePostPayload) => Promise<Post | null>;
   refetchData: () => Promise<void>;
 }
@@ -76,8 +80,8 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
   const [photosSubTab, setPhotosSubTab] = useState<'of_you' | 'your_photos' | 'albums'>('your_photos');
   const [listingsCategory, setListingsCategory] = useState<string>('all');
 
-  const resolvedUserId = targetUserId || CURRENT_USER_MOCK.id;
-  const isOwnProfile = !targetUserId || targetUserId === CURRENT_USER_MOCK.id || targetUserId === 'me';
+  const resolvedUserId = targetUserId || 'me';
+  const isOwnProfile = !targetUserId || targetUserId === 'me' || profile?.friendshipStatus === 'self';
 
   const loadProfileData = useCallback(async () => {
     setIsLoading(true);
@@ -88,10 +92,10 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
       setProfile(profileData);
 
       const [userPosts, userFriends, userPhotos, userListings] = await Promise.all([
-        fetchUserPosts(resolvedUserId),
-        fetchUserFriends(resolvedUserId),
-        fetchUserPhotos(resolvedUserId),
-        fetchUserListings(resolvedUserId),
+        fetchUserPosts(profileData.id),
+        fetchUserFriends(profileData.id),
+        fetchUserPhotos(profileData.id),
+        fetchUserListings(profileData.id),
       ]);
 
       setPosts(userPosts);
@@ -124,11 +128,21 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     if (!profile) return;
     try {
       const updated = await updateUserProfile(data);
-      setProfile(updated);
+      setProfile((previous) => ({ ...updated, avatar: data.avatar ?? previous?.avatar ?? updated.avatar }));
       setIsEditModalOpen(false);
     } catch (err: unknown) {
       console.error('Lỗi cập nhật hồ sơ:', err);
     }
+  };
+
+  const updateAvatar = async (file: File, caption: string, visibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => {
+    const avatar = await uploadProfileAvatar(file, caption, visibility);
+    setProfile((previous) => previous ? { ...previous, avatar } : previous);
+  };
+
+  const updateCover = async (file: File) => {
+    const coverBanner = await uploadProfileCover(file);
+    setProfile((previous) => previous ? { ...previous, coverBanner } : previous);
   };
 
   const handleFriendAction = async (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => {
@@ -136,9 +150,16 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     try {
       const res = await updateFriendshipStatus(profile.id, action);
       setProfile((prev) => (prev ? { ...prev, friendshipStatus: res.status as FriendshipStatus } : null));
+      if (action === 'accept' || action === 'unfriend') await loadProfileData();
     } catch (err: unknown) {
       console.error('Lỗi tương tác bạn bè:', err);
     }
+  };
+
+  const unfriendById = async (friendId: string) => {
+    await updateFriendshipStatus(friendId, 'unfriend');
+    setFriends((previous) => previous.filter((friend) => friend.id !== friendId));
+    setProfile((previous) => previous ? { ...previous, friendsCount: Math.max(0, previous.friendsCount - 1) } : previous);
   };
 
   const handleCreatePost = async (payload: CreatePostPayload): Promise<Post | null> => {
@@ -180,7 +201,10 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     setListingsCategory,
     updateBio,
     updateProfile,
+    updateAvatar,
+    updateCover,
     handleFriendAction,
+    unfriendById,
     handleCreatePost,
     refetchData: loadProfileData,
   };

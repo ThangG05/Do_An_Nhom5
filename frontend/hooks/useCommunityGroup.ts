@@ -1,310 +1,112 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import {
-  GroupTab,
-  MarketItem,
-  RoomItem,
-  EventItem,
-  GroupHeaderData,
-  EventUserStatus,
-} from "@/types/group";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchFeed, fetchGroups } from "@/lib/api";
+import type { Post } from "@/types/post";
+import type { EventItem, EventUserStatus, GroupHeaderData, GroupTab, MarketItem, RoomItem } from "@/types/group";
 
-const INITIAL_HEADER_DATA: GroupHeaderData = {
-  id: "grp-hvnh-hub",
-  title: "Cộng Đồng Sinh Viên HVNH",
-  description:
-    "Không gian trao đổi giáo trình, pass đồ dùng cá nhân, tìm phòng trọ/ở ghép và cập nhật các sự kiện chính thức tại Học viện Ngân hàng.",
-  bannerImage: "https://picsum.photos/seed/hvnh-campus-banner/1400/420",
-  avatarImage: "BAV",
-  memberCount: 14280,
-  postCount: 3520,
-  isJoined: true,
+const EMPTY_HEADER: GroupHeaderData = {
+  id: "community", title: "Cộng đồng sinh viên HVNH",
+  description: "Các bài đăng Pass đồ, phòng trọ và sự kiện từ cộng đồng HVNH Hub.",
+  bannerImage: "", avatarImage: "BAV", memberCount: 0, postCount: 0, isJoined: false,
 };
 
-const INITIAL_MARKET_ITEMS: MarketItem[] = [
-  {
-    id: "mkt-1",
-    title: "Pass lại Giáo trình Tài chính Doanh nghiệp K24 (Mới 99%)",
-    price: "45.000đ",
-    originalPrice: "90.000đ",
-    condition: "Like New",
-    location: "KTX Học viện Ngân hàng",
-    sellerName: "Lê Minh Anh",
-    sellerAvatar: "MA",
-    sellerPhone: "0987123456",
-    image: "https://picsum.photos/seed/finance-book/600/400",
-    category: "Giáo trình & Tài liệu",
-    status: "available",
-    createdAt: "30 phút trước",
-  },
-  {
-    id: "mkt-2",
-    title: "Thanh lý Máy tính Casio fx-580VN X chính hãng tem BITEX",
-    price: "320.000đ",
-    originalPrice: "650.000đ",
-    condition: "Like New",
-    location: "Ngõ 12 Chùa Bộc, Đống Đa",
-    sellerName: "Nguyễn Hoàng Nam",
-    sellerAvatar: "HN",
-    sellerPhone: "0912345678",
-    image: "https://picsum.photos/seed/casio-calculator/600/400",
-    category: "Đồ dùng học tập",
-    status: "available",
-    createdAt: "2 giờ trước",
-  },
-  {
-    id: "mkt-3",
-    title: "Xe máy Wave Alpha 2021 chính chủ biển Hà Nội - Xe đi giữ gìn",
-    price: "13.500.000đ",
-    condition: "Used",
-    location: "Cổng phụ HVNH - Chùa Bộc",
-    sellerName: "Trần Đức Tiến",
-    sellerAvatar: "DT",
-    sellerPhone: "0978999888",
-    image: "https://picsum.photos/seed/wave-motorbike/600/400",
-    category: "Phương tiện đi lại",
-    status: "available",
-    createdAt: "5 giờ trước",
-  },
-  {
-    id: "mkt-4",
-    title: "Tai nghe Bluetooth Sony WH-1000XM4 chống ồn cao cấp",
-    price: "3.800.000đ",
-    originalPrice: "6.900.000đ",
-    condition: "Like New",
-    location: "Khu tập thể Ngân Hàng",
-    sellerName: "Phạm Thu Trang",
-    sellerAvatar: "TT",
-    sellerPhone: "0934567890",
-    image: "https://picsum.photos/seed/sony-headphone/600/400",
-    category: "Đồ điện tử",
-    status: "sold",
-    createdAt: "1 ngày trước",
-  },
-];
+const imageOf = (post: Post) => post.media?.find((item) => item.type === "image")?.url || "";
 
-const INITIAL_ROOM_ITEMS: RoomItem[] = [
-  {
-    id: "rm-1",
-    title: "Cho thuê phòng trọ khép kín full đồ ngõ 43 Chùa Bộc - Cách cổng trường 200m",
-    rentPerMonth: "3.200.000đ",
-    area: "28 m²",
-    address: "Ngõ 43 Chùa Bộc, Đống Đa, Hà Nội",
-    distanceToSchool: "200m (Đi bộ 3 phút)",
-    amenities: ["Điều hòa", "Nóng lạnh", "Máy giặt", "Ban công", "Không chung chủ"],
-    status: "available",
-    landlordName: "Cô Hương (Chủ nhà)",
-    landlordPhone: "0912888999",
-    image: "https://picsum.photos/seed/room-studio/600/400",
-    createdAt: "1 giờ trước",
-  },
-  {
-    id: "rm-2",
-    title: "Tìm 1 nữ ở ghép căn hộ chung cư 2PN gần Học viện Ngân hàng",
-    rentPerMonth: "2.100.000đ",
-    area: "65 m²",
-    address: "Chung cư Star City, Lê Văn Lương",
-    distanceToSchool: "1.2 km",
-    amenities: ["Điều hòa", "Nóng lạnh", "Tủ lạnh", "Sàn gỗ", "Thang máy", "Cho nuôi pet"],
-    status: "available",
-    landlordName: "Nguyễn Phương Thảo",
-    landlordPhone: "0945666777",
-    image: "https://picsum.photos/seed/apartment-living/600/400",
-    createdAt: "4 giờ trước",
-  },
-  {
-    id: "rm-3",
-    title: "Phòng trọ giá rẻ cho nam sinh viên gần KTX Ngân Hàng",
-    rentPerMonth: "1.800.000đ",
-    area: "18 m²",
-    address: "Ngõ 165 Chùa Bộc, Đống Đa",
-    distanceToSchool: "350m",
-    amenities: ["Nóng lạnh", "Có chỗ để xe", "An ninh tốt"],
-    status: "rented",
-    landlordName: "Chú Tuấn",
-    landlordPhone: "0904123123",
-    image: "https://picsum.photos/seed/budget-room/600/400",
-    createdAt: "2 ngày trước",
-  },
-];
+function marketItem(post: Post): MarketItem {
+  const condition = post.marketListing?.condition;
+  return {
+    id: post.id, title: post.content || "Bài đăng Pass đồ",
+    price: post.marketListing?.price || "Liên hệ",
+    condition: condition === "Brand New" || condition === "Like New" ? condition : "Used",
+    location: post.marketListing?.location || "Chưa cập nhật địa điểm",
+    sellerName: post.author.name, sellerAvatar: post.author.avatar,
+    image: imageOf(post), category: "Bài đăng cộng đồng", status: "available",
+    createdAt: post.createdAt,
+  };
+}
 
-const INITIAL_EVENT_ITEMS: EventItem[] = [
-  {
-    id: "evt-1",
-    title: "Chào Tân Sinh Viên K27 - BA Youth Festival 2026",
-    day: "15",
-    month: "Tháng 9",
-    time: "18:30 - 22:00",
-    location: "Sân vận động Học viện Ngân hàng",
-    organizer: "Đoàn Thanh Niên & Hội Sinh Viên HVNH",
-    coverImage: "https://picsum.photos/seed/campus-festival/800/450",
-    goingCount: 1450,
-    interestedCount: 3200,
-    userStatus: "going",
-    createdAt: "2 ngày trước",
-  },
-  {
-    id: "evt-2",
-    title: "Workshop: Định Hướng Nghề Nghiệp Ngành Fintech & Ngân Hàng Số",
-    day: "22",
-    month: "Tháng 9",
-    time: "08:30 - 11:30",
-    location: "Hội trường D1 - HVNH",
-    organizer: "Khoa Ngân Hàng & CLB Nhà Đầu Tư Trẻ",
-    coverImage: "https://picsum.photos/seed/fintech-workshop/800/450",
-    goingCount: 380,
-    interestedCount: 890,
-    userStatus: "interested",
-    createdAt: "3 ngày trước",
-  },
-  {
-    id: "evt-3",
-    title: "Giải Bóng Đá Nam Sinh Viên HVNH Cup 2026",
-    day: "05",
-    month: "Tháng 10",
-    time: "07:30 - 17:30",
-    location: "Sân bóng đá cỏ nhân tạo HVNH",
-    organizer: "CLB Thể Thao HVNH",
-    coverImage: "https://picsum.photos/seed/football-cup/800/450",
-    goingCount: 620,
-    interestedCount: 1100,
-    userStatus: null,
-    createdAt: "5 ngày trước",
-  },
-];
+function roomItem(post: Post): RoomItem {
+  return {
+    id: post.id, title: post.content || "Bài đăng phòng trọ",
+    rentPerMonth: post.roomListing?.rentPerMonth || "Liên hệ",
+    area: post.roomListing?.area || "Chưa cập nhật",
+    address: post.roomListing?.location || "Chưa cập nhật địa chỉ",
+    distanceToSchool: "Chưa cập nhật", amenities: post.roomListing?.amenities || [],
+    status: "available", landlordName: post.author.name, landlordPhone: "",
+    image: imageOf(post), createdAt: post.createdAt,
+  };
+}
+
+function eventItem(post: Post): EventItem {
+  const parsed = post.eventListing?.eventDate ? new Date(post.eventListing.eventDate) : null;
+  const date = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+  return {
+    id: post.id, title: post.content || "Sự kiện HVNH",
+    day: date ? String(date.getDate()).padStart(2, "0") : "--",
+    month: date ? `Tháng ${date.getMonth() + 1}` : "Chưa cập nhật",
+    time: post.eventListing?.eventTime || "Chưa cập nhật",
+    location: post.eventListing?.location || "Chưa cập nhật địa điểm",
+    organizer: post.eventListing?.organizer || post.author.name,
+    coverImage: imageOf(post), goingCount: 0, interestedCount: 0,
+    userStatus: null, createdAt: post.createdAt,
+  };
+}
 
 export function useCommunityGroup() {
   const [activeTab, setActiveTab] = useState<GroupTab>("market");
-  const [headerData, setHeaderData] = useState<GroupHeaderData>(INITIAL_HEADER_DATA);
-  const [marketItems, setMarketItems] = useState<MarketItem[]>(INITIAL_MARKET_ITEMS);
-  const [roomItems, setRoomItems] = useState<RoomItem[]>(INITIAL_ROOM_ITEMS);
-  const [eventItems, setEventItems] = useState<EventItem[]>(INITIAL_EVENT_ITEMS);
-
-  // Filters state
+  const [headerData, setHeaderData] = useState<GroupHeaderData>(EMPTY_HEADER);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [marketConditionFilter, setMarketConditionFilter] = useState<string>("all");
-  const [marketStatusFilter, setMarketStatusFilter] = useState<string>("all");
-  const [roomStatusFilter, setRoomStatusFilter] = useState<string>("all");
+  const [marketConditionFilter, setMarketConditionFilter] = useState("all");
+  const [marketStatusFilter, setMarketStatusFilter] = useState("all");
+  const [roomStatusFilter, setRoomStatusFilter] = useState("all");
 
-  const toggleJoinGroup = useCallback(() => {
-    setHeaderData((prev) => ({
-      ...prev,
-      isJoined: !prev.isJoined,
-      memberCount: prev.isJoined ? prev.memberCount - 1 : prev.memberCount + 1,
-    }));
+  const load = useCallback(async () => {
+    setLoading(true); setError("");
+    try {
+      const [feed, groups] = await Promise.all([fetchFeed(100), fetchGroups()]);
+      setPosts(feed);
+      setHeaderData({
+        ...EMPTY_HEADER,
+        memberCount: groups.reduce((total, group) => total + group.member_count, 0),
+        postCount: feed.filter((post) => ["market", "roommate", "event"].includes(post.category)).length,
+        isJoined: groups.some((group) => group.membership === "MEMBER" || group.membership === "ADMIN"),
+      });
+    } catch (reason) {
+      setPosts([]); setHeaderData(EMPTY_HEADER);
+      setError(reason instanceof Error ? reason.message : "Không thể tải dữ liệu cộng đồng.");
+    } finally { setLoading(false); }
   }, []);
 
-  const toggleSoldStatus = useCallback((itemId: string) => {
-    setMarketItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const nextStatus = item.status === "available" ? "sold" : "available";
-          return { ...item, status: nextStatus };
-        }
-        return item;
-      })
-    );
-  }, []);
+  useEffect(() => { void load(); }, [load]);
 
-  const toggleEventStatus = useCallback(
-    (eventId: string, targetStatus: EventUserStatus) => {
-      setEventItems((prev) =>
-        prev.map((evt) => {
-          if (evt.id === eventId) {
-            const currentStatus = evt.userStatus;
-            let nextStatus: EventUserStatus = targetStatus;
-            let goingDelta = 0;
-            let interestedDelta = 0;
+  const marketItems = useMemo(() => posts.filter((post) => post.category === "market").map(marketItem).filter((item) => {
+    const query = searchQuery.toLocaleLowerCase("vi");
+    return (!query || item.title.toLocaleLowerCase("vi").includes(query) || item.location.toLocaleLowerCase("vi").includes(query))
+      && (marketConditionFilter === "all" || item.condition === marketConditionFilter)
+      && (marketStatusFilter === "all" || item.status === marketStatusFilter);
+  }), [posts, searchQuery, marketConditionFilter, marketStatusFilter]);
 
-            if (currentStatus === targetStatus) {
-              nextStatus = null;
-              if (targetStatus === "going") goingDelta = -1;
-              if (targetStatus === "interested") interestedDelta = -1;
-            } else {
-              if (currentStatus === "going") goingDelta -= 1;
-              if (currentStatus === "interested") interestedDelta -= 1;
+  const roomItems = useMemo(() => posts.filter((post) => post.category === "roommate").map(roomItem).filter((item) => {
+    const query = searchQuery.toLocaleLowerCase("vi");
+    return (!query || item.title.toLocaleLowerCase("vi").includes(query) || item.address.toLocaleLowerCase("vi").includes(query))
+      && (roomStatusFilter === "all" || item.status === roomStatusFilter);
+  }), [posts, searchQuery, roomStatusFilter]);
 
-              if (targetStatus === "going") goingDelta += 1;
-              if (targetStatus === "interested") interestedDelta += 1;
-            }
-
-            return {
-              ...evt,
-              userStatus: nextStatus,
-              goingCount: Math.max(0, evt.goingCount + goingDelta),
-              interestedCount: Math.max(0, evt.interestedCount + interestedDelta),
-            };
-          }
-          return evt;
-        })
-      );
-    },
-    []
-  );
-
-  // Filtered lists
-  const filteredMarketItems = useMemo(() => {
-    return marketItems.filter((item) => {
-      const matchQuery =
-        !searchQuery ||
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchCondition =
-        marketConditionFilter === "all" || item.condition === marketConditionFilter;
-
-      const matchStatus =
-        marketStatusFilter === "all" || item.status === marketStatusFilter;
-
-      return matchQuery && matchCondition && matchStatus;
-    });
-  }, [marketItems, searchQuery, marketConditionFilter, marketStatusFilter]);
-
-  const filteredRoomItems = useMemo(() => {
-    return roomItems.filter((item) => {
-      const matchQuery =
-        !searchQuery ||
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.address.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchStatus =
-        roomStatusFilter === "all" || item.status === roomStatusFilter;
-
-      return matchQuery && matchStatus;
-    });
-  }, [roomItems, searchQuery, roomStatusFilter]);
-
-  const filteredEventItems = useMemo(() => {
-    return eventItems.filter((item) => {
-      return (
-        !searchQuery ||
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.location.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    });
-  }, [eventItems, searchQuery]);
+  const eventItems = useMemo(() => posts.filter((post) => post.category === "event").map(eventItem).filter((item) => {
+    const query = searchQuery.toLocaleLowerCase("vi");
+    return !query || item.title.toLocaleLowerCase("vi").includes(query) || item.location.toLocaleLowerCase("vi").includes(query);
+  }), [posts, searchQuery]);
 
   return {
-    activeTab,
-    setActiveTab,
-    headerData,
-    toggleJoinGroup,
-    searchQuery,
-    setSearchQuery,
-    // Market
-    marketItems: filteredMarketItems,
-    marketConditionFilter,
-    setMarketConditionFilter,
-    marketStatusFilter,
-    setMarketStatusFilter,
-    toggleSoldStatus,
-    // Room
-    roomItems: filteredRoomItems,
-    roomStatusFilter,
-    setRoomStatusFilter,
-    // Event
-    eventItems: filteredEventItems,
-    toggleEventStatus,
+    activeTab, setActiveTab, headerData, toggleJoinGroup: () => undefined,
+    searchQuery, setSearchQuery, marketItems, marketConditionFilter, setMarketConditionFilter,
+    marketStatusFilter, setMarketStatusFilter, toggleSoldStatus: () => undefined,
+    roomItems, roomStatusFilter, setRoomStatusFilter, eventItems,
+    toggleEventStatus: (_eventId: string, _targetStatus: EventUserStatus) => undefined,
+    loading, error, refetch: load,
   };
 }

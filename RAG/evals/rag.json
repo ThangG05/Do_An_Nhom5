@@ -1,0 +1,17 @@
+[
+  {
+    "question": "Chuẩn đầu ra ngoại ngữ VSTEP cho sinh viên Học viện Ngân hàng như thế nào?",
+    "expected_source_title_contains": "VSTEP",
+    "expected_refused": false
+  },
+  {
+    "question": "Học viện có hoạt động hỗ trợ tâm lý nào cho sinh viên?",
+    "expected_source_title_contains": "hỗ trợ tâm lý",
+    "expected_refused": false
+  },
+  {
+    "question": "Nội quy Học viện năm học 2024/2025 quy định điều gì?",
+    "expected_source_title_contains": null,
+    "expected_refused": true
+  }
+]

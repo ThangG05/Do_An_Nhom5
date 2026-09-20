@@ -1,0 +1,12 @@
+services:
+  api:
+    environment:
+      HOME: /home/app
+    volumes:
+      - "${USERPROFILE}/.modal.toml:/home/app/.modal.toml:ro"
+
+  pipeline-worker:
+    environment:
+      HOME: /home/app
+    volumes:
+      - "${USERPROFILE}/.modal.toml:/home/app/.modal.toml:ro"

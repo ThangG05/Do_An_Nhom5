@@ -1,0 +1,11 @@
+[
+  {
+    "user_input": "Giảng viên Triệu Thu Hương là ai và phụ trách những học phần nào?",
+    "response": "Giảng viên Triệu Thu Hương là Trưởng Bộ môn Công nghệ thông tin (thuộc bộ môn Tin học quản lý) và phụ trách các học phần: Tin học đại cương, Cơ sở lập trình 1, Lập trình Web [1].",
+    "retrieved_contexts": [
+      "Triệu Thu Hương\nTrưởng BM CNTT\nhuongtrieu@hvnh.edu.vn\nThông tin thày/cô\nBộ môn:\nTin học quản lý\nPhụ trách học phần:\nTin học đại cương, Cơ sở lập trình 1, Lập trình Web\nChuyên môn:\nTS, ThS, ĐH\nĐịnh hướng nghiên cứu\nĐang cập nhật..."
+    ],
+    "reference": "Triệu Thu Hương Trưởng BM CNTT huongtrieu@hvnh.edu.vn Thông tin thày/cô Bộ môn: Tin học quản lý Phụ trách học phần: Tin học đại cương, Cơ sở lập trình 1, Lập trình Web Chuyên môn: TS, ThS, ĐH Định hướng nghiên cứu Đang cập nhật...",
+    "case_id": "hvnh-042"
+  }
+]

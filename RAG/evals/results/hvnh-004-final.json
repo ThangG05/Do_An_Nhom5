@@ -1,0 +1,26 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "hvnh-004",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "b124aaac-4713-4871-afd0-f519e7fcd56b",
+      "message_id": "9b0fbfd8-eee8-4d38-bbb7-9a318454f6b3",
+      "citations": [
+        {
+          "title": "[CHƯƠNG TRÌNH TRAO ĐỔI SINH VIÊN]",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/truong-dai-hoc-kinh-te-dai-hoc-da-nang-thong-bao-chuong-trinh-trao-doi-sinh-vien-trong-hoc-ky-he-2025-2026-danh-cho-sinh-vien-cac-truong-doi-tac-3852.html"
+        }
+      ]
+    }
+  ]
+}

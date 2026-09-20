@@ -4,6 +4,8 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { UserProfile, ProfileTabType } from '@/types/user';
 import ProfileNavTabs from './ProfileNavTabs';
+import { safeImageSrc } from '@/lib/media';
+import { useDialog } from '@/components/ui/DialogProvider';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -24,6 +26,7 @@ export default function ProfileHeader({
   onFriendAction,
   onUpdateAvatarPhoto,
 }: ProfileHeaderProps) {
+  const dialog = useDialog();
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -32,12 +35,12 @@ export default function ProfileHeader({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn tệp định dạng ảnh (JPEG, PNG, WEBP).');
+      dialog.notify({title:'Tệp không hợp lệ',message:'Vui lòng chọn ảnh JPEG, PNG hoặc WEBP.',tone:'danger'});
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Kích thước ảnh tối đa 5MB.');
+      dialog.notify({title:'Ảnh quá lớn',message:'Kích thước ảnh tối đa là 5 MB.',tone:'danger'});
       return;
     }
 
@@ -115,13 +118,18 @@ export default function ProfileHeader({
         onChange={handleAvatarFileChange}
       />
 
+      <div className="profile-cover-banner">
+        <img src={safeImageSrc(profile.coverBanner)} alt={`Ảnh bìa của ${profile.name}`} className="cover-banner-img" />
+        <div className="cover-banner-gradient-overlay" aria-hidden="true" />
+      </div>
+
       {/* Elevated Profile Info Card */}
       <div className="profile-info-section">
         <div className="profile-info-content">
           {/* Avatar Container with Online Indicator */}
           <div className="profile-avatar-wrapper">
             <img
-              src={profile.avatar}
+              src={safeImageSrc(profile.avatar)}
               alt={profile.name}
               className="profile-avatar-img"
             />
@@ -132,7 +140,7 @@ export default function ProfileHeader({
               <button
                 type="button"
                 className="edit-avatar-badge-btn text-only-badge"
-                onClick={() => avatarInputRef.current?.click()}
+                onClick={onOpenEditModal}
                 aria-label="Chỉnh sửa ảnh đại diện"
               >
                 <span>Đổi ảnh</span>
@@ -144,11 +152,6 @@ export default function ProfileHeader({
           <div className="profile-identity-details">
             <div className="name-and-verification">
               <h1 className="profile-full-name">{profile.name}</h1>
-              {profile.isVerified && (
-                <span className="verified-badge-check" title="Tài khoản sinh viên HVNH đã xác thực">
-                  ✓
-                </span>
-              )}
             </div>
 
             <div className="profile-sub-meta">

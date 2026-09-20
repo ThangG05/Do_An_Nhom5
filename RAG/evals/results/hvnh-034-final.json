@@ -1,0 +1,26 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "hvnh-034",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "a121e550-b254-48cd-9a11-4c049bcac93b",
+      "message_id": "a0150ad5-0148-444e-8a83-e2b67ad7539d",
+      "citations": [
+        {
+          "title": "Thông báo Tuyển sinh Khóa 02 Chương trình Tiến sĩ Doctor of Philosophy UWE, Bristol (Vương quốc Anh)",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-tuyen-sinh-khoa-02-chuong-trinh-tien-si-doctor-of-philosophy-uwe-bristol-vuong-quoc-anh-4051.html"
+        }
+      ]
+    }
+  ]
+}

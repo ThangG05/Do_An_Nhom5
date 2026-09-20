@@ -2,6 +2,10 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  requestRegistrationCode,
+  verifyRegistrationCode,
+} from "@/lib/auth";
 
 type VerificationFormProps = {
   email: string;
@@ -11,6 +15,7 @@ export default function VerificationForm({ email }: VerificationFormProps) {
   const [code, setCode] = useState(["", "", "", ""]);
   const [seconds, setSeconds] = useState(60);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const router = useRouter();
 
@@ -39,19 +44,41 @@ export default function VerificationForm({ email }: VerificationFormProps) {
       inputRefs.current[index - 1]?.focus();
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (code.some((digit) => !digit)) {
       setMessage("Vui lòng nhập đủ 4 chữ số xác thực.");
       return;
     }
-    router.push(`/password?email=${encodeURIComponent(email)}`);
+    setIsLoading(true);
+    setMessage("");
+    try {
+      const result = await verifyRegistrationCode(email, code.join(""));
+      window.sessionStorage.setItem(
+        "hvnh-hub-registration-token",
+        result.registration_token,
+      );
+      router.push("/password");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Mã xác thực không hợp lệ.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  function resendCode() {
+  async function resendCode() {
     if (seconds > 0) return;
-    setSeconds(60);
-    setMessage("Mã xác thực mới đã được gửi.");
+    setIsLoading(true);
+    setMessage("");
+    try {
+      await requestRegistrationCode(email);
+      setSeconds(60);
+      setMessage("Mã xác thực mới đã được gửi.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể gửi lại mã.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -75,13 +102,13 @@ export default function VerificationForm({ email }: VerificationFormProps) {
       </div>
       <p className="resend-copy">
         Chưa nhận được mã?{" "}
-        <button type="button" onClick={resendCode} disabled={seconds > 0}>
+        <button type="button" onClick={resendCode} disabled={seconds > 0 || isLoading}>
           Gửi lại{" "}
           {seconds > 0 ? `trong 0:${String(seconds).padStart(2, "0")}` : "mã"}
         </button>
       </p>
-      <button className="verification-submit" type="submit">
-        Tiếp tục
+      <button className="verification-submit" type="submit" disabled={isLoading}>
+        {isLoading ? "Đang xác thực…" : "Tiếp tục"}
       </button>
       {message ? (
         <p className="verification-message" role="status">

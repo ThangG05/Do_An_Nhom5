@@ -14,8 +14,11 @@ import ProfileFriendsTab from '@/components/profile/ProfileFriendsTab';
 import ProfilePhotosTab from '@/components/profile/ProfilePhotosTab';
 import ProfileListingsTab from '@/components/profile/ProfileListingsTab';
 import EditProfileModal from '@/components/profile/EditProfileModal';
+import { createReport, setUserBlocked } from '@/lib/api';
+import { useDialog } from '@/components/ui/DialogProvider';
 
 export default function VisitorProfilePage() {
+  const dialog = useDialog();
   const params = useParams();
   const userId = (params?.id as string) || '102';
 
@@ -48,6 +51,7 @@ export default function VisitorProfilePage() {
     updateBio,
     updateProfile,
     handleFriendAction,
+    unfriendById,
     handleCreatePost,
     refetchData,
   } = useProfile(userId);
@@ -93,6 +97,17 @@ export default function VisitorProfilePage() {
         onOpenEditModal={() => setIsEditModalOpen(true)}
         onFriendAction={handleFriendAction}
       />
+      {!isOwnProfile && (
+        <div className="profile-report-row">
+          <button type="button" className="btn btn-secondary btn-sm" onClick={async () => {
+            const reason = await dialog.prompt({title:'Báo cáo tài khoản',message:`Mô tả hành vi vi phạm của ${profile.name}.`,placeholder:'Lý do báo cáo...',multiline:true,minLength:5,tone:'danger'});
+            if (!reason) return;
+            try { await createReport('USER', profile.id, reason); dialog.notify({title:'Đã gửi báo cáo',message:'Quản trị viên sẽ xem xét nội dung này.',tone:'success'}); }
+            catch (error) { dialog.notify({title:'Không thể gửi báo cáo',message:error instanceof Error ? error.message : undefined,tone:'danger'}); }
+          }}>Báo cáo tài khoản</button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={async()=>{if(!await dialog.confirm({title:'Chặn người dùng?',message:'Hai bên sẽ không thể xem hồ sơ, kết bạn hoặc nhắn tin. Quan hệ bạn bè hiện tại sẽ bị hủy.',confirmLabel:'Chặn người dùng',tone:'danger'}))return;try{await setUserBlocked(profile.id,true);window.location.assign('/home');}catch(error){dialog.notify({title:'Không thể chặn người dùng',message:error instanceof Error?error.message:undefined,tone:'danger'});}}}>Chặn người dùng</button>
+        </div>
+      )}
 
       {/* Main Profile Body Content Area */}
       <main className="profile-body-container">
@@ -111,6 +126,8 @@ export default function VisitorProfilePage() {
                 listings={listings}
                 onSeeAllListings={setActiveTab}
               />
+              <ProfilePhotosWidget photos={photos} onSeeAllPhotos={setActiveTab} />
+              <ProfileFriendsWidget friends={friends} friendsCount={profile.friendsCount} onSeeAllFriends={setActiveTab} />
             </aside>
 
             <section className="profile-right-timeline">
@@ -135,6 +152,14 @@ export default function VisitorProfilePage() {
             isOwnProfile={isOwnProfile}
             onOpenEditModal={() => setIsEditModalOpen(true)}
           />
+        )}
+
+        {activeTab === 'friends' && (
+          <ProfileFriendsTab friends={friends} isOwnProfile={isOwnProfile} searchQuery={friendsSearch} filter={friendsFilter} onSearchChange={setFriendsSearch} onFilterChange={setFriendsFilter} onUnfriend={unfriendById} />
+        )}
+
+        {activeTab === 'photos' && (
+          <ProfilePhotosTab photos={photos} subTab={photosSubTab} onSubTabChange={setPhotosSubTab} />
         )}
 
         {/* 3. My Listings Tab View */}

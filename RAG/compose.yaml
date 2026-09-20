@@ -1,0 +1,96 @@
+name: hvnh-rag-ai
+
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - path: ../backend/.env
+        required: false
+    ports:
+      - "${API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=2)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  crawl-scheduler:
+    profiles: ["crawler"]
+    build: .
+    restart: unless-stopped
+    env_file:
+      - path: ../backend/.env
+        required: false
+    command: ["python", "-m", "scripts.crawl_scheduler"]
+
+  crawl-worker:
+    profiles: ["crawler"]
+    build: .
+    restart: unless-stopped
+    env_file:
+      - path: ../backend/.env
+        required: false
+    command: ["python", "-m", "scripts.crawl_worker"]
+
+  pipeline-worker:
+    profiles: ["crawler"]
+    build: .
+    restart: unless-stopped
+    env_file:
+      - path: ../backend/.env
+        required: false
+    command: ["python", "-m", "scripts.pipeline_worker"]
+
+  postgres:
+    profiles: ["local-infra"]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-hvnh}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-change-me}"
+      POSTGRES_DB: "${POSTGRES_DB:-hvnh_rag}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    profiles: ["local-infra"]
+    image: qdrant/qdrant:v1.15.4
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    profiles: ["local-infra"]
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  redis_data:

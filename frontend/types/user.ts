@@ -50,6 +50,7 @@ export interface UserProfile {
   mutualFriendsAvatars: string[];
   friendshipStatus: FriendshipStatus;
   socialLinks?: UserSocialLinks;
+  joinedGroups?: { id: string; name: string; slug: string; role: string }[];
 }
 
 export interface UserFriend {

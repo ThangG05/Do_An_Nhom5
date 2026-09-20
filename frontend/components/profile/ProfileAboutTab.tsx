@@ -99,6 +99,8 @@ export default function ProfileAboutTab({
               )}
             </ul>
 
+            {!!profile.joinedGroups?.length && <div className="about-group-block mt-4"><h4 className="group-title">Nhóm đã tham gia</h4><ul className="about-info-rows">{profile.joinedGroups.map(group => <li className="info-row" key={group.id}><span className="row-icon">👥</span><div className="row-text"><strong>{group.name}</strong><p className="sub-detail">{group.role === 'ADMIN' ? 'Quản trị viên nhóm' : 'Thành viên'}</p></div></li>)}</ul></div>}
+
             {isOwnProfile && (
               <button
                 type="button"

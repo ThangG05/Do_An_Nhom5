@@ -3,6 +3,8 @@
 import React from "react";
 import { MarketItem } from "@/types/group";
 import { IconSearch, IconMessage } from "@/components/ui/Icons";
+import { safeImageSrc } from "@/lib/media";
+import RelativeTime from "@/components/ui/RelativeTime";
 
 interface MarketCardMatrixProps {
   items: MarketItem[];
@@ -24,7 +26,6 @@ export default function MarketCardMatrix({
   onConditionFilterChange,
   statusFilter,
   onStatusFilterChange,
-  onToggleSold,
   onMessageSeller,
 }: MarketCardMatrixProps) {
   return (
@@ -94,7 +95,7 @@ export default function MarketCardMatrix({
           >
             {/* Image & Price Overlay */}
             <div className="item-thumbnail-wrap">
-              <img src={item.image} alt={item.title} loading="lazy" />
+              <img src={safeImageSrc(item.image)} alt={item.title} loading="lazy" />
               <div className="price-tag-badge">{item.price}</div>
               {item.status === "sold" && (
                 <div className="sold-overlay-badge">ĐÃ BÁN</div>
@@ -112,7 +113,7 @@ export default function MarketCardMatrix({
             <div className="item-card-body">
               <div className="item-meta-top">
                 <span className="item-category-chip">{item.category}</span>
-                <small>{item.createdAt}</small>
+                <RelativeTime value={item.createdAt}/>
               </div>
 
               <h3 className="item-card-title">{item.title}</h3>
@@ -127,7 +128,7 @@ export default function MarketCardMatrix({
 
               <div className="seller-profile-snippet">
                 <img
-                  src={item.sellerAvatar && item.sellerAvatar.length > 5 ? item.sellerAvatar : "/assets/logo.png"}
+                  src={safeImageSrc(item.sellerAvatar)}
                   alt={item.sellerName}
                   className="author-avatar-img"
                 />
@@ -146,14 +147,6 @@ export default function MarketCardMatrix({
                   <span>Nhắn người bán</span>
                 </button>
 
-                <button
-                  type="button"
-                  className="toggle-status-btn"
-                  onClick={() => onToggleSold(item.id)}
-                  title={item.status === "sold" ? "Đánh dấu còn hàng" : "Đánh dấu đã bán"}
-                >
-                  {item.status === "sold" ? "Mở lại" : "Đã bán"}
-                </button>
               </div>
             </div>
           </article>

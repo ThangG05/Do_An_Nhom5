@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { UserListing, ProfileTabType } from '@/types/user';
+import { safeImageSrc } from '@/lib/media';
 
 interface ProfileListingsWidgetProps {
   listings: UserListing[];
@@ -50,7 +51,7 @@ export default function ProfileListingsWidget({
             return (
               <div key={item.id} className="listing-mini-card">
                 <div className="mini-card-thumb">
-                  <img src={item.imageUrl} alt={item.title} />
+                  <img src={safeImageSrc(item.imageUrl)} alt={item.title} />
                   <span className={`category-tag ${badge.className}`}>{badge.label}</span>
                 </div>
                 <div className="mini-card-info">

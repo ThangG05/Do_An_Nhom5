@@ -1,0 +1,40 @@
+[
+  {
+    "id": "student-exchange-2026",
+    "category": "announcement",
+    "query": "Chương trình trao đổi sinh viên năm học 2026/2027 là gì?",
+    "expected_title_contains": ["trao đổi sinh viên"],
+    "expected_academic_year": "2026/2027"
+  },
+  {
+    "id": "vstep-output-standard",
+    "category": "guide",
+    "query": "Chuẩn đầu ra ngoại ngữ VSTEP như thế nào?",
+    "expected_title_contains": ["VSTEP"]
+  },
+  {
+    "id": "student-mental-health",
+    "category": "student-support",
+    "query": "Có hoạt động hỗ trợ tâm lý nào cho sinh viên?",
+    "expected_title_contains": ["hỗ trợ tâm lý"]
+  },
+  {
+    "id": "tuition-2024-2025",
+    "category": "historical",
+    "query": "Mức học phí năm học 2024/2025 của Học viện Ngân hàng là bao nhiêu?",
+    "expected_title_contains": ["học phí năm học 2024 - 2025", "học phí năm học 2024-2025"],
+    "expected_academic_year": "2024/2025"
+  },
+  {
+    "id": "lecturer-trieu-thu-huong",
+    "category": "named-entity",
+    "query": "Giảng viên Triệu Thu Hương là ai?",
+    "expected_title_contains": ["Triệu Thu Hương"]
+  },
+  {
+    "id": "unknown-information",
+    "category": "negative",
+    "query": "Quy định sử dụng tàu vũ trụ của Học viện Ngân hàng năm 2099/2100",
+    "expected_empty": true
+  }
+]

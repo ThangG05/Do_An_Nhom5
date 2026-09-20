@@ -1,3 +1,5 @@
+-r ../RAG/requirements.txt
+
 fastapi
 uvicorn
 sqlalchemy
@@ -5,3 +7,13 @@ alembic
 psycopg2-binary
 langgraph
 qdrant-client
+google-auth
+PyJWT
+pydantic-settings
+pwdlib[argon2]
+resend
+boto3
+httpx
+python-multipart
+Pillow
+openpyxl

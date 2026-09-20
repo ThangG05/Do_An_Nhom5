@@ -1,0 +1,18 @@
+services:
+  api:
+    environment:
+      DATABASE_URL: ""
+      POSTGRES_HOST: postgres
+      QDRANT_HOST: qdrant
+      QDRANT_HTTPS: "false"
+      QDRANT_API_KEY: ""
+      REDIS_URL: ""
+      REDIS_HOST: redis
+      REDIS_SSL: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

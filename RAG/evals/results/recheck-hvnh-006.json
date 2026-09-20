@@ -1,0 +1,38 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 0,
+  "citation_accuracy": 0.0,
+  "refusal_accuracy": 0.0,
+  "latency": {
+    "mean_ms": 12798.0,
+    "p50_ms": 12798,
+    "p95_ms": 12798,
+    "max_ms": 12798
+  },
+  "results": [
+    {
+      "id": "hvnh-006",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "ab36f9d5-a277-4827-ab1b-84561f4f4100",
+      "message_id": "a05d2385-6083-4ddc-8853-dfdc00116281",
+      "question": "Sinh viên Học viện Ngân hàng đã đạt thành tích gì tại The Moneyverse năm 2026?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Sinh viên Học viện Ngân hàng lọt vào Tứ kết The Moneyverse - Vũ trụ đồng tiền cấp quốc gia năm 2026.",
+      "latency_ms": 12798,
+      "retrieved_contexts": [],
+      "citations": []
+    }
+  ]
+}

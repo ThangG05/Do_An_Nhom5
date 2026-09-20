@@ -1,30 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 import ConversationList from "@/components/chat/ConversationList";
 import ChatWorkspace from "@/components/chat/ChatWorkspace";
 import ChatDetailsPanel from "@/components/chat/ChatDetailsPanel";
 import { useMessenger } from "@/hooks/useMessenger";
 
 export default function MessagesPage() {
-  const [checked, setChecked] = useState(false);
-  const router = useRouter();
-
   const messengerState = useMessenger();
-
-  useEffect(() => {
-    if (
-      window.sessionStorage.getItem("hvnh-hub-mock-authenticated") !== "true"
-    ) {
-      router.replace("/login");
-      return;
-    }
-    setChecked(true);
-  }, [router]);
-
-  if (!checked)
-    return <main className="home-loading" aria-label="Đang tải tin nhắn" />;
+  const [searchOpen,setSearchOpen]=useState(false);
 
   return (
     <main className="messenger-page-full-canvas">
@@ -40,6 +25,7 @@ export default function MessagesPage() {
           onSelectConversation={messengerState.selectConversation}
           searchQuery={messengerState.searchQuery}
           onSearchChange={messengerState.setSearchQuery}
+          onStartConversation={messengerState.startConversation}
         />
 
         {/* Column 2: Chat Workspace (Center) */}
@@ -52,6 +38,10 @@ export default function MessagesPage() {
             onToggleDetailsPanel={messengerState.toggleDetailsPanel}
             showDetailsPanel={messengerState.showDetailsPanel}
             onBackMobile={() => messengerState.setMobileView("list")}
+            realtimeEvent={messengerState.realtimeEvent}
+            onSignal={messengerState.sendRealtime}
+            searchOpen={searchOpen}
+            onCloseSearch={()=>setSearchOpen(false)}
           />
         )}
 
@@ -60,6 +50,9 @@ export default function MessagesPage() {
           <ChatDetailsPanel
             conversation={messengerState.activeConversation}
             onClose={messengerState.toggleDetailsPanel}
+            onSearch={()=>setSearchOpen(true)}
+            onUpdateSettings={messengerState.updateSettings}
+            onBlocked={messengerState.removeActiveConversation}
           />
         )}
       </div>

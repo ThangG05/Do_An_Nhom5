@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { UserFriend } from '@/types/user';
 import { IconSearch } from '@/components/ui/Icons';
+import { safeImageSrc } from '@/lib/media';
 
 interface ProfileFriendsTabProps {
   friends: UserFriend[];
@@ -88,7 +89,7 @@ export default function ProfileFriendsTab({
           {filteredFriends.map((friend) => (
             <div key={friend.id} className="friend-matrix-card">
               <Link href={`/profile/${friend.id}`} className="friend-card-avatar-link">
-                <img src={friend.avatar} alt={friend.name} className="friend-matrix-avatar" />
+                <img src={safeImageSrc(friend.avatar)} alt={friend.name} className="friend-matrix-avatar" />
                 {friend.isOnline && <span className="avatar-online-dot" title="Đang hoạt động" />}
               </Link>
 

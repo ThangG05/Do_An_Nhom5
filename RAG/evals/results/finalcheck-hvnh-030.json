@@ -1,0 +1,55 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 9622.0,
+    "p50_ms": 9622,
+    "p95_ms": 9622,
+    "max_ms": 9622
+  },
+  "results": [
+    {
+      "id": "hvnh-030",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 3,
+      "conversation_id": "7e8b1f67-64b2-4236-badd-3370b59fedbc",
+      "message_id": "4548219a-e122-45df-b9c9-03281421e86f",
+      "question": "Nguồn chính thức “Hội thảo khoa học Quốc gia - “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”” cung cấp thông tin gì?",
+      "response": "Nguồn chính thức cung cấp thông tin về Hội thảo khoa học Quốc gia với chủ đề “Chuyển đổi số: Từ dữ liệu đến tự động hóa” diễn ra vào ngày 09/12/2022 [1, 2]. Sự kiện này do Ngân hàng Nhà nước Việt Nam chủ trì, cùng Học viện Ngân hàng (Khoa Hệ thống thông tin quản lý) phối hợp với Công ty TNHH Phần mềm FPT (akaBot) tổ chức [1, 2]. Hội thảo tập trung chia sẻ kiến thức, kinh nghiệm thực tiễn và thảo luận các chủ đề công nghệ như bảo mật dữ liệu cá nhân, tăng cường trải nghiệm thanh toán số, văn hóa dữ liệu trong doanh nghiệp và công nghệ siêu tự động hóa [3]. Chương trình gồm hai phiên chuyên đề vào buổi chiều về \"Dữ liệu\" và \"Tự động hóa\", kết hợp hoạt động trải nghiệm giải pháp akaBot và robot ảo RPA [3]. Hội thảo mang lại góc nhìn toàn cảnh về dữ liệu và tự động hóa quy trình nghiệp vụ trong các tổ chức tài chính - ngân hàng tại Việt Nam [3].",
+      "reference": "Hội thảo khoa học quốc gia ngày 09/12/2022 do Học viện Ngân hàng phối hợp FPT Software tổ chức dưới sự chủ trì của Ngân hàng Nhà nước Việt Nam.",
+      "latency_ms": 9622,
+      "retrieved_contexts": [
+        "Hội thảo khoa học Quốc gia “Chuyển đổi số: Từ dữ liệu đến tự động hóa”\nNgày đăng: 10/12/2022\nNgày 09/12/2022, dưới sự chủ trì của Ngân hàng Nhà nước Việt Nam, Học viện Ngân hàng (Khoa Hệ thống thông tin quản lý) phối hợp Công ty TNHH Phần mềm FPT (akaBot) đã tổ chức Hội thảo khoa học Quốc gia với chủ đề “Chuyển đổi số: Từ dữ liệu đến tự động hóa”.\nTham dự sự kiện về phía NHNN có:\n- Ông Nguyễn Quốc Hùng - Tổng thư ký Hiệp hội Ngân hàng Việt Nam\n- Ông Lê Anh Dũng - Phó Vụ trưởng Vụ Thanh toán NHNN\n- Bà Thái Thị An Hoa - Phó Vụ trưởng Vụ Dự báo thống kê tiền tệ\n- Ông Nguyễn Hồng Cương - Phó Cục trưởng Cục Quản trị NHNN\n- Ông Phạm Minh Tú - Phó Viện trưởng Viện Chiến lược Ngân hàng\nVề phía các khách mời có:\n- TS. Lê Xuân Nghĩa - Cố vấn kinh tế, Chuyên gia trong lĩnh vực tài chính, tiền tệ và ngân hàng\n- Ông Trần Đăng Hòa - Phó Tổng Giám đốc FPT Software\n- Ông Đỗ Danh Thanh - Phó tổng Giám đốc Deloitte Việt Nam\n- Bà Trần Thanh Xuân - Phó Giám đốc Trung tâm Ngân hàng số, Ngân hàng TMCP Đầu t",
+        "Hội thảo khoa học Quốc gia - “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”\nNgày đăng: 10/12/2022\nNgày 09/12/2022, dưới sự chủ trì của Ngân hàng Nhà nước Việt Nam, Học viện Ngân hàng (Khoa Hệ thống thông tin quản lý) phối hợp Công ty TNHH Phần mềm FPT (akaBot) đã tổ chức Hội thảo khoa học Quốc gia với chủ đề “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”.",
+        "diện\" do Ông Trần Đăng Hòa - Phó Tổng Giám đốc FPT Software trình bày.\nHội thảo đã lắng nghe những chia sẻ kiến thức cũng như kinh nghiệm thực tiễn trong triển khai hoạt động chuyển đổi số từ các lãnh đạo, các nhà quản lý và chuyên gia đầu ngành. Các chủ đề công nghệ được thảo luận tại Hội thảo bao gồm: Bảo mật dữ liệu cá nhân, tăng cường trải nghiệm thanh toán số dựa trên quản trị dữ liệu, văn hóa dữ liệu trong doanh nghiệp, công nghệ siêu tự động hóa tăng cường năng lực ngân hàng.\nTrong buổi chiều, Hội thảo diễn ra 2 phiên chuyên đề liên quan đến chủ điểm \"Dữ liệu\" và \"Tự động hoá\".\nBên cạnh đó, các đại biểu tham dự Hội thảo cũng có cơ hội được trải nghiệm trực tiếp giải pháp akaBot của FPT Software. Tại đây, khách có thể chạy bản thử nghiệm các giải pháp công nghệ tự động hóa quy trình bằng robot ảo RPA và siêu tự động hóa Hyperautomation.\nHội thảo đã đem đến góc nhìn toàn cảnh về dữ liệu và bài toán tự động hóa quy trình nghiệp vụ bằng robot trong bối cảnh chuyển đổi số tại các tổ "
+      ],
+      "citations": [
+        {
+          "title": "Hội thảo khoa học Quốc gia “Chuyển đổi số: Từ dữ liệu đến tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/530_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        },
+        {
+          "title": "Hội thảo khoa học Quốc gia - “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/17_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        },
+        {
+          "title": "Hội thảo khoa học Quốc gia “Chuyển đổi số: Từ dữ liệu đến tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/530_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        }
+      ]
+    }
+  ]
+}

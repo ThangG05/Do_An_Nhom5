@@ -1,0 +1,162 @@
+{
+  "generated_at": "2026-09-09T10:35:12.622372+00:00",
+  "counts": {
+    "sources": 10,
+    "enabled_sources": 9,
+    "documents": 350,
+    "versions": 541,
+    "chunks": 1577,
+    "quarantined": 0
+  },
+  "version_statuses": {
+    "ARCHIVED": 195,
+    "INDEXED": 346
+  },
+  "missing_metadata": {
+    "academic_year": 305,
+    "published_at": 48,
+    "issuer": 0,
+    "source_url": 0
+  },
+  "integrity": {
+    "indexed_without_chunks": 0,
+    "processing_without_chunks": 0
+  },
+  "rejected_crawl_items": {
+    "PII_EXCLUDED": 1
+  },
+  "rejected_details": [
+    {
+      "url": "https://hvnh.edu.vn/medias/tckt/vi/03.2026/system/archivedate/77444535_Danh%20s%C3%A1ch%20sinh%20vi%C3%AAn%20n%E1%BB%A3%20h%E1%BB%8Dc%20ph%C3%AD%20HK02_n%C4%83m%20h%E1%BB%8Dc%202025-2026.pdf",
+      "error_code": "PII_EXCLUDED",
+      "content_type": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "d049add6-3109-4d25-9168-d94cbb42c889",
+      "name": "HVNH - Kho quy chế sinh viên",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/qlnh/vi/cong-giao-dich-dien-tu/tong-hop-van-ban-quy-che-danh-cho-sinh-vien-hoc-vien-ngan-hang-948.html",
+      "overdue": true,
+      "latest_run_status": "SUCCEEDED",
+      "latest_run_id": "9053ae77-80f4-4310-85f5-922425e18aa5",
+      "version_statuses": {
+        "ARCHIVED": 1
+      }
+    },
+    {
+      "id": "4e546256-cca8-49ed-acf2-45cfe3e31b17",
+      "name": "HVNH - Nganh Cong nghe thong tin",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-tuong-lai/nganh-cong-nghe-thong-tin-1800.html",
+      "overdue": true,
+      "latest_run_status": "SUCCEEDED",
+      "latest_run_id": "bb79266e-62c4-459a-853f-eec71d3a3efc",
+      "version_statuses": {
+        "ARCHIVED": 2
+      }
+    },
+    {
+      "id": "56925f92-46a7-44d2-ab3f-21fc5205f6b2",
+      "name": "HVNH - QD 2450 hoc phi 2023-2024",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/dieu-chinh-muc-thu-hoc-phi-nam-hoc-20232024-doi-voi-cac-he-dao-tao-83.html",
+      "overdue": true,
+      "latest_run_status": "PARTIAL",
+      "latest_run_id": "2ad63a86-9482-4e39-98fe-f80a73eb2550",
+      "version_statuses": {
+        "INDEXED": 1,
+        "ARCHIVED": 3
+      }
+    },
+    {
+      "id": "20f80c4f-c2d9-4fa7-8e5f-7c05129a60fe",
+      "name": "HVNH - Sinh viên",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai",
+      "overdue": true,
+      "latest_run_status": "SUCCEEDED",
+      "latest_run_id": "28887949-0b22-4326-bf85-a1093f892a3a",
+      "version_statuses": {
+        "INDEXED": 10,
+        "ARCHIVED": 11
+      }
+    },
+    {
+      "id": "5ba7f594-295d-4d7c-9367-01f08dfab6fb",
+      "name": "HVNH - Tuyển sinh",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh",
+      "overdue": true,
+      "latest_run_status": "PARTIAL",
+      "latest_run_id": "1a70e49f-f34c-4457-bbda-76c094f00e22",
+      "version_statuses": {
+        "INDEXED": 19,
+        "ARCHIVED": 10
+      }
+    },
+    {
+      "id": "5df76b8c-6361-45ef-a361-15d99b434c06",
+      "name": "ITDE - Khoa CNTT va Kinh te so",
+      "enabled": true,
+      "base_url": "https://itde.hvnh.edu.vn/",
+      "overdue": true,
+      "latest_run_status": "PARTIAL",
+      "latest_run_id": "aa3b036e-4d23-429d-8720-e893295b64f0",
+      "version_statuses": {
+        "INDEXED": 272,
+        "ARCHIVED": 113
+      }
+    },
+    {
+      "id": "40a9f6fe-5682-4c57-8c3d-e42348c46c41",
+      "name": "Online HVNH - Chương trình đào tạo",
+      "enabled": false,
+      "base_url": "https://online.hvnh.edu.vn/News/Type/1017",
+      "overdue": false,
+      "latest_run_status": "SUCCEEDED",
+      "latest_run_id": "b1c8756e-db4a-491a-bba3-b29292044246",
+      "version_statuses": {}
+    },
+    {
+      "id": "06af0994-4658-4d90-99a4-f58565b6bd52",
+      "name": "PDT - Quy định Bộ GDĐT",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/pdt/vn/bgddt",
+      "overdue": true,
+      "latest_run_status": "PARTIAL",
+      "latest_run_id": "599932ef-6215-4daa-aea3-90d7cda7e84d",
+      "version_statuses": {
+        "INDEXED": 14,
+        "ARCHIVED": 25
+      }
+    },
+    {
+      "id": "36b519f2-dd22-4bbf-a808-8ee378691ab9",
+      "name": "PDT - Quản lý đào tạo",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/pdt/vn/qtqldt",
+      "overdue": true,
+      "latest_run_status": "SUCCEEDED",
+      "latest_run_id": "c9528c81-a2a9-46f6-9459-89d37f9a6863",
+      "version_statuses": {
+        "INDEXED": 12,
+        "ARCHIVED": 10
+      }
+    },
+    {
+      "id": "bfe813d1-f29a-4a62-98db-2de44d47c934",
+      "name": "TCKT - Học phí",
+      "enabled": true,
+      "base_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi",
+      "overdue": true,
+      "latest_run_status": "PARTIAL",
+      "latest_run_id": "660e3152-753e-4e19-b985-2e399deb9e1e",
+      "version_statuses": {
+        "INDEXED": 18,
+        "ARCHIVED": 20
+      }
+    }
+  ]
+}

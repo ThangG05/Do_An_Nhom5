@@ -2,12 +2,15 @@
 
 import React, { useState, useRef } from 'react';
 import { UserProfile } from '@/types/user';
+import { safeImageSrc } from '@/lib/media';
 
 interface EditProfileModalProps {
   profile: UserProfile;
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: Partial<UserProfile>) => Promise<void>;
+  onUploadAvatar?: (file: File, caption: string, visibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => Promise<void>;
+  onUploadCover?: (file: File) => Promise<void>;
 }
 
 export default function EditProfileModal({
@@ -15,10 +18,11 @@ export default function EditProfileModal({
   isOpen,
   onClose,
   onSave,
+  onUploadAvatar,
+  onUploadCover,
 }: EditProfileModalProps) {
   const [avatar, setAvatar] = useState(profile.avatar || '');
   const [coverBanner, setCoverBanner] = useState(profile.coverBanner || '');
-  const [name, setName] = useState(profile.name || '');
   const [bio, setBio] = useState(profile.bio || '');
   const [pronouns, setPronouns] = useState(profile.pronouns || '');
   const [workplace, setWorkplace] = useState(profile.workplace || '');
@@ -32,7 +36,11 @@ export default function EditProfileModal({
   const [linkedin, setLinkedin] = useState(profile.socialLinks?.linkedin || '');
 
   const [avatarError, setAvatarError] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarCaption, setAvatarCaption] = useState('');
+  const [avatarVisibility, setAvatarVisibility] = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
   const [coverError, setCoverError] = useState('');
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -57,6 +65,7 @@ export default function EditProfileModal({
 
     const localPreviewUrl = URL.createObjectURL(file);
     setAvatar(localPreviewUrl);
+    setAvatarFile(file);
   };
 
   const handleCoverFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,15 +85,21 @@ export default function EditProfileModal({
 
     const localPreviewUrl = URL.createObjectURL(file);
     setCoverBanner(localPreviewUrl);
+    setCoverFile(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    await onSave({
-      avatar,
+    try {
+      if (avatarFile && onUploadAvatar) {
+        await onUploadAvatar(avatarFile, avatarCaption, avatarVisibility);
+      }
+      if (coverFile && onUploadCover) {
+        await onUploadCover(coverFile);
+      }
+      await onSave({
       coverBanner,
-      name,
       bio,
       pronouns,
       workplace,
@@ -98,8 +113,12 @@ export default function EditProfileModal({
         instagram,
         linkedin,
       },
-    });
-    setIsSaving(false);
+      });
+    } catch (error) {
+      setAvatarError(error instanceof Error ? error.message : 'Không thể lưu ảnh đại diện.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -139,7 +158,33 @@ export default function EditProfileModal({
             </div>
             {avatarError && <p className="file-error-msg">{avatarError}</p>}
             <div className="avatar-preview-wrapper">
-              <img src={avatar} alt="Avatar preview" />
+              <img src={safeImageSrc(avatar)} alt="Avatar preview" />
+            </div>
+            {avatarFile && (
+              <div className="form-group mt-3">
+                <label>Chú thích bài viết ảnh đại diện</label>
+                <textarea className="form-control" rows={3} maxLength={5000} value={avatarCaption} onChange={(event) => setAvatarCaption(event.target.value)} placeholder="Bạn đang nghĩ gì?" />
+                <label className="mt-2">Ai có thể xem bài viết này?</label>
+                <select className="form-control" value={avatarVisibility} onChange={(event) => setAvatarVisibility(event.target.value as 'PUBLIC' | 'FRIENDS' | 'PRIVATE')}>
+                  <option value="PUBLIC">Công khai</option>
+                  <option value="FRIENDS">Bạn bè</option>
+                  <option value="PRIVATE">Chỉ mình tôi</option>
+                </select>
+              </div>
+            )}
+          </section>
+
+          <section className="form-section">
+            <div className="section-header-row">
+              <h3>Ảnh bìa</h3>
+              <button type="button" className="btn btn-secondary" onClick={() => coverInputRef.current?.click()}>
+                Tải ảnh bìa từ máy tính
+              </button>
+              <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFileSelect} />
+            </div>
+            {coverError && <p className="file-error-msg">{coverError}</p>}
+            <div className="cover-preview-wrapper">
+              <img src={safeImageSrc(coverBanner)} alt="Xem trước ảnh bìa" />
             </div>
           </section>
 
@@ -152,10 +197,11 @@ export default function EditProfileModal({
                 <input
                   type="text"
                   className="form-control"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
+                  value={profile.name}
+                  disabled
+                  aria-describedby="identity-name-help"
                 />
+                <small id="identity-name-help">Họ tên được xác thực từ tài khoản HVNH và không thể tự thay đổi.</small>
               </div>
 
               <div className="form-group">

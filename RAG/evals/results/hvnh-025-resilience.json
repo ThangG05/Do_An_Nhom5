@@ -1,0 +1,30 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "hvnh-025",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "61a0c781-7e7d-41ca-8787-b79113104621",
+      "message_id": "8a2164b9-0690-4019-89fe-966a8a1401ac",
+      "citations": [
+        {
+          "title": "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/656_toa_dam_chuyen_mon_chuan_hoa_danh_gia_do_an_tot_nghieptu_chuan_dau_ra_den_tieu_chi_cham_va_minh_chung_danh_gia.html"
+        },
+        {
+          "title": "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/656_toa_dam_chuyen_mon_chuan_hoa_danh_gia_do_an_tot_nghieptu_chuan_dau_ra_den_tieu_chi_cham_va_minh_chung_danh_gia.html"
+        }
+      ]
+    }
+  ]
+}

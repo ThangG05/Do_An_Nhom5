@@ -1,0 +1,45 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 9521.0,
+    "p50_ms": 9521,
+    "p95_ms": 9521,
+    "max_ms": 9521
+  },
+  "results": [
+    {
+      "id": "hvnh-028",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "c82ebfb0-4599-44fa-83d4-98ec48dfec39",
+      "message_id": "3e27113f-08bb-4bf3-a661-3aec06724aec",
+      "question": "Sinh viên đăng nhập và truy cập học phần trên hệ thống LMS như thế nào?",
+      "response": "Sinh viên đăng nhập hệ thống LMS tại địa chỉ https://lms.hvnh.edu.vn/ bằng tên đăng nhập là mã sinh viên kèm đuôi @hvnh.edu.vn và mật khẩu sử dụng trên cổng thông tin online sinh viên [1]. Sau khi đăng nhập thành công, hệ thống hiển thị danh sách các học phần sinh viên đăng ký theo dạng thời khóa biểu hoặc dạng list tại mục My Courses [1]. Sinh viên có thể truy cập vào môn học để xem thông tin, tài liệu theo yêu cầu và thông báo của giảng viên [1].",
+      "reference": "Sinh viên đăng nhập LMS tại https://lms.hvnh.edu.vn bằng tài khoản mã sinh viên @hvnh.edu.vn và mật khẩu cổng online. Sau đăng nhập, sinh viên truy cập học phần qua danh sách thời khóa biểu hoặc mục My Courses.",
+      "latency_ms": 9521,
+      "retrieved_contexts": [
+        "HƯ\nỚ\nNG D\nẪ\nN SINH VIÊN\nS\nỬ\nD\nỤ\nNG H\nỆ\nTH\nỐ\nNG LMS\nH\nỌ\nC VI\nỆ\nN NGÂN HÀNG\nBư\nớ\nc 1. Đ\nị\na ch\nỉ\nh\nệ\nth\nố\nng\nĐăng nh\nậ\np h\nệ\nth\nố\nng LMS t\nạ\ni đ\nị\na ch\nỉ\n:\nhttps://lms.hvnh.edu.vn/\nBư\nớ\nc\n2.\nĐ\năng nh\nậ\np\nh\nệ\nth\nố\nng\n-\nĐăng nh\nậ\np h\nệ\nth\nố\nng LMS c\nủ\na trư\nờ\nng\nb\nằ\nng thông tin:\n+ Tên đăng nh\nậ\np: Mã sinh viên + @hvnh.edu.vn (ví d\nụ\n:\n23A4000....@hvnh.edu.vn)\n+ M\nậ\nt kh\nẩ\nu đăng nh\nậ\np: m\nậ\nt kh\nẩ\nu s\nử\nd\nụ\nng trên c\nổ\nng thông tin\nonline\nsinh viên\n-\nN\nế\nu sinh viên quên m\nậ\nt kh\nẩ\nu\ntrên c\nổ\nng thông tin online sinh viên, liên h\nệ\nphòng Qu\nả\nn\nlý ng\nư\nờ\ni h\nọ\nc\n(\nqlnh@hvnh.edu.vn\n)\nđ\nể\nđư\nợ\nc h\nỗ\ntr\nợ\nvà c\nấ\np l\nạ\ni.\n\nBư\nớ\nc 3. Truy c\nậ\np vào môn h\nọ\nc\nSau khi đăng nh\nậ\np thành công, h\nệ\nth\nố\nng hi\nể\nn th\nị\ndanh sách các h\nọ\nc ph\nầ\nn sinh viên đăng\nký h\nọ\nc\n+ D\nạ\nng th\nờ\ni khoá bi\nể\nu\n+ D\nạ\nng list\n: ch\nọ\nn m\nụ\nc My Courses\n\nBư\nớ\nc 4. Thông tin gi\nả\nng viên gi\nả\nng d\nạ\ny\n-\nCh\nọ\nn m\nụ\nc Home\n-\nKéo thanh trư\nợ\nt xu\nố\nng My courses\nBư\nớ\nc 5.\nTruy c\nậ\np vào h\nọ\nc ph\nầ\nn\n-\nSinh viên đ\nọ\nc\n,\nt"
+      ],
+      "citations": [
+        {
+          "title": "96232686_Huong%20dan%20SV%20vao%20he%20thong%20LMS.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/pdt/vi/10.2022/system/archivedate/96232686_Huong%20dan%20SV%20vao%20he%20thong%20LMS.pdf"
+        }
+      ]
+    }
+  ]
+}

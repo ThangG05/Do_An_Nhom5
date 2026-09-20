@@ -1,1 +1,22 @@
-# Docker services
+name: hvnh-hub
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      AUTH_SERVICE_URL: inprocess://backend
+      AUTH_SERVICE_TIMEOUT_SECONDS: "8"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+# Backend và RAG chạy trong cùng một tiến trình uvicorn, chỉ publish cổng 8000.

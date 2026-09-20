@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { UserPhoto } from '@/types/user';
+import { safeImageSrc } from '@/lib/media';
+import RelativeTime from '@/components/ui/RelativeTime';
 
 interface ProfilePhotosTabProps {
   photos: UserPhoto[];
@@ -69,7 +71,7 @@ export default function ProfilePhotosTab({
             albumsList.map((album, idx) => (
               <div key={idx} className="album-card">
                 <div className="album-cover-thumb">
-                  <img src={album.coverUrl} alt={album.name} />
+                  <img src={safeImageSrc(album.coverUrl)} alt={album.name} />
                   <span className="album-count-badge">{album.count} mục</span>
                 </div>
                 <div className="album-meta">
@@ -90,7 +92,7 @@ export default function ProfilePhotosTab({
                 className="gallery-photo-item"
                 onClick={() => setSelectedPhoto(photo)}
               >
-                <img src={photo.url} alt={photo.caption || 'Ảnh người dùng'} />
+                <img src={safeImageSrc(photo.url)} alt={photo.caption || 'Ảnh người dùng'} />
                 <div className="photo-hover-overlay">
                   {photo.likesCount && <span>❤️ {photo.likesCount}</span>}
                 </div>
@@ -117,12 +119,12 @@ export default function ProfilePhotosTab({
               ✕
             </button>
             <div className="lightbox-image-wrapper">
-              <img src={selectedPhoto.url} alt={selectedPhoto.caption || 'Ảnh xem phóng to'} />
+              <img src={safeImageSrc(selectedPhoto.url)} alt={selectedPhoto.caption || 'Ảnh xem phóng to'} />
             </div>
             {selectedPhoto.caption && (
               <div className="lightbox-caption-bar">
                 <p>{selectedPhoto.caption}</p>
-                {selectedPhoto.createdAt && <small>{selectedPhoto.createdAt}</small>}
+                {selectedPhoto.createdAt && <RelativeTime value={selectedPhoto.createdAt}/>}
               </div>
             )}
           </div>

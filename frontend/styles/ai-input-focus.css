@@ -1,0 +1,3 @@
+.ai-pet-panel>form:focus-within{border-color:#5b8eb8;box-shadow:0 0 0 3px rgba(43,120,184,.12),0 5px 16px rgba(20,53,83,.07)}
+.ai-pet-panel textarea:focus,.ai-pet-panel textarea:focus-visible,.assistant-composer textarea:focus,.assistant-composer textarea:focus-visible{border:0!important;outline:0!important;outline-offset:0!important;box-shadow:none!important}
+.assistant-composer>div:focus-within{border-color:#5b8eb8;box-shadow:0 0 0 3px rgba(43,120,184,.12),0 6px 20px rgba(22,52,80,.06)}

@@ -1,0 +1,543 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 31,
+  "passed": 27,
+  "pass_rate": 0.8709677419354839,
+  "results": [
+    {
+      "id": "hvnh-003",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "41cbef63-3676-428b-9423-8a61e60461cd",
+      "message_id": "edbc4ced-6f56-4850-b503-d8cf19f9a3b6",
+      "citations": [
+        {
+          "title": "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/thong-bao-tuyen-sinh-chuong-trinh-trao-doi-sinh-vien-hoc-ky-i-nam-hoc-20262027-tai-truong-dai-hoc-kinh-te-dai-hoc-da-nang-4040.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-004",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "citation_count": 0,
+      "conversation_id": "47b2fd52-f3ad-48d7-8d54-98cd58affb7e",
+      "message_id": "04269ae6-45b5-4606-aa9a-dca518f9906b",
+      "citations": []
+    },
+    {
+      "id": "hvnh-005",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "dfb94bb6-2540-4b69-9567-db80d86a01d0",
+      "message_id": "16764aa4-5a46-49d6-b551-28113c02325f",
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026",
+          "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-xu-ly-sinh-vien-con-no-hoc-phi-hoc-ky-ii-nam-hoc-2025-2026-112.html"
+        },
+        {
+          "title": "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/tckt/vi/07.2025/system/archivedate/47c23652_QD%203455%20Muc%20thu%20hoc%20phi%20nam%20hoc%202025%202026.pdf"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-006",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "5573be7a-0d1b-4f7a-bc75-494829a322d9",
+      "message_id": "e1a3efd0-0579-424f-aeea-b32b50474581",
+      "citations": [
+        {
+          "title": "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/sinh-vien-hoc-vien-ngan-hang-xuat-sac-lot-vao-tu-ket-cuoc-thi-the-moneyverse-vu-tru-dong-tien-cap-quoc-gia-3909.html"
+        },
+        {
+          "title": "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/sinh-vien-hoc-vien-ngan-hang-xuat-sac-lot-vao-tu-ket-cuoc-thi-the-moneyverse-vu-tru-dong-tien-cap-quoc-gia-3909.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-007",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "66e89bd3-7f2a-4e4b-821e-6fb0e82b0f02",
+      "message_id": "d81356b4-adeb-4b6a-9d47-5a50e6ce97a2",
+      "citations": [
+        {
+          "title": "Thăm quan thực tế tại ProtonX",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/19_tham_quan_thuc_te_tai_protonx.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-008",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "70f4ac79-4d4d-478d-bebf-663550dc4836",
+      "message_id": "ff948a68-2d66-4454-816a-af55170e251d",
+      "citations": [
+        {
+          "title": "Thăm quan thực tế tại FPT Software",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/18_tham_quan_thuc_te_tai_fpt_software.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-011",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "eefde28f-3f65-4e6b-af60-d26a63779216",
+      "message_id": "3d3b9fb7-1ebe-4fb1-93f5-9cf007f519ad",
+      "citations": [
+        {
+          "title": "Điểm trúng tuyển đại học chính quy năm 2026",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-ve-muc-diem-trung-tuyen-dai-hoc-chinh-quy-nam-2026-ma-truong-nhh-4054.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-013",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "fe867380-e218-4e30-a049-77ce0c267105",
+      "message_id": "f7d800cf-477d-4117-8e8a-0859dc96ce6f",
+      "citations": [
+        {
+          "title": "Hướng dẫn thủ tục đăng ký học CTĐT ngành 2",
+          "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-dang-ky-hoc-ctdt-nganh-2-340.html"
+        },
+        {
+          "title": "Hướng dẫn thủ tục liên quan đến học phần",
+          "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-lien-quan-den-hoc-phan-294.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-014",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "0d7a4783-4369-4a99-8789-840c4273d6cc",
+      "message_id": "a7b88997-2184-471a-93dc-7d1d15b04558",
+      "citations": [
+        {
+          "title": "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH",
+          "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-chuyen-doi-giua-cac-ctdt-trong-hvnh-341.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-019",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "ef8fa53a-2854-4311-8bc5-619363b2b31c",
+      "message_id": "e006311f-b6e8-4ee3-8dfc-25d04edef6bb",
+      "citations": [
+        {
+          "title": "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/hieu-qua-tu-he-sinh-thai-ho-tro-tam-ly-toan-dien-cho-sinh-vien-o-hoc-vien-ngan-hang-3836.html"
+        },
+        {
+          "title": "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/hieu-qua-tu-he-sinh-thai-ho-tro-tam-ly-toan-dien-cho-sinh-vien-o-hoc-vien-ngan-hang-3836.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-020",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 4,
+      "conversation_id": "a935b6d3-ff60-4691-ac71-c6984955510a",
+      "message_id": "f9d44ef6-2398-409c-98c4-5590648d66aa",
+      "citations": [
+        {
+          "title": "Định hướng nghề nghiệp và cơ hội việc làm cho sinh viên MIS - Học viện Ngân hàng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/366_dinh_huong_nghe_nghiep_va_co_hoi_viec_lam_cho_sinh_vien_mis_hoc_vien_ngan_hang.html"
+        },
+        {
+          "title": "Định hướng nghề nghiệp và cơ hội việc làm cho sinh viên MIS - Học viện Ngân hàng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/366_dinh_huong_nghe_nghiep_va_co_hoi_viec_lam_cho_sinh_vien_mis_hoc_vien_ngan_hang.html"
+        },
+        {
+          "title": "Ngành MIS & cơ hội việc làm rộng mở",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/58_nganh_mis_co_hoi_viec_lam_rong_mo.html"
+        },
+        {
+          "title": "Lựa chọn nghề nghiệp mới trong kỷ nguyên cuộc cách mạng 4.0",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/73_lua_chon_nghe_nghiep_moi_trong_ky_nguyen_cuoc_cach_mang_4.0.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-021",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "f59fcd8a-18df-4d93-b192-eea7a059f730",
+      "message_id": "0b82d360-2d24-40a6-b6af-21eb74b30019",
+      "citations": [
+        {
+          "title": "Điều chỉnh chuẩn Tiếng Anh & Tin học năm hoc 2019-2020 cho sinh viên Khóa 19-21",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/62_dieu_chinh_chuan_tieng_anh_tin_hoc_nam_hoc_2019_2020_cho_sinh_vien_khoa_19_21.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-022",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "0f3a1939-6f24-436c-ae8b-9707090d8c1b",
+      "message_id": "ad2b4a5e-e526-4b59-b349-0d3c969e8f93",
+      "citations": [
+        {
+          "title": "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/chung-ket-cap-hoc-vien-cuoc-thi-vietnam-esg-challenge-2026-vong-tang-truong-4079.html"
+        },
+        {
+          "title": "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/chung-ket-cap-hoc-vien-cuoc-thi-vietnam-esg-challenge-2026-vong-tang-truong-4079.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-023",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "b9ad99f5-2e9f-44f1-93d0-ef0fe4f942b9",
+      "message_id": "394d78c8-a27e-4a3b-8b26-86a950ccda0d",
+      "citations": [
+        {
+          "title": "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/vstep-giai-phap-hoan-thien-chuan-dau-ra-ngoai-ngu-cho-sinh-vien-hoc-vien-ngan-hang-4069.html"
+        },
+        {
+          "title": "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/vstep-giai-phap-hoan-thien-chuan-dau-ra-ngoai-ngu-cho-sinh-vien-hoc-vien-ngan-hang-4069.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-024",
+      "passed": false,
+      "error": "EmbeddingError"
+    },
+    {
+      "id": "hvnh-025",
+      "passed": false,
+      "error": "EmbeddingError"
+    },
+    {
+      "id": "hvnh-027",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "30eff02f-e72a-4449-8918-eef67df5f1fb",
+      "message_id": "73580108-13b7-474a-af9b-f6d94e9f3e1c",
+      "citations": [
+        {
+          "title": "Tôi yêu MIS (Viết cho thanh xuân của tôi bên mái nhà MIS | Trịnh Thị Lan Anh, K18HTTTC)",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/329_toi_yeu_mis_viet_cho_thanh_xuan_cua_toi_ben_mai_nha_mis_trinh_thi_lan_anh_k18htttc_.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-028",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "a174a540-d8e1-40bf-91bf-c53f1753c3f7",
+      "message_id": "a25b0070-3bf4-49b4-83a2-8802274da495",
+      "citations": [
+        {
+          "title": "96232686_Huong%20dan%20SV%20vao%20he%20thong%20LMS.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/pdt/vi/10.2022/system/archivedate/96232686_Huong%20dan%20SV%20vao%20he%20thong%20LMS.pdf"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-029",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "99eb3a30-4d4d-4e5a-a619-18941e5a99cf",
+      "message_id": "d07f5494-b3a5-4f6c-b151-73269d5a37b5",
+      "citations": [
+        {
+          "title": "Hội thảo Quốc gia - Chuyển đổi số: từ Dữ liệu đến Tự động hoá (VTV1, 18h Ngày 11/12/2022)",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/clip_chi_tiet/20_hoi_thao_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa_vtv1_18h_ngay_11_12_2022_.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-030",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 3,
+      "conversation_id": "aef4d275-f799-4648-9ed2-d5e118c6638b",
+      "message_id": "078111df-c68c-4299-ab86-80c4251b4ae6",
+      "citations": [
+        {
+          "title": "Hội thảo khoa học Quốc gia - “Chuyển đổi số: từ Dữ liệu đến Tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/17_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        },
+        {
+          "title": "Hội thảo khoa học Quốc gia “Chuyển đổi số: Từ dữ liệu đến tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/530_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        },
+        {
+          "title": "Hội thảo khoa học Quốc gia “Chuyển đổi số: Từ dữ liệu đến tự động hóa”",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/530_hoi_thao_khoa_hoc_quoc_gia_chuyen_doi_so_tu_du_lieu_den_tu_dong_hoa.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-031",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "5e6fec85-05ac-4a4e-bbd9-d4f65587a391",
+      "message_id": "0f2c6cd4-0635-437c-93ff-4e483caba358",
+      "citations": [
+        {
+          "title": "Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/23_kien_truc_httt_trong_thuc_te_nghien_cuu_truong_hop_cua_min_software.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-032",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "cd45faa7-d28b-470f-af49-e116f8202fe4",
+      "message_id": "2d26fa7e-b5a1-4d35-a5fa-a59f18e5e39e",
+      "citations": [
+        {
+          "title": "MIS - một nghề mới đầy triển vọng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/355_mis_mot_nghe_moi_day_trien_vong.html"
+        },
+        {
+          "title": "MIS - một nghề mới đầy triển vọng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/355_mis_mot_nghe_moi_day_trien_vong.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-033",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "ce97ace8-b5a2-45a3-9499-7a89bac4ffa2",
+      "message_id": "769f8a7b-1e59-488e-9d1e-5e4fec1c3b1a",
+      "citations": [
+        {
+          "title": "Nhận diện thông tin sai sự thật về bầu cử trong môi trường số",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/nhan-dien-thong-tin-sai-su-that-ve-bau-cu-trong-moi-truong-so-3825.html"
+        },
+        {
+          "title": "Nhận diện thông tin sai sự thật về bầu cử trong môi trường số",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/nhan-dien-thong-tin-sai-su-that-ve-bau-cu-trong-moi-truong-so-3825.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-034",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "5edf8d94-89f9-4c65-98c2-b01d61250d44",
+      "message_id": "881b057f-f9d3-45a3-877c-69e2040a2fac",
+      "citations": [
+        {
+          "title": "Thông báo Tuyển sinh Khóa 02 Chương trình Tiến sĩ Doctor of Philosophy UWE, Bristol (Vương quốc Anh)",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-tuyen-sinh-khoa-02-chuong-trinh-tien-si-doctor-of-philosophy-uwe-bristol-vuong-quoc-anh-4051.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-036",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "42a10173-328a-4c69-b6fd-9e84980c1ac1",
+      "message_id": "38beffdb-b412-49f0-80b9-4dd7ae3ebab2",
+      "citations": [
+        {
+          "title": "Chào mừng Kỷ niệm 60 năm ngày truyền thống HVNH (13/09/1961 - 13/09/2021)",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/492_chao_mung_ky_niem_60_nam_ngay_truyen_thong_hvnh_13_09_1961_13_09_2021_.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-037",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "citation_count": 0,
+      "conversation_id": "898f4bdb-2dc1-4a1a-ab84-98454ef19aae",
+      "message_id": "021fb04e-5d5f-4e6a-b183-34f2a386d74e",
+      "citations": []
+    },
+    {
+      "id": "hvnh-038",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "citation_count": 0,
+      "conversation_id": "4c53652e-1c37-4e56-a2fe-a377fe58d9b3",
+      "message_id": "8722e1ab-20bf-4989-9391-5124dc437e73",
+      "citations": []
+    },
+    {
+      "id": "hvnh-039",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "citation_count": 0,
+      "conversation_id": "3a836b61-1871-4691-a28f-6c3a4bfff30a",
+      "message_id": "152e0902-f980-400c-a9f9-edeafb7e841a",
+      "citations": []
+    },
+    {
+      "id": "hvnh-040",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": true,
+      "citation_count": 0,
+      "conversation_id": "6f302abc-02b5-42cc-8e3a-fc753d31bf41",
+      "message_id": "1f22ba88-8e01-40fa-ba71-5aa9b2431c59",
+      "citations": []
+    },
+    {
+      "id": "hvnh-041",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 2,
+      "conversation_id": "26984e5b-2a2a-489a-9192-487042043ab1",
+      "message_id": "0bf25aeb-c833-4b8e-b561-c3074374f1ce",
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+          "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-gia-han-nop-hoc-phi-hoc-ky-02-nam-hoc-20252026-doi-voi-sinh-vien-he-chinh-quy-chuan-va-chat-luong-cao-111.html"
+        },
+        {
+          "title": "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/tckt/vi/07.2025/system/archivedate/47c23652_QD%203455%20Muc%20thu%20hoc%20phi%20nam%20hoc%202025%202026.pdf"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-042",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "41a39e51-e55e-411a-804d-314977124be9",
+      "message_id": "fa231c38-828a-4708-9679-dfcb83a546f2",
+      "citations": [
+        {
+          "title": "Giảng viên | Triệu Thu Hương",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/giang_vien/8_trieu_thu_huong.html"
+        }
+      ]
+    }
+  ]
+}

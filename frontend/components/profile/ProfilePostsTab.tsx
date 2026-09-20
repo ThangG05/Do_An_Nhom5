@@ -29,15 +29,7 @@ export default function ProfilePostsTab({
   onViewModeChange,
   onCreatePost,
 }: ProfilePostsTabProps) {
-  const createPostState = useCreatePost((newPost: Post) => {
-    onCreatePost({
-      content: newPost.content,
-      category: newPost.category,
-      privacy: newPost.privacy,
-      media: newPost.media || [],
-      taggedFriends: [],
-    });
-  });
+  const createPostState = useCreatePost(onCreatePost);
 
   const filteredPosts = posts.filter((p) => {
     if (postFilter === 'market') return p.category === 'market';

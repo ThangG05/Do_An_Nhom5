@@ -1,0 +1,23 @@
+{
+  "complete": true,
+  "cases": 1,
+  "metrics": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9848538503225361,
+    "answer_correctness": 0.573606300383799,
+    "context_precision": 0.9999999999,
+    "context_recall": 1.0
+  },
+  "results": [
+    {
+      "case_id": "hvnh-003",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.9848538503225361,
+        "answer_correctness": 0.573606300383799,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    }
+  ]
+}

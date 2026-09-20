@@ -1,13 +1,18 @@
 export type PostCategory = 'general' | 'market' | 'roommate' | 'event' | 'study';
 
-export type PostPrivacy = 'public' | 'friends';
+export type PostPrivacy = 'public' | 'friends' | 'private';
 
 export interface PostMedia {
   id: string;
   url: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio' | 'file';
+  file?: File;
   name?: string;
   size?: number;
+  uploadProgress?: number;
+  uploadStatus?: 'pending' | 'uploading' | 'complete' | 'error';
+  uploadError?: string;
+  uploadedMediaId?: string;
 }
 
 export interface MarketListingData {
@@ -40,6 +45,7 @@ export interface CreatePostPayload {
   marketListing?: MarketListingData;
   roomListing?: RoomListingData;
   eventListing?: EventListingData;
+  onUploadProgress?: (mediaId: string, progress: number, status: 'uploading' | 'complete' | 'error', error?: string, uploadedMediaId?: string) => void;
 }
 
 export interface Author {
@@ -61,6 +67,8 @@ export interface Comment {
   author: CommentAuthor;
   content: string;
   createdAt: string;
+  parentId?: string | null;
+  imageUrl?: string | null;
 }
 
 export interface Post {

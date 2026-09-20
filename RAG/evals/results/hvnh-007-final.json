@@ -1,0 +1,26 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "hvnh-007",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "756d2d4d-8a16-4858-9201-0db1ffd62db0",
+      "message_id": "2068c876-8851-427a-9607-88bd2bc7c589",
+      "citations": [
+        {
+          "title": "Thăm quan thực tế tại ProtonX",
+          "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/19_tham_quan_thuc_te_tai_protonx.html"
+        }
+      ]
+    }
+  ]
+}

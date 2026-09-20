@@ -1,0 +1,17 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+pydantic-settings==2.10.1
+SQLAlchemy[asyncio]==2.0.43
+asyncpg==0.30.0
+alembic==1.16.5
+qdrant-client==1.19.0
+redis==6.4.0
+httpx==0.28.1
+google-genai==2.22.0
+pypdf==6.0.0
+beautifulsoup4==4.13.5
+python-docx==1.2.0
+openpyxl==3.1.5
+certifi==2026.7.22
+PyJWT==2.10.1
+modal==1.5.5

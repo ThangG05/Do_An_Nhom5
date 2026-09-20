@@ -1,0 +1,45 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 9572.0,
+    "p50_ms": 9572,
+    "p95_ms": 9572,
+    "max_ms": 9572
+  },
+  "results": [
+    {
+      "id": "hvnh-027",
+      "passed": false,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.5,
+      "citation_count": 1,
+      "conversation_id": "64db34ef-4d21-46f4-a6b1-a66d07608c95",
+      "message_id": "3064c1ba-8f00-4099-8950-71f33ea00616",
+      "question": "Bài viết Tôi yêu MIS chia sẻ trải nghiệm gì về việc học ngành MIS?",
+      "response": "Bài viết \"Tôi yêu MIS\" của sinh viên Trịnh Thị Lan Anh (K18HTTTC) chia sẻ những trải nghiệm trong năm học đầu tiên tại khoa Hệ thống Thông tin Quản lý gồm: tiếp cận các môn học mới lạ và thuật ngữ chưa từng biết thời THPT [1]. Sinh viên vượt qua sự rụt rè ban đầu nhờ sự nhiệt huyết và sáng tạo trong giờ giảng của các thầy cô [1]. Ngoài ra, tác giả còn tham gia các hoạt động phong trào như quay video bài hát truyền thống của khoa và tham gia câu lạc bộ BIT cùng Liên Chi Hội [1].",
+      "reference": "Người viết chọn ngành MIS vì yêu công nghệ và khẳng định không hối hận với lựa chọn này. Năm đầu học MIS đem lại nhiều môn học, thuật ngữ và trải nghiệm mới.",
+      "latency_ms": 9572,
+      "retrieved_contexts": [
+        "Tôi yêu MIS (Viết cho thanh xuân của tôi bên mái nhà MIS | Trịnh Thị Lan Anh, K18HTTTC)\nNgày đăng: 12/06/2018\nThật sự, tôi không biết đã qua bao nhiêu ngày kể từ khi tôi loay hoay chọn trường đại học và vùi đầu vào ôn thi. Có quá nhiều sự lựa chọn cho tuổi 18, khi ấy tôi là một cô bé có cá tính, trẻ trung năng động, căng tràn nhiệt huyết và hơn hết tôi yêu công nghệ. Chính vì thế ngành nghề tôi chọn cũng phải phù hợp với tính cách của bản thân, chính quyết định ngày hôm đó đã làm thay đổi hoàn toàn viễn cảnh cuộc đời tôi. Tôi đã chọn MIS và chắc chắn sẽ không bao giờ hối hận.\nLật lại những trang kí ức đầu tiên của tôi bên cạnh MIS, có quá nhiều điều thú vị và mới lạ với hành trình của tôi bên cạnh khoa Hệ thống Thông tin Quản lý. Để tôi kể bạn nghe, năm học đầu tiên của tôi bắt đầu với những môn học mới lạ, những thuật ngữ mới mà tôi chưa từng được biết đến khi tôi còn học THPT, những rụt rè, e ngại của buổi đầu đến lớp với bạn mới, trường mới, thầy cô mới đã bị đánh bay hoàn toàn bởi "
+      ],
+      "citations": [
+        {
+          "title": "Tôi yêu MIS (Viết cho thanh xuân của tôi bên mái nhà MIS | Trịnh Thị Lan Anh, K18HTTTC)",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/329_toi_yeu_mis_viet_cho_thanh_xuan_cua_toi_ben_mai_nha_mis_trinh_thi_lan_anh_k18htttc_.html"
+        }
+      ]
+    }
+  ]
+}

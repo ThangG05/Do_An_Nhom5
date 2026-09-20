@@ -1,0 +1,26 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "hvnh-011",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "bb9d92c7-c4a5-457c-bbcc-5537d6ead0e4",
+      "message_id": "e7b43ab3-13c1-43a6-8b5c-aa4c788e76cb",
+      "citations": [
+        {
+          "title": "Điểm trúng tuyển đại học chính quy năm 2026",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-ve-muc-diem-trung-tuyen-dai-hoc-chinh-quy-nam-2026-ma-truong-nhh-4054.html"
+        }
+      ]
+    }
+  ]
+}

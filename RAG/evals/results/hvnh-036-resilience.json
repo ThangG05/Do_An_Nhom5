@@ -1,0 +1,26 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "id": "hvnh-036",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "fa85d992-017d-4b8e-9153-12ce6b30a91a",
+      "message_id": "932367ca-785a-4a2f-b58b-5a826ef6b625",
+      "citations": [
+        {
+          "title": "Chào mừng Kỷ niệm 60 năm ngày truyền thống HVNH (13/09/1961 - 13/09/2021)",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/492_chao_mung_ky_niem_60_nam_ngay_truyen_thong_hvnh_13_09_1961_13_09_2021_.html"
+        }
+      ]
+    }
+  ]
+}

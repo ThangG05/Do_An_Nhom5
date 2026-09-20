@@ -14,9 +14,24 @@ env/
 
 # Environment variables
 .env
+.env.*
+!.env.example
+!**/.env.example
+!**/.env.*.example
 .env.local
 .env*.local
 .env.production
+
+# Credentials and private keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+credentials.json
+credentials.*.json
+service-account.json
+service-account-*.json
 
 # IDE
 .vscode/
@@ -46,7 +61,13 @@ logs/
 # Test coverage
 htmlcov/
 .coverage
+.coverage.*
 coverage.xml
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
 
 # Docker
 docker-compose.override.yml
@@ -54,11 +75,32 @@ docker-compose.override.yml
 # Node (frontend)
 node_modules/
 .next/
+.next-e2e/
 out/
 .nuxt/
 *.tsbuildinfo
 npm-debug.log*
 yarn-error.log*
+playwright-report/
+test-results/
+.e2e-state.json
+
+# Local service volumes and generated uploads
+qdrant_storage/
+postgres_data/
+redis_data/
+uploads/
+celerybeat-schedule*
+
+# Downloaded ML weights
+*.onnx
+*.pt
+*.pth
+*.safetensors
+
+# Local database exports
+*.dump
+*.sql.gz
 
 # Build
 *.pyc

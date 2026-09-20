@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { PostCategory } from "@/types/post";
 import { IconMarket, IconHousing, IconEvent } from "@/components/ui/Icons";
+import { getAuthUser, getCurrentUser } from "@/lib/auth";
+import { safeImageSrc } from "@/lib/media";
 
 interface CreatePostCardProps {
   onOpenModal: (category?: PostCategory) => void;
@@ -12,19 +14,25 @@ interface CreatePostCardProps {
 
 export default function CreatePostCard({
   onOpenModal,
-  userAvatar = "SV",
-  userName = "sinh viên HVNH",
+  userAvatar,
+  userName,
 }: CreatePostCardProps) {
+  const [identity, setIdentity] = useState({ name: userName || "", avatar: userAvatar || "" });
+
+  useEffect(() => {
+    const stored = getAuthUser();
+    if (stored) setIdentity({ name: stored.full_name || stored.username, avatar: stored.avatar_url || "" });
+    void getCurrentUser().then(user => setIdentity({ name: user.full_name || user.username, avatar: user.avatar_url || "" })).catch(() => undefined);
+  }, [userAvatar, userName]);
+
+  const initials = identity.name.trim().split(/\s+/).slice(-2).map(part => part[0]).join('').toUpperCase() || 'U';
+
   return (
     <section className="create-post-card" aria-label="Tạo bài viết mới">
       {/* Upper Row: Avatar + Simulated Input Pill */}
       <div className="card-top-row">
         <div className="card-user-avatar-wrap">
-          <img
-            src={userAvatar && userAvatar !== "SV" ? userAvatar : "/assets/logo.png"}
-            alt={userName}
-            className="create-post-user-avatar"
-          />
+          {identity.avatar ? <img src={safeImageSrc(identity.avatar)} alt={identity.name} className="create-post-user-avatar" /> : <span className="create-post-user-avatar avatar-initials">{initials}</span>}
         </div>
         <button
           type="button"
@@ -32,7 +40,7 @@ export default function CreatePostCard({
           onClick={() => onOpenModal("general")}
           aria-label="Mở bảng tạo bài viết"
         >
-          <span>{`Bạn đang nghĩ gì thế, ${userName}?`}</span>
+          <span>{identity.name ? `Bạn đang nghĩ gì thế, ${identity.name}?` : 'Bạn đang nghĩ gì thế?'}</span>
         </button>
       </div>
 

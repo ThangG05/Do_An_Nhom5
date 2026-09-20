@@ -1,0 +1,45 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 8874.0,
+    "p50_ms": 8874,
+    "p95_ms": 8874,
+    "max_ms": 8874
+  },
+  "results": [
+    {
+      "id": "hvnh-005",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "c25dbdf4-7531-42ec-8c42-5e598631217b",
+      "message_id": "da9fec5c-d3ac-43bb-8434-8d0f33fdd782",
+      "question": "Sinh viên còn nợ học phí học kỳ II năm học 2025/2026 bị xử lý thế nào và cần liên hệ khi nào?",
+      "response": "Sinh viên chưa hoàn thành nghĩa vụ tài chính học phí học kỳ II năm học 2025/2026 sau thời hạn gia hạn sẽ bị hủy kết quả đăng ký học phần trong học kỳ này và tạm dừng các quyền lợi học tập liên quan [1]. Trường hợp có thắc mắc hoặc cần rà soát, sinh viên liên hệ Phòng Tài chính – Kế toán trước 11h ngày 04/03/2026 để được hướng dẫn [1].",
+      "reference": "Sinh viên chưa hoàn thành nghĩa vụ tài chính bị hủy kết quả đăng ký học phần và tạm dừng quyền lợi học tập. Sinh viên cần liên hệ Phòng Tài chính - Kế toán trước 11h ngày 04/03/2026 nếu cần rà soát.",
+      "latency_ms": 8874,
+      "retrieved_contexts": [
+        "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026\nNgày 03/03/2026\n4,933 lượt xem\nTHÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026\nC\năn cứ Thông báo số 1392/TB-HVNH ngày 12 tháng 02 năm 2026 của Giám đốc Học viện Ngân hàng về việc gia hạn nộp học phí đến hết ngày 01/03/2026, Phòng Tài chính - Kế toán Học viện Ngân hàng thông báo:\nHết thời hạn gia hạn nêu trên, những sinh viên chưa hoàn thành nghĩa vụ tài chính sẽ bị hủy kết quả đăng ký học phần trong học kỳ này (xóa đăng ký học) và tạm dừng các quyền lợi học tập liên quan theo quy định (có Danh sách kèm theo).\nTrường hợp có thắc mắc hoặc cần rà soát, sinh viên liên hệ Phòng Tài chính – Kế toán trước 11h ngày 04/03/2026 để được hướng dẫn."
+      ],
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026",
+          "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-xu-ly-sinh-vien-con-no-hoc-phi-hoc-ky-ii-nam-hoc-2025-2026-112.html"
+        }
+      ]
+    }
+  ]
+}

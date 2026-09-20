@@ -1,0 +1,113 @@
+{
+  "complete": true,
+  "cases": 10,
+  "metrics": {
+    "faithfulness": 0.75,
+    "answer_relevancy": 0.8846587360131132,
+    "answer_correctness": 0.48736711610669614,
+    "context_precision": 0.79999999993,
+    "context_recall": 0.7742424242424242
+  },
+  "results": [
+    {
+      "case_id": "hvnh-003",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.9848538503225361,
+        "answer_correctness": 0.508702454229953,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "case_id": "hvnh-004",
+      "scores": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.9250274907907712,
+        "answer_correctness": 0.7499757345242852,
+        "context_precision": 0.9999999999,
+        "context_recall": 0.9090909090909091
+      }
+    },
+    {
+      "case_id": "hvnh-005",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8336280398299323,
+        "answer_correctness": 0.20874855701531173,
+        "context_precision": 0.0,
+        "context_recall": 0.0
+      }
+    },
+    {
+      "case_id": "hvnh-006",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.895824900325135,
+        "answer_correctness": 0.41206140513842837,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "case_id": "hvnh-007",
+      "scores": {
+        "faithfulness": 0.6666666666666666,
+        "answer_relevancy": 0.8881810712453074,
+        "answer_correctness": 0.5006180199252592,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "case_id": "hvnh-011",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8758476899323075,
+        "answer_correctness": 0.8037711946272059,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "case_id": "hvnh-013",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.9044044265368454,
+        "answer_correctness": 0.313534557319598,
+        "context_precision": 0.9999999999,
+        "context_recall": 0.8333333333333334
+      }
+    },
+    {
+      "case_id": "hvnh-014",
+      "scores": {
+        "faithfulness": 0.42857142857142855,
+        "answer_relevancy": 0.7813976148234761,
+        "answer_correctness": 0.6016489772698357,
+        "context_precision": 0.9999999999,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "case_id": "hvnh-019",
+      "scores": {
+        "faithfulness": 0.5714285714285714,
+        "answer_relevancy": 0.8972511907216657,
+        "answer_correctness": 0.5812923311776175,
+        "context_precision": 0.99999999995,
+        "context_recall": 1.0
+      }
+    },
+    {
+      "case_id": "hvnh-020",
+      "scores": {
+        "faithfulness": 0.3333333333333333,
+        "answer_relevancy": 0.8601710856031547,
+        "answer_correctness": 0.19331792983946675,
+        "context_precision": 0.0,
+        "context_recall": 0.0
+      }
+    }
+  ]
+}

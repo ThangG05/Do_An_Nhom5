@@ -1,0 +1,38 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 0,
+  "citation_accuracy": 0.0,
+  "refusal_accuracy": 0.0,
+  "latency": {
+    "mean_ms": 12774.0,
+    "p50_ms": 12774,
+    "p95_ms": 12774,
+    "max_ms": 12774
+  },
+  "results": [
+    {
+      "id": "hvnh-004",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "c365b6bd-845d-48b6-90bd-79d3326e0df3",
+      "message_id": "3f9a8aa8-007a-4552-a877-d398d21cde3e",
+      "question": "Chương trình trao đổi sinh viên học kỳ hè 2025/2026 tại Đại học Kinh tế - Đại học Đà Nẵng được tổ chức thế nào?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Đối tượng là sinh viên đại học chính quy đang học tại Học viện Ngân hàng. Học tại Đại học Kinh tế - Đại học Đà Nẵng từ 06/07/2026 đến 24/07/2026; thi dự kiến 27-28/07/2026.",
+      "latency_ms": 12774,
+      "retrieved_contexts": [],
+      "citations": []
+    }
+  ]
+}

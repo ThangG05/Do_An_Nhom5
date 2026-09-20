@@ -1,0 +1,38 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 0,
+  "citation_accuracy": 0.0,
+  "refusal_accuracy": 0.0,
+  "latency": {
+    "mean_ms": 17363.0,
+    "p50_ms": 17363,
+    "p95_ms": 17363,
+    "max_ms": 17363
+  },
+  "results": [
+    {
+      "id": "hvnh-041",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "330f0632-93b4-4ed8-9cc3-919964e77fee",
+      "message_id": "7fe905fa-edd1-4dce-896a-daf4914b86fb",
+      "question": "Mức thu học phí năm học 2025/2026 cho các hệ đào tạo tại Học viện Ngân hàng được quy định thế nào?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Quyết định 3455/QĐ-HVNH có hiệu lực trong năm học 2025/2026. Đại học chính quy sau tự chủ có mức 785.000 đồng/tín chỉ khối III, 830.000 đồng/tín chỉ khối V và 800.000 đồng/tín chỉ khối VII.",
+      "latency_ms": 17363,
+      "retrieved_contexts": [],
+      "citations": []
+    }
+  ]
+}

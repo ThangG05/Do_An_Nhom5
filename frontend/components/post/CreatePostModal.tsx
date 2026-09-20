@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { PostCategory, PostPrivacy } from "@/types/post";
 import { UseCreatePostReturn } from "@/hooks/useCreatePost";
+import { AuthUser, getAuthUser, getCurrentUser } from "@/lib/auth";
+import { safeImageSrc } from "@/lib/media";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 interface CreatePostModalProps {
   postState: UseCreatePostReturn;
@@ -19,6 +22,7 @@ const CATEGORY_OPTIONS: { val: PostCategory; label: string; icon: string }[] = [
 const PRIVACY_OPTIONS: { val: PostPrivacy; label: string; icon: string }[] = [
   { val: "public", label: "Công khai", icon: "🌐" },
   { val: "friends", label: "Bạn bè", icon: "👥" },
+  { val: "private", label: "Chỉ mình tôi", icon: "🔒" },
 ];
 
 const AMENITY_TAGS = [
@@ -33,6 +37,8 @@ const AMENITY_TAGS = [
 ];
 
 export default function CreatePostModal({ postState }: CreatePostModalProps) {
+  const dialog = useDialog();
+  const [author, setAuthor] = useState<AuthUser | null>(null);
   const {
     isOpen,
     closeModal,
@@ -60,6 +66,14 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setAuthor(getAuthUser());
+    void getCurrentUser().then(setAuthor).catch(() => {
+      // Keep the authenticated session identity visible if /auth/me is temporarily unavailable.
+    });
+  }, [isOpen]);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -110,7 +124,7 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
       case "study":
         return "Chia sẻ đề thi, giáo trình, tài liệu môn học...";
       default:
-        return "Bạn đang nghĩ gì thế, sinh viên HVNH?";
+        return `Bạn đang nghĩ gì thế${author?.full_name ? `, ${author.full_name}` : ""}?`;
     }
   };
 
@@ -142,15 +156,10 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
         <div className="modal-body">
           {/* Author Header */}
           <div className="author-row">
-            <div className="author-avatar" aria-hidden="true">
-              SV
-            </div>
+            <img className="author-avatar author-avatar-real" src={safeImageSrc(author?.avatar_url)} alt={author?.full_name || "Ảnh đại diện"} />
             <div className="author-meta">
               <div className="author-name-row">
-                <strong>Sinh viên HVNH</strong>
-                <span className="verified-badge" title="Tài khoản @hvnh.edu.vn đã xác thực">
-                  ✓ HVNH
-                </span>
+                <strong>{author?.full_name || author?.username || "Đang tải thông tin..."}</strong>
               </div>
 
               <div className="selector-group">
@@ -375,10 +384,13 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
               {mediaList.map((m) => (
                 <div key={m.id} className="preview-item">
                   {m.type === "image" ? (
-                    <img src={m.url} alt="Xem trước ảnh đăng bài" />
+                    <img src={safeImageSrc(m.url)} alt="Xem trước ảnh đăng bài" />
+                  ) : m.type === "audio" ? (
+                    <audio src={m.url} controls />
                   ) : (
                     <video src={m.url} controls />
                   )}
+                  {m.uploadStatus&&m.uploadStatus!=="pending"&&<div className={`media-upload-state ${m.uploadStatus}`}><span>{m.uploadStatus==="uploading"?`${m.uploadProgress||0}%`:m.uploadStatus==="complete"?"Đã tải lên":"Tải lên lỗi"}</span><i style={{width:`${m.uploadProgress||0}%`}}/>{m.uploadError&&<small>{m.uploadError}</small>}</div>}
                   <button
                     type="button"
                     className="remove-media-btn"
@@ -411,8 +423,8 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
                 type="button"
                 className="action-icon-btn location-btn"
                 title="Thêm địa điểm"
-                onClick={() => {
-                  const loc = prompt("Nhập địa điểm (ví dụ: Thư viện HVNH):");
+                onClick={async () => {
+                  const loc = await dialog.prompt({title:"Thêm địa điểm",message:"Địa điểm sẽ được hiển thị cùng bài viết.",placeholder:"Ví dụ: Thư viện HVNH",confirmLabel:"Thêm địa điểm"});
                   if (loc) setLocation(loc);
                 }}
               >
@@ -423,7 +435,7 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*,video/*"
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/webm,application/pdf,text/plain,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
               multiple
               style={{ display: "none" }}
               onChange={handleFileChange}

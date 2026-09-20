@@ -1,0 +1,53 @@
+{
+  "complete": true,
+  "generated_at": "2026-09-18T02:12:28.895671+00:00",
+  "cases": 5,
+  "minimum": 0.8,
+  "accepted": true,
+  "metrics": {
+    "answer_correctness": 0.8625587314738142,
+    "faithfulness": 1.0
+  },
+  "results": [
+    {
+      "case_id": "hvnh-004",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.8904393022954644
+      },
+      "source_report": "evals/results/ragas-hard-4-v4-scores.json"
+    },
+    {
+      "case_id": "hvnh-005",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.9926387605641426
+      },
+      "source_report": "evals/results/ragas-hard-5-v2-scores.json"
+    },
+    {
+      "case_id": "hvnh-014",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.9116433014008988
+      },
+      "source_report": "evals/results/ragas-hvnh-014-v6-scores.json"
+    },
+    {
+      "case_id": "hvnh-019",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.7178578390844319
+      },
+      "source_report": "evals/results/ragas-hard-3-v5-scores.json"
+    },
+    {
+      "case_id": "hvnh-020",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.8002144540241338
+      },
+      "source_report": "evals/results/ragas-hard-3-v5-scores.json"
+    }
+  ]
+}

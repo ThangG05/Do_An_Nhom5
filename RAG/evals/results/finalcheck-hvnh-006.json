@@ -1,0 +1,50 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 9469.0,
+    "p50_ms": 9469,
+    "p95_ms": 9469,
+    "max_ms": 9469
+  },
+  "results": [
+    {
+      "id": "hvnh-006",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "64dc6b3c-625b-46a6-a886-fb6d8c681e27",
+      "message_id": "5f3ee857-b2e4-4ab7-8ef3-6dd57676e069",
+      "question": "Sinh viên Học viện Ngân hàng đã đạt thành tích gì tại The Moneyverse năm 2026?",
+      "response": "Tại cuộc thi The Moneyverse năm 2026, đội thi Học viện Ngân hàng (BAV) đã xuất sắc vượt qua vòng casting cấp quốc gia để lọt vào vòng Tứ kết [1, 2]. Thành tích này khẳng định chất lượng đào tạo, năng lực hội nhập và bản lĩnh chuyên môn của sinh viên Học viện Ngân hàng trong lĩnh vực tài chính – ngân hàng [1].",
+      "reference": "Sinh viên Học viện Ngân hàng lọt vào Tứ kết The Moneyverse - Vũ trụ đồng tiền cấp quốc gia năm 2026.",
+      "latency_ms": 9469,
+      "retrieved_contexts": [
+        "thi BAV đã thể hiện rõ nét phong thái tự tin, bản lĩnh vững vàng và khả năng thích ứng nhanh với áp lực – những phẩm chất tiêu biểu của sinh viên được đào tạo trong môi trường tài chính – ngân hàng chuyên nghiệp.\nPhần thi của các phi hành gia BAV\nĐặc biệt, sau những phần thi gay cấn và cạnh tranh, đội thi BAV đã xuất sắc lọt vào vòng Tứ kết của cuộc thi. Thành tích này tiếp tục nối dài dấu ấn của sinh viên BAV tại\nThe Moneyverse\nqua các năm, qua đó khẳng định chất lượng đào tạo, năng lực hội nhập và bản lĩnh chuyên môn trong lĩnh vực tài chính – ngân hàng.\nCác phi hành gia BAV đã xuất sắc lọt vào Tứ kết cuộc thi\nKhông chỉ dừng lại ở một sân chơi học thuật, hành trình tại\nThe Moneyverse – Vũ trụ đồng tiền\ncòn là minh chứng rõ nét cho định hướng đào tạo gắn với thực tiễn, lấy người học làm trung tâm và phát triển năng lực toàn diện của BAV. Từ giảng đường đến “đấu trường” quốc gia, sinh viên BAV đang từng bước khẳng định vai trò là lực lượng trẻ giàu tri thức, sẵn sàng thích ứng và dẫn d",
+        "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia\nNgày 05/05/2026\n1,424 lượt xem\nSáng ngày 05/5/2026, tại Nhà thi đấu Tương Mai, các “phi hành gia” Học viện Ngân hàng (BAV) đã tham gia vòng casting cấp quốc gia cuộc thi “\nThe Moneyverse – Vũ trụ đồng tiền”\n– chương trình truyền hình thực tế về tài chính, đầu tư quy mô toàn quốc.\nCuộc thi do VTV Times phối hợp tổ chức, quy tụ đông đảo sinh viên xuất sắc đến từ nhiều trường đại học, học viện trên cả nước, tạo nên một “đấu trường trí tuệ” giàu tính cạnh tranh trong lĩnh vực tài chính – đầu tư. Với hệ thống thử thách đa dạng, gắn với bối cảnh thị trường thực tiễn,\nThe Moneyverse\nkhông chỉ là sân chơi học thuật mà còn là môi trường rèn luyện tư duy chiến lược, năng lực phân tích và khả năng ra quyết định trong điều kiện biến động.\nPGS.TS. Phạm Thị Hoàng Anh – Phó Giám đốc Học viện tham dự và cổ vũ đội thi BAV\nTham dự và cổ vũ đội thi có PGS.TS. Phạm Thị Hoàng Anh – Phó Giám đốc Học "
+      ],
+      "citations": [
+        {
+          "title": "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/sinh-vien-hoc-vien-ngan-hang-xuat-sac-lot-vao-tu-ket-cuoc-thi-the-moneyverse-vu-tru-dong-tien-cap-quoc-gia-3909.html"
+        },
+        {
+          "title": "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/sinh-vien-hoc-vien-ngan-hang-xuat-sac-lot-vao-tu-ket-cuoc-thi-the-moneyverse-vu-tru-dong-tien-cap-quoc-gia-3909.html"
+        }
+      ]
+    }
+  ]
+}

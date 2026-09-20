@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { UserPhoto, ProfileTabType } from '@/types/user';
+import { safeImageSrc } from '@/lib/media';
 
 interface ProfilePhotosWidgetProps {
   photos: UserPhoto[];
@@ -34,7 +35,7 @@ export default function ProfilePhotosWidget({
         <div className="photos-grid-3x3">
           {recentPhotos.map((photo) => (
             <div key={photo.id} className="photo-grid-item">
-              <img src={photo.url} alt={photo.caption || 'Ảnh người dùng'} />
+              <img src={safeImageSrc(photo.url)} alt={photo.caption || 'Ảnh người dùng'} />
             </div>
           ))}
         </div>

@@ -1,0 +1,20 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "id": "hvnh-007",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "citation_count": 0,
+      "conversation_id": "60d49f76-5218-4238-b202-56f8edf453de",
+      "message_id": "7186bfc2-9b1c-4f96-8927-c876896d7a4b"
+    }
+  ]
+}

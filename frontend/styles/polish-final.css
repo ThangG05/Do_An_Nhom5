@@ -1,0 +1,74 @@
+.skip-link{position:fixed;z-index:1000;top:8px;left:16px;padding:10px 14px;border-radius:8px;background:#082b50;color:#fff;transform:translateY(-140%);text-decoration:none;font-weight:700}.skip-link:focus{transform:translateY(0)}
+:where(.live-group-summary,.live-group-composer,.live-admin-panel,.group-admin-panel,.admin-users,.admin-group-stats,.audit-panel,.system-config,.report-queue,.post-card-item,.notification-main-card) button:not(:disabled):hover{transform:translateY(-1px);filter:saturate(.94);box-shadow:0 7px 18px rgba(24,62,96,.1)}
+:where(.live-group-summary,.live-group-composer,.live-admin-panel,.group-admin-panel,.admin-users,.admin-group-stats,.audit-panel,.system-config,.report-queue) button:disabled{cursor:not-allowed;opacity:.55}
+.post-card-header,.post-card-body,.post-card-footer{padding-left:clamp(14px,3vw,22px)!important;padding-right:clamp(14px,3vw,22px)!important}.post-text-content{line-height:1.68!important;color:#243b53!important}.comment-input-field,.chat-text-input{min-height:42px!important}
+.notification-item:hover,.conversation-list-item:hover,.member-table article:hover{background:#f4f8fb!important}.admin-status,.post-status{letter-spacing:.02em}.admin-charts,.blocked-card{border-color:rgba(210,222,233,.9)!important;box-shadow:0 4px 16px rgba(24,62,96,.06)!important}
+@media(max-width:540px){body{font-size:15px}.post-card-header,.post-card-body,.post-card-footer{padding-left:13px!important;padding-right:13px!important}.global-search-pill{display:none!important}.navbar-center-nav{gap:2px!important}.nav-label{font-size:11px!important}.post-action-buttons-row{gap:4px}.post-action-btn{min-height:42px}.admin-metric-grid article,.group-admin-stats article{padding:13px!important}}
+
+/* Compact social-feed post layout. Audio and files never inherit image/video height. */
+.post-card-item{padding:0!important;border-radius:12px!important}
+.post-card-header-facebook{position:relative;align-items:flex-start!important;margin:0!important;padding-top:16px!important;padding-bottom:8px!important}
+.post-card-header-facebook .author-avatar-link{flex:0 0 auto}
+.post-card-header-facebook .author-avatar-img{width:42px!important;height:42px!important;border-radius:50%!important;object-fit:cover}
+.post-card-header-facebook .author-meta{min-width:0;flex:1;padding-top:1px}
+.post-card-header-facebook .author-name-row{min-height:20px}
+.post-card-header-facebook .author-name{text-decoration:none;color:#172b4d;font-weight:700}
+.post-time-privacy{margin-top:1px;gap:4px!important;line-height:18px}
+.privacy-badge{display:inline-flex;align-items:center;font-size:11px;line-height:1;filter:grayscale(1)}
+.post-more-wrap{position:relative;margin-left:auto}
+.post-more-button{display:grid;place-items:center;width:38px;height:38px;padding:0 0 7px;border:0;border-radius:50%;background:transparent;color:#53657a;font-size:19px;font-weight:800;letter-spacing:1px}
+.post-more-button:hover,.post-more-button[aria-expanded="true"]{background:#eef2f6}
+.post-more-menu{position:absolute;z-index:30;top:42px;right:0;width:220px;padding:7px;border:1px solid #dce4ed;border-radius:12px;background:#fff;box-shadow:0 14px 36px rgba(15,23,42,.18)}
+.post-more-menu button{display:flex;width:100%;min-height:40px;align-items:center;padding:9px 11px;border:0;border-radius:8px;background:transparent;color:#243b53;font:inherit;font-size:13px;font-weight:650;text-align:left}
+.post-more-menu button:hover{background:#f1f5f9}.post-more-menu button.danger{color:#b42318}
+.post-card-body{padding-top:6px!important;padding-bottom:0!important}
+.post-text-content{margin:0 0 13px!important;white-space:pre-wrap}
+.post-media-gallery{margin:0!important;border-radius:10px!important}
+.post-attachments-list{display:grid;gap:8px;margin:4px 0 2px}
+.post-audio-attachment{display:flex;align-items:center;gap:12px;min-height:72px;padding:10px 12px;border:1px solid #dbe4ee;border-radius:12px;background:#f4f7fa}
+.post-audio-attachment>span{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:#dce9f6;font-size:20px}
+.post-audio-attachment>div{min-width:0;flex:1}.post-audio-attachment strong{display:block;margin-bottom:5px;color:#243b53;font-size:12px}.post-audio-attachment audio{display:block;width:100%;height:36px}
+.post-file-attachment{display:flex!important;align-items:center;gap:12px;min-height:66px!important;padding:11px 13px!important;border:1px solid #dbe4ee;border-radius:12px;background:#f4f7fa;color:#243b53;text-decoration:none}
+.post-file-attachment>span:first-child{font-size:22px}.post-file-attachment>span:last-child{display:flex;min-width:0;flex-direction:column}.post-file-attachment strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.post-file-attachment small{margin-top:2px;color:#64748b}
+.post-card-footer{margin-top:12px!important;padding-top:0!important;padding-bottom:8px!important;border-top:0!important}
+.post-stats-row{min-height:34px;align-items:center;margin:0!important;padding:0 2px}
+.post-action-divider{border-top:1px solid #e4e9ef}
+.post-action-buttons-row{padding:4px 0!important;border-top:0!important}
+.post-action-btn{color:#53657a!important}.post-action-btn:hover{background:#f0f2f5!important}.post-action-btn.liked{color:#e53935!important}
+@media(max-width:900px){.home-feed{width:min(100%,760px);margin-inline:auto}}
+@media(max-width:540px){.post-card-item{border-radius:0!important}.post-card-header-facebook{padding-top:12px!important}.post-audio-attachment{padding:8px}.post-audio-attachment>span{display:none}}
+
+/* Persistent global navigation. The page offset prevents content from sliding
+   underneath the floating bar. */
+.global-navbar-header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;z-index:1100!important;border-top:0!important;border-left:0!important;border-right:0!important;border-radius:0 0 14px 14px!important}
+.app-main-body-content{padding-top:74px}
+.profile-workspace-wrapper,.messenger-page-layout,.notifications-page,.live-groups-page,.group-admin-page,.admin-console{padding-top:28px!important}
+
+/* Conversation-style comments, inspired by familiar social feeds. */
+.post-comments-section{margin-top:2px!important;padding-top:8px!important;gap:7px!important}
+.comment-form-row{position:relative;display:flex;align-items:center;gap:8px}
+.comment-composer-avatar{flex:0 0 34px;width:34px;height:34px;border-radius:50%;object-fit:cover}
+.comment-composer-shell{position:relative;min-width:0;flex:1}
+.comment-input-field{width:100%;height:40px!important;padding:0 44px 0 15px!important;border:0!important;border-radius:22px!important;background:#f0f2f5!important;color:#172b4d;font-size:13px!important;box-shadow:none!important}
+.comment-input-field:focus{background:#eef2f6!important;box-shadow:inset 0 0 0 1px #c9d5e2!important}
+.comment-image-button{position:absolute;top:50%;right:7px;display:grid!important;place-items:center;min-width:30px!important;width:30px;height:30px!important;transform:translateY(-50%);border:0!important;border-radius:50%!important;background:transparent!important;filter:grayscale(1);font-size:15px}
+.comment-image-button:hover{background:#dde4eb!important}
+.comment-submit-btn{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;min-height:36px!important;padding:0 2px 1px 0;border:0;border-radius:50%;background:#0b4f8a;color:#fff;font-size:17px;box-shadow:none}
+.comment-submit-btn:disabled{background:#dbe2ea;color:#8b9aab}
+.comment-replying{margin-left:42px!important;margin-bottom:-4px;border-radius:10px!important;background:#eef5fb!important}
+.comments-stream-list{gap:6px!important}.comment-item-row{gap:7px!important}
+.comment-author-avatar{flex:0 0 32px;margin-top:2px}
+.comment-content-column{display:flex;min-width:0;max-width:min(86%,560px);flex-direction:column;align-items:flex-start}
+.comment-bubble{display:inline-block!important;width:auto!important;height:auto!important;min-height:0!important;max-width:100%!important;padding:7px 11px!important;border-radius:15px!important;border-top-left-radius:5px!important;background:#f0f2f5!important}
+.comment-author-name{margin:0 0 2px!important;color:#172b4d!important;font-size:12px!important}
+.home-feed article .comment-text-body,.comment-text-body{width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;font-size:13px!important;line-height:1.42!important;white-space:pre-wrap;overflow-wrap:anywhere}
+.comment-meta-row{display:flex;align-items:center;gap:9px;min-height:18px;padding:0 8px;color:#64748b}
+.comment-timestamp{display:inline!important;margin:0!important;color:#718096!important;font-size:10px!important}
+.comment-reply-button,.comment-manage-actions button{padding:0!important;border:0!important;background:transparent!important;color:#53657a!important;font-size:10px!important;font-weight:700!important}
+.comment-reply-button:hover,.comment-manage-actions button:hover{text-decoration:underline;color:#173f68!important}
+.comment-manage-actions{display:flex;gap:10px;margin:0!important}
+.comment-reply-row{margin-left:40px!important;padding-left:9px!important}
+@media(max-width:760px){.app-main-body-content{padding-top:64px}.profile-workspace-wrapper,.messenger-page-layout,.notifications-page,.live-groups-page,.group-admin-page,.admin-console{padding-top:14px!important}.comment-content-column{max-width:calc(100% - 40px)}}
+
+.author-avatar-real{display:block!important;width:46px!important;height:46px!important;flex:0 0 46px;border-radius:50%!important;object-fit:cover;background:#eef2f6}
+.avatar-initials,.comment-avatar-initials{display:grid!important;place-items:center;background:#dce7f2!important;color:#173f68;font-weight:800}

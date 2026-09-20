@@ -1,0 +1,38 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 0,
+  "citation_accuracy": 0.0,
+  "refusal_accuracy": 0.0,
+  "latency": {
+    "mean_ms": 13248.0,
+    "p50_ms": 13248,
+    "p95_ms": 13248,
+    "max_ms": 13248
+  },
+  "results": [
+    {
+      "id": "hvnh-005",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "f9192ba5-b8d9-417c-8da4-62263a18b4ec",
+      "message_id": "6b423f5a-6bef-4ae9-b244-4dcff4548e26",
+      "question": "Sinh viên còn nợ học phí học kỳ II năm học 2025/2026 bị xử lý thế nào và cần liên hệ khi nào?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Sinh viên chưa hoàn thành nghĩa vụ tài chính bị hủy kết quả đăng ký học phần và tạm dừng quyền lợi học tập. Sinh viên cần liên hệ Phòng Tài chính - Kế toán trước 11h ngày 04/03/2026 nếu cần rà soát.",
+      "latency_ms": 13248,
+      "retrieved_contexts": [],
+      "citations": []
+    }
+  ]
+}

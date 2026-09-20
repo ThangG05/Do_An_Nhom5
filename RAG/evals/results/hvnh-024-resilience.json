@@ -1,0 +1,26 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "results": [
+    {
+      "id": "hvnh-024",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "c909985c-bcb4-4304-a608-41de6db0264e",
+      "message_id": "2ee08e71-39db-4051-9df5-427a009858ee",
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/658_thong_bao_v_v_tap_trung_sinh_vien_nganh_cong_nghe_thong_tin_huong_dan_thuc_tap_va_khoa_luan_tot_nghiep_hoc_ky_i_nam_hoc_2026_2027.html"
+        }
+      ]
+    }
+  ]
+}

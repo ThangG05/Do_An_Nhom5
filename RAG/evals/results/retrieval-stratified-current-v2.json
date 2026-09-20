@@ -1,0 +1,758 @@
+{
+  "cases": 60,
+  "hit_at_5": 0.9818181818181818,
+  "mrr": 0.9,
+  "correct_empty": 1.0,
+  "details": [
+    {
+      "id": "strat-001-th-ng-b-o-tuy-n-sinh-ch-ng-tr-nh-tr",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+        "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027",
+        "Mức thu học phí năm học 2026 - 2027 đối với các hệ đào tạo",
+        "Mức thu dịch vụ năm học 2026 - 2027 đối với các hệ đào tạo"
+      ]
+    },
+    {
+      "id": "strat-002-chung-k-t-c-p-h-c-vi-n-cu-c-thi-vie",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng",
+        "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng",
+        "Chung khảo Cuộc thi “Giải thưởng Công trình khóa luận xuất sắc” năm 2026 tại Học viện Ngân hàng",
+        "Lễ tổng kết dự án hợp tác giữa Học viện Ngân hàng và công ty TNHH Openway Vietnam",
+        "Lễ tổng kết dự án hợp tác giữa Học viện Ngân hàng và công ty TNHH Openway Vietnam"
+      ]
+    },
+    {
+      "id": "strat-003-th-ng-b-o-v-m-c-i-m-tr-ng-tuy-n-c-a",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "Thông báo về việc xét tuyển bổ sung Đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế",
+        "Điểm trúng tuyển đại học chính quy năm 2026",
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "40a3c4ba_To trinh GD bo sung Muc thu dich vu nam hoc 2025-2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-004-h-ng-d-n-nh-p-h-c-n-m-2026",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn nhập học năm 2026",
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "Hướng dẫn thí sinh đăng ký nguyện vọng xét tuyển năm 2026",
+        "Điểm trúng tuyển đại học chính quy năm 2026",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf"
+      ]
+    },
+    {
+      "id": "strat-005-i-m-tr-ng-tuy-n-i-h-c-ch-nh-quy-n-m",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Điểm trúng tuyển đại học chính quy năm 2026",
+        "Ngưỡng đảm bảo chất lượng đầu vào và cách thức quy đổi tương đương điểm trúng tuyển giữa các phương thức xét tuyển đại học chính quy năm 2026 tại Học viện Ngân hàng (mã trường NHH)",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf",
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "Thông báo về việc xét tuyển bổ sung Đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế"
+      ]
+    },
+    {
+      "id": "strat-006-th-ng-b-o-v-v-t-p-trung-sinh-vi-n-n",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027",
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+        "Mức thu dịch vụ năm học 2026 - 2027 đối với các hệ đào tạo",
+        "Mức thu học phí năm học 2026 - 2027 đối với các hệ đào tạo"
+      ]
+    },
+    {
+      "id": "strat-007-l-c-ng-b-quy-t-nh-b-nhi-m-b-nhi-m-l",
+      "category": "decision",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Lễ công bố Quyết định bổ nhiệm, bổ nhiệm lại cán bộ quản lý cấp bộ môn thuộc Khoa",
+        "Lễ công bố Quyết định bổ nhiệm, bổ nhiệm lại cán bộ quản lý cấp bộ môn thuộc Khoa",
+        "Lễ công bố Quyết định bổ nhiệm Phó Giám đốc Học viện Ngân hàng",
+        "Thông báo về việc Khoa Hệ thống thông tin quản lý đổi tên thành Khoa Công nghệ thông tin và Kinh tế số",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf"
+      ]
+    },
+    {
+      "id": "strat-008-h-ng-d-n-quy-i-i-m-tin-h-c-ngo-i-ng",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn quy đổi điểm Tin học, Ngoại ngữ từ các chứng chỉ hợp lệ áp dụng từ năm học 2019-2020",
+        "Công ty Phát triển phần mềm Toshiba tuyển thực tập sinh năm 2019-2020",
+        "Điều chỉnh chuẩn Tiếng Anh & Tin học năm hoc 2019-2020 cho sinh viên Khóa 19-21",
+        "Công ty Phát triển phần mềm Toshiba tuyển thực tập sinh năm 2019-2020",
+        "OpenWay Việt Nam và Khoa Hệ thống thông tin quản lý (HVNH) ký thỏa thuận hợp tác chiến lược"
+      ]
+    },
+    {
+      "id": "strat-009-b-t-ph-s-nghi-p-c-ng-ch-ng-tr-nh-th",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Bứt phá sự nghiệp cùng chương trình Thạc sĩ Hệ thống thông tin quản lý - Đợt 2 Năm 2026",
+        "Tuyển sinh Thạc sĩ ngành Hệ thống thông tin quản lý năm 2024",
+        "Hội nghị tổng kết và Lễ phát động Cuộc thi Sinh viên nghiên cứu khoa học Khoa Hệ thống thông tin quản lý Năm học 2022-2023",
+        "Nhìn lại 17 năm đào tạo ngành Hệ thống thông tin quản lý của Học viện Ngân hàng",
+        "Chương trình đào tạo Ngành Hệ thống thông tin quản lý (áp dụng từ K21)"
+      ]
+    },
+    {
+      "id": "strat-010-o-t-o-i-h-c-cao-ng-h-v-a-l-m-v-a-h-",
+      "category": "regulation",
+      "passed": true,
+      "rank": 4,
+      "returned_titles": [
+        "36.2007-Q\u0010.BGD&\u0010T-Quy ch¿ \u0011ào t¡o \u0011¡i hÍc và cao \u0011³ng hình théc vëa làm vëa hÍc.pdf",
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO",
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO",
+        "Đào tạo đại học, cao đẳng hệ vừa làm vừa học",
+        "b7c846f1_08-BGD.signed.pdf"
+      ]
+    },
+    {
+      "id": "strat-011-h-ng-d-n-th-t-c-ng-k-h-c-ct-t-ng-nh",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn thủ tục đăng ký học CTĐT ngành 2",
+        "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH",
+        "Hướng dẫn thủ tục liên quan đến học phần",
+        "Hướng dẫn thủ tục liên quan đến học phần",
+        "5d96b96f_23.2014-TT.BGD%C4%90T-Ban%20h%C3%A0nh%20quy%20%C4%91%E1%BB%8Bnh%20v%E1%BB%81%20%C4%91%C3%A0o%20t%E1%BA%A1o%20ch%E1%BA%A5t%20l%C6%B0%E1%BB%A3ng%20cao%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc.pdf"
+      ]
+    },
+    {
+      "id": "strat-012-m-c-thu-d-ch-v-n-m-h-c-2026-2027-i-",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Mức thu dịch vụ năm học 2026 - 2027 đối với các hệ đào tạo",
+        "Mức thu học phí năm học 2026 - 2027 đối với các hệ đào tạo",
+        "Phô lôc sè 1A",
+        "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027",
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng"
+      ]
+    },
+    {
+      "id": "strat-013-vstep-gi-i-ph-p-ho-n-thi-n-chu-n-u-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng",
+        "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng",
+        "Điều chỉnh chuẩn Tiếng Anh & Tin học năm hoc 2019-2020 cho sinh viên Khóa 19-21",
+        "Hướng dẫn quy đổi điểm Tin học, Ngoại ngữ từ các chứng chỉ hợp lệ áp dụng từ năm học 2019-2020",
+        "Hướng dẫn thủ tục liên quan đến Chương trình Trao đổi sinh viên HVNH"
+      ]
+    },
+    {
+      "id": "strat-014-th-ng-b-o-v-vi-c-x-t-tuy-n-b-sung-i",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Thông báo về việc xét tuyển bổ sung Đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế",
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf",
+        "Điểm trúng tuyển đại học chính quy năm 2026",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf"
+      ]
+    },
+    {
+      "id": "strat-015-h-ng-d-n-th-sinh-ng-k-nguy-n-v-ng-x",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn thí sinh đăng ký nguyện vọng xét tuyển năm 2026",
+        "Điểm trúng tuyển đại học chính quy năm 2026",
+        "Thông báo về việc xét tuyển bổ sung Đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế",
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf"
+      ]
+    },
+    {
+      "id": "strat-016-tho-ng-ba-o-tuye-n-sinh-kho-a-02-ch",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Thông báo Tuyển sinh Khóa 02 Chương trình Tiến sĩ Doctor of Philosophy UWE, Bristol (Vương quốc Anh)",
+        "Thông báo tuyển sinh Thạc sĩ Tài chính và Đầu tư (Đại học West of England) năm 2026 đợt 2",
+        "Phô lôc sè 1A",
+        "d3888c81_4473.TB-HVNH%20(09082026)%20%C4%91i%E1%BB%83m%20tr%C3%BAng%20tuy%E1%BB%83n%202026%20NHH-signed.pdf",
+        "6c6842d6_2026.%20Huong%20dan%20Nhap%20hoc.%20CU%E1%BB%90I%20C%C3%99NG.pdf"
+      ]
+    },
+    {
+      "id": "strat-017-th-ng-b-o-v-vi-c-khoa-h-th-ng-th-ng",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Thông báo về việc Khoa Hệ thống thông tin quản lý đổi tên thành Khoa Công nghệ thông tin và Kinh tế số",
+        "Từ \"Hệ thống thông tin quản lý\" đến \"Công nghệ thông tin và Kinh tế số\" - đột phá & tất yếu",
+        "Từ \"Hệ thống thông tin quản lý\" đến \"Công nghệ thông tin và Kinh tế số\" - đột phá & tất yếu",
+        "Khoa Công nghệ thông tin và Kinh tế số nhận giấy chứng nhận kiểm định Chương trình đào tạo",
+        "Giới thiệu khoa Hệ thống thông tin quản lý - Học viện Ngân hàng"
+      ]
+    },
+    {
+      "id": "strat-018-l-c-ng-b-quy-t-nh-b-nhi-m-ph-gi-m-c",
+      "category": "decision",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Lễ công bố Quyết định bổ nhiệm Phó Giám đốc Học viện Ngân hàng",
+        "Lễ công bố Quyết định bổ nhiệm, bổ nhiệm lại cán bộ quản lý cấp bộ môn thuộc Khoa",
+        "Lễ công bố Quyết định bổ nhiệm, bổ nhiệm lại cán bộ quản lý cấp bộ môn thuộc Khoa",
+        "Lễ công bố Quyết định công nhận Chủ tịch Hội đồng Học viện Ngân hàng nhiệm kỳ 2020-2025",
+        "Lễ công bố Quyết định công nhận Chủ tịch Hội đồng Học viện Ngân hàng nhiệm kỳ 2020-2025"
+      ]
+    },
+    {
+      "id": "strat-019-t-a-m-chuy-n-m-n-chu-n-h-a-nh-gi-n-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ",
+        "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ",
+        "Khảo sát Mục tiêu, Chuẩn đầu ra chương trình đào tạo ngành HTTTQL & CNTT",
+        "Microsoft Word - quy che dao tao dhcd26-6.doc",
+        "Microsoft Word - quy che dao tao dhcd26-6.doc"
+      ]
+    },
+    {
+      "id": "strat-020-o-t-o-li-n-th-ng-tr-nh-cao-ng-i-h-c",
+      "category": "regulation",
+      "passed": true,
+      "rank": 3,
+      "returned_titles": [
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO",
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO",
+        "Đào tạo liên thông trình độ cao đẳng, đại học",
+        "b7c846f1_08-BGD.signed.pdf",
+        "08-BGD.signed.pdf"
+      ]
+    },
+    {
+      "id": "strat-021-h-ng-d-n-th-t-c-chuy-n-i-gi-a-c-c-c",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH",
+        "Hướng dẫn thủ tục liên quan đến học phần",
+        "Hướng dẫn quy đổi điểm Tin học, Ngoại ngữ từ các chứng chỉ hợp lệ áp dụng từ năm học 2019-2020",
+        "2605e36a_HDSD%20Google%20Meet_v2.pdf",
+        "Hướng dẫn thủ tục liên quan đến tốt nghiệp"
+      ]
+    },
+    {
+      "id": "strat-022-m-c-thu-h-c-ph-n-m-h-c-2026-2027-i-",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Mức thu học phí năm học 2026 - 2027 đối với các hệ đào tạo",
+        "Phô lôc sè 1A",
+        "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027",
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng"
+      ]
+    },
+    {
+      "id": "strat-023-chung-kh-o-cu-c-thi-gi-i-th-ng-c-ng",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Chung khảo Cuộc thi “Giải thưởng Công trình khóa luận xuất sắc” năm 2026 tại Học viện Ngân hàng",
+        "Chung khảo Cuộc thi “Giải thưởng Công trình khóa luận xuất sắc” năm 2026 tại Học viện Ngân hàng",
+        "10176dd5_QD 3456 Muc thu dich vu nam hoc 2025 2026.pdf",
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf"
+      ]
+    },
+    {
+      "id": "strat-024-th-ng-b-o-tuy-n-sinh-th-c-s-t-i-ch-",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Thông báo tuyển sinh Thạc sĩ Tài chính và Đầu tư (Đại học West of England) năm 2026 đợt 2",
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "Bứt phá sự nghiệp cùng chương trình Thạc sĩ Hệ thống thông tin quản lý - Đợt 2 Năm 2026",
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "10176dd5_QD 3456 Muc thu dich vu nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-025-h-c-vi-n-ng-n-h-ng-th-ng-tin-v-vi-c",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Học viện Ngân hàng thông tin về việc tạo tài khoản xét tuyển và cập nhật chứng chỉ cho thí sinh tự do năm 2026",
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf",
+        "Điểm trúng tuyển đại học chính quy năm 2026",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-026-l-c-ng-b-quy-t-nh-c-ng-nh-n-ch-t-ch",
+      "category": "decision",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Lễ công bố Quyết định công nhận Chủ tịch Hội đồng Học viện Ngân hàng nhiệm kỳ 2020-2025",
+        "Lễ công bố Quyết định công nhận Chủ tịch Hội đồng Học viện Ngân hàng nhiệm kỳ 2020-2025",
+        "Lễ công bố Quyết định công nhận Chủ tịch Hội đồng Học viện Ngân hàng nhiệm kỳ 2020-2025",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+        "10176dd5_QD 3456 Muc thu dich vu nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-027-ki-n-tr-c-httt-trong-th-c-t-nghi-n-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software",
+        "Thăm quan thực tế tại FPT Software",
+        "SINH VIÊN MIS ĐI TRẢI NGHIỆM THỰC TẾ TẠI CÔNG TY FIS",
+        "Sinh viên Khoa HTTTQL trải nghiệm thực tế tại công ty FPT IS",
+        "Lợi thế khi ứng tuyển vào vị trí phát triển ứng dụng của sinh viên MIS"
+      ]
+    },
+    {
+      "id": "strat-028-o-t-o-i-h-c-cao-ng-h-ch-nh-quy-ni-n",
+      "category": "regulation",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Đào tạo đại học, cao đẳng hệ chính quy (niên chế)",
+        "Microsoft Word - quy che dao tao dhcd26-6.doc",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "Đào tạo đại học, cao đẳng hệ chính quy (theo hệ thống tín chỉ)",
+        "Đào tạo đại học, cao đẳng hệ vừa làm vừa học"
+      ]
+    },
+    {
+      "id": "strat-029-h-ng-d-n-th-t-c-li-n-quan-n-ch-ng-t",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn thủ tục liên quan đến Chương trình Trao đổi sinh viên HVNH",
+        "Hướng dẫn thủ tục liên quan đến học phần",
+        "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH",
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+        "Hướng dẫn thủ tục bảo lưu/tiếp nhận"
+      ]
+    },
+    {
+      "id": "strat-030-th-ng-b-o-v-v-x-l-sinh-vi-n-c-n-n-h",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026",
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "Mức thu học phí năm học 2025 - 2026 đối với các hệ đào tạo",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-031-sinh-vi-n-h-c-vi-n-ng-n-h-ng-xu-t-s",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+        "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia",
+        "Học viện Ngân hàng xuất sắc đạt thành tích cao trong Kỳ thi Olympic Tin học sinh viên toàn quốc lần thứ 32 & Kỳ thi Lập trình sinh viên quốc tế năm 2023",
+        "Học viện Ngân hàng xuất sắc đạt thành tích cao trong Kỳ thi Olympic Tin học sinh viên toàn quốc lần thứ 32 & Kỳ thi Lập trình sinh viên quốc tế năm 2023",
+        "Chung khảo Cuộc thi “Giải thưởng Công trình khóa luận xuất sắc” năm 2026 tại Học viện Ngân hàng"
+      ]
+    },
+    {
+      "id": "strat-032-th-ng-b-o-ng-ng-m-b-o-ch-t-l-ng-u-v",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Thông báo ngưỡng đảm bảo chất lượng đầu vào đối với ngành Luật năm 2026 (Mã trường NHH)",
+        "Ngưỡng đảm bảo chất lượng đầu vào và cách thức quy đổi tương đương điểm trúng tuyển giữa các phương thức xét tuyển đại học chính quy năm 2026 tại Học viện Ngân hàng (mã trường NHH)",
+        "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf"
+      ]
+    },
+    {
+      "id": "strat-033-ng-ng-m-b-o-ch-t-l-ng-u-v-o-v-c-ch-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Ngưỡng đảm bảo chất lượng đầu vào và cách thức quy đổi tương đương điểm trúng tuyển giữa các phương thức xét tuyển đại học chính quy năm 2026 tại Học viện Ngân hàng (mã trường NHH)",
+        "Thông báo ngưỡng đảm bảo chất lượng đầu vào đối với ngành Luật năm 2026 (Mã trường NHH)",
+        "Điểm trúng tuyển đại học chính quy năm 2026",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf"
+      ]
+    },
+    {
+      "id": "strat-034-k-k-t-bi-n-b-n-ghi-nh-h-p-t-c-gi-a-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Ký kết biên bản ghi nhớ hợp tác giữa Khoa CNTT & KTS và CRIF D&B Việt Nam",
+        "Lễ ký kết thỏa thuận hợp tác giữa Khoa Hệ thống Thông tin Quản lý - Học viện Ngân hàng và công ty TNHH 1C Việt Nam",
+        "Lễ ký kết thỏa thuận hợp tác giữa Khoa Hệ thống Thông tin Quản lý - Học viện Ngân hàng và công ty TNHH 1C Việt Nam",
+        "Lễ ký kết giữa MIS & 1C",
+        "Hội thảo “Cơ hội gia nhập ngành công nghệ RPA cho sinh viên ngân hàng” và Lễ ký hợp tác giữa Khoa Hệ thống thông tin quản lý (HVNH) & akaBot (FPT Software)"
+      ]
+    },
+    {
+      "id": "strat-035-o-t-o-ch-t-l-ng-cao-tr-nh-i-h-c",
+      "category": "regulation",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Đào tạo chất lượng cao trình độ đại học",
+        "5d96b96f_23.2014-TT.BGD%C4%90T-Ban%20h%C3%A0nh%20quy%20%C4%91%E1%BB%8Bnh%20v%E1%BB%81%20%C4%91%C3%A0o%20t%E1%BA%A1o%20ch%E1%BA%A5t%20l%C6%B0%E1%BB%A3ng%20cao%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc.pdf",
+        "5d96b96f_23.2014-TT.BGD%C4%90T-Ban%20h%C3%A0nh%20quy%20%C4%91%E1%BB%8Bnh%20v%E1%BB%81%20%C4%91%C3%A0o%20t%E1%BA%A1o%20ch%E1%BA%A5t%20l%C6%B0%E1%BB%A3ng%20cao%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc.pdf",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO"
+      ]
+    },
+    {
+      "id": "strat-036-h-ng-d-n-sinh-vi-n-s-d-ng-h-th-ng-l",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn sinh viên sử dụng hệ thống LMS",
+        "Tài liệu hướng dẫn sử dụng Google Meet",
+        "2605e36a_HDSD%20Google%20Meet_v2.pdf",
+        "96232686_Huong%20dan%20SV%20vao%20he%20thong%20LMS.pdf",
+        "Hội nghị tổng kết và Lễ phát động Cuộc thi Sinh viên nghiên cứu khoa học Khoa Hệ thống thông tin quản lý Năm học 2022-2023"
+      ]
+    },
+    {
+      "id": "strat-037-th-ng-b-o-v-v-gia-h-n-n-p-h-c-ph-h-",
+      "category": "announcement",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026",
+        "Mức thu học phí năm học 2025 - 2026 đối với các hệ đào tạo",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-038-ch-ng-tr-nh-trao-i-sinh-vi-n",
+      "category": "other",
+      "passed": true,
+      "rank": 3,
+      "returned_titles": [
+        "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng",
+        "Hướng dẫn thủ tục liên quan đến Chương trình Trao đổi sinh viên HVNH",
+        "[CHƯƠNG TRÌNH TRAO ĐỔI SINH VIÊN]",
+        "Hướng dẫn thủ tục liên quan đến Chương trình Trao đổi sinh viên HVNH",
+        "[CHƯƠNG TRÌNH TRAO ĐỔI SINH VIÊN]"
+      ]
+    },
+    {
+      "id": "strat-039-khoa-c-ng-ngh-th-ng-tin-kinh-t-s-h-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Khoa Công nghệ thông tin & Kinh tế số - Học viện Ngân hàng và Apex University kết hợp tổ chức thành công Hội thảo NICE-TEAS ASIA 2025!",
+        "Khoa Công nghệ thông tin & Kinh tế số - Học viện Ngân hàng và Apex University kết hợp tổ chức thành công Hội thảo NICE-TEAS ASIA 2025!",
+        "Cuộc thi ITDE-DEVCHAMPION 2025",
+        "Ngày Quốc tế Phụ nữ 08.03.2025",
+        "Lễ ký kết Thỏa thuận hợp tác MoU giữa Khoa Công nghệ thông tin & Kinh tế số - Học viện Ngân hàng và Oracle Việt Nam"
+      ]
+    },
+    {
+      "id": "strat-040-o-t-o-i-h-c-cao-ng-h-ch-nh-quy-theo",
+      "category": "regulation",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Đào tạo đại học, cao đẳng hệ chính quy (theo hệ thống tín chỉ)",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "43.2007-Q%C4%90.BGD&%C4%90T-Quy%20ch%E1%BA%BF%20%C4%91%C3%A0o%20t%E1%BA%A1o%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc,%20cao%20%C4%91%E1%BA%B3ng%20ch%C3%ADnh%20quy%20theo%20h%E1%BB%87%20th%E1%BB%91ng%20t%C3%ADn%20ch%E1%BB%89.pdf",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "43.2007-Q%C4%90.BGD&%C4%90T-Quy%20ch%E1%BA%BF%20%C4%91%C3%A0o%20t%E1%BA%A1o%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc,%20cao%20%C4%91%E1%BA%B3ng%20ch%C3%ADnh%20quy%20theo%20h%E1%BB%87%20th%E1%BB%91ng%20t%C3%ADn%20ch%E1%BB%89.pdf"
+      ]
+    },
+    {
+      "id": "strat-041-t-i-li-u-h-ng-d-n-s-d-ng-google-mee",
+      "category": "guide",
+      "passed": true,
+      "rank": 2,
+      "returned_titles": [
+        "2605e36a_HDSD%20Google%20Meet_v2.pdf",
+        "Tài liệu hướng dẫn sử dụng Google Meet",
+        "2605e36a_HDSD%20Google%20Meet_v2.pdf",
+        "2605e36a_HDSD%20Google%20Meet_v2.pdf",
+        "User manual template"
+      ]
+    },
+    {
+      "id": "strat-042-m-c-thu-d-ch-v-kh-c-n-m-h-c-2025-20",
+      "category": "announcement",
+      "passed": true,
+      "rank": 2,
+      "returned_titles": [
+        "40a3c4ba_To trinh GD bo sung Muc thu dich vu nam hoc 2025-2026.pdf",
+        "Mức thu dịch vụ khác năm học 2025 - 2026 đối với các hệ đào tạo (bổ sung)",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+        "10176dd5_QD 3456 Muc thu dich vu nam hoc 2025 2026.pdf",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-043-k-ni-m-95-n-m-ng-y-th-nh-l-p-o-n-tn",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Kỷ niệm 95 năm ngày thành lập Đoàn TNCS Hồ Chí Minh (26/3/1931 - 26/3/2026)",
+        "Kỷ niệm 95 năm ngày thành lập Đoàn TNCS Hồ Chí Minh (26/3/1931 - 26/3/2026)",
+        "Đỗ Ngọc Đăng - sinh viên xuất sắc tiêu biểu học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh năm 2020",
+        "95474d2d_2026.07.07.3508.TB.HVNH.Thong bao ve nguong dam bao chat luong dau vao va cach thuc quy doi tuong duong diem trung tuyen giua các PTXT DHCQ nam 2026 tai HVNH.pdf",
+        "Sinh hoạt chuyên đề Quý II Năm 2022 - Hành trình về nguồn tại Tuyên Quang"
+      ]
+    },
+    {
+      "id": "strat-044-khoa-cntt-kts-h-c-vi-n-ng-n-h-ng-ph",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Khoa CNTT&KTS - Học viện Ngân hàng phối hợp cùng SAP tổ chức Workshop về các giải pháp công nghệ tiên tiến trong lĩnh vực tài chính – ngân hàng và quản trị doanh nghiệp",
+        "Khoa CNTT&KTS - Học viện Ngân hàng phối hợp cùng SAP tổ chức Workshop về các giải pháp công nghệ tiên tiến trong lĩnh vực tài chính – ngân hàng và quản trị doanh nghiệp",
+        "[MIS & CORP] - Workshop kinh nghiệm triển khai giải pháp Elastic trong lĩnh vực tài chính, ngân hàng",
+        "Hợp tác MIS-HVNH & CYBERTRAP đưa giải pháp bảo mật tiên tiến thế giới vào hoạt động đào tạo",
+        "Hội thảo khoa học Quốc gia “Ứng dụng công nghệ trong ngành Tài chính Ngân hàng – Xu hướng và góc nhìn chuyên sâu\""
+      ]
+    },
+    {
+      "id": "strat-045-b-gi-o-d-c-v-o-t-o",
+      "category": "regulation",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO",
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO",
+        "Microsoft Word - quy che dao tao dhcd26-6.doc",
+        "43.2007-Q%C4%90.BGD&%C4%90T-Quy%20ch%E1%BA%BF%20%C4%91%C3%A0o%20t%E1%BA%A1o%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc,%20cao%20%C4%91%E1%BA%B3ng%20ch%C3%ADnh%20quy%20theo%20h%E1%BB%87%20th%E1%BB%91ng%20t%C3%ADn%20ch%E1%BB%89.pdf",
+        "5d96b96f_23.2014-TT.BGD%C4%90T-Ban%20h%C3%A0nh%20quy%20%C4%91%E1%BB%8Bnh%20v%E1%BB%81%20%C4%91%C3%A0o%20t%E1%BA%A1o%20ch%E1%BA%A5t%20l%C6%B0%E1%BB%A3ng%20cao%20tr%C3%ACnh%20%C4%91%E1%BB%99%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc.pdf"
+      ]
+    },
+    {
+      "id": "strat-046-h-ng-d-n-th-t-c-li-n-quan-n-h-c-ph-",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn thủ tục liên quan đến học phần",
+        "43.2007-Q%C4%90.BGD&%C4%90T-Quy%20ch%E1%BA%BF%20%C4%91%C3%A0o%20t%E1%BA%A1o%20%C4%91%E1%BA%A1i%20h%E1%BB%8Dc,%20cao%20%C4%91%E1%BA%B3ng%20ch%C3%ADnh%20quy%20theo%20h%E1%BB%87%20th%E1%BB%91ng%20t%C3%ADn%20ch%E1%BB%89.pdf",
+        "Microsoft Word - quy che dao tao dhcd26-6.doc",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "Microsoft Word - quy che dao tao dhcd26-6.doc"
+      ]
+    },
+    {
+      "id": "strat-047-m-c-thu-h-c-ph-n-m-h-c-2025-2026-i-",
+      "category": "announcement",
+      "passed": true,
+      "rank": 4,
+      "returned_titles": [
+        "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf",
+        "Mức thu học phí năm học 2025 - 2026 đối với các hệ đào tạo",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-048-t-p-hu-n-cho-sinh-vi-n-nh-n-di-n-b-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Tập huấn cho sinh viên nhận diện, báo cáo giao dịch đáng ngờ liên quan đến buôn bán trái pháp luật động vật hoang dã",
+        "Tập huấn cho sinh viên nhận diện, báo cáo giao dịch đáng ngờ liên quan đến buôn bán trái pháp luật động vật hoang dã",
+        "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027",
+        "BỘ GIÁO DỤC VÀ ĐÀO TẠO",
+        "Kết quả cuộc thi Sinh viên Nghiên cứu khoa học Khoa hệ thống thông tin quản lý, Năm học 2021-2022"
+      ]
+    },
+    {
+      "id": "strat-049-c-ng-ngh-th-ng-tin-h-c-vi-n-ng-n-h-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "CÔNG NGHỆ THÔNG TIN - HỌC VIỆN NGÂN HÀNG: NỀN TẢNG VỮNG CHẮC CHO CHUYỂN ĐỔI SỐ TOÀN DIỆN",
+        "CÔNG NGHỆ THÔNG TIN - HỌC VIỆN NGÂN HÀNG: NỀN TẢNG VỮNG CHẮC CHO CHUYỂN ĐỔI SỐ TOÀN DIỆN",
+        "Từ \"Hệ thống thông tin quản lý\" đến \"Công nghệ thông tin và Kinh tế số\" - đột phá & tất yếu",
+        "Sắp diễn ra hội thảo về Chuyển đổi số: từ Dữ liệu đến Tự động hoá",
+        "Hội thảo khoa học Quốc gia “Chuyển đổi số: Từ dữ liệu đến tự động hóa”"
+      ]
+    },
+    {
+      "id": "strat-050-microsoft-word-quy-che-dao-tao-dhcd",
+      "category": "regulation",
+      "passed": false,
+      "rank": null,
+      "returned_titles": [
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "Đào tạo đại học, cao đẳng hệ chính quy (niên chế)",
+        "QD17_VBHN_BGD.pdf",
+        "dc805895_4683%20TB-HVNH%20(18082026)%20x%C3%A9t%20tuy%E1%BB%83n%20b%E1%BB%95%20sung%20%C4%90HCQ%20n%C4%83m%202026%20%C4%91%E1%BB%91i%20v%E1%BB%9Bi%20c%C3%A1c%20CTLK%C4%90T%20qu%E1%BB%91c%20t%E1%BA%BF%20t%E1%BA%A1i%20HVNH.pdf"
+      ]
+    },
+    {
+      "id": "strat-051-h-ng-d-n-th-t-c-c-p-c-c-lo-i-gi-y-c",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn thủ tục cấp các loại giấy chứng nhận/bảng điểm",
+        "Hướng dẫn quy đổi điểm Tin học, Ngoại ngữ từ các chứng chỉ hợp lệ áp dụng từ năm học 2019-2020",
+        "User manual template",
+        "User manual template",
+        "Hướng dẫn thủ tục liên quan đến tốt nghiệp"
+      ]
+    },
+    {
+      "id": "strat-052-m-c-thu-d-ch-v-kh-c-n-m-h-c-2025-20",
+      "category": "announcement",
+      "passed": true,
+      "rank": 3,
+      "returned_titles": [
+        "40a3c4ba_To trinh GD bo sung Muc thu dich vu nam hoc 2025-2026.pdf",
+        "Mức thu dịch vụ khác năm học 2025 - 2026 đối với các hệ đào tạo (bổ sung)",
+        "Mức thu dịch vụ khác năm học 2025 - 2026 đối với các hệ đào tạo",
+        "10176dd5_QD 3456 Muc thu dich vu nam hoc 2025 2026.pdf",
+        "47c23652_QD 3455 Muc thu hoc phi nam hoc 2025 2026.pdf"
+      ]
+    },
+    {
+      "id": "strat-053-hi-u-qu-t-h-sinh-th-i-h-tr-t-m-l-to",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên",
+        "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên",
+        "Kết quả cuộc thi Sinh viên Nghiên cứu khoa học Khoa hệ thống thông tin quản lý, Năm học 2021-2022",
+        "Hội nghị tổng kết và Lễ phát động Cuộc thi Sinh viên nghiên cứu khoa học Khoa Hệ thống thông tin quản lý Năm học 2022-2023",
+        "Hội thảo “Cơ hội gia nhập ngành công nghệ RPA cho sinh viên ngân hàng” và Lễ ký hợp tác giữa Khoa Hệ thống thông tin quản lý (HVNH) & akaBot (FPT Software)"
+      ]
+    },
+    {
+      "id": "strat-054-workshop-itde-2025-h-nh-tr-nh-truy-",
+      "category": "other",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Workshop ITDE 2025 – Hành trình truyền cảm hứng cùng diễn giả Dennis Khoo",
+        "Workshop ITDE 2025 – Hành trình truyền cảm hứng cùng diễn giả Dennis Khoo",
+        "Cuộc thi ITDE-DEVCHAMPION 2025",
+        "Cuộc thi ITDE-DEVCHAMPION 2025",
+        "Khoa Công nghệ thông tin & Kinh tế số - Học viện Ngân hàng và Apex University kết hợp tổ chức thành công Hội thảo NICE-TEAS ASIA 2025!"
+      ]
+    },
+    {
+      "id": "strat-055-h-ng-d-n-th-t-c-li-n-quan-n-k-thi",
+      "category": "guide",
+      "passed": true,
+      "rank": 1,
+      "returned_titles": [
+        "Hướng dẫn thủ tục liên quan đến kỳ thi",
+        "Hướng dẫn thủ tục liên quan đến tốt nghiệp",
+        "User manual template",
+        "57.2012-TT.BGDĐT-Sửa đổi, bổ sung Quy chế đào tạo đại học, cao đẳng chính quy theo hệ thống tín chỉ.pdf",
+        "08-BGD.signed.pdf"
+      ]
+    },
+    {
+      "id": "negative-01",
+      "category": "negative",
+      "passed": true,
+      "rank": null,
+      "returned_titles": []
+    },
+    {
+      "id": "negative-02",
+      "category": "negative",
+      "passed": true,
+      "rank": null,
+      "returned_titles": []
+    },
+    {
+      "id": "negative-03",
+      "category": "negative",
+      "passed": true,
+      "rank": null,
+      "returned_titles": []
+    },
+    {
+      "id": "negative-04",
+      "category": "negative",
+      "passed": true,
+      "rank": null,
+      "returned_titles": []
+    },
+    {
+      "id": "negative-05",
+      "category": "negative",
+      "passed": true,
+      "rank": null,
+      "returned_titles": []
+    }
+  ]
+}

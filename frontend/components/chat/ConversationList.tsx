@@ -1,7 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Conversation } from "@/types/message";
+import { safeImageSrc } from "@/lib/media";
+import NewConversationModal from "./NewConversationModal";
+import RelativeTime from "@/components/ui/RelativeTime";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -9,6 +12,7 @@ interface ConversationListProps {
   onSelectConversation: (id: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  onStartConversation: (userId:string) => Promise<unknown>;
 }
 
 export default function ConversationList({
@@ -17,9 +21,12 @@ export default function ConversationList({
   onSelectConversation,
   searchQuery,
   onSearchChange,
+  onStartConversation,
 }: ConversationListProps) {
+  const [showNewChat,setShowNewChat]=useState(false);
   return (
     <aside className="messenger-left-panel" aria-label="Danh sách cuộc trò chuyện">
+      {showNewChat&&<NewConversationModal onClose={()=>setShowNewChat(false)} onStart={onStartConversation}/>}
       {/* Panel Header */}
       <div className="left-panel-header">
         <div className="title-row">
@@ -28,7 +35,7 @@ export default function ConversationList({
             type="button"
             className="new-chat-icon-btn"
             title="Tạo cuộc trò chuyện mới"
-            onClick={() => alert("Chức năng tạo tin nhắn mới với sinh viên HVNH")}
+            onClick={() => setShowNewChat(true)}
           >
             ✏️
           </button>
@@ -81,7 +88,7 @@ export default function ConversationList({
               >
                 {/* Avatar with Online/Offline Dot */}
                 <div className="chat-avatar-wrap">
-                  <div className="participant-avatar">{conv.participantAvatar}</div>
+                  <div className="participant-avatar">{conv.participantAvatar.startsWith('/') || conv.participantAvatar.startsWith('http') ? <img src={safeImageSrc(conv.participantAvatar)} alt={conv.participantName} /> : conv.participantAvatar}</div>
                   <span
                     className={`online-status-dot ${
                       conv.isOnline ? "online" : "offline"
@@ -94,7 +101,7 @@ export default function ConversationList({
                 <div className="chat-item-meta">
                   <div className="chat-item-top">
                     <strong className="participant-name">{conv.participantName}</strong>
-                    <span className="chat-time-stamp">{conv.lastMessageTime}</span>
+                    <RelativeTime className="chat-time-stamp" value={conv.lastMessageTime}/>
                   </div>
 
                   <div className="chat-snippet-row">

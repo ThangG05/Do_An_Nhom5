@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { UserListing } from '@/types/user';
+import { safeImageSrc } from '@/lib/media';
+import RelativeTime from '@/components/ui/RelativeTime';
 
 interface ProfileListingsTabProps {
   listings: UserListing[];
@@ -122,13 +124,13 @@ export default function ProfileListingsTab({
             return (
               <div key={item.id} className="listing-matrix-card">
                 <div className="listing-card-image-wrap">
-                  <img src={item.imageUrl} alt={item.title} />
+                  <img src={safeImageSrc(item.imageUrl)} alt={item.title} />
                   <span className={`category-tag ${catBadge.className}`}>{catBadge.label}</span>
                   <span className={`status-tag-badge ${statusBadge.className}`}>{statusBadge.label}</span>
                 </div>
 
                 <div className="listing-card-content">
-                  <span className="listing-card-date">{item.createdAt}</span>
+                  <RelativeTime className="listing-card-date" value={item.createdAt}/>
                   <h3 className="listing-card-title">{item.title}</h3>
                   <div className="listing-card-price-row">
                     <span className="listing-card-price">{item.price}</span>

@@ -1,0 +1,752 @@
+[
+  {
+    "id": "strat-001-th-ng-b-o-tuy-n-sinh-ch-ng-tr-nh-tr",
+    "category": "announcement",
+    "query": "Thông báo “Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng” có nội dung gì?",
+    "expected_document_id": "bdfd7822-5bbf-420f-b34d-3314956c7100",
+    "expected_title_contains": [
+      "Thông báo tuyển sinh Chương trình trao đổi sinh viên Học kỳ I năm học 2026–2027 tại Trường Đại học Kinh tế – Đại học Đà Nẵng"
+    ],
+    "expected_academic_year": "2026/2027",
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/thong-bao-tuyen-sinh-chuong-trinh-trao-doi-sinh-vien-hoc-ky-i-nam-hoc-20262027-tai-truong-dai-hoc-kinh-te-dai-hoc-da-nang-4040.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-002-chung-k-t-c-p-h-c-vi-n-cu-c-thi-vie",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng” là gì?",
+    "expected_document_id": "d0e11969-a353-4c5e-87ce-4d33819f5678",
+    "expected_title_contains": [
+      "Chung kết cấp Học viện cuộc thi “Vietnam ESG Challenge 2026” – Vòng Tăng trưởng"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/chung-ket-cap-hoc-vien-cuoc-thi-vietnam-esg-challenge-2026-vong-tang-truong-4079.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-003-th-ng-b-o-v-m-c-i-m-tr-ng-tuy-n-c-a",
+    "category": "announcement",
+    "query": "Thông báo “Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng” có nội dung gì?",
+    "expected_document_id": "e5f384c8-6fb9-45aa-b6dd-5a384cce7c6a",
+    "expected_title_contains": [
+      "Thông báo Về mức điểm trúng tuyển của đợt xét tuyển bổ sung đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế tại Học viện Ngân hàng"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-ve-muc-diem-trung-tuyen-cua-dot-xet-tuyen-bo-sung-dai-hoc-chinh-quy-nam-2026-doi-voi-cac-chuong-trinh-lien-ket-dao-tao-quoc-te-tai-hoc-vien-ngan-hang-4080.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-004-h-ng-d-n-nh-p-h-c-n-m-2026",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn nhập học năm 2026” áp dụng như thế nào?",
+    "expected_document_id": "fe71a5cf-a7ef-408d-aa72-aa9134ed65a8",
+    "expected_title_contains": [
+      "Hướng dẫn nhập học năm 2026"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/huong-dan-nhap-hoc-nam-2026-4056.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-005-i-m-tr-ng-tuy-n-i-h-c-ch-nh-quy-n-m",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Điểm trúng tuyển đại học chính quy năm 2026” là gì?",
+    "expected_document_id": "39f08ac1-a4be-4ac0-8da4-f4fb41d7ce35",
+    "expected_title_contains": [
+      "Điểm trúng tuyển đại học chính quy năm 2026"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-ve-muc-diem-trung-tuyen-dai-hoc-chinh-quy-nam-2026-ma-truong-nhh-4054.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-006-th-ng-b-o-v-v-t-p-trung-sinh-vi-n-n",
+    "category": "announcement",
+    "query": "Thông báo “THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027” có nội dung gì?",
+    "expected_document_id": "7e456225-de94-4410-a470-53d8ed47c141",
+    "expected_title_contains": [
+      "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027"
+    ],
+    "expected_academic_year": "2026/2027",
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/658_thong_bao_v_v_tap_trung_sinh_vien_nganh_cong_nghe_thong_tin_huong_dan_thuc_tap_va_khoa_luan_tot_nghiep_hoc_ky_i_nam_hoc_2026_2027.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-007-l-c-ng-b-quy-t-nh-b-nhi-m-b-nhi-m-l",
+    "category": "decision",
+    "query": "Quyết định “Lễ công bố Quyết định bổ nhiệm, bổ nhiệm lại cán bộ quản lý cấp bộ môn thuộc Khoa” quy định nội dung gì?",
+    "expected_document_id": "dd79be6b-f728-4824-a0f9-d8c2ad8e6acb",
+    "expected_title_contains": [
+      "Lễ công bố Quyết định bổ nhiệm, bổ nhiệm lại cán bộ quản lý cấp bộ môn thuộc Khoa"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/532_le_cong_bo_quyet_dinh_bo_nhiem_bo_nhiem_lai_can_bo_quan_ly_cap_bo_mon_thuoc_khoa.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-008-h-ng-d-n-quy-i-i-m-tin-h-c-ngo-i-ng",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn quy đổi điểm Tin học, Ngoại ngữ từ các chứng chỉ hợp lệ áp dụng từ năm học 2019-2020” áp dụng như thế nào?",
+    "expected_document_id": "2d180fea-b5ce-4264-ad90-6fca9248137e",
+    "expected_title_contains": [
+      "Hướng dẫn quy đổi điểm Tin học, Ngoại ngữ từ các chứng chỉ hợp lệ áp dụng từ năm học 2019-2020"
+    ],
+    "expected_academic_year": "2019/2020",
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/53_huong_dan_quy_doi_diem_tin_hoc_ngoai_ngu_tu_cac_chung_chi_hop_le_ap_dung_tu_nam_hoc_2019_2020.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-009-b-t-ph-s-nghi-p-c-ng-ch-ng-tr-nh-th",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Bứt phá sự nghiệp cùng chương trình Thạc sĩ Hệ thống thông tin quản lý - Đợt 2 Năm 2026” là gì?",
+    "expected_document_id": "32346c18-1500-4b7b-90e2-40d283e994aa",
+    "expected_title_contains": [
+      "Bứt phá sự nghiệp cùng chương trình Thạc sĩ Hệ thống thông tin quản lý - Đợt 2 Năm 2026"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/clip_chi_tiet/23_but_pha_su_nghiep_cung_chuong_trinh_thac_si_he_thong_thong_tin_quan_ly_dot_2_nam_2026.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-010-o-t-o-i-h-c-cao-ng-h-v-a-l-m-v-a-h-",
+    "category": "regulation",
+    "query": "Quy định trong tài liệu “Đào tạo đại học, cao đẳng hệ vừa làm vừa học” là gì?",
+    "expected_document_id": "2e840dd7-7639-41fa-acbb-f51ae387744e",
+    "expected_title_contains": [
+      "Đào tạo đại học, cao đẳng hệ vừa làm vừa học"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quy định Bộ GDĐT",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/bgddt/dao-tao-dai-hoc-cao-dang-he-vua-lam-vua-hoc-257.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-011-h-ng-d-n-th-t-c-ng-k-h-c-ct-t-ng-nh",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn thủ tục đăng ký học CTĐT ngành 2” áp dụng như thế nào?",
+    "expected_document_id": "69dc7513-877e-442c-bd72-11b6c7151698",
+    "expected_title_contains": [
+      "Hướng dẫn thủ tục đăng ký học CTĐT ngành 2"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-dang-ky-hoc-ctdt-nganh-2-340.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-012-m-c-thu-d-ch-v-n-m-h-c-2026-2027-i-",
+    "category": "announcement",
+    "query": "Thông báo “Mức thu dịch vụ năm học 2026 - 2027 đối với các hệ đào tạo” có nội dung gì?",
+    "expected_document_id": "f9b685f6-8537-4bbb-b9ed-a9f22763a3e6",
+    "expected_title_contains": [
+      "Mức thu dịch vụ năm học 2026 - 2027 đối với các hệ đào tạo"
+    ],
+    "expected_academic_year": "2026/2027",
+    "source_name": "TCKT - Học phí",
+    "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/muc-thu-dich-vu-nam-hoc-2026-2027-doi-voi-cac-he-dao-tao-122.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-013-vstep-gi-i-ph-p-ho-n-thi-n-chu-n-u-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng” là gì?",
+    "expected_document_id": "5704f1e6-cbe7-4456-bf79-aa61437b0095",
+    "expected_title_contains": [
+      "VSTEP – Giải pháp hoàn thiện chuẩn đầu ra Ngoại ngữ cho sinh viên Học viện Ngân hàng"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/vstep-giai-phap-hoan-thien-chuan-dau-ra-ngoai-ngu-cho-sinh-vien-hoc-vien-ngan-hang-4069.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-014-th-ng-b-o-v-vi-c-x-t-tuy-n-b-sung-i",
+    "category": "announcement",
+    "query": "Thông báo “Thông báo về việc xét tuyển bổ sung Đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế” có nội dung gì?",
+    "expected_document_id": "b73b36ae-4c4f-4c7a-91c1-838143e1a48b",
+    "expected_title_contains": [
+      "Thông báo về việc xét tuyển bổ sung Đại học chính quy năm 2026 đối với các chương trình liên kết đào tạo quốc tế"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-ve-viec-xet-tuyen-bo-sung-dai-hoc-chinh-quy-nam-2026-doi-voi-cac-chuong-trinh-lien-ket-dao-tao-quoc-te-4066.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-015-h-ng-d-n-th-sinh-ng-k-nguy-n-v-ng-x",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn thí sinh đăng ký nguyện vọng xét tuyển năm 2026” áp dụng như thế nào?",
+    "expected_document_id": "4d78488c-4b4a-49bb-b20b-0244a1d127c0",
+    "expected_title_contains": [
+      "Hướng dẫn thí sinh đăng ký nguyện vọng xét tuyển năm 2026"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/huong-dan-thi-sinh-dang-ky-nguyen-vong-xet-tuyen-nam-2026-3977.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-016-tho-ng-ba-o-tuye-n-sinh-kho-a-02-ch",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Thông báo Tuyển sinh Khóa 02 Chương trình Tiến sĩ Doctor of Philosophy UWE, Bristol (Vương quốc Anh)” là gì?",
+    "expected_document_id": "edead0bf-e6c3-4f7f-9c35-c4f7be36348c",
+    "expected_title_contains": [
+      "Thông báo Tuyển sinh Khóa 02 Chương trình Tiến sĩ Doctor of Philosophy UWE, Bristol (Vương quốc Anh)"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-tuyen-sinh-khoa-02-chuong-trinh-tien-si-doctor-of-philosophy-uwe-bristol-vuong-quoc-anh-4051.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-017-th-ng-b-o-v-vi-c-khoa-h-th-ng-th-ng",
+    "category": "announcement",
+    "query": "Thông báo “Thông báo về việc Khoa Hệ thống thông tin quản lý đổi tên thành Khoa Công nghệ thông tin và Kinh tế số” có nội dung gì?",
+    "expected_document_id": "8d80ba43-03ba-4747-bf01-bc15d68766cd",
+    "expected_title_contains": [
+      "Thông báo về việc Khoa Hệ thống thông tin quản lý đổi tên thành Khoa Công nghệ thông tin và Kinh tế số"
+    ],
+    "expected_academic_year": "2026/2027",
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/550_thong_bao_ve_viec_khoa_he_thong_thong_tin_quan_ly_doi_ten_thanh_khoa_cong_nghe_thong_tin_va_kinh_te_so.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-018-l-c-ng-b-quy-t-nh-b-nhi-m-ph-gi-m-c",
+    "category": "decision",
+    "query": "Quyết định “Lễ công bố Quyết định bổ nhiệm Phó Giám đốc Học viện Ngân hàng” quy định nội dung gì?",
+    "expected_document_id": "10ff8119-99b8-4f38-af2d-a3696c73bdc4",
+    "expected_title_contains": [
+      "Lễ công bố Quyết định bổ nhiệm Phó Giám đốc Học viện Ngân hàng"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/514_le_cong_bo_quyet_dinh_bo_nhiem_pho_giam_doc_hoc_vien_ngan_hang.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-019-t-a-m-chuy-n-m-n-chu-n-h-a-nh-gi-n-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ” là gì?",
+    "expected_document_id": "038051bf-ae34-410c-bf53-1be127cc981c",
+    "expected_title_contains": [
+      "TỌA ĐÀM CHUYÊN MÔN: CHUẨN HÓA ĐÁNH GIÁ ĐỒ ÁN TỐT NGHIỆP – TỪ CHUẨN ĐẦU RA ĐẾN TIÊU CHÍ CHẤM VÀ MINH CHỨNG ĐÁNH GIÁ"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/656_toa_dam_chuyen_mon_chuan_hoa_danh_gia_do_an_tot_nghieptu_chuan_dau_ra_den_tieu_chi_cham_va_minh_chung_danh_gia.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-020-o-t-o-li-n-th-ng-tr-nh-cao-ng-i-h-c",
+    "category": "regulation",
+    "query": "Quy định trong tài liệu “Đào tạo liên thông trình độ cao đẳng, đại học” là gì?",
+    "expected_document_id": "694e1fcc-1991-4303-b7e8-a845136995bc",
+    "expected_title_contains": [
+      "Đào tạo liên thông trình độ cao đẳng, đại học"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quy định Bộ GDĐT",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/bgddt/dao-tao-lien-thong-trinh-do-cao-dang-dai-hoc-259.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-021-h-ng-d-n-th-t-c-chuy-n-i-gi-a-c-c-c",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH” áp dụng như thế nào?",
+    "expected_document_id": "febb1a5f-494a-4be4-beae-61f6bf723353",
+    "expected_title_contains": [
+      "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-chuyen-doi-giua-cac-ctdt-trong-hvnh-341.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-022-m-c-thu-h-c-ph-n-m-h-c-2026-2027-i-",
+    "category": "announcement",
+    "query": "Thông báo “Mức thu học phí năm học 2026 - 2027 đối với các hệ đào tạo” có nội dung gì?",
+    "expected_document_id": "a32402b0-d5a4-41df-b618-d832773caec6",
+    "expected_title_contains": [
+      "Mức thu học phí năm học 2026 - 2027 đối với các hệ đào tạo"
+    ],
+    "expected_academic_year": "2026/2027",
+    "source_name": "TCKT - Học phí",
+    "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/muc-thu-hoc-phi-nam-hoc-2026-2027-doi-voi-cac-he-dao-tao-121.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-023-chung-kh-o-cu-c-thi-gi-i-th-ng-c-ng",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Chung khảo Cuộc thi “Giải thưởng Công trình khóa luận xuất sắc” năm 2026 tại Học viện Ngân hàng” là gì?",
+    "expected_document_id": "fa1cfe7d-311b-4b84-9b29-9d766fb7a7cd",
+    "expected_title_contains": [
+      "Chung khảo Cuộc thi “Giải thưởng Công trình khóa luận xuất sắc” năm 2026 tại Học viện Ngân hàng"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/chung-khao-cuoc-thi-giai-thuong-cong-trinh-khoa-luan-xuat-sac-nam-2026-tai-hoc-vien-ngan-hang-3930.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-024-th-ng-b-o-tuy-n-sinh-th-c-s-t-i-ch-",
+    "category": "announcement",
+    "query": "Thông báo “Thông báo tuyển sinh Thạc sĩ Tài chính và Đầu tư (Đại học West of England) năm 2026 đợt 2” có nội dung gì?",
+    "expected_document_id": "ef1d7695-a88a-474d-8a31-ba37060e385d",
+    "expected_title_contains": [
+      "Thông báo tuyển sinh Thạc sĩ Tài chính và Đầu tư (Đại học West of England) năm 2026 đợt 2"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-tuyen-sinh-thac-si-tai-chinh-va-dau-tu-dai-hoc-west-of-england-nam-2026-dot-2-4052.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-025-h-c-vi-n-ng-n-h-ng-th-ng-tin-v-vi-c",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Học viện Ngân hàng thông tin về việc tạo tài khoản xét tuyển và cập nhật chứng chỉ cho thí sinh tự do năm 2026” là gì?",
+    "expected_document_id": "038881af-0a5d-4a70-94e4-8c560f631685",
+    "expected_title_contains": [
+      "Học viện Ngân hàng thông tin về việc tạo tài khoản xét tuyển và cập nhật chứng chỉ cho thí sinh tự do năm 2026"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/hoc-vien-ngan-hang-thong-tin-ve-viec-tao-tai-khoan-xet-tuyen-va-cap-nhat-chung-chi-cho-thi-sinh-tu-do-nam-2026-4027.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-026-l-c-ng-b-quy-t-nh-c-ng-nh-n-ch-t-ch",
+    "category": "decision",
+    "query": "Quyết định “Lễ công bố Quyết định công nhận Chủ tịch Hội đồng Học viện Ngân hàng nhiệm kỳ 2020-2025” quy định nội dung gì?",
+    "expected_document_id": "6872f634-42ff-4d3d-a35c-6b35a065fd11",
+    "expected_title_contains": [
+      "Lễ công bố Quyết định công nhận Chủ tịch Hội đồng Học viện Ngân hàng nhiệm kỳ 2020-2025"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/508_le_cong_bo_quyet_dinh_cong_nhan_chu_tich_hoi_dong_hoc_vien_ngan_hang_nhiem_ky_2020_2025.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-027-ki-n-tr-c-httt-trong-th-c-t-nghi-n-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software” là gì?",
+    "expected_document_id": "b1e3bec4-adca-486f-9607-e4b37e27b9a9",
+    "expected_title_contains": [
+      "Kiến trúc HTTT trong thực tế - Nghiên cứu trường hợp của Min Software"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/gioi_thieu/album_chi_tiet/23_kien_truc_httt_trong_thuc_te_nghien_cuu_truong_hop_cua_min_software.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-028-o-t-o-i-h-c-cao-ng-h-ch-nh-quy-ni-n",
+    "category": "regulation",
+    "query": "Quy định trong tài liệu “Đào tạo đại học, cao đẳng hệ chính quy (niên chế)” là gì?",
+    "expected_document_id": "0ccd2268-c624-4a69-9177-0563f2b95718",
+    "expected_title_contains": [
+      "Đào tạo đại học, cao đẳng hệ chính quy (niên chế)"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quy định Bộ GDĐT",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/bgddt/dao-tao-dai-hoc-cao-dang-he-chinh-quy-nien-che-256.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-029-h-ng-d-n-th-t-c-li-n-quan-n-ch-ng-t",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn thủ tục liên quan đến Chương trình Trao đổi sinh viên HVNH” áp dụng như thế nào?",
+    "expected_document_id": "0f61eb0d-fda3-4212-9bd0-654e1475bb7d",
+    "expected_title_contains": [
+      "Hướng dẫn thủ tục liên quan đến Chương trình Trao đổi sinh viên HVNH"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-lien-quan-den-chuong-trinh-trao-doi-sinh-vien-hvnh-342.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-030-th-ng-b-o-v-v-x-l-sinh-vi-n-c-n-n-h",
+    "category": "announcement",
+    "query": "Thông báo “THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026” có nội dung gì?",
+    "expected_document_id": "4907d5b8-a548-46c6-b4ea-b7e2d7ded204",
+    "expected_title_contains": [
+      "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026"
+    ],
+    "expected_academic_year": "2025/2026",
+    "source_name": "TCKT - Học phí",
+    "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-xu-ly-sinh-vien-con-no-hoc-phi-hoc-ky-ii-nam-hoc-2025-2026-112.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-031-sinh-vi-n-h-c-vi-n-ng-n-h-ng-xu-t-s",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia” là gì?",
+    "expected_document_id": "f2a001ca-6d16-4054-85ef-89ca66aee016",
+    "expected_title_contains": [
+      "Sinh viên Học viện Ngân hàng xuất sắc lọt vào Tứ kết cuộc thi The Moneyverse – Vũ trụ đồng tiền cấp quốc gia"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/sinh-vien-hoc-vien-ngan-hang-xuat-sac-lot-vao-tu-ket-cuoc-thi-the-moneyverse-vu-tru-dong-tien-cap-quoc-gia-3909.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-032-th-ng-b-o-ng-ng-m-b-o-ch-t-l-ng-u-v",
+    "category": "announcement",
+    "query": "Thông báo “Thông báo ngưỡng đảm bảo chất lượng đầu vào đối với ngành Luật năm 2026 (Mã trường NHH)” có nội dung gì?",
+    "expected_document_id": "e400d63b-cb6a-4240-b293-4da5c5ad9aec",
+    "expected_title_contains": [
+      "Thông báo ngưỡng đảm bảo chất lượng đầu vào đối với ngành Luật năm 2026 (Mã trường NHH)"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/thong-bao-nguong-dam-bao-chat-luong-dau-vao-doi-voi-nganh-luat-nam-2026-ma-truong-nhh-4039.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-033-ng-ng-m-b-o-ch-t-l-ng-u-v-o-v-c-ch-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Ngưỡng đảm bảo chất lượng đầu vào và cách thức quy đổi tương đương điểm trúng tuyển giữa các phương thức xét tuyển đại học chính quy năm 2026 tại Học viện Ngân hàng (mã trường NHH)” là gì?",
+    "expected_document_id": "dba662ac-2186-477a-9c2d-483e25b2420c",
+    "expected_title_contains": [
+      "Ngưỡng đảm bảo chất lượng đầu vào và cách thức quy đổi tương đương điểm trúng tuyển giữa các phương thức xét tuyển đại học chính quy năm 2026 tại Học viện Ngân hàng (mã trường NHH)"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Tuyển sinh",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/thong-tin-tuyen-sinh/nguong-dam-bao-chat-luong-dau-vao-va-cach-thuc-quy-doi-tuong-duong-diem-trung-tuyen-giua-cac-phuong-thuc-xet-tuyen-dai-hoc-chinh-quy-nam-2026-4024.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-034-k-k-t-bi-n-b-n-ghi-nh-h-p-t-c-gi-a-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Ký kết biên bản ghi nhớ hợp tác giữa Khoa CNTT & KTS và CRIF D&B Việt Nam” là gì?",
+    "expected_document_id": "f583d960-765d-47dc-91e7-f56c46d15cde",
+    "expected_title_contains": [
+      "Ký kết biên bản ghi nhớ hợp tác giữa Khoa CNTT & KTS và CRIF D&B Việt Nam"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/655_ky_ket_bien_ban_ghi_nho_hop_tac_giua_khoa_cntt_kts_va_crif_db_viet_nam.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-035-o-t-o-ch-t-l-ng-cao-tr-nh-i-h-c",
+    "category": "regulation",
+    "query": "Quy định trong tài liệu “Đào tạo chất lượng cao trình độ đại học” là gì?",
+    "expected_document_id": "d504cc76-4e04-476d-a334-d2a62e40c8c9",
+    "expected_title_contains": [
+      "Đào tạo chất lượng cao trình độ đại học"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quy định Bộ GDĐT",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/bgddt/dao-tao-chat-luong-cao-trinh-do-dai-hoc-258.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-036-h-ng-d-n-sinh-vi-n-s-d-ng-h-th-ng-l",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn sinh viên sử dụng hệ thống LMS” áp dụng như thế nào?",
+    "expected_document_id": "84cd68f6-f3c6-4b50-ad67-00bb9c281367",
+    "expected_title_contains": [
+      "Hướng dẫn sinh viên sử dụng hệ thống LMS"
+    ],
+    "expected_academic_year": "2022/2023",
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-sinh-vien-su-dung-he-thong-lms-315.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-037-th-ng-b-o-v-v-gia-h-n-n-p-h-c-ph-h-",
+    "category": "announcement",
+    "query": "Thông báo “THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)” có nội dung gì?",
+    "expected_document_id": "e580ebd5-76c8-4b16-91ea-884a4b12a88d",
+    "expected_title_contains": [
+      "THÔNG BÁO V/v gia hạn nộp học phí học kỳ 02 năm học 2025-2026 đối với sinh viên hệ Chính quy (Chuẩn và Chất lượng cao)"
+    ],
+    "expected_academic_year": "2025/2026",
+    "source_name": "TCKT - Học phí",
+    "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-gia-han-nop-hoc-phi-hoc-ky-02-nam-hoc-20252026-doi-voi-sinh-vien-he-chinh-quy-chuan-va-chat-luong-cao-111.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-038-ch-ng-tr-nh-trao-i-sinh-vi-n",
+    "category": "other",
+    "query": "Thông tin chính trong bài “[CHƯƠNG TRÌNH TRAO ĐỔI SINH VIÊN]” là gì?",
+    "expected_document_id": "c064abe9-66d4-45e0-bca5-1131611dd323",
+    "expected_title_contains": [
+      "[CHƯƠNG TRÌNH TRAO ĐỔI SINH VIÊN]"
+    ],
+    "expected_academic_year": "2025/2026",
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/truong-dai-hoc-kinh-te-dai-hoc-da-nang-thong-bao-chuong-trinh-trao-doi-sinh-vien-trong-hoc-ky-he-2025-2026-danh-cho-sinh-vien-cac-truong-doi-tac-3852.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-039-khoa-c-ng-ngh-th-ng-tin-kinh-t-s-h-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Khoa Công nghệ thông tin & Kinh tế số - Học viện Ngân hàng và Apex University kết hợp tổ chức thành công Hội thảo NICE-TEAS ASIA 2025!” là gì?",
+    "expected_document_id": "3c816dc2-f56d-4c54-9b6b-900f46913ea3",
+    "expected_title_contains": [
+      "Khoa Công nghệ thông tin & Kinh tế số - Học viện Ngân hàng và Apex University kết hợp tổ chức thành công Hội thảo NICE-TEAS ASIA 2025!"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/654_khoa_cong_nghe_thong_tin_kinh_te_so_hoc_vien_ngan_hang_va_apex_university_ket_hop_to_chuc_thanh_cong_hoi_thao_nice_teas_asia_2025_.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-040-o-t-o-i-h-c-cao-ng-h-ch-nh-quy-theo",
+    "category": "regulation",
+    "query": "Quy định trong tài liệu “Đào tạo đại học, cao đẳng hệ chính quy (theo hệ thống tín chỉ)” là gì?",
+    "expected_document_id": "f4a81f48-cba9-4d75-b1d6-4ebbe859929f",
+    "expected_title_contains": [
+      "Đào tạo đại học, cao đẳng hệ chính quy (theo hệ thống tín chỉ)"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quy định Bộ GDĐT",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/bgddt/dao-tao-dai-hoc-cao-dang-he-chinh-quy-theo-he-thong-tin-chi-260.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-041-t-i-li-u-h-ng-d-n-s-d-ng-google-mee",
+    "category": "guide",
+    "query": "Hướng dẫn “Tài liệu hướng dẫn sử dụng Google Meet” áp dụng như thế nào?",
+    "expected_document_id": "23e44d75-721d-4b8b-9ee6-96cac9c0dc02",
+    "expected_title_contains": [
+      "Tài liệu hướng dẫn sử dụng Google Meet"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/tai-lieu-huong-dan-su-dung-google-meet-314.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-042-m-c-thu-d-ch-v-kh-c-n-m-h-c-2025-20",
+    "category": "announcement",
+    "query": "Thông báo “Mức thu dịch vụ khác năm học 2025 - 2026 đối với các hệ đào tạo (bổ sung)” có nội dung gì?",
+    "expected_document_id": "8fce7a7b-1c1d-4ed4-bdc0-634f58fdbd6e",
+    "expected_title_contains": [
+      "Mức thu dịch vụ khác năm học 2025 - 2026 đối với các hệ đào tạo (bổ sung)"
+    ],
+    "expected_academic_year": "2025/2026",
+    "source_name": "TCKT - Học phí",
+    "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/muc-thu-dich-vu-khac-nam-hoc-2025-2026-doi-voi-cac-he-dao-tao-bo-sung-100.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-043-k-ni-m-95-n-m-ng-y-th-nh-l-p-o-n-tn",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Kỷ niệm 95 năm ngày thành lập Đoàn TNCS Hồ Chí Minh (26/3/1931 - 26/3/2026)” là gì?",
+    "expected_document_id": "e9b96987-1f0e-4484-8a3d-09bd2db3bc03",
+    "expected_title_contains": [
+      "Kỷ niệm 95 năm ngày thành lập Đoàn TNCS Hồ Chí Minh (26/3/1931 - 26/3/2026)"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/ky-niem-95-nam-ngay-thanh-lap-doan-tncs-ho-chi-minh-2631931-2632026-3838.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-044-khoa-cntt-kts-h-c-vi-n-ng-n-h-ng-ph",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Khoa CNTT&KTS - Học viện Ngân hàng phối hợp cùng SAP tổ chức Workshop về các giải pháp công nghệ tiên tiến trong lĩnh vực tài chính – ngân hàng và quản trị doanh nghiệp” là gì?",
+    "expected_document_id": "0dc75279-e2c8-4991-86ca-2af5dfc01094",
+    "expected_title_contains": [
+      "Khoa CNTT&KTS - Học viện Ngân hàng phối hợp cùng SAP tổ chức Workshop về các giải pháp công nghệ tiên tiến trong lĩnh vực tài chính – ngân hàng và quản trị doanh nghiệp"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/653_khoa_cnttkts_hoc_vien_ngan_hang_phoi_hop_cung_sap_to_chuc_workshop_ve_cac_giai_phap_cong_nghe_tien_tien_trong_linh_vuc_tai_chinhngan_hang_va_quan_tri_doanh_nghiep.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-045-b-gi-o-d-c-v-o-t-o",
+    "category": "regulation",
+    "query": "Quy định trong tài liệu “BỘ GIÁO DỤC VÀ ĐÀO TẠO” là gì?",
+    "expected_document_id": "64f34926-5a3a-4917-ba28-486865197d53",
+    "expected_title_contains": [
+      "BỘ GIÁO DỤC VÀ ĐÀO TẠO"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quy định Bộ GDĐT",
+    "source_url": "https://hvnh.edu.vn/medias/pdt/vi/04.2019/system/archivedate/THONGTULT2012.pdf",
+    "synthetic": true
+  },
+  {
+    "id": "strat-046-h-ng-d-n-th-t-c-li-n-quan-n-h-c-ph-",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn thủ tục liên quan đến học phần” áp dụng như thế nào?",
+    "expected_document_id": "224bf3b0-231b-4728-b705-b9797fe4e2ac",
+    "expected_title_contains": [
+      "Hướng dẫn thủ tục liên quan đến học phần"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-lien-quan-den-hoc-phan-294.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-047-m-c-thu-h-c-ph-n-m-h-c-2025-2026-i-",
+    "category": "announcement",
+    "query": "Thông báo “Mức thu học phí năm học 2025 - 2026 đối với các hệ đào tạo” có nội dung gì?",
+    "expected_document_id": "4a85f473-38f2-4e64-b2fe-d9f50de5f0dd",
+    "expected_title_contains": [
+      "Mức thu học phí năm học 2025 - 2026 đối với các hệ đào tạo"
+    ],
+    "expected_academic_year": "2025/2026",
+    "source_name": "TCKT - Học phí",
+    "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/muc-thu-hoc-phi-nam-hoc-2025-2026-doi-voi-cac-he-dao-tao-98.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-048-t-p-hu-n-cho-sinh-vi-n-nh-n-di-n-b-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Tập huấn cho sinh viên nhận diện, báo cáo giao dịch đáng ngờ liên quan đến buôn bán trái pháp luật động vật hoang dã” là gì?",
+    "expected_document_id": "477089d6-131b-440d-93b3-6f7555678f90",
+    "expected_title_contains": [
+      "Tập huấn cho sinh viên nhận diện, báo cáo giao dịch đáng ngờ liên quan đến buôn bán trái pháp luật động vật hoang dã"
+    ],
+    "expected_academic_year": null,
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/tap-huan-cho-sinh-vien-nhan-dien-bao-cao-giao-dich-dang-ngo-lien-quan-den-buon-ban-trai-phap-luat-dong-vat-hoang-da-3841.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-049-c-ng-ngh-th-ng-tin-h-c-vi-n-ng-n-h-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “CÔNG NGHỆ THÔNG TIN - HỌC VIỆN NGÂN HÀNG: NỀN TẢNG VỮNG CHẮC CHO CHUYỂN ĐỔI SỐ TOÀN DIỆN” là gì?",
+    "expected_document_id": "2cfc7a85-9d38-40f2-95a6-143c21da9f62",
+    "expected_title_contains": [
+      "CÔNG NGHỆ THÔNG TIN - HỌC VIỆN NGÂN HÀNG: NỀN TẢNG VỮNG CHẮC CHO CHUYỂN ĐỔI SỐ TOÀN DIỆN"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/652_cong_nghe_thong_tin_hoc_vien_ngan_hang_nen_tang_vung_chac_cho_chuyen_doi_so_toan_dien.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-050-microsoft-word-quy-che-dao-tao-dhcd",
+    "category": "regulation",
+    "query": "Quy định trong tài liệu “Microsoft Word - quy che dao tao dhcd26-6.doc” là gì?",
+    "expected_document_id": "45522200-6b76-4b05-b22e-81301f7fa7c3",
+    "expected_title_contains": [
+      "Microsoft Word - quy che dao tao dhcd26-6.doc"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quy định Bộ GDĐT",
+    "source_url": "https://hvnh.edu.vn/medias/pdt/vi/07.2022/system/archivedate/1c96a5dd_Quy%20che%2025.pdf",
+    "synthetic": true
+  },
+  {
+    "id": "strat-051-h-ng-d-n-th-t-c-c-p-c-c-lo-i-gi-y-c",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn thủ tục cấp các loại giấy chứng nhận/bảng điểm” áp dụng như thế nào?",
+    "expected_document_id": "f6fbafef-c573-44b3-bf06-84aaddaab74c",
+    "expected_title_contains": [
+      "Hướng dẫn thủ tục cấp các loại giấy chứng nhận/bảng điểm"
+    ],
+    "expected_academic_year": "2023/2024",
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-cap-cac-loai-giay-chung-nhanbang-diem-293.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-052-m-c-thu-d-ch-v-kh-c-n-m-h-c-2025-20",
+    "category": "announcement",
+    "query": "Thông báo “Mức thu dịch vụ khác năm học 2025 - 2026 đối với các hệ đào tạo” có nội dung gì?",
+    "expected_document_id": "aef54d36-f2b7-42ca-9493-42d58a1b1a6e",
+    "expected_title_contains": [
+      "Mức thu dịch vụ khác năm học 2025 - 2026 đối với các hệ đào tạo"
+    ],
+    "expected_academic_year": "2025/2026",
+    "source_name": "TCKT - Học phí",
+    "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/muc-thu-dich-vu-khac-nam-hoc-2025-2026-doi-voi-cac-he-dao-tao-99.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-053-hi-u-qu-t-h-sinh-th-i-h-tr-t-m-l-to",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên” là gì?",
+    "expected_document_id": "f4080b83-9317-42f7-9168-7484633591a1",
+    "expected_title_contains": [
+      "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên"
+    ],
+    "expected_academic_year": "2025/2026",
+    "source_name": "HVNH - Sinh viên",
+    "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/hieu-qua-tu-he-sinh-thai-ho-tro-tam-ly-toan-dien-cho-sinh-vien-o-hoc-vien-ngan-hang-3836.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-054-workshop-itde-2025-h-nh-tr-nh-truy-",
+    "category": "other",
+    "query": "Thông tin chính trong bài “Workshop ITDE 2025 – Hành trình truyền cảm hứng cùng diễn giả Dennis Khoo” là gì?",
+    "expected_document_id": "07761052-bd83-4141-8644-3b0767a0f776",
+    "expected_title_contains": [
+      "Workshop ITDE 2025 – Hành trình truyền cảm hứng cùng diễn giả Dennis Khoo"
+    ],
+    "expected_academic_year": null,
+    "source_name": "ITDE - Khoa CNTT va Kinh te so",
+    "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/650_workshop_itde_2025hanh_trinh_truyen_cam_hung_cung_dien_gia_dennis_khoo.html",
+    "synthetic": true
+  },
+  {
+    "id": "strat-055-h-ng-d-n-th-t-c-li-n-quan-n-k-thi",
+    "category": "guide",
+    "query": "Hướng dẫn “Hướng dẫn thủ tục liên quan đến kỳ thi” áp dụng như thế nào?",
+    "expected_document_id": "565bbf0b-a424-47ab-ab86-abea6a14f0e6",
+    "expected_title_contains": [
+      "Hướng dẫn thủ tục liên quan đến kỳ thi"
+    ],
+    "expected_academic_year": null,
+    "source_name": "PDT - Quản lý đào tạo",
+    "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-lien-quan-den-ky-thi-295.html",
+    "synthetic": true
+  },
+  {
+    "id": "negative-01",
+    "category": "negative",
+    "query": "Quy chế điều khiển tàu vũ trụ HVNH năm 2099/2100",
+    "expected_empty": true,
+    "synthetic": true
+  },
+  {
+    "id": "negative-02",
+    "category": "negative",
+    "query": "Thông báo mở ngành khảo cổ học Sao Hỏa năm học 2098/2099",
+    "expected_empty": true,
+    "synthetic": true
+  },
+  {
+    "id": "negative-03",
+    "category": "negative",
+    "query": "Mức phí nuôi rồng trong ký túc xá năm học 2097/2098",
+    "expected_empty": true,
+    "synthetic": true
+  },
+  {
+    "id": "negative-04",
+    "category": "negative",
+    "query": "Danh sách giảng viên môn dịch chuyển tức thời năm học 2096/2097",
+    "expected_empty": true,
+    "synthetic": true
+  },
+  {
+    "id": "negative-05",
+    "category": "negative",
+    "query": "Lịch thi bằng lái phi thuyền năm học 2095/2096",
+    "expected_empty": true,
+    "synthetic": true
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "dataset": "evals\\rag-gold-draft.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "results": [
+    {
+      "id": "hvnh-011",
+      "passed": false,
+      "refusal_ok": true,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": false,
+      "citation_count": 1,
+      "conversation_id": "ea3d0133-a023-409f-a88a-fe99af9aa240",
+      "message_id": "ed45e5ac-1db4-4e42-a37c-ec6cc3c037ad",
+      "citations": [
+        {
+          "title": "d3888c81_4473.TB-HVNH%20(09082026)%20%C4%91i%E1%BB%83m%20tr%C3%BAng%20tuy%E1%BB%83n%202026%20NHH-signed.pdf",
+          "source_url": "https://hvnh.edu.vn/medias/hvnh/vi/08.2026/system/archivedate/d3888c81_4473.TB-HVNH%20(09082026)%20%C4%91i%E1%BB%83m%20tr%C3%BAng%20tuy%E1%BB%83n%202026%20NHH-signed.pdf"
+        }
+      ]
+    }
+  ]
+}

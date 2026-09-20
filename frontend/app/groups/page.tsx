@@ -1,103 +1,32 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import GroupHeader from "@/components/group/GroupHeader";
-import MarketCardMatrix from "@/components/group/MarketCardMatrix";
-import HousingCardMatrix from "@/components/group/HousingCardMatrix";
-import EventsCardMatrix from "@/components/group/EventsCardMatrix";
-import CreatePostModal from "@/components/post/CreatePostModal";
-import { useCommunityGroup } from "@/hooks/useCommunityGroup";
-import { useCreatePost } from "@/hooks/useCreatePost";
-
-export default function GroupsPage() {
-  const [checked, setChecked] = useState(false);
-  const router = useRouter();
-
-  const communityState = useCommunityGroup();
-  const createPostState = useCreatePost();
-
-  useEffect(() => {
-    if (
-      window.sessionStorage.getItem("hvnh-hub-mock-authenticated") !== "true"
-    ) {
-      router.replace("/login");
-      return;
-    }
-    setChecked(true);
-  }, [router]);
-
-  if (!checked)
-    return <main className="home-loading" aria-label="Đang tải trang hội nhóm" />;
-
-  const handleMessageSeller = (sellerName: string) => {
-    router.push("/messages");
-  };
-
-  const handleContactLandlord = (name: string, phone: string) => {
-    alert(`Liên hệ chủ nhà/người cho thuê: ${name} (${phone})`);
-  };
-
-  return (
-    <main className="group-community-page-full">
-      <div className="group-content-wrapper-full">
-        {/* Group Header & In-Page Navigation Tabs (Pass đồ, Tìm trọ, Sự kiện) */}
-        <GroupHeader
-          data={communityState.headerData}
-          activeTab={communityState.activeTab}
-          onTabChange={communityState.setActiveTab}
-          onToggleJoin={communityState.toggleJoinGroup}
-          onOpenCreateModal={() => {
-            if (communityState.activeTab === "market")
-              createPostState.openModal("market");
-            else if (communityState.activeTab === "room")
-              createPostState.openModal("roommate");
-            else if (communityState.activeTab === "event")
-              createPostState.openModal("event");
-            else createPostState.openModal();
-          }}
-        />
-
-        {/* Dynamic Card Matrix Views */}
-        <div className="group-content-area" style={{ marginTop: "24px" }}>
-          {communityState.activeTab === "market" && (
-            <MarketCardMatrix
-              items={communityState.marketItems}
-              searchQuery={communityState.searchQuery}
-              onSearchChange={communityState.setSearchQuery}
-              conditionFilter={communityState.marketConditionFilter}
-              onConditionFilterChange={communityState.setMarketConditionFilter}
-              statusFilter={communityState.marketStatusFilter}
-              onStatusFilterChange={communityState.setMarketStatusFilter}
-              onToggleSold={communityState.toggleSoldStatus}
-              onMessageSeller={handleMessageSeller}
-            />
-          )}
-
-          {communityState.activeTab === "room" && (
-            <HousingCardMatrix
-              items={communityState.roomItems}
-              searchQuery={communityState.searchQuery}
-              onSearchChange={communityState.setSearchQuery}
-              statusFilter={communityState.roomStatusFilter}
-              onStatusFilterChange={communityState.setRoomStatusFilter}
-              onContactLandlord={handleContactLandlord}
-            />
-          )}
-
-          {communityState.activeTab === "event" && (
-            <EventsCardMatrix
-              items={communityState.eventItems}
-              searchQuery={communityState.searchQuery}
-              onSearchChange={communityState.setSearchQuery}
-              onToggleStatus={communityState.toggleEventStatus}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Create Post Modal Triggered from Group */}
-      <CreatePostModal postState={createPostState} />
-    </main>
-  );
+import {useCallback,useEffect,useState} from "react";
+import PostCard from "@/components/post/PostCard";
+import ReportQueue from "@/components/admin/ReportQueue";
+import {createGroupPost,decideGroupJoin,fetchGroupJoinRequests,fetchGroupMembers,fetchGroupPosts,fetchGroups,fetchMyGroupPosts,fetchPendingGroupPosts,kickGroupMember,leaveGroup,moderateGroupPost,requestGroupJoin,setGroupPostPinned} from "@/lib/api";
+import {getAuthUser} from "@/lib/auth";
+import type {ApiGroup,GroupJoinRequest,GroupMember,GroupPost} from "@/types/group-api";
+import {useDialog} from "@/components/ui/DialogProvider";
+import RelativeTime from "@/components/ui/RelativeTime";
+const order=["pass-do","ghep-phong-tim-tro","su-kien","hoc-tap"];
+const icons:Record<string,string>={"pass-do":"🛍️","ghep-phong-tim-tro":"🏠","su-kien":"📅","hoc-tap":"📚"};
+export default function GroupsPage(){
+ const dialog=useDialog();
+ const [groups,setGroups]=useState<ApiGroup[]>([]),[activeId,setActiveId]=useState(""),[posts,setPosts]=useState<GroupPost[]>([]),[myPosts,setMyPosts]=useState<GroupPost[]>([]),[pending,setPending]=useState<GroupPost[]>([]),[requests,setRequests]=useState<GroupJoinRequest[]>([]),[members,setMembers]=useState<GroupMember[]>([]);
+ const [tab,setTab]=useState<"posts"|"requests"|"members">("posts"),[content,setContent]=useState(""),[files,setFiles]=useState<File[]>([]),[query,setQuery]=useState(""),[sort,setSort]=useState<"latest"|"featured"|"pinned">("latest"),[showMine,setShowMine]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ const [auth,setAuth]=useState<ReturnType<typeof getAuthUser>>(null),active=groups.find(g=>g.id===activeId),isAdmin=!!active&&(auth?.system_role==="SUPER_ADMIN"||auth?.admin_group_slugs?.includes(active.slug));
+ const loadGroups=useCallback(async()=>{const rows=await fetchGroups();rows.sort((a,b)=>order.indexOf(a.slug)-order.indexOf(b.slug));setGroups(rows);setActiveId(v=>v||rows.find(g=>order.includes(g.slug))?.id||"");},[]);
+ const load=useCallback(async()=>{if(!activeId)return;const [feed,mine]=await Promise.all([fetchGroupPosts(activeId,query,sort),fetchMyGroupPosts(activeId)]);setPosts(feed);setMyPosts(mine);const selected=groups.find(g=>g.id===activeId),admin=!!selected&&(auth?.system_role==="SUPER_ADMIN"||auth?.admin_group_slugs?.includes(selected.slug));if(admin){const [p,r,m]=await Promise.all([fetchPendingGroupPosts(activeId),fetchGroupJoinRequests(activeId),fetchGroupMembers(activeId)]);setPending(p);setRequests(r);setMembers(m);}else{setPending([]);setRequests([]);setMembers([]);}},[activeId,groups,auth,query,sort]);
+ useEffect(()=>{setAuth(getAuthUser());void loadGroups().catch(e=>setError(e.message));},[loadGroups]);useEffect(()=>{void load().catch(e=>setError(e.message));},[load]);
+ const act=async(work:()=>Promise<unknown>)=>{setBusy(true);setError("");try{await work();await loadGroups();await load();}catch(e){setError(e instanceof Error?e.message:"Có lỗi xảy ra.");}finally{setBusy(false);}};
+ const submit=()=>act(async()=>{if(!active||(!content.trim()&&!files.length))return;await createGroupPost(active.id,content.trim(),files);setContent("");setFiles([]);setShowMine(true);});
+ const rejectPost=async(post:GroupPost)=>{if(!active)return;const reason=await dialog.prompt({title:'Từ chối bài viết',message:`Nêu lý do để ${post.author.name} biết cách chỉnh sửa.`,placeholder:'Lý do từ chối...',multiline:true,minLength:3,tone:'danger'});if(reason)await act(()=>moderateGroupPost(active.id,post.id,'REJECT',reason));};
+ const kickMember=async(member:GroupMember)=>{if(!active)return;if(await dialog.confirm({title:'Mời thành viên khỏi nhóm?',message:`${member.name} sẽ mất quyền truy cập nội dung dành cho thành viên.`,confirmLabel:'Mời khỏi nhóm',tone:'danger'}))await act(()=>kickGroupMember(active.id,member.id));};
+ return <main className="live-groups-page">
+  <section className="live-groups-hero"><span>CỘNG ĐỒNG HVNH</span><h1>Bốn không gian dành cho sinh viên</h1><p>Tham gia nhóm, chia sẻ nội dung và theo dõi kết quả kiểm duyệt minh bạch.</p></section>
+  <nav className="live-group-tabs">{groups.filter(g=>order.includes(g.slug)).map(g=><button key={g.id} className={g.id===activeId?"active":""} onClick={()=>{setActiveId(g.id);setQuery("");setShowMine(false);}}><b>{icons[g.slug]} {g.name}</b><small>{g.member_count} thành viên</small></button>)}</nav>
+  {active&&<><section className="live-group-summary"><div><h2>{icons[active.slug]} {active.name}</h2><p>{active.description}</p></div><div>{active.membership==="NONE"&&<button disabled={busy} onClick={()=>act(()=>requestGroupJoin(active.id))}>Tham gia nhóm</button>}{active.membership==="PENDING"&&<button disabled>Đang chờ duyệt</button>}{active.membership==="MEMBER"&&<button disabled={busy} className="secondary" onClick={()=>act(()=>leaveGroup(active.id))}>Rời nhóm</button>}{active.membership==="ADMIN"&&<span className="live-admin-badge">Group Admin</span>}</div></section>
+  {(active.membership==="MEMBER"||active.membership==="ADMIN"||auth?.system_role==="SUPER_ADMIN")&&<section className="live-group-composer"><h3>Tạo bài viết trong {active.name}</h3><textarea value={content} onChange={e=>setContent(e.target.value)} placeholder="Bài viết sẽ được admin nhóm kiểm duyệt trước khi hiển thị."/><div><input type="file" multiple accept="image/*,video/*,audio/*,application/pdf,text/plain,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip" onChange={e=>setFiles(Array.from(e.target.files||[]))}/><button disabled={busy||(!content.trim()&&!files.length)} onClick={submit}>Gửi duyệt</button></div>{!!files.length&&<small>Đã chọn {files.length} tệp.</small>}</section>}
+  {isAdmin&&<section className="live-admin-panel"><header><div><span>TRUNG TÂM KIỂM DUYỆT</span><h2>Quản trị {active.name}</h2></div><nav><button className={tab==="posts"?"active":""} onClick={()=>setTab("posts")}>Bài chờ ({pending.length})</button><button className={tab==="requests"?"active":""} onClick={()=>setTab("requests")}>Xin vào nhóm ({requests.length})</button><button className={tab==="members"?"active":""} onClick={()=>setTab("members")}>Thành viên ({members.length})</button></nav></header><div className="live-admin-list">{tab==="posts"&&pending.map(p=><article key={p.id}><div><strong>{p.author.name}</strong><p>{p.content||"Bài viết chỉ có media"}</p></div><div><button onClick={()=>act(()=>moderateGroupPost(active.id,p.id,"APPROVE"))}>Phê duyệt</button><button className="danger" onClick={()=>{void rejectPost(p);}}>Từ chối</button></div></article>)}{tab==="requests"&&requests.map(r=><article key={r.id}><div><strong>{r.name}</strong><p>@{r.username}</p></div><div><button onClick={()=>act(()=>decideGroupJoin(active.id,r.id,"APPROVE"))}>Chấp nhận</button><button className="danger" onClick={()=>act(()=>decideGroupJoin(active.id,r.id,"REJECT"))}>Từ chối</button></div></article>)}{tab==="members"&&members.map(m=><article key={m.id}><div><strong>{m.name}</strong><p>@{m.username} · {m.role}</p></div>{m.role==="MEMBER"&&<button className="danger" onClick={()=>void kickMember(m)}>Mời khỏi nhóm</button>}</article>)}{((tab==="posts"&&!pending.length)||(tab==="requests"&&!requests.length)||(tab==="members"&&!members.length))&&<p className="live-empty">Chưa có dữ liệu.</p>}</div></section>}
+  <section className="group-user-tools"><div className="group-feed-filters"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Tìm trong nhóm…"/><select value={sort} onChange={e=>setSort(e.target.value as typeof sort)}><option value="latest">Mới nhất</option><option value="featured">Nổi bật</option><option value="pinned">Đã ghim</option></select><button className={showMine?"active":"secondary"} onClick={()=>setShowMine(v=>!v)}>Bài của tôi ({myPosts.length})</button></div>{showMine&&<div className="my-group-posts"><h3>Trạng thái bài đã gửi</h3>{myPosts.map(p=><article key={p.id}><div><b className={`post-status ${p.status.toLowerCase()}`}>{p.status==="PENDING"?"Chờ duyệt":p.status==="APPROVED"?"Đã duyệt":"Bị từ chối"}</b><RelativeTime value={p.createdAt}/></div><p>{p.content||"Bài viết chỉ có media"}</p>{p.rejectionReason&&<strong>Lý do: {p.rejectionReason}</strong>}</article>)}{!myPosts.length&&<p className="live-empty">Bạn chưa gửi bài nào trong nhóm này.</p>}</div>}</section>
+  <section className="live-group-feed"><header><h2>Bài viết trong nhóm</h2><span>{posts.length} bài phù hợp</span></header>{posts.map(p=><div key={p.id} className="live-post-wrap">{p.isPinned&&<span className="live-pin-label">📌 Bài viết đã ghim</span>}<PostCard post={p}/>{isAdmin&&<button className="live-pin-button" onClick={()=>act(()=>setGroupPostPinned(active.id,p.id,!p.isPinned))}>{p.isPinned?"Bỏ ghim":"Ghim bài"}</button>}</div>)}{!posts.length&&<div className="live-empty-card">Không có bài viết phù hợp với bộ lọc.</div>}</section></>}{error&&<div className="live-group-error">{error}</div>}{isAdmin&&active&&<ReportQueue groupId={active.id}/>}</main>;
 }

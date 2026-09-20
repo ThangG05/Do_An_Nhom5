@@ -3,6 +3,8 @@
 import React from "react";
 import { RoomItem } from "@/types/group";
 import { IconSearch, IconHousing } from "@/components/ui/Icons";
+import { safeImageSrc } from "@/lib/media";
+import RelativeTime from "@/components/ui/RelativeTime";
 
 interface HousingCardMatrixProps {
   items: RoomItem[];
@@ -76,7 +78,7 @@ export default function HousingCardMatrix({
           >
             {/* Image Wrap */}
             <div className="room-image-wrap">
-              <img src={room.image} alt={room.title} loading="lazy" />
+              <img src={safeImageSrc(room.image)} alt={room.title} loading="lazy" />
 
               <div className="rent-badge-overlay">{room.rentPerMonth}</div>
 
@@ -91,7 +93,7 @@ export default function HousingCardMatrix({
             <div className="room-card-body">
               <div className="room-time-meta">
                 <span>Cách HVNH {room.distanceToSchool}</span>
-                <small>{room.createdAt}</small>
+                <RelativeTime value={room.createdAt}/>
               </div>
 
               <h3 className="room-card-title">{room.title}</h3>
@@ -136,9 +138,7 @@ export default function HousingCardMatrix({
                   <button
                     type="button"
                     className="view-map-btn"
-                    onClick={() =>
-                      alert(`Xem vị trí phòng trọ trên bản đồ: ${room.address}`)
-                    }
+                    onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(room.address)}`,'_blank','noopener,noreferrer')}
                   >
                     <span>Bản đồ</span>
                   </button>

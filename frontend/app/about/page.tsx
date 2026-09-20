@@ -13,8 +13,10 @@ import {
   IconLock,
   IconSend,
 } from "@/components/ui/Icons";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 export default function AboutPage() {
+  const dialog = useDialog();
   const [feedbackName, setFeedbackName] = useState("");
   const [feedbackEmail, setFeedbackEmail] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
@@ -27,7 +29,7 @@ export default function AboutPage() {
     setTimeout(() => {
       setFeedbackMsg("");
       setSentStatus(false);
-      alert("Cảm ơn bạn đã gửi ý kiến đóng góp cho Ban quản trị HVNH Hub!");
+      dialog.notify({title:"Đã nhận ý kiến đóng góp",message:"Cảm ơn bạn đã góp ý cho Ban quản trị HVNH Hub.",tone:"success"});
     }, 1200);
   };
 

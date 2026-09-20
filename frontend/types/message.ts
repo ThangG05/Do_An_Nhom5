@@ -1,10 +1,10 @@
 export type MessageStatus = 'sent' | 'delivered' | 'seen';
 
-export type MessageType = 'text' | 'image' | 'file';
+export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'file';
 
 export interface MessageAttachment {
   id: string;
-  type: 'image' | 'file';
+  type: 'image' | 'video' | 'audio' | 'file';
   url: string;
   name: string;
   size?: string;
@@ -50,6 +50,20 @@ export interface Conversation {
   unreadCount: number;
   bio?: string;
   role?: string;
+  theme: 'blue' | 'indigo' | 'emerald' | 'rose' | 'violet' | 'amber';
+  nickname?: string | null;
+  isMuted: boolean;
   sharedMedia: SharedMedia[];
   sharedFiles: SharedFile[];
+}
+
+export interface RealtimeCallEvent {
+  event: 'call.offer' | 'call.answer' | 'call.ice' | 'call.end';
+  conversation_id: string;
+  from_user_id: string;
+  video?: boolean;
+  sdp?: RTCSessionDescriptionInit;
+  candidate?: RTCIceCandidateInit;
+  reason?: string;
+  sequence: number;
 }

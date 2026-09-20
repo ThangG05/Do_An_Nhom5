@@ -3,6 +3,7 @@
 import React from "react";
 import { EventItem, EventUserStatus } from "@/types/group";
 import { IconSearch, IconEvent } from "@/components/ui/Icons";
+import { safeImageSrc } from "@/lib/media";
 
 interface EventsCardMatrixProps {
   items: EventItem[];
@@ -15,7 +16,6 @@ export default function EventsCardMatrix({
   items,
   searchQuery,
   onSearchChange,
-  onToggleStatus,
 }: EventsCardMatrixProps) {
   return (
     <section className="group-module-section" aria-label="Sự Kiện Sinh Viên HVNH">
@@ -56,7 +56,7 @@ export default function EventsCardMatrix({
           <article key={event.id} className="event-card">
             {/* Cover Image & Square Calendar Date Badge */}
             <div className="event-cover-wrap">
-              <img src={event.coverImage} alt={event.title} loading="lazy" />
+              <img src={safeImageSrc(event.coverImage)} alt={event.title} loading="lazy" />
 
               {/* Calendar Date Block Badge */}
               <div className="calendar-date-badge">
@@ -94,28 +94,6 @@ export default function EventsCardMatrix({
                 <span>Tổ chức bởi: <strong>{event.organizer}</strong></span>
               </div>
 
-              {/* Event Action Buttons */}
-              <div className="event-card-actions">
-                <button
-                  type="button"
-                  className={`event-action-btn going-btn ${
-                    event.userStatus === "going" ? "active" : ""
-                  }`}
-                  onClick={() => onToggleStatus(event.id, "going")}
-                >
-                  {event.userStatus === "going" ? "✓ Sẽ tham gia" : "+ Tham gia"}
-                </button>
-
-                <button
-                  type="button"
-                  className={`event-action-btn interested-btn ${
-                    event.userStatus === "interested" ? "active" : ""
-                  }`}
-                  onClick={() => onToggleStatus(event.id, "interested")}
-                >
-                  {event.userStatus === "interested" ? "Đã quan tâm" : "Quan tâm"}
-                </button>
-              </div>
             </div>
           </article>
         ))}

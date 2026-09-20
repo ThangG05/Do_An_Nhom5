@@ -1,0 +1,158 @@
+{
+  "dataset": "evals\\results\\rag-gold-hard-5.json",
+  "official_score": true,
+  "cases": 5,
+  "passed": 5,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 9173.8,
+    "p50_ms": 3798,
+    "p95_ms": 31006,
+    "max_ms": 31006
+  },
+  "results": [
+    {
+      "id": "hvnh-004",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "1f080bea-3b39-47a1-94f8-ae0859d1b0d7",
+      "message_id": "faa53bca-2dd5-4574-8cbe-b4f85e338472",
+      "question": "Chương trình trao đổi sinh viên học kỳ hè 2025/2026 tại Đại học Kinh tế - Đại học Đà Nẵng được tổ chức thế nào?",
+      "response": "Chương trình trao đổi sinh viên học kỳ hè năm học 2025/2026 dành cho sinh viên đại học chính quy đang học tập tại Học viện Ngân hàng tại Trường Đại học Kinh tế - Đại học Đà Nẵng diễn ra từ ngày 06/7/2026 đến 24/7/2026 [1]. Các học phần giảng dạy gồm Marketing căn bản, Giao tiếp trong kinh doanh, và Thị trường và các định chế tài chính với số lượng đăng ký tối đa 80 sinh viên/học phần [1]. Sinh viên đăng ký thông tin tại link trực tuyến và nộp hồ sơ gồm đơn đề nghị tham gia chương trình trao đổi và bản sao căn cước công dân tại Học viện từ ngày 23/3/2026 đến ngày 30/5/2026 [1]. Sinh viên đóng học phí cho Học viện Ngân hàng theo số tín chỉ đăng ký và được Trường Đại học Kinh tế - Đại học Đà Nẵng ưu tiên bố trí chỗ ở ký túc xá miễn phí theo nhu cầu [1].",
+      "reference": "Đối tượng là sinh viên đại học chính quy đang học tại Học viện Ngân hàng. Học tại Đại học Kinh tế - Đại học Đà Nẵng từ 06/07/2026 đến 24/07/2026; thi dự kiến 27-28/07/2026.",
+      "latency_ms": 31006,
+      "retrieved_contexts": [
+        "Trường Đại học Kinh tế - Đại học Đà Nẵng thông báo Chương trình trao đổi sinh viên trong học kỳ hè 2025 - 2026 dành cho sinh viên các trường đối tác.\nNgày 30/03/2026\n1,503 lượt xem\nCăn cứ theo Thỏa thuận hợp tác giữa Trường Đại học Kinh tế - Đại học Đà Nẵng (ĐHKT) với các cơ sở đào tạo trong nước (10 Trường đối tác, gọi tắt là Nhóm ICYREB) ký ngày 29/10/2022;\nCăn cứ Thông báo số 1224/TB-ĐHKT thông báo chương trình trao đổi sinh viên tại trường ĐHKT học kỳ hè năm học 2025-2026, cụ thể như sau:\n1. Thông tin chung về chương trình\nĐối tượng: Sinh viên đại học chính quy đang học tập tại Học viện Ngân hàng.\nĐịa điểm học tập: Trường ĐH Kinh tế - ĐH Đà Nẵng, số 71 Ngũ Hành Sơn, TP. Đà Nẵng.\nThời gian học: Từ ngày 06/7/2026 đến 24/7/2026.\nThời gian thi (dự kiến): Ngày 27 - 28/7/2026.\n2. Các học phần giảng dạy\nSTT\nTên học phần\nMã học phần\nSố tín chỉ\n1\nMarketing căn bản\nMKT2001\n3\n2\nGiao tiếp trong kinh doanh\nTOU1001\n3\n3\nThị trường và các định chế tài chính\nFIN2001\n3\nLưu ý: Số lượng đăng ký tối đa"
+      ],
+      "citations": [
+        {
+          "title": "[CHƯƠNG TRÌNH TRAO ĐỔI SINH VIÊN]",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/truong-dai-hoc-kinh-te-dai-hoc-da-nang-thong-bao-chuong-trinh-trao-doi-sinh-vien-trong-hoc-ky-he-2025-2026-danh-cho-sinh-vien-cac-truong-doi-tac-3852.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-005",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "6fe96c75-3f5a-422f-b4a1-d7907a89ac7a",
+      "message_id": "035b87bf-4077-45c2-8fae-6ed195e51efb",
+      "question": "Sinh viên còn nợ học phí học kỳ II năm học 2025/2026 bị xử lý thế nào và cần liên hệ khi nào?",
+      "response": "Sinh viên chưa hoàn thành nghĩa vụ tài chính sẽ bị hủy kết quả đăng ký học phần trong học kỳ này và tạm dừng các quyền lợi học tập liên quan theo quy định [1]. Trường hợp có thắc mắc hoặc cần rà soát, sinh viên liên hệ Phòng Tài chính – Kế toán trước 11h ngày 04/03/2026 [1].",
+      "reference": "Sinh viên chưa hoàn thành nghĩa vụ tài chính bị hủy kết quả đăng ký học phần và tạm dừng quyền lợi học tập. Sinh viên cần liên hệ Phòng Tài chính - Kế toán trước 11h ngày 04/03/2026 nếu cần rà soát.",
+      "latency_ms": 4163,
+      "retrieved_contexts": [
+        "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026\nNgày 03/03/2026\n5,006 lượt xem\nTHÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026\nC\năn cứ Thông báo số 1392/TB-HVNH ngày 12 tháng 02 năm 2026 của Giám đốc Học viện Ngân hàng về việc gia hạn nộp học phí đến hết ngày 01/03/2026, Phòng Tài chính - Kế toán Học viện Ngân hàng thông báo:\nHết thời hạn gia hạn nêu trên, những sinh viên chưa hoàn thành nghĩa vụ tài chính sẽ bị hủy kết quả đăng ký học phần trong học kỳ này (xóa đăng ký học) và tạm dừng các quyền lợi học tập liên quan theo quy định (có Danh sách kèm theo).\nTrường hợp có thắc mắc hoặc cần rà soát, sinh viên liên hệ Phòng Tài chính – Kế toán trước 11h ngày 04/03/2026 để được hướng dẫn."
+      ],
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/V XỬ LÝ SINH VIÊN CÒN NỢ HỌC PHÍ HỌC KỲ II NĂM HỌC 2025 - 2026",
+          "source_url": "https://hvnh.edu.vn/tckt/vi/hoc-phi/thong-bao-vv-xu-ly-sinh-vien-con-no-hoc-phi-hoc-ky-ii-nam-hoc-2025-2026-112.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-014",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "d3d21ce9-8466-4050-ae0a-1ee0a6f03ab0",
+      "message_id": "fc42b89d-ca2a-4afb-942c-42ed497e94f7",
+      "question": "Tôi cần thực hiện như thế nào theo tài liệu “Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH”?",
+      "response": "Để chuyển sang học một chương trình hoặc ngành đào tạo khác giữa Trụ sở và các Phân viện hoặc giữa các Phân viện, sinh viên đáp ứng điều kiện không là sinh viên năm thứ nhất hoặc năm cuối khóa, không thuộc diện bị xem xét buộc thôi học, còn đủ thời gian học tập, đạt điều kiện trúng tuyển trong cùng khóa tuyển sinh, ngành muốn chuyển đủ điều kiện đảm bảo chất lượng, và được sự đồng ý của trưởng các đơn vị phụ trách đào tạo cùng Giám đốc Học viện [1]. Sinh viên viết và nộp đơn xin chuyển CTĐT (Mẫu 14) tại phòng Đào tạo (P. 106, nhà A1) [1]. Phòng Đào tạo xét duyệt và trình Ban Giám đốc ra Quyết định chuyển hình thức học tập nếu sinh viên đủ điều kiện và thông báo kết quả trên cổng thông tin [1]. Sau khi có Quyết định xác nhận đủ điều kiện chuyển CTĐT, sinh viên vào trang cá nhân kiểm tra chương trình học và tiến hành đăng ký học theo kế hoạch [1].",
+      "reference": "Sinh viên chuyển chương trình không được đang ở năm thứ nhất, năm cuối hoặc thuộc diện xem xét buộc thôi học. Sinh viên nộp đơn Mẫu 14 tại Phòng Đào tạo và cần sự đồng ý của các đơn vị phụ trách cùng Giám đốc Học viện.",
+      "latency_ms": 3798,
+      "retrieved_contexts": [
+        "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH\nNgày 25/07/2023\n9,679 lượt xem\nSTT\nNỘI DUNG\nĐIỀU KIỆN\nQUY TRÌNH\n1\nChuyển sang học một chương trình, một ngành đào tạo khác giữa Trụ sở và các Phân viện, giữa các Phân viện\n- Không đang là sinh viên trình độ năm thứ nhất hoặc năm cuối khoá, không thuộc diện bị xem xét buộc thôi học và còn đủ thời gian học tập theo quy định tại khoản 2 Điều 4 của Quy định này.\n- Sinh viên đạt điều kiện trúng tuyển của chương trình, ngành đào tạo, của trụ sở chính (hoặc Phân viện) trong cùng khoá tuyển sinh.\n- Ngành, CTĐT muốn chuyển sang có đủ các điều kiện bảo đảm chất lượng, chưa vượt qua năng lực đào tạo theo quy định hiện hành của BGD&ĐT.\n- Được sự đồng ý của trưởng các đơn vị phụ trách đào tạo và của Giám đốc Học viện.\n- Bước 1: Sinh viên viết và nộp đơn xin chuyển CTĐT (Mẫu 14) và nộp đơn tại phòng Đào tạo (P. 106, nhà A1).\n- Bước 2: Phòng Đào tạo xét duyệt và trình Ban Giám đốc ra Quyết định chuyển hình thức học tập nếu Sinh viên đủ điều kiện v"
+      ],
+      "citations": [
+        {
+          "title": "Hướng dẫn thủ tục chuyển đổi giữa các CTĐT trong HVNH",
+          "source_url": "https://hvnh.edu.vn/pdt/vn/qtqldt/huong-dan-thu-tuc-chuyen-doi-giua-cac-ctdt-trong-hvnh-341.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-019",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "8aa24a8a-3702-4ebb-a0f4-1cb1ee904698",
+      "message_id": "c599fb60-f70d-4c63-9102-70c7e587875c",
+      "question": "Học viện Ngân hàng đang hỗ trợ sức khỏe tâm lý cho sinh viên như thế nào?",
+      "response": "Học viện Ngân hàng triển khai hệ sinh thái hỗ trợ sinh viên toàn diện, tích hợp giữa sức khỏe tinh thần, năng lực học tập và hành trang nghề nghiệp [1]. Học viện đã xây dựng mô hình “Không gian hỗ trợ và tư vấn tâm lý” nhằm đồng hành kịp thời với người học [1]. Tháng 4/2025, trường tổ chức tọa đàm “Sức khỏe tâm lý sinh viên năm 2025” với chủ đề “Bí quyết làm chủ cảm xúc và định hướng mục tiêu cho thế hệ trẻ” [1]. Đến tháng 9/2025, trường triển khai “Mạng lưới chăm sóc sức khỏe và tư vấn tâm lý cho sinh viên” để nâng cao nhận thức về chăm sóc sức khỏe tinh thần học đường [1].",
+      "reference": "Học viện triển khai hệ sinh thái hỗ trợ tích hợp sức khỏe tinh thần, năng lực nghề nghiệp và việc làm cho sinh viên. Mô hình có Không gian hỗ trợ và tư vấn tâm lý để giúp sinh viên an tâm học tập.",
+      "latency_ms": 3485,
+      "retrieved_contexts": [
+        "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên ở Học viện Ngân hàng\nNgày 20/03/2026\n608 lượt xem\nTrong bối cảnh áp lực học tập, cạnh tranh việc làm và bất định nghề nghiệp gia tăng, câu chuyện hỗ trợ sinh viên không còn dừng ở học vụ hay giới thiệu việc làm. Tại Học viện Ngân hàng (BAV), hệ sinh thái hỗ trợ sinh viên toàn diện, từ việc làm cho tới sức khỏe tinh thần đang được triển khai, đã giúp sinh viên an tâm học tập.\nXây dựng mô hình “Không gian hỗ trợ và tư vấn tâm lý”\nWHO định nghĩa sức khỏe tinh thần là trạng thái an sinh giúp con người đối phó với căng thẳng của cuộc sống, học tốt và làm việc tốt; còn NACE xem “career readiness” (sự sẵn sàng cho nghề nghiệp) là nền tảng năng lực để người học thành công trong công việc và quản trị nghề nghiệp lâu dài. Hai hướng tiếp cận này cho thấy hỗ trợ sinh viên hôm nay phải là một hệ thống tích hợp giữa sức khỏe tinh thần, năng lực học tập và hành trang nghề nghiệp.\nNhìn từ chuỗi các hoạt động dành cho sinh viên tại BAV thời"
+      ],
+      "citations": [
+        {
+          "title": "Hiệu quả từ hệ sinh thái hỗ trợ tâm lý toàn diện cho sinh viên",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/hieu-qua-tu-he-sinh-thai-ho-tro-tam-ly-toan-dien-cho-sinh-vien-o-hoc-vien-ngan-hang-3836.html"
+        }
+      ]
+    },
+    {
+      "id": "hvnh-020",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 2,
+      "conversation_id": "8b1ce050-5a10-4b5f-a675-017c8ec0743d",
+      "message_id": "557795dd-281b-4c5f-a62e-7c855eafb6fa",
+      "question": "Sinh viên ngành MIS có những định hướng nghề nghiệp và cơ hội việc làm nào?",
+      "response": "Sinh viên tốt nghiệp ngành MIS có khả năng phân tích thiết kế, tổ chức phát triển, quản lý và khai thác các hệ thống thông tin tại doanh nghiệp, cũng như tham gia xây dựng chính sách và chỉ đạo thực thi công tác ứng dụng công nghệ thông tin tại các tổ chức tài chính, ngân hàng và doanh nghiệp [1]. Các đơn vị tham gia định hướng nghề nghiệp cho sinh viên MIS bao gồm các ngân hàng như Ngân hàng TMCP Quân đội (MB), Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank), Ngân hàng TMCP Công thương Việt Nam (Vietinbank), Công ty TNHH Hệ thống thông tin FPT (FPT IS), Công ty cổ phần NGV, Công ty cổ phần TriAx Việt Nam, Công ty cổ phần chứng khoán Sài Gòn (SSI), và Công ty IIG Việt Nam [2]. Tại Công ty FPT IS, các vị trí làm việc phù hợp với sinh viên ngành Hệ thống thông tin bao gồm lập trình viên, phân tích nghiệp vụ, chuyên viên kiểm thử và tư vấn triển khai dự án [1].",
+      "reference": "Khoa Hệ thống thông tin quản lý tổ chức tọa đàm định hướng nghề nghiệp thường niên để sinh viên tiếp cận cơ hội việc làm đúng chuyên ngành. Tọa đàm có sự tham gia của các ngân hàng và doanh nghiệp công nghệ, hệ thống thông tin.",
+      "latency_ms": 3417,
+      "retrieved_contexts": [
+        "Banking, System Integration.... Sinh viên tốt nghiệp được cấp bằng cử nhân về Hệ thống thông tin quản lý, có khả năng phân tích thiết kế, tổ chức phát triển và quản lý, khai thác các hệ thống thông tin trong hoạt động thực tiễn tại doanh nghiệp. Sinh viên cũng có khả năng tham gia xây dựng chính sách và chỉ đạo thực thi công tác ứng dụng công nghệ thông tin tại các tổ chức tài chính, ngân hàng cũng như tại doanh nghiệp nói chung. Ngoài ra, Thầy cũng đưa ra những câu hỏi và đề xuất về cơ hội nghề nghiệp cho sinh viên đối của Khoa với các nhà tuyển dụng có mặt trong tọa đàm.\nĐể trả lời những câu hỏi về định hướng nghề nghiệp cho sinh viên, rất nhiều tổ chức đã tham gia trình bày, chia sẻ những thông tin hữu ích.\nBài phát biểu của Ông Nguyễn Duy Hữu – Chuyên viên Tuyển dụng & Đào tạo – Ban Nhân sự - Công ty TNHH Hệ thống thông tin FPT - FPT IS đưa ra các vị trí làm việc phù hợp với sinh viên MIS tại FIS cũng như những điều kiện tiên quyết giúp sinh viên có thể đáp ứng được công việc. Hàng",
+        "Định hướng nghề nghiệp và cơ hội việc làm cho sinh viên MIS - Học viện Ngân hàng\nNgày đăng: 18/05/2015\nNối tiếp thành công của hoạt động định hướng nghề nghiệp năm 2014, chiều ngày 14/05/2015, Khoa Hệ thống thông tin Quản lý đã tổ chức thành công buổi Tọa đàm Định hướng nghề nghiệp lần thứ hai cho sinh viên của Khoa tại Hội trường A2. Đây là một chương trình trong chuỗi hoạt động thường niên của Khoa nhằm mở rộng mối quan hệ hợp tác giữa Khoa với các tổ chức doanh nghiệp, cũng như hỗ trợ sinh viên trong việc tiếp cận các cơ hội việc làm phù hợp với chuyên ngành đào tạo.\nCùng với sự ủng hộ và tham gia nhiệt tình từ phía các đơn vị trong Học viện, tọa đàm năm nay đánh dấu sự tăng đáng kể về phía số lượng khách mời từ các ngân hàng cũng như các doanh nghiệp hoạt động trong lĩnh vực hệ thống thông tin như:\nNgân hàng TMCP Quân đội – MB; Ngân hàng TMCP Kỹ thương Việt Nam – Techcombank; Ngân hàng TMCP Công thương Việt Nam – Viettinbank; Công ty TNHH Hệ thống thông tin FPT - FPT-IS; Công ty cổ"
+      ],
+      "citations": [
+        {
+          "title": "Định hướng nghề nghiệp và cơ hội việc làm cho sinh viên MIS - Học viện Ngân hàng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/366_dinh_huong_nghe_nghiep_va_co_hoi_viec_lam_cho_sinh_vien_mis_hoc_vien_ngan_hang.html"
+        },
+        {
+          "title": "Định hướng nghề nghiệp và cơ hội việc làm cho sinh viên MIS - Học viện Ngân hàng",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/366_dinh_huong_nghe_nghiep_va_co_hoi_viec_lam_cho_sinh_vien_mis_hoc_vien_ngan_hang.html"
+        }
+      ]
+    }
+  ]
+}

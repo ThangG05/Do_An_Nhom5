@@ -1,0 +1,18 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 1,
+  "citation_accuracy": 0.0,
+  "refusal_accuracy": 0.0,
+  "latency": {},
+  "results": [
+    {
+      "id": "hvnh-039",
+      "passed": false,
+      "error": "DBAPIError"
+    }
+  ]
+}

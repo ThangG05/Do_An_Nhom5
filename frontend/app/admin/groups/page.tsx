@@ -1,0 +1,5 @@
+"use client";
+import {useEffect,useState} from "react";
+import {fetchAdminDashboard} from "@/lib/api";
+import type {AdminDashboard} from "@/types/admin";
+export default function AdminGroupsPage(){const [data,setData]=useState<AdminDashboard|null>(null),[error,setError]=useState("");useEffect(()=>{fetchAdminDashboard().then(setData).catch(e=>setError(e instanceof Error?e.message:"Không tải được dữ liệu nhóm."));},[]);return <main className="admin-console"><header className="admin-page-heading"><div><span>GROUP MANAGEMENT</span><h1>Quản lý nhóm</h1><p>Theo dõi thành viên và trạng thái kiểm duyệt của từng nhóm.</p></div></header>{error&&<div className="admin-error">{error}</div>}<section className="admin-group-stats"><h2>Hoạt động theo nhóm</h2><div>{data?.groups.map(group=><article key={group.id}><strong>{group.name}</strong><p>{group.members} thành viên</p><span>{group.approved_posts} đã duyệt · {group.pending_posts} chờ duyệt</span></article>)}</div>{!data&&!error&&<p className="admin-loading">Đang tải dữ liệu nhóm...</p>}</section></main>}

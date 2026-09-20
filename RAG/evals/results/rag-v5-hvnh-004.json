@@ -1,0 +1,45 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 12218.0,
+    "p50_ms": 12218,
+    "p95_ms": 12218,
+    "max_ms": 12218
+  },
+  "results": [
+    {
+      "id": "hvnh-004",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "ce903f3e-770d-4363-89ab-839986e2d290",
+      "message_id": "78676d11-f3a3-479a-be7e-31fa65c88715",
+      "question": "Chương trình trao đổi sinh viên học kỳ hè 2025/2026 tại Đại học Kinh tế - Đại học Đà Nẵng được tổ chức thế nào?",
+      "response": "Chương trình trao đổi sinh viên trong học kỳ hè 2025 - 2026 tại Trường Đại học Kinh tế - Đại học Đà Nẵng dành cho sinh viên đại học chính quy đang học tập tại Học viện Ngân hàng [1]. Địa điểm học tập tại số 71 Ngũ Hành Sơn, TP. Đà Nẵng [1]. Thời gian học diễn ra từ ngày 06/7/2026 đến 24/7/2026 và thời gian thi dự kiến từ ngày 27 - 28/7/2026 [1]. Chương trình giảng dạy các học phần gồm Marketing căn bản (MKT2001), Giao tiếp trong kinh doanh (TOU1001), và Thị trường và các định chế tài chính (FIN2001) với số lượng đăng ký tối đa 80 sinh viên mỗi học phần [1]. Về thủ tục, sinh viên điền thông tin tại https://tinyurl.com/kyhedue và nộp hồ sơ gồm đơn đề nghị tham gia chương trình trao đổi và bản sao CCCD tại Học viện từ ngày 23/3/2026 đến ngày 30/5/2026 [1]. Về tài chính, sinh viên đóng học phí cho Học viện Ngân hàng dựa trên số tín chỉ đăng ký và mức thu quy định, trong khi chỗ ở ký túc xá được ưu tiên bố trí miễn phí theo nhu cầu còn các chi phí ăn ở, đi lại khác do sinh viên tự chi trả [1].",
+      "reference": "Đối tượng là sinh viên đại học chính quy đang học tại Học viện Ngân hàng. Học tại Đại học Kinh tế - Đại học Đà Nẵng từ 06/07/2026 đến 24/07/2026; thi dự kiến 27-28/07/2026.",
+      "latency_ms": 12218,
+      "retrieved_contexts": [
+        "Trường Đại học Kinh tế - Đại học Đà Nẵng thông báo Chương trình trao đổi sinh viên trong học kỳ hè 2025 - 2026 dành cho sinh viên các trường đối tác.\nNgày 30/03/2026\n1,474 lượt xem\nCăn cứ theo Thỏa thuận hợp tác giữa Trường Đại học Kinh tế - Đại học Đà Nẵng (ĐHKT) với các cơ sở đào tạo trong nước (10 Trường đối tác, gọi tắt là Nhóm ICYREB) ký ngày 29/10/2022;\nCăn cứ Thông báo số 1224/TB-ĐHKT thông báo chương trình trao đổi sinh viên tại trường ĐHKT học kỳ hè năm học 2025-2026, cụ thể như sau:\n1. Thông tin chung về chương trình\nĐối tượng: Sinh viên đại học chính quy đang học tập tại Học viện Ngân hàng.\nĐịa điểm học tập: Trường ĐH Kinh tế - ĐH Đà Nẵng, số 71 Ngũ Hành Sơn, TP. Đà Nẵng.\nThời gian học: Từ ngày 06/7/2026 đến 24/7/2026.\nThời gian thi (dự kiến): Ngày 27 - 28/7/2026.\n2. Các học phần giảng dạy\nSTT\nTên học phần\nMã học phần\nSố tín chỉ\n1\nMarketing căn bản\nMKT2001\n3\n2\nGiao tiếp trong kinh doanh\nTOU1001\n3\n3\nThị trường và các định chế tài chính\nFIN2001\n3\nLưu ý: Số lượng đăng ký tối đa"
+      ],
+      "citations": [
+        {
+          "title": "[CHƯƠNG TRÌNH TRAO ĐỔI SINH VIÊN]",
+          "source_url": "https://hvnh.edu.vn/hvnh/vi/sinh-vien-hien-tai/truong-dai-hoc-kinh-te-dai-hoc-da-nang-thong-bao-chuong-trinh-trao-doi-sinh-vien-trong-hoc-ky-he-2025-2026-danh-cho-sinh-vien-cac-truong-doi-tac-3852.html"
+        }
+      ]
+    }
+  ]
+}

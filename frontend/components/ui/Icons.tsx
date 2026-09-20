@@ -198,4 +198,8 @@ export function IconInfo({ size = 18, color = 'currentColor', strokeWidth = 1.8,
   );
 }
 
+export function IconAI({ size = 20, color = 'currentColor', strokeWidth = 1.8, ...props }: IconProps) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 3l1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2L12 3z"/><path d="M18.5 13l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/><path d="M6 14l.7 1.8 1.8.7-1.8.7L6 19l-.7-1.8-1.8-.7 1.8-.7L6 14z"/></svg>;
+}
+
 

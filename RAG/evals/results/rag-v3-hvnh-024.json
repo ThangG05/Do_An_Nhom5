@@ -1,0 +1,45 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 1,
+  "pass_rate": 1.0,
+  "errors": 0,
+  "citation_accuracy": 1.0,
+  "refusal_accuracy": 1.0,
+  "latency": {
+    "mean_ms": 10822.0,
+    "p50_ms": 10822,
+    "p95_ms": 10822,
+    "max_ms": 10822
+  },
+  "results": [
+    {
+      "id": "hvnh-024",
+      "passed": true,
+      "refusal_ok": true,
+      "citation_ok": true,
+      "keywords_ok": true,
+      "refused": false,
+      "expected_refused": false,
+      "facts_ok": true,
+      "fact_coverage": 1.0,
+      "citation_count": 1,
+      "conversation_id": "07ca28a8-dad7-496d-bd6c-8069aedf22e9",
+      "message_id": "5d58c566-b7b3-4910-8716-eac912e1c703",
+      "question": "Thông báo thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026/2027 áp dụng cho những sinh viên nào?",
+      "response": "Thông báo hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027 áp dụng cho toàn thể sinh viên ngành Công nghệ thông tin và ngành Hệ thống thông tin quản lý đủ điều kiện thực tập và làm đồ án tốt nghiệp đợt 1 năm 2026–2027 [1].",
+      "reference": "Thông báo áp dụng cho sinh viên ngành Công nghệ thông tin và Hệ thống thông tin quản lý đủ điều kiện thực tập, làm đồ án tốt nghiệp đợt 1 năm 2026/2027.",
+      "latency_ms": 10822,
+      "retrieved_contexts": [
+        "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027\nNgày đăng: 13/08/2026\nĐể triển khai kế hoạch thực tập và thực hiện đồ án tốt nghiệp, chuyên đề tốt nghiệp\nhọc kỳ I năm học 2026–2027 theo thông báo của Phòng Đào tạo, Khoa CNTT & Kinh tế số\nthông báo đến toàn thể sinh viên đủ điều kiện tham gia thực tập và làm đồ án tốt nghiệp\nnhư sau:\n1. Thành phần\nToàn thể sinh viên ngành Công nghệ thông tin, Hệ thống thông tin quản lý đủ điều kiện\nthực tập và làm đồ án tốt nghiệp đợt 1 năm 2026–2027.\n2. Thời gian\nNgành Công nghệ thông tin:\n20h00, Thứ Tư, ngày 19/8/2026.\nLink online:\nhttps://meet.google.com/ihz-asbd-bqm\nNgành Hệ thống thông tin quản lý:\n20h00, Thứ Tư, ngày 19/8/2026.\nLink online:\nhttps://meet.google.com/zpc-gyym-vir\n3. Nội dung\nPhổ biến kế hoạch thực tập và thực hiện đồ án tốt nghiệp.\nHướng dẫn quy trình làm việc với giảng viên hướng dẫn và đơn vị thực tập.\nHướng dẫn yêu cầu về tiến độ, nội dung thực hiện,"
+      ],
+      "citations": [
+        {
+          "title": "THÔNG BÁO V/v tập trung sinh viên ngành Công nghệ thông tin hướng dẫn thực tập và khóa luận tốt nghiệp học kỳ I năm học 2026–2027",
+          "source_url": "https://itde.hvnh.edu.vn/tin_tuc/chi_tiet/658_thong_bao_v_v_tap_trung_sinh_vien_nganh_cong_nghe_thong_tin_huong_dan_thuc_tap_va_khoa_luan_tot_nghiep_hoc_ky_i_nam_hoc_2026_2027.html"
+        }
+      ]
+    }
+  ]
+}

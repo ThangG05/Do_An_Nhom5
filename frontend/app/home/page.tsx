@@ -1,126 +1,32 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import {useCallback,useEffect,useRef,useState} from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import CreatePostCard from "@/components/post/CreatePostCard";
 import CreatePostModal from "@/components/post/CreatePostModal";
 import PostCard from "@/components/post/PostCard";
-import { useCreatePost } from "@/hooks/useCreatePost";
-import { Post } from "@/types/post";
+import {useCreatePost} from "@/hooks/useCreatePost";
+import type {Post,PostCategory} from "@/types/post";
+import {getAuthUser,type AuthUser} from "@/lib/auth";
+import {createProfilePost,fetchFeed} from "@/lib/api";
+import AIPet from "@/components/ai/AIPet";
 
-const initialSeedPosts: Post[] = [
-  {
-    id: "seed-1",
-    author: {
-      id: "bav-official",
-      name: "Học viện Ngân Hàng",
-      avatar: "/assets/logo.png",
-      isVerified: true,
-    },
-    content: "TUYỂN SINH CHƯƠNG TRÌNH TIẾN SĨ UWE BRISTOL CẤP BẰNG QUỐC TẾ. Đăng ký nhận thông tin tư vấn tại phòng Đào tạo HVNH.",
-    createdAt: "1 giờ trước",
-    category: "general",
-    privacy: "public",
-    media: [
-      {
-        id: "media-1",
-        type: "image",
-        url: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80",
-      },
-    ],
-    likesCount: 142,
-    commentsCount: 28,
-    isLiked: false,
-  },
-  {
-    id: "seed-2",
-    author: {
-      id: "user-2",
-      name: "Abdul Quayyum",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-      isVerified: true,
-    },
-    content: "Tìm bạn ở ghép chung cư mini gần Học viện Ngân hàng ngõ 12 Chùa Bộc, ưu tiên sinh viên HVNH.",
-    createdAt: "2 giờ trước",
-    category: "roommate",
-    privacy: "public",
-    media: [
-      {
-        id: "media-2",
-        type: "image",
-        url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80",
-      },
-    ],
-    likesCount: 45,
-    commentsCount: 12,
-    isLiked: true,
-  },
-];
+const PAGE_SIZE=10;
+const filters:{value:''|PostCategory;label:string}[]=[{value:'',label:'Tất cả'},{value:'general',label:'Bài chung'},{value:'market',label:'Pass đồ'},{value:'roommate',label:'Phòng trọ'},{value:'event',label:'Sự kiện'},{value:'study',label:'Học tập'}];
+function FeedSkeleton(){return <div className="feed-skeleton" aria-hidden="true"><div className="skeleton-head"><i/><div><b/><span/></div></div><p/><p/><div className="skeleton-media"/></div>}
 
-export default function HomePage() {
-  const [checked, setChecked] = useState(false);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const router = useRouter();
-
-  const handlePostCreated = (newPost: Post) => {
-    setPosts((prev) => [newPost, ...prev]);
-  };
-
-  const createPostState = useCreatePost(handlePostCreated);
-
-  useEffect(() => {
-    if (
-      window.sessionStorage.getItem("hvnh-hub-mock-authenticated") !== "true"
-    ) {
-      router.replace("/login");
-      return;
-    }
-    setChecked(true);
-  }, [router]);
-
-  if (!checked)
-    return <main className="home-loading" aria-label="Đang tải trang chủ" />;
-
-  return (
-    <main className="home-page-single-column">
-      <div className="home-content-full">
-        <section className="home-welcome">
-          <p>Cộng đồng HVNH</p>
-          <h1>Chào mừng trở lại</h1>
-          <span>Khám phá những tin tức và bài đăng mới nhất trong trường hôm nay.</span>
-        </section>
-
-        <div className="home-layout">
-          <section className="home-feed" aria-label="Bài viết mới">
-            {/* MODULE A: Feed Header Create Post Card */}
-            <CreatePostCard onOpenModal={createPostState.openModal} />
-
-            {/* Dynamically Created Posts */}
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-
-            {/* Initial Seed Posts with Interactive PostCard */}
-            {initialSeedPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </section>
-
-          <aside className="home-side-panel">
-            <h2>Khám phá cộng đồng HVNH</h2>
-            <p>
-              Tham gia các nhóm chuyên biệt theo chủ đề: Pass lại đồ dùng, Tìm nhà trọ/Ghép phòng, và Sự kiện sinh viên.
-            </p>
-            <Link href="/market" className="btn btn-primary btn-block">
-              Xem các nhóm
-            </Link>
-          </aside>
-        </div>
-      </div>
-
-      {/* MODULE A: Create Post Full Modal */}
-      <CreatePostModal postState={createPostState} />
-    </main>
-  );
+export default function HomePage(){
+ const [posts,setPosts]=useState<Post[]>([]),[authUser,setAuthUser]=useState<AuthUser|null>(null),[loading,setLoading]=useState(false),[hasMore,setHasMore]=useState(true),[feedError,setFeedError]=useState(""),[category,setCategory]=useState<''|PostCategory>('');
+ const offsetRef=useRef(0),sentinelRef=useRef<HTMLDivElement|null>(null),loadingRef=useRef(false);
+ const loadMore=useCallback(async(reset=false)=>{if(loadingRef.current||(!reset&&!hasMore))return;loadingRef.current=true;setLoading(true);try{const offset=reset?0:offsetRef.current;const next=await fetchFeed(PAGE_SIZE,offset,category);setPosts(previous=>reset?next:[...previous,...next.filter(item=>!previous.some(existing=>existing.id===item.id))]);offsetRef.current=offset+next.length;setHasMore(next.length===PAGE_SIZE);setFeedError("");}catch(error){setFeedError(error instanceof Error?error.message:"Không thể tải bảng tin.");}finally{loadingRef.current=false;setLoading(false);}},[hasMore,category]);
+ useEffect(()=>setAuthUser(getAuthUser()),[]);
+ useEffect(()=>{offsetRef.current=0;setHasMore(true);setPosts([]);void loadMore(true);},[category]); // eslint-disable-line react-hooks/exhaustive-deps
+ useEffect(()=>{const target=sentinelRef.current;if(!target)return;const observer=new IntersectionObserver(entries=>{if(entries[0]?.isIntersecting)void loadMore();},{rootMargin:"500px 0px"});observer.observe(target);return()=>observer.disconnect();},[loadMore]);
+ const handlePostCreated=async(payload:Parameters<typeof createProfilePost>[0])=>{const created=await createProfilePost(payload);if(!category||created.category===category)setPosts(previous=>[created,...previous]);return created;};
+ const createPostState=useCreatePost(handlePostCreated);
+ return <main className="home-page-single-column"><div className="home-content-full"><section className="home-welcome"><p>Cộng đồng HVNH</p><h1>Chào mừng trở lại{authUser?.full_name?`, ${authUser.full_name}`:""}</h1><span>Khám phá những tin tức và bài đăng mới nhất trong trường hôm nay.</span></section>
+  <div className="home-layout"><section className="home-feed" aria-label="Bài viết mới"><CreatePostCard onOpenModal={createPostState.openModal} userAvatar={authUser?.avatar_url||undefined} userName={authUser?.full_name||undefined}/><div className="feed-filter-bar" role="tablist" aria-label="Lọc bảng tin">{filters.map(item=><button type="button" role="tab" aria-selected={category===item.value} className={category===item.value?'active':''} key={item.value||'all'} onClick={()=>setCategory(item.value)}>{item.label}</button>)}</div>
+   {loading&&!posts.length?<><FeedSkeleton/><FeedSkeleton/><FeedSkeleton/></>:posts.map(post=><PostCard key={post.id} post={post}/>)}
+   <div ref={sentinelRef} className="feed-load-sentinel" aria-live="polite">{loading&&posts.length>0&&<span><i/>Đang tải thêm bài viết...</span>}{feedError&&<><p>{feedError}</p><button type="button" className="btn btn-secondary" onClick={()=>void loadMore()}>Thử lại</button></>}{!loading&&!feedError&&!hasMore&&posts.length>0&&<small>Bạn đã xem hết bài viết.</small>}{!loading&&!feedError&&!posts.length&&<small>Chưa có bài viết trong chuyên mục này.</small>}</div>
+  </section><aside className="home-side-panel"><h2>Khám phá cộng đồng HVNH</h2><p>Tham gia các nhóm chuyên biệt theo chủ đề: Pass đồ, Phòng trọ, Sự kiện và Học tập.</p><Link href="/groups" className="btn btn-primary btn-block">Xem các nhóm</Link></aside></div>
+ </div><CreatePostModal postState={createPostState}/><AIPet userName={authUser?.full_name}/></main>;
 }

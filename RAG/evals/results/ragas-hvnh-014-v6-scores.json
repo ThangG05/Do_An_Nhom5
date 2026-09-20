@@ -1,0 +1,23 @@
+{
+  "complete": true,
+  "generated_at": "2026-09-18T02:11:52.711440+00:00",
+  "cases": 1,
+  "judge": {
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "independent_from_answer_model": false
+  },
+  "metrics": {
+    "faithfulness": 1.0,
+    "answer_correctness": 0.9116433014008988
+  },
+  "results": [
+    {
+      "case_id": "hvnh-014",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.9116433014008988
+      }
+    }
+  ]
+}
