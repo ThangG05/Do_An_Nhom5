@@ -27,7 +27,7 @@ export default function LoginForm() {
         password,
       );
       saveAuthSession(tokens);
-      router.replace(tokens.user.system_role === "SUPER_ADMIN" ? "/admin" : "/home");
+      router.replace(tokens.user.system_role === "SUPER_ADMIN" ? "/admin" : tokens.user.admin_group_slugs.length ? "/group-admin" : "/home");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể đăng nhập.");
     } finally {

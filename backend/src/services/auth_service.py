@@ -232,7 +232,7 @@ def request_registration_code(email_value: str, db: Session) -> int:
             password_hash=f"!pending:{secrets.token_urlsafe(32)}",
             status=AccountStatus.PENDING,
         )
-        user.profile = Profile(full_name=_make_username(email))
+        user.profile = Profile(full_name=_make_username(email), student_code=email.split("@", 1)[0])
         db.add(user)
         try:
             db.flush()
@@ -315,11 +315,14 @@ def verify_registration_code(
     return RegistrationVerifiedResponse(
         registration_token=registration_token,
         expires_in=expires_in,
+        full_name=(user.profile.full_name if user.profile else None),
+        requires_full_name=not bool(user.profile and user.profile.full_name and user.profile.full_name != _make_username(user.email)),
     )
 
 
 def complete_registration(
     registration_token: str,
+    full_name: str,
     password: str,
     db: Session,
 ) -> TokenResponse:
@@ -335,10 +338,14 @@ def complete_registration(
         raise ManualAuthenticationError("Tài khoản đã bị vô hiệu hóa.")
     if user.status == AccountStatus.LOCKED:
         raise ManualAuthenticationError("Tài khoản đã bị khóa.")
+    # Cho phép tài khoản Google đã tồn tại đặt thêm mật khẩu email.
+    # Một tài khoản/email vẫn dùng chung một User, nên không tạo bản ghi thứ hai.
     if user.status == AccountStatus.ACTIVE and not user.password_hash.startswith(("!google:", "!pending:")):
         raise AccountAlreadyRegisteredError("Tài khoản đã có mật khẩu.")
 
     is_new_user = user.status == AccountStatus.PENDING
+    if is_new_user and user.profile is not None:
+        user.profile.full_name = " ".join(full_name.strip().split())
     user.password_hash = hash_password(password)
     user.status = AccountStatus.ACTIVE
     user.last_login_at = datetime.now(UTC)
@@ -393,7 +400,7 @@ def authenticate_with_google(
             email_verified_at=now,
             last_login_at=now,
         )
-        user.profile = Profile(full_name=full_name)
+        user.profile = Profile(full_name=full_name, student_code=email.split("@", 1)[0])
         db.add(user)
         try:
             db.flush()
@@ -417,6 +424,10 @@ def authenticate_with_google(
     if user.status == AccountStatus.PENDING:
         user.status = AccountStatus.ACTIVE
         user.email_verified_at = user.email_verified_at or now
+        # Nếu người dùng khởi tạo luồng email nhưng chuyển sang Google,
+        # thay tên tạm theo mã sinh viên bằng tên Google đã xác minh.
+        if user.profile is not None and user.profile.full_name == _make_username(user.email):
+            user.profile.full_name = full_name
     user.last_login_at = now
 
     response = _issue_tokens(user, db, is_new_user=is_new_user)

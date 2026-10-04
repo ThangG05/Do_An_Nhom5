@@ -37,11 +37,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           router.replace('/admin');
           return;
         }
-        const state = await fetchSystemStatus();
-        if (state.enabled && user?.system_role !== 'SUPER_ADMIN') {
-          router.replace('/maintenance');
-          return;
-        }
+        try {
+          const state = await fetchSystemStatus();
+          if (state.enabled && user?.system_role !== 'SUPER_ADMIN') {
+            router.replace('/maintenance');
+            return;
+          }
+        } catch { /* A status outage must not log out a valid user. */ }
         setIsReady(true);
       })
       .catch(() => {

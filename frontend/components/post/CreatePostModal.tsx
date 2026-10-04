@@ -5,7 +5,7 @@ import { PostCategory, PostPrivacy } from "@/types/post";
 import { UseCreatePostReturn } from "@/hooks/useCreatePost";
 import { AuthUser, getAuthUser, getCurrentUser } from "@/lib/auth";
 import { safeImageSrc } from "@/lib/media";
-import { useDialog } from "@/components/ui/DialogProvider";
+import LocationPicker from "@/components/post/LocationPicker";
 
 interface CreatePostModalProps {
   postState: UseCreatePostReturn;
@@ -37,8 +37,8 @@ const AMENITY_TAGS = [
 ];
 
 export default function CreatePostModal({ postState }: CreatePostModalProps) {
-  const dialog = useDialog();
   const [author, setAuthor] = useState<AuthUser | null>(null);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const {
     isOpen,
     closeModal,
@@ -79,12 +79,13 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
-        closeModal();
+        if (locationPickerOpen) setLocationPickerOpen(false);
+        else closeModal();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, closeModal]);
+  }, [isOpen, closeModal, locationPickerOpen]);
 
   // Focus textarea when modal opens
   useEffect(() => {
@@ -367,10 +368,10 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
           {/* Location Tag Badge */}
           {location && (
             <div className="location-badge">
-              📍 <span>{location}</span>
+              📍 <span title={location.address || location.name}>{location.name}</span>
               <button
                 type="button"
-                onClick={() => setLocation("")}
+                onClick={() => setLocation(null)}
                 aria-label="Xóa địa điểm"
               >
                 ✕
@@ -423,10 +424,7 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
                 type="button"
                 className="action-icon-btn location-btn"
                 title="Thêm địa điểm"
-                onClick={async () => {
-                  const loc = await dialog.prompt({title:"Thêm địa điểm",message:"Địa điểm sẽ được hiển thị cùng bài viết.",placeholder:"Ví dụ: Thư viện HVNH",confirmLabel:"Thêm địa điểm"});
-                  if (loc) setLocation(loc);
-                }}
+                onClick={() => setLocationPickerOpen(true)}
               >
                 📍 <small>Địa điểm</small>
               </button>
@@ -463,6 +461,14 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
             )}
           </button>
         </div>
+        <LocationPicker
+          open={locationPickerOpen}
+          onClose={() => setLocationPickerOpen(false)}
+          onSelect={(selectedLocation) => {
+            setLocation(selectedLocation);
+            setLocationPickerOpen(false);
+          }}
+        />
       </div>
     </div>
   );

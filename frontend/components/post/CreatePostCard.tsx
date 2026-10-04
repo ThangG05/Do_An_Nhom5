@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { PostCategory } from "@/types/post";
 import { IconMarket, IconHousing, IconEvent } from "@/components/ui/Icons";
-import { getAuthUser, getCurrentUser } from "@/lib/auth";
+import { getAuthUser } from "@/lib/auth";
+import { useAuthUser } from "@/components/auth/AuthProvider";
 import { safeImageSrc } from "@/lib/media";
 
 interface CreatePostCardProps {
@@ -17,13 +18,14 @@ export default function CreatePostCard({
   userAvatar,
   userName,
 }: CreatePostCardProps) {
+  const currentUser = useAuthUser();
   const [identity, setIdentity] = useState({ name: userName || "", avatar: userAvatar || "" });
 
   useEffect(() => {
     const stored = getAuthUser();
     if (stored) setIdentity({ name: stored.full_name || stored.username, avatar: stored.avatar_url || "" });
-    void getCurrentUser().then(user => setIdentity({ name: user.full_name || user.username, avatar: user.avatar_url || "" })).catch(() => undefined);
-  }, [userAvatar, userName]);
+    if (currentUser) setIdentity({ name: currentUser.full_name || currentUser.username, avatar: currentUser.avatar_url || "" });
+  }, [currentUser, userAvatar, userName]);
 
   const initials = identity.name.trim().split(/\s+/).slice(-2).map(part => part[0]).join('').toUpperCase() || 'U';
 

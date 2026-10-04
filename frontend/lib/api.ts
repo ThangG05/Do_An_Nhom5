@@ -86,6 +86,9 @@ export async function fetchUserPhotos(userId: string): Promise<UserPhoto[]> {
 export async function fetchUserListings(userId: string, category = 'all'): Promise<UserListing[]> {
   return api<UserListing[]>(`/users/${userId}/listings?category=${encodeURIComponent(category)}`);
 }
+export async function fetchUserGroupPosts(userId: string): Promise<import('@/types/post').Post[]> {
+  return api<import('@/types/post').Post[]>(`/users/${userId}/group-posts`);
+}
 
 export async function updateFriendshipStatus(
   targetUserId: string,
@@ -136,12 +139,50 @@ export async function createProfilePost(payload: CreatePostPayload): Promise<Pos
       marketListing: payload.marketListing,
       roomListing: payload.roomListing,
       eventListing: payload.eventListing,
+      location: payload.location,
     }),
   });
 }
 
+export interface LocationSuggestion {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export async function searchLocations(query: string): Promise<LocationSuggestion[]> {
+  const params = new URLSearchParams({ q: query, limit: '5' });
+  return api<LocationSuggestion[]>(`/locations/search?${params.toString()}`);
+}
+
+export async function reverseGeocode(latitude: number, longitude: number): Promise<LocationSuggestion | null> {
+  const params = new URLSearchParams({ latitude: String(latitude), longitude: String(longitude) });
+  return api<LocationSuggestion | null>(`/locations/reverse?${params.toString()}`);
+}
+
+export interface FeedPage { items: Post[]; nextCursor: string | null; }
+
+/** Cursor pagination avoids progressively slower OFFSET queries while scrolling. */
+export async function fetchFeedPage(limit = 30, cursor = '', category = ''): Promise<FeedPage> {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (cursor) query.set('cursor', cursor);
+  if (category) query.set('category', category);
+  const response = await authenticatedFetch(`${API_BASE_URL}/posts/feed?${query.toString()}`, { headers: { 'Content-Type': 'application/json' } });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(payload?.detail || `API error: ${response.statusText}`);
+  }
+  return { items: await response.json() as Post[], nextCursor: response.headers.get('X-Next-Cursor') };
+}
+
+// Kept for external callers compiled against the older offset-based helper.
 export async function fetchFeed(limit = 30, offset = 0, category = ''): Promise<Post[]> {
-  return api<Post[]>(`/posts/feed?limit=${limit}&offset=${offset}${category?`&category=${encodeURIComponent(category)}`:''}`);
+  return api<Post[]>(`/posts/feed?limit=${limit}&offset=${offset}${category ? `&category=${encodeURIComponent(category)}` : ''}`);
+}
+
+export async function fetchPost(postId: string): Promise<Post> {
+  return api<Post>(`/posts/${encodeURIComponent(postId)}`);
 }
 
 export async function setPostLike(postId: string, isLiked: boolean): Promise<{ isLiked: boolean; likesCount: number }> {
@@ -157,6 +198,9 @@ export async function addPostComment(postId: string, content: string, parentId?:
     mediaId=((await response.json()) as {media_id:string}).media_id;
   }
   return api(`/posts/${postId}/comments`, { method: 'POST', body: JSON.stringify({ content, parent_id: parentId, media_id: mediaId }) });
+}
+export async function fetchPostComments(postId: string, limit = 100): Promise<import('@/types/post').Comment[]> {
+  return api(`/posts/${postId}/comments?limit=${limit}`);
 }
 
 export async function editPost(postId: string, content: string, privacy?: Post['privacy'], category?:Post['category'],mediaIds?:string[]): Promise<Post> {
@@ -179,6 +223,7 @@ export interface ApiNotification {
   actor_avatar: string | null;
   reference_type: string | null;
   reference_id: string | null;
+  payload: Record<string, unknown>;
   link: string | null;
   is_unread: boolean;
   created_at: string;

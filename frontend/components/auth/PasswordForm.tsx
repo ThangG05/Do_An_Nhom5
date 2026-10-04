@@ -1,19 +1,28 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearPreviousAuthSession, completeRegistration, saveAuthSession } from "@/lib/auth";
 
 export default function PasswordForm() {
+  const [fullName, setFullName] = useState("");
+  const [requiresFullName, setRequiresFullName] = useState(true);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    const storedName = window.sessionStorage.getItem("hvnh-hub-registration-name") || "";
+    const requiresName = window.sessionStorage.getItem("hvnh-hub-registration-requires-name") !== "false";
+    setFullName(storedName);
+    setRequiresFullName(requiresName);
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!password || !confirmation) {
+    if ((requiresFullName && !fullName.trim()) || !password || !confirmation) {
       setMessage("Vui lòng nhập đầy đủ thông tin.");
       return;
     }
@@ -42,10 +51,12 @@ export default function PasswordForm() {
     setMessage("");
     try {
       await clearPreviousAuthSession();
-      const tokens = await completeRegistration(registrationToken, password);
+      const tokens = await completeRegistration(registrationToken, fullName, password);
       saveAuthSession(tokens);
       window.sessionStorage.removeItem("hvnh-hub-registration-token");
-      router.replace("/home");
+      window.sessionStorage.removeItem("hvnh-hub-registration-name");
+      window.sessionStorage.removeItem("hvnh-hub-registration-requires-name");
+      router.replace(tokens.user.system_role === "SUPER_ADMIN" ? "/admin" : tokens.user.admin_group_slugs.length ? "/group-admin" : "/home");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể hoàn tất đăng ký.");
     } finally {
@@ -55,6 +66,10 @@ export default function PasswordForm() {
 
   return (
     <form className="password-form" onSubmit={handleSubmit}>
+      {requiresFullName ? <div className="password-field">
+        <label htmlFor="full-name">Họ và tên</label>
+        <input id="full-name" name="fullName" type="text" autoComplete="name" value={fullName} onChange={(event) => setFullName(event.target.value)} required />
+      </div> : <p className="password-existing-name">Tên tài khoản: <strong>{fullName}</strong></p>}
       <div className="password-field">
         <label htmlFor="password">Mật khẩu</label>
         <input

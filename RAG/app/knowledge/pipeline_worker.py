@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 import logging
 from pathlib import Path
 import re
+import subprocess
 import sys
 from uuid import UUID
 
@@ -33,27 +34,31 @@ def next_pipeline_failure(attempts: int, max_retries: int) -> tuple[int, str]:
 
 async def _run_module(*arguments: str) -> int:
     settings = get_settings()
-    process = await asyncio.create_subprocess_exec(
-        sys.executable, "-m", *arguments,
-        cwd=str(RAG_ROOT),
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT,
-    )
     try:
-        output, _ = await asyncio.wait_for(
-            process.communicate(), timeout=settings.pipeline_stage_timeout_seconds
+        # asyncio subprocess transports are unavailable with the Selector loop
+        # used by Uvicorn's Windows reload worker. Run the blocking subprocess
+        # in a thread so the embedded FastAPI loop remains platform-independent.
+        completed = await asyncio.to_thread(
+            subprocess.run,
+            [sys.executable, "-m", *arguments],
+            cwd=str(RAG_ROOT),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=settings.pipeline_stage_timeout_seconds,
+            check=False,
         )
-    except TimeoutError:
-        process.kill()
-        await process.communicate()
+        output = completed.stdout or b""
+        exit_code = completed.returncode
+    except subprocess.TimeoutExpired as exc:
+        output = exc.stdout or b""
         logger.error("pipeline stage timed out", extra={"stage": arguments[0]})
         return 124
     logger.info("pipeline stage finished", extra={
-        "stage": arguments[0], "exit_code": process.returncode,
+        "stage": arguments[0], "exit_code": exit_code,
         "output_bytes": len(output or b""),
         "diagnostic": _safe_stage_diagnostic(output),
     })
-    return int(process.returncode or 0)
+    return int(exit_code or 0)
 
 
 def _safe_stage_diagnostic(output: bytes | None) -> str | None:

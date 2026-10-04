@@ -45,6 +45,7 @@ class GroupMemberResponse(BaseModel):
     username: str
     role: str
     student_code: str | None = None
+    avatar_url: str | None = None
 
 
 class JoinRequestResponse(BaseModel):

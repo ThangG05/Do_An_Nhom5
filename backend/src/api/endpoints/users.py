@@ -95,6 +95,16 @@ def get_profile_listings(user_id: uuid.UUID, current_user: CurrentUser, db: Anno
     return post_service.list_user_listings(db, target, current_user, category)
 
 
+@router.get("/{user_id}/group-posts", response_model=list[ProfilePostResponse])
+def get_profile_group_posts(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
+    target = db.get(User, user_id)
+    if target is None or target.deleted_at is not None:
+        raise HTTPException(404, "Không tìm thấy người dùng.")
+    if block_service.is_blocked(db, current_user.id, target.id):
+        raise HTTPException(403, "Không thể xem bài đăng hội nhóm do quan hệ chặn.")
+    return post_service.list_user_group_posts(db, target, current_user)
+
+
 @router.get("/{user_id}/friends", response_model=list[FriendResponse])
 def get_friends(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], q: str = ""):
     target = db.get(User, user_id)

@@ -88,7 +88,8 @@ def send(db,cid,user,payload:SendMessageRequest):
     for uid in recipients:
         db.add(MessageReceipt(message_id=msg.id,user_id=uid,delivered_at=now if manager.is_online_local(uid) else None))
         recipient_member=db.get(ConversationMember,(cid,uid))
-        if not recipient_member or not recipient_member.is_muted:
+        # Message events are handled by the chat badge, not the notification center.
+        if False and (not recipient_member or not recipient_member.is_muted):
             db.execute(text("INSERT INTO notifications (user_id,type,title,content,actor_id,reference_type,reference_id) VALUES (:uid,'MESSAGE','Tin nhắn mới',:content,:actor,'CONVERSATION',:ref)"),{"uid":uid,"content":f"{user.profile.full_name if user.profile else user.username} đã gửi cho bạn một tin nhắn.","actor":user.id,"ref":cid})
     conv=db.get(Conversation,cid);conv.last_message_at=now;conv.updated_at=now;db.commit();db.refresh(msg);return _message(db,msg,user.id)
 

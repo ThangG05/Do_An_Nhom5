@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Post, Comment } from '@/types/post';
 import { IconHeart, IconMessage } from '@/components/ui/Icons';
-import { addPostComment, removeGroupComment, setPostLike } from '@/lib/api';
-import { AuthUser, getAuthUser, getCurrentUser } from '@/lib/auth';
+import { addPostComment, fetchPostComments, removeGroupComment, setPostLike } from '@/lib/api';
+import { AuthUser, getAuthUser } from '@/lib/auth';
+import { useAuthUser } from '@/components/auth/AuthProvider';
 import PostActionModal from '@/components/post/PostActionModal';
 import CommentActionModal from '@/components/post/CommentActionModal';
 import { safeImageSrc } from '@/lib/media';
@@ -23,6 +24,7 @@ interface PostCardProps {
   onLikeToggle?: (postId: string, isLiked: boolean) => void;
   onAddComment?: (postId: string, commentText: string) => void;
   moderatorGroupId?: string;
+  highlightCommentId?: string | null;
 }
 
 export default function PostCard({
@@ -30,12 +32,14 @@ export default function PostCard({
   onLikeToggle,
   onAddComment,
   moderatorGroupId,
+  highlightCommentId,
 }: PostCardProps) {
   const dialog = useDialog();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
   const [comments, setComments] = useState<Comment[]>(post.comments || []);
+  const [loadingAllComments, setLoadingAllComments] = useState(false);
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [commentImage,setCommentImage]=useState<File|null>(null);
@@ -50,17 +54,33 @@ export default function PostCard({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewer, setViewer] = useState<AuthUser | null>(null);
+  const authenticatedUser = useAuthUser();
+  const loadAllComments = async () => {
+    if (loadingAllComments || comments.length >= commentsCount) return;
+    setLoadingAllComments(true);
+    try { setComments(await fetchPostComments(post.id)); }
+    catch (error) { setActionError(error instanceof Error ? error.message : 'Không thể tải thêm bình luận.'); }
+    finally { setLoadingAllComments(false); }
+  };
+  useEffect(() => {
+    if (!highlightCommentId) return;
+    setIsCommentSectionOpen(true);
+    void fetchPostComments(post.id).then(setComments).catch(error => setActionError(error instanceof Error ? error.message : 'Không thể tải bình luận.'));
+  }, [highlightCommentId, post.id]);
+  useEffect(() => {
+    if (!highlightCommentId || !comments.some(comment => comment.id === highlightCommentId)) return;
+    const timer = window.setTimeout(() => document.getElementById(`comment-${highlightCommentId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+    return () => window.clearTimeout(timer);
+  }, [comments, highlightCommentId]);
   const imageMedia = (post.media || []).filter((item) => item.type === 'image');
   const visualMedia = (post.media || []).filter((item) => item.type === 'image' || item.type === 'video');
   const attachmentMedia = (post.media || []).filter((item) => item.type === 'audio' || item.type === 'file');
   const currentPrivacy = privacyLabel[privacy as keyof typeof privacyLabel] || privacyLabel.public;
 
   useEffect(() => {
-    const stored = getAuthUser();
-    setViewer(stored);
-    setIsOwner(stored?.id === post.author.id);
-    void getCurrentUser().then(user => { setViewer(user); setIsOwner(user.id === post.author.id); }).catch(() => undefined);
-  }, [post.author.id]);
+    setViewer(authenticatedUser);
+    setIsOwner(authenticatedUser?.id === post.author.id);
+  }, [authenticatedUser, post.author.id]);
   useEffect(()=>{if(lightboxIndex===null)return;const handle=(event:KeyboardEvent)=>{if(event.key==='Escape')setLightboxIndex(null);if(event.key==='ArrowLeft')setLightboxIndex(current=>current===null?null:(current-1+imageMedia.length)%imageMedia.length);if(event.key==='ArrowRight')setLightboxIndex(current=>current===null?null:(current+1)%imageMedia.length);};document.body.style.overflow='hidden';window.addEventListener('keydown',handle);return()=>{document.body.style.overflow='';window.removeEventListener('keydown',handle);};},[lightboxIndex,imageMedia.length]);
 
   const handleLike = async () => {
@@ -119,6 +139,7 @@ export default function PostCard({
             <Link href={`/profile/${post.author.id}`} className="author-name">
               {post.author.name}
             </Link>
+            {post.groupId && post.groupName && <><span className="post-group-arrow">›</span><Link href={`/groups?group=${post.groupId}`} className="post-group-link">{post.groupName}</Link></>}
           </div>
           <div className="post-time-privacy">
             <RelativeTime className="post-time" value={post.createdAt}/>
@@ -140,6 +161,20 @@ export default function PostCard({
       {/* 2. Post Body Content */}
       <div className="post-card-body">
         <p className="post-text-content">{content}</p>
+
+        {post.location && (
+          post.location.latitude != null && post.location.longitude != null ? (
+            <a
+              className="post-location-link"
+              href={`https://www.openstreetmap.org/?mlat=${post.location.latitude}&mlon=${post.location.longitude}#map=16/${post.location.latitude}/${post.location.longitude}`}
+              target="_blank"
+              rel="noreferrer"
+              title={post.location.address || post.location.name}
+            >
+              <span aria-hidden="true">📍</span> {post.location.name}
+            </a>
+          ) : <span className="post-location-link" title={post.location.address || post.location.name}><span aria-hidden="true">📍</span> {post.location.name}</span>
+        )}
 
         {post.marketListing && (
           <div className="post-special-badge market-badge">
@@ -178,7 +213,7 @@ export default function PostCard({
           <button
             type="button"
             className="comments-count-btn"
-            onClick={() => setIsCommentSectionOpen(!isCommentSectionOpen)}
+            onClick={() => { setIsCommentSectionOpen(!isCommentSectionOpen); if (!isCommentSectionOpen) void loadAllComments(); }}
           >
             {commentsCount} bình luận
           </button>
@@ -204,7 +239,7 @@ export default function PostCard({
           <button
             type="button"
             className="post-action-btn"
-            onClick={() => setIsCommentSectionOpen(!isCommentSectionOpen)}
+            onClick={() => { setIsCommentSectionOpen(!isCommentSectionOpen); if (!isCommentSectionOpen) void loadAllComments(); }}
           >
             <IconMessage size={18} color="#002855" className="action-icon" />
             <span>Bình luận</span>
@@ -241,8 +276,9 @@ export default function PostCard({
             {/* Comments List Stream */}
             {comments.length > 0 ? (
               <div className="comments-stream-list">
+                {commentsCount > comments.length && <button type="button" className="comments-count-btn" onClick={() => void loadAllComments()} disabled={loadingAllComments}>{loadingAllComments ? 'Đang tải bình luận...' : `Xem thêm ${commentsCount - comments.length} bình luận`}</button>}
                 {comments.map((c) => (
-                  <div key={c.id} className={`comment-item-row ${c.parentId?'comment-reply-row':''}`}>
+                  <div id={`comment-${c.id}`} key={c.id} className={`comment-item-row ${c.parentId?'comment-reply-row':''} ${c.id===highlightCommentId?'notification-target-comment':''}`}>
                     <img
                       src={c.author.avatar || '/assets/logo.png'}
                       alt={c.author.name}

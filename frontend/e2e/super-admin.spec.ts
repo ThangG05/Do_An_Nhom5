@@ -14,8 +14,11 @@ test('Super Admin vào dashboard, quản lý tài khoản và xem audit log', as
   const target = page.locator('.admin-user-list article').filter({ hasText: state.emails.target });
   await expect(target).toBeVisible();
 
-  page.once('dialog', async dialog => dialog.accept('Cảnh báo từ Playwright E2E'));
   await target.locator('.discipline-actions button').first().click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.locator('textarea, input').first().fill('Cảnh báo từ Playwright E2E');
+  await dialog.getByRole('button', { name: /xác nhận/i }).click();
   await expect(target.locator('.discipline-actions button').first()).toContainText('(1)');
 
   await page.locator('.admin-sidebar a[href="/admin/audit"]').click();

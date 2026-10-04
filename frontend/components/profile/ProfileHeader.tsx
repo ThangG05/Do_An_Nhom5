@@ -28,6 +28,7 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   const dialog = useDialog();
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
+  const [isAvatarViewerOpen, setIsAvatarViewerOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +128,7 @@ export default function ProfileHeader({
       <div className="profile-info-section">
         <div className="profile-info-content">
           {/* Avatar Container with Online Indicator */}
-          <div className="profile-avatar-wrapper">
+          <button type="button" className="profile-avatar-wrapper profile-avatar-button" onClick={() => setIsAvatarViewerOpen(true)} aria-label={`Xem ảnh đại diện của ${profile.name}`}>
             <img
               src={safeImageSrc(profile.avatar)}
               alt={profile.name}
@@ -136,17 +137,7 @@ export default function ProfileHeader({
             {profile.isOnline && (
               <span className="avatar-online-badge" title="Đang hoạt động" />
             )}
-            {isOwnProfile && (
-              <button
-                type="button"
-                className="edit-avatar-badge-btn text-only-badge"
-                onClick={onOpenEditModal}
-                aria-label="Chỉnh sửa ảnh đại diện"
-              >
-                <span>Đổi ảnh</span>
-              </button>
-            )}
-          </div>
+          </button>
 
           {/* Identity Info */}
           <div className="profile-identity-details">
@@ -155,7 +146,7 @@ export default function ProfileHeader({
             </div>
 
             <div className="profile-sub-meta">
-              <span className="profile-username">@{profile.username}</span>
+              <span className="profile-username">Mã sinh viên: {profile.studentCode || profile.username}</span>
               {profile.faculty && <span className="meta-bullet-dot">•</span>}
               {profile.faculty && <span className="profile-faculty-tag">{profile.faculty}</span>}
             </div>
@@ -227,6 +218,7 @@ export default function ProfileHeader({
           friendsCount={profile.friendsCount}
         />
       </div>
+      {isAvatarViewerOpen && <div className="profile-avatar-viewer" role="presentation" onClick={() => setIsAvatarViewerOpen(false)}><section role="dialog" aria-modal="true" aria-label="Ảnh đại diện" onClick={(event) => event.stopPropagation()}><button type="button" className="profile-avatar-viewer-close" onClick={() => setIsAvatarViewerOpen(false)} aria-label="Đóng">×</button><img src={safeImageSrc(profile.avatar)} alt={`Ảnh đại diện của ${profile.name}`}/>{isOwnProfile && <button type="button" className="profile-avatar-change-action" onClick={() => { setIsAvatarViewerOpen(false); onOpenEditModal(); }}>Đổi ảnh đại diện</button>}</section></div>}
     </header>
   );
 }

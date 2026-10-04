@@ -6,6 +6,15 @@ import { safeImageSrc } from "@/lib/media";
 import { searchConversationMessages } from "@/lib/api";
 import RelativeTime from "@/components/ui/RelativeTime";
 
+const CHAT_EMOJIS = [
+  "😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃",
+  "😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜",
+  "🤪","🤨","🧐","🤓","😎","🥳","🤩","🥺","😏","😒","😞","😔",
+  "😟","😕","🙁","☹️","😣","😖","😫","😩","🥹","😭","😤","😡",
+  "👍","👎","👏","🙌","🤝","🙏","💪","🔥","✨","🎉","❤️","💙",
+  "💚","💛","💜","🧡","🤍","🖤","💯","✅","❌","⭐","🎓","📚",
+];
+
 interface ChatWorkspaceProps {
   activeConversation: Conversation;
   messages: Message[];
@@ -34,6 +43,7 @@ export default function ChatWorkspace({
   onCloseSearch,
 }: ChatWorkspaceProps) {
   const [inputText, setInputText] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const [searchQuery,setSearchQuery]=useState(""),[searchResults,setSearchResults]=useState<Message[]|null>(null);
   const [call,setCall]=useState<{status:'incoming'|'calling'|'active';video:boolean;error?:string}|null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,7 +103,7 @@ export default function ChatWorkspace({
           </button>
 
           <div className="header-avatar-wrap">
-            <div className="participant-avatar">{activeConversation.participantAvatar.startsWith('/') || activeConversation.participantAvatar.startsWith('http') ? <img src={safeImageSrc(activeConversation.participantAvatar)} alt={activeConversation.participantName} /> : activeConversation.participantAvatar}</div>
+            <div className="participant-avatar"><img src={safeImageSrc(activeConversation.participantAvatar)} alt={activeConversation.participantName} /></div>
             <span
               className={`online-status-dot ${
                 activeConversation.isOnline ? "online" : "offline"
@@ -159,7 +169,7 @@ export default function ChatWorkspace({
               className={`message-bubble-row ${isMe ? "outgoing" : "incoming"}`}
             >
               {!isMe && (
-                <div className="message-sender-avatar">{msg.senderAvatar}</div>
+                <div className="message-sender-avatar"><img src={safeImageSrc(msg.senderAvatar)} alt={msg.senderName} /></div>
               )}
 
               <div className="bubble-content-wrap">
@@ -167,7 +177,7 @@ export default function ChatWorkspace({
                   <p>{msg.content}</p>
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="attachment-preview">
-                      {msg.attachments[0].type==='image'?<img src={safeImageSrc(msg.attachments[0].url)} alt="Tệp đính kèm" />:msg.attachments[0].type==='video'?<video src={msg.attachments[0].url} controls />:msg.attachments[0].type==='audio'?<audio src={msg.attachments[0].url} controls />:<a href={msg.attachments[0].url}>{msg.attachments[0].name}</a>}
+                      {msg.attachments[0].type==='image'?<img src={safeImageSrc(msg.attachments[0].url)} alt={msg.attachments[0].name || "Tệp đính kèm"} loading="lazy" />:msg.attachments[0].type==='video'?<video src={safeImageSrc(msg.attachments[0].url)} controls preload="metadata" />:msg.attachments[0].type==='audio'?<audio src={safeImageSrc(msg.attachments[0].url)} controls />:<a className="chat-file-card" href={safeImageSrc(msg.attachments[0].url,'#')} target="_blank" rel="noreferrer"><span className="chat-file-icon">{msg.attachments[0].name.toLowerCase().endsWith('.pdf')?'PDF':'DOC'}</span><span className="chat-file-info"><strong>{msg.attachments[0].name || 'Tệp đính kèm'}</strong><small>{msg.attachments[0].size || 'Nhấn để mở tệp'}</small></span><span className="chat-file-open">↗</span></a>}
                     </div>
                   )}
                 </div>
@@ -223,10 +233,14 @@ export default function ChatWorkspace({
             type="button"
             className="tool-btn"
             title="Biểu tượng cảm xúc"
-            onClick={() => setInputText((prev) => prev + " 😊")}
+            aria-expanded={emojiOpen}
+            onClick={() => setEmojiOpen((open) => !open)}
           >
             😊
           </button>
+          {emojiOpen && <div className="chat-emoji-picker" role="listbox" aria-label="Chọn biểu tượng cảm xúc">
+            {CHAT_EMOJIS.map((emoji) => <button key={emoji} type="button" role="option" aria-label={emoji} onClick={() => { setInputText((prev) => `${prev}${prev ? " " : ""}${emoji}`); setEmojiOpen(false); }}>{emoji}</button>)}
+          </div>}
         </div>
 
         <input

@@ -52,7 +52,11 @@ export default function NotificationsPage() {
       setUnreadCount((value) => Math.max(0, value - 1));
       notifyBadgeChanged();
     }
-    if (item.link) router.push(item.link);
+    const commentId = typeof item.payload?.comment_id === "string" ? item.payload.comment_id : null;
+    const target = (item.type === "POST_LIKE" || item.type === "COMMENT") && item.reference_id
+      ? `/home?post=${encodeURIComponent(item.reference_id)}${commentId ? `&comment=${encodeURIComponent(commentId)}` : ""}`
+      : item.link;
+    if (target) router.push(target);
   };
 
   const markAll = async () => {

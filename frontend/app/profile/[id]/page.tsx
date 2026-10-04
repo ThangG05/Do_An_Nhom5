@@ -28,6 +28,7 @@ export default function VisitorProfilePage() {
     friends,
     photos,
     listings,
+    groupPosts,
     activeTab,
     isLoading,
     isError,
@@ -165,10 +166,7 @@ export default function VisitorProfilePage() {
         {/* 3. My Listings Tab View */}
         {activeTab === 'listings' && (
           <ProfileListingsTab
-            listings={listings}
-            isOwnProfile={isOwnProfile}
-            categoryFilter={listingsCategory}
-            onCategoryChange={setListingsCategory}
+            groupPosts={groupPosts}
           />
         )}
       </main>

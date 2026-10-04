@@ -35,13 +35,20 @@ export interface EventListingData {
   organizer: string;
 }
 
+export interface PostLocation {
+  name: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string | null;
+}
+
 export interface CreatePostPayload {
   content: string;
   category: PostCategory;
   privacy: PostPrivacy;
   media: PostMedia[];
   taggedFriends: string[];
-  location?: string;
+  location?: PostLocation;
   marketListing?: MarketListingData;
   roomListing?: RoomListingData;
   eventListing?: EventListingData;
@@ -86,4 +93,8 @@ export interface Post {
   marketListing?: MarketListingData;
   roomListing?: RoomListingData;
   eventListing?: EventListingData;
+  location?: PostLocation | null;
+  groupId?: string;
+  groupName?: string | null;
+  groupSlug?: string | null;
 }

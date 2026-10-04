@@ -32,7 +32,7 @@ export default function ProfileListingsWidget({
     <div className="profile-widget-card listings-widget">
       <div className="widget-header-row">
         <div className="widget-title-group">
-          <h2 className="widget-title">Bài niêm yết đang hoạt động</h2>
+          <h2 className="widget-title">Bài đăng hội nhóm đang hoạt động</h2>
           <span className="widget-count-tag">{activeListings.length} mục</span>
         </div>
         <button
@@ -64,7 +64,7 @@ export default function ProfileListingsWidget({
           })}
         </div>
       ) : (
-        <p className="widget-empty-text">Hiện chưa có bài niêm yết nào đang hoạt động.</p>
+        <p className="widget-empty-text">Hiện chưa có bài đăng hội nhóm nào đang hoạt động.</p>
       )}
     </div>
   );

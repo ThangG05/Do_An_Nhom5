@@ -24,7 +24,11 @@ from src.services import auth_service, email_service
 router = APIRouter(prefix="/auth", tags=["Auth"])
 DbSession = Annotated[Session, Depends(get_db)]
 
-def _session_cookies(response:Response,tokens:TokenResponse)->TokenResponse:
+def _session_cookies(response:Response,tokens:TokenResponse, *, mobile: bool = False)->TokenResponse:
+    # Native clients keep the refresh token in platform secure storage.  The
+    # existing cookie-only behaviour remains unchanged for the web client.
+    if mobile:
+        return tokens
     import secrets
     from src.config import settings
     csrf=secrets.token_urlsafe(24);domain=settings.AUTH_COOKIE_DOMAIN or None
@@ -32,6 +36,9 @@ def _session_cookies(response:Response,tokens:TokenResponse)->TokenResponse:
     response.set_cookie("hvnh_csrf",csrf,max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS*86400,httponly=False,secure=settings.AUTH_COOKIE_SECURE,samesite="lax",path="/",domain=domain)
     tokens.refresh_token=""
     return tokens
+
+def _is_mobile_client(request: Request) -> bool:
+    return request.headers.get("x-hvnh-client", "").lower() == "mobile"
 
 def _cookie_token(request:Request,payload_token:str|None)->str:
     token=request.cookies.get("hvnh_refresh") or payload_token
@@ -102,13 +109,15 @@ def complete_registration(
     request: CompleteRegistrationRequest,
     db: DbSession,
     response: Response,
+    http_request: Request,
 ) -> TokenResponse:
     try:
         return _session_cookies(response,auth_service.complete_registration(
             request.registration_token,
+            request.full_name,
             request.password,
             db,
-        ))
+        ), mobile=_is_mobile_client(http_request))
     except auth_service.ManualAuthenticationError as exc:
         raise _manual_auth_error(exc) from exc
 
@@ -118,9 +127,9 @@ def complete_registration(
     response_model=TokenResponse,
     summary="Đăng nhập bằng email và mật khẩu",
 )
-def login(request: LoginRequest, db: DbSession,response:Response) -> TokenResponse:
+def login(request: LoginRequest, db: DbSession,response:Response, http_request: Request) -> TokenResponse:
     try:
-        return _session_cookies(response,auth_service.authenticate_with_password(request.email, request.password, db))
+        return _session_cookies(response,auth_service.authenticate_with_password(request.email, request.password, db), mobile=_is_mobile_client(http_request))
     except auth_service.ManualAuthenticationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -131,7 +140,7 @@ def login(request: LoginRequest, db: DbSession,response:Response) -> TokenRespon
 @router.post("/refresh", response_model=TokenResponse, summary="Làm mới phiên đăng nhập")
 def refresh(payload: RefreshTokenRequest, request:Request,response:Response,db: DbSession) -> TokenResponse:
     try:
-        return _session_cookies(response,auth_service.refresh_session(_cookie_token(request,payload.refresh_token), db))
+        return _session_cookies(response,auth_service.refresh_session(_cookie_token(request,payload.refresh_token), db), mobile=_is_mobile_client(request))
     except auth_service.ManualAuthenticationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -163,9 +172,9 @@ def me(current_user: CurrentUser, db: DbSession) -> AuthUserResponse:
     response_model=TokenResponse,
     summary="Đăng ký hoặc đăng nhập bằng Google Workspace HVNH",
 )
-def google_auth(request: GoogleAuthRequest, db: DbSession,response:Response) -> TokenResponse:
+def google_auth(request: GoogleAuthRequest, db: DbSession,response:Response, http_request: Request) -> TokenResponse:
     try:
-        return _session_cookies(response,auth_service.authenticate_with_google(request.credential, db))
+        return _session_cookies(response,auth_service.authenticate_with_google(request.credential, db), mobile=_is_mobile_client(http_request))
     except auth_service.GoogleAuthenticationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

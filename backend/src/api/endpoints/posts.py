@@ -15,8 +15,22 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 
 
 @router.get("/feed", response_model=list[ProfilePostResponse])
-def feed(current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int, Query(ge=1, le=100)] = 30, offset: Annotated[int, Query(ge=0)] = 0, category: Annotated[str | None, Query(pattern="^(general|market|roommate|event|study)$")]=None):
-    return post_service.list_feed(db, current_user, limit, offset, category)
+def feed(response: Response, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int, Query(ge=1, le=100)] = 30, offset: Annotated[int, Query(ge=0)] = 0, category: Annotated[str | None, Query(pattern="^(general|market|roommate|event|study)$")] = None, cursor: str | None = None):
+    items, next_cursor = post_service.list_feed(db, current_user, limit, offset, category, cursor)
+    if next_cursor:
+        response.headers["X-Next-Cursor"] = next_cursor
+    response.headers["Access-Control-Expose-Headers"] = "X-Next-Cursor"
+    return items
+
+
+@router.get("/{post_id}/comments", response_model=list[CommentResponse])
+def comments(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int, Query(ge=1, le=100)] = 100):
+    return post_service.list_comments(db, post_id, current_user, limit)
+
+
+@router.get("/{post_id}", response_model=ProfilePostResponse)
+def get_post(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
+    return post_service.get_post_response(db, post_id, current_user)
 
 
 @router.put("/{post_id}/like", response_model=LikeResponse)

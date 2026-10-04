@@ -58,6 +58,8 @@ export default function VerificationForm({ email }: VerificationFormProps) {
         "hvnh-hub-registration-token",
         result.registration_token,
       );
+      window.sessionStorage.setItem("hvnh-hub-registration-name", result.full_name || "");
+      window.sessionStorage.setItem("hvnh-hub-registration-requires-name", String(result.requires_full_name));
       router.push("/password");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Mã xác thực không hợp lệ.");

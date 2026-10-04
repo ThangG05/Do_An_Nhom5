@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:3000"
     RESEND_API_KEY: str = ""
     RESEND_FROM_EMAIL: str = "HVNH Hub <onboarding@resend.dev>"
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_SENDER_NAME: str = "HVNH Hub"
+    SMTP_FROM_EMAIL: str = ""
     R2_ACCOUNT_ID: str = ""
     R2_ACCESS_KEY_ID: str = ""
     R2_SECRET_ACCESS_KEY: str = ""

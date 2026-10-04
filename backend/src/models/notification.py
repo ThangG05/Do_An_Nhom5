@@ -13,6 +13,7 @@ class NotificationResponse(BaseModel):
     actor_avatar: str | None = None
     reference_type: str | None = None
     reference_id: uuid.UUID | None = None
+    payload: dict = Field(default_factory=dict)
     link: str | None = None
     is_unread: bool
     created_at: datetime

@@ -4,6 +4,12 @@ import React, { useState } from 'react';
 import { UserProfile } from '@/types/user';
 import { IconHousing, IconInfo } from '@/components/ui/Icons';
 
+function formatJoinedDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
 interface ProfileIntroWidgetProps {
   profile: UserProfile;
   isOwnProfile: boolean;
@@ -155,7 +161,7 @@ export default function ProfileIntroWidget({
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
             <div className="metadata-content">
-              <span>Đã tham gia vào <strong>{profile.joinedDate}</strong></span>
+              <span>Đã tham gia từ <strong>{formatJoinedDate(profile.joinedDate)}</strong></span>
             </div>
           </li>
         )}

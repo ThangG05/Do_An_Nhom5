@@ -3,22 +3,28 @@
    ========================================================================== */
 
 .home-page-single-column {
-  width: min(100%, 1100px);
+  width: min(100%, 1400px);
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 24px 20px 80px;
+  padding: 18px 20px 64px;
+  position: relative;
 }
+
+.home-page-single-column:before{content:"";position:fixed;inset:70px 0 0;z-index:-1;background:radial-gradient(circle at 12% 18%,rgba(48,132,190,.14),transparent 32%),radial-gradient(circle at 86% 38%,rgba(25,92,142,.10),transparent 28%),linear-gradient(180deg,#eef5fb 0%,#e8f0f7 100%)}
 
 .home-content-full {
   width: 100%;
 }
 
 .home-welcome {
-  padding: 24px 0 28px;
+  padding: 16px 24px 22px;
+  border-radius: 20px;
+  background: linear-gradient(125deg, #082f56 0%, #126497 100%);
+  box-shadow: 0 14px 30px rgba(8,47,86,.16);
 }
 
 .home-welcome p {
-  margin: 0 0 6px 20px;
+  margin: 0 0 6px;
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
@@ -27,7 +33,7 @@
 }
 
 .home-welcome h1 {
-  margin: 0 0 8px 20px;
+  margin: 0 0 8px;
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 800;
   color: #ffffff;
@@ -36,30 +42,39 @@
 
 .home-welcome span {
   color: #d1e4ff;
-  margin: 0 0 8px 20px;
+  margin: 0;
   font-size: 16px;
 }
 
 .home-layout {
   display: grid;
-  grid-template-columns: minmax(0, 760px) 280px;
-  gap: 24px;
+  grid-template-columns: 220px minmax(0, 720px) 280px;
+  max-width: 1240px;
+  margin: 0 auto;
+  gap: 16px;
   align-items: start;
   justify-content: center;
 }
 
+.home-layout:before{content:"CỘNG ĐỒNG HVNH  •  CHIA SẺ  •  KẾT NỐI  •  HỖ TRỢ";grid-column:1/-1;display:block;padding:8px 14px;border:1px solid #d8e5f0;border-radius:999px;background:rgba(255,255,255,.72);color:#64809a;font-size:11px;font-weight:800;letter-spacing:.09em;text-align:center}
+.home-layout:after{content:"HỒ SƠ CỦA BẠN\\A\\A Cập nhật thông tin cá nhân\\A Xem bài viết đã đăng\\A Bạn bè và nhóm đã tham gia\\A\\A KHÁM PHÁ NHANH\\A\\A 📚 Tài liệu học tập\\A 🏠 Tìm phòng trọ\\A 🎉 Sự kiện sinh viên";grid-column:1;grid-row:2;white-space:pre-line;align-self:start;padding:18px 16px;border:1px solid #d8e5f0;border-radius:16px;background:#fff;box-shadow:0 8px 22px rgba(25,68,102,.07);color:#49657f;font-size:12px;line-height:1.85;font-weight:600;position:sticky;top:88px}
+.home-feed{grid-column:2}.home-side-panel{grid-column:3}
+
 .home-feed {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
+.home-feed > *{border-color:#d6e3ee;box-shadow:0 8px 24px rgba(25,68,102,.07)}
+.feed-filter-bar{background:#fff;border:1px solid #d6e3ee;border-radius:15px;padding:7px;box-shadow:0 7px 18px rgba(25,68,102,.06)}
+
 .home-side-panel {
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 40, 85, 0.04);
+  display: grid;
+  gap: 12px;
+  background: transparent;
+  border: 0;
+  padding: 0;
   position: sticky;
   top: 88px;
 }
@@ -83,7 +98,11 @@
     grid-template-columns: 1fr;
   }
 
+  .home-layout:after,.home-feed,.home-side-panel{grid-column:1}.home-layout:after{display:none}
+
   .home-side-panel {
     display: none;
   }
 }
+
+.home-side-panel h2{margin:0 0 8px;font-size:17px;color:#002855}.home-side-panel p{margin:0 0 14px;color:#64748b;font-size:13px;line-height:1.55}.home-side-card{padding:18px;border:1px solid #dce6f0;border-radius:16px;background:#fff;box-shadow:0 7px 20px rgba(15,45,75,.06)}.home-side-heading{display:flex;align-items:center;gap:9px}.home-side-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#e8f2fb;color:#07558c;font-weight:800}.home-quick-links h3{margin:0 0 9px;color:#0f3154;font-size:14px}.home-quick-links a{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #edf2f7;color:#31506f;text-decoration:none;font-size:13px;font-weight:650}.home-quick-links a span{color:#7490aa}.home-side-tip{padding:15px;border-radius:15px;background:#eaf5ff;color:#315d81}.home-side-tip strong{font-size:13px;color:#0b4b76}.home-side-tip p{margin:5px 0 0;font-size:12px}

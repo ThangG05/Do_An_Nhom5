@@ -10,6 +10,7 @@ from src.db.models.post import Comment, Post, PostLike, PostMedia, PostStatus, P
 from src.db.models.user import User
 from src.models.group import GroupMemberResponse, GroupPostCreateRequest, GroupResponse, JoinRequestResponse, ModerationRequest
 from src.services.post_service import _serialize
+from src.services.storage_service import create_download_url
 
 
 def _group(db: Session, group_id: uuid.UUID):
@@ -145,8 +146,15 @@ def pin_post(db: Session, group_id: uuid.UUID, post_id: uuid.UUID, value: bool) 
 
 def members(db: Session, group_id: uuid.UUID, query: str = "") -> list[GroupMemberResponse]:
     pattern=f"%{query.strip()}%"
-    rows = db.execute(text("SELECT u.id,p.full_name name,u.username,p.student_code,gm.role FROM group_members gm JOIN users u ON u.id=gm.user_id JOIN profiles p ON p.user_id=u.id WHERE gm.group_id=:gid AND (:q='' OR p.full_name ILIKE :pattern OR p.student_code ILIKE :pattern OR u.username ILIKE :pattern) ORDER BY gm.role,u.username"), {"gid": group_id,"q":query.strip(),"pattern":pattern}).mappings()
-    return [GroupMemberResponse(id=str(r["id"]), name=r["name"], username=r["username"], student_code=r["student_code"], role=str(r["role"])) for r in rows]
+    rows = db.execute(text("SELECT u.id,p.full_name name,u.username,p.student_code,p.avatar_media_id,gm.role FROM group_members gm JOIN users u ON u.id=gm.user_id JOIN profiles p ON p.user_id=u.id WHERE gm.group_id=:gid AND (:q='' OR p.full_name ILIKE :pattern OR p.student_code ILIKE :pattern OR u.username ILIKE :pattern) ORDER BY gm.role,u.username"), {"gid": group_id,"q":query.strip(),"pattern":pattern}).mappings()
+    result=[]
+    for row in rows:
+        avatar=None
+        if row["avatar_media_id"]:
+            media=db.get(MediaFile,row["avatar_media_id"])
+            if media and media.status==MediaStatus.READY: avatar=create_download_url(media)
+        result.append(GroupMemberResponse(id=str(row["id"]), name=row["name"], username=row["username"], student_code=row["student_code"], role=str(row["role"]), avatar_url=avatar))
+    return result
 
 
 def kick_member(db: Session, group_id: uuid.UUID, user_id: uuid.UUID, admin: User) -> None:

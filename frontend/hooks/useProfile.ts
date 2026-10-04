@@ -16,6 +16,7 @@ import {
   fetchUserFriends,
   fetchUserPhotos,
   fetchUserListings,
+  fetchUserGroupPosts,
   updateUserProfile,
   uploadProfileAvatar,
   uploadProfileCover,
@@ -29,6 +30,7 @@ export interface UseProfileReturn {
   friends: UserFriend[];
   photos: UserPhoto[];
   listings: UserListing[];
+  groupPosts: Post[];
   activeTab: ProfileTabType;
   isLoading: boolean;
   isError: boolean;
@@ -66,6 +68,7 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
   const [friends, setFriends] = useState<UserFriend[]>([]);
   const [photos, setPhotos] = useState<UserPhoto[]>([]);
   const [listings, setListings] = useState<UserListing[]>([]);
+  const [groupPosts, setGroupPosts] = useState<Post[]>([]);
 
   const [activeTab, setActiveTab] = useState<ProfileTabType>('posts');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -91,17 +94,19 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
       const profileData = await fetchUserProfile(resolvedUserId);
       setProfile(profileData);
 
-      const [userPosts, userFriends, userPhotos, userListings] = await Promise.all([
+      const [userPosts, userFriends, userPhotos, userListings, userGroupPosts] = await Promise.all([
         fetchUserPosts(profileData.id),
         fetchUserFriends(profileData.id),
         fetchUserPhotos(profileData.id),
         fetchUserListings(profileData.id),
+        fetchUserGroupPosts(profileData.id),
       ]);
 
       setPosts(userPosts);
       setFriends(userFriends);
       setPhotos(userPhotos);
       setListings(userListings);
+      setGroupPosts(userGroupPosts);
     } catch (err: unknown) {
       setIsError(true);
       setErrorMessage(err instanceof Error ? err.message : 'Không thể tải thông tin hồ sơ.');
@@ -179,6 +184,7 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     friends,
     photos,
     listings,
+    groupPosts,
     activeTab,
     isLoading,
     isError,

@@ -16,7 +16,16 @@ class VerifyEmailCodeRequest(BaseModel):
 
 class CompleteRegistrationRequest(BaseModel):
     registration_token: str = Field(..., min_length=1)
+    full_name: str = Field(..., min_length=2, max_length=150)
     password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, value: str) -> str:
+        value = " ".join(value.strip().split())
+        if len(value) < 2:
+            raise ValueError("Vui lòng nhập họ và tên.")
+        return value
 
     @field_validator("password")
     @classmethod
@@ -36,6 +45,8 @@ class MessageResponse(BaseModel):
 class RegistrationVerifiedResponse(BaseModel):
     registration_token: str
     expires_in: int
+    full_name: str | None = None
+    requires_full_name: bool = True
 
 
 class RefreshTokenRequest(BaseModel):

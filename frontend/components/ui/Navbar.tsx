@@ -16,7 +16,8 @@ import {
   IconAI,
 } from './Icons';
 import { AuthUser, getAccessToken, getAuthUser, logoutSession } from '@/lib/auth';
-import { createWebSocketTicket, fetchUnreadMessageCount, fetchUnreadNotificationCount } from '@/lib/api';
+import { fetchUnreadMessageCount, fetchUnreadNotificationCount } from '@/lib/api';
+import { useAuthUser } from '@/components/auth/AuthProvider';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -28,11 +29,12 @@ export default function Navbar() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const contextUser = useAuthUser();
 
   useEffect(() => {
-    setAuthUser(getAuthUser());
+    setAuthUser(contextUser || getAuthUser());
     setIsProfileMenuOpen(false);
-  }, [pathname]);
+  }, [pathname, contextUser]);
 
   useEffect(() => {
     if (!isProfileMenuOpen) return;
@@ -51,11 +53,16 @@ export default function Navbar() {
   }, [isProfileMenuOpen]);
 
   useEffect(() => {
-    if(!getAccessToken())return;
-    let socket:WebSocket|undefined,timer:number|undefined,cancelled=false;
-    void createWebSocketTicket().then(ticket=>{if(cancelled)return;const base=(process.env.NEXT_PUBLIC_API_URL||'http://localhost:8000/api/v1').replace(/^http/,'ws');socket=new WebSocket(`${base}/chat/ws?ticket=${encodeURIComponent(ticket)}`);socket.onmessage=event=>{try{const data=JSON.parse(event.data);if(data.event==='notification.created'){void fetchUnreadNotificationCount().then(setNotificationCount);if(data.type==='MESSAGE')void fetchUnreadMessageCount().then(setMessageCount);}else if(data.event==='call.offer'&&pathname!=='/messages'){window.sessionStorage.setItem('hvnh-pending-call',JSON.stringify(data));router.push(`/messages?conversationId=${encodeURIComponent(data.conversation_id)}`);}}catch{/* ignore malformed frames */}};timer=window.setInterval(()=>{if(socket?.readyState===WebSocket.OPEN)socket.send('ping');},25000);}).catch(()=>undefined);
-    return()=>{cancelled=true;if(timer!==undefined)window.clearInterval(timer);socket?.close();};
-  },[pathname]);
+    const handleRealtime = (event: Event) => {
+      const data = (event as CustomEvent<Record<string, unknown>>).detail;
+      if (data?.event === 'call.offer' && pathname !== '/messages') {
+        window.sessionStorage.setItem('hvnh-pending-call', JSON.stringify(data));
+        router.push(`/messages?conversationId=${encodeURIComponent(String(data.conversation_id || ''))}`);
+      }
+    };
+    window.addEventListener('hvnh-realtime', handleRealtime);
+    return () => window.removeEventListener('hvnh-realtime', handleRealtime);
+  }, [pathname, router]);
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -118,6 +125,7 @@ export default function Navbar() {
     { label: 'Thông báo', href: '/notifications', icon: IconBell, badge: notificationCount },
   ];
 
+  if (pathname.startsWith('/admin') || pathname.startsWith('/group-admin')) return null;
   return (
     <header className="global-navbar-header">
       <div className="navbar-container">
@@ -172,7 +180,7 @@ export default function Navbar() {
             <input
               type="text"
               className="search-pill-input"
-              placeholder="Tìm kiếm sinh viên, bài viết..."
+              placeholder="Tìm kiếm sinh viên"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Tìm kiếm sinh viên"

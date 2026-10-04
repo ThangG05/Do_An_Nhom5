@@ -18,7 +18,7 @@ Nội dung thực hiện và kết quả dự kiến
    • Lập kế hoạch kiến trúc: FastAPI làm Backend dùng chung, PostgreSQL làm cơ sở dữ liệu chính, Cloudflare R2 lưu trữ dữ liệu đa phương tiện, WebSocket phục vụ realtime.
    • Lập kế hoạch AI: xây dựng hệ thống RAG sử dụng BAAI/bge-m3 để tạo embedding và Qdrant làm vector database; dữ liệu lấy từ các nguồn chính thức, công khai của Học viện và các tài liệu được phép sử dụng.
 2. Phân tích yêu cầu
-   • Yêu cầu xác thực và quản lý tài khoản: Chỉ cho phép đăng ký bằng email @hvnh.edu.vn; người dùng phải xác thực email bằng OTP hoặc liên kết xác thực trước khi kích hoạt tài khoản. Việc lấy thông tin định danh mở rộng từ hệ thống của Học viện chỉ thực hiện khi có quyền truy cập API phù hợp.
+   • Yêu cầu xác thực và quản lý tài khoản: Chỉ cho phép đăng ký bằng email @hvnh.edu.vn tôi đang đăng ký rend.com ở trong .env rồi, username của web sẽ tự động lấy bằng tên user của email đăng ký ( ví dụ : NguyenManhThang thì sau khi đăng ký sẽ lấy tên user là NguyenManhThang luôn ); người dùng phải xác thực email bằng OTP hoặc liên kết xác thực trước khi kích hoạt tài khoản. Việc lấy thông tin định danh mở rộng từ hệ thống của Học viện chỉ thực hiện khi có quyền truy cập API phù hợp.
    • Yêu cầu hội nhóm: Hệ thống gồm các nhóm nghiệp vụ chính: Pass đồ; Ghép phòng / tìm phòng trọ; Sự kiện; Học tập. Người dùng có thể tham gia nhóm, xem nội dung và tương tác theo quyền được cấp.
    • Yêu cầu bài viết và tương tác: Bài viết hỗ trợ văn bản, nhiều hình ảnh và video; có các trạng thái pending, approved, rejected. Người dùng có thể Like/Unlike, Comment và báo cáo nội dung.
    • Yêu cầu kết nối người dùng: Hỗ trợ tìm kiếm sinh viên theo tên hoặc mã sinh viên, gửi/chấp nhận/từ chối lời mời kết bạn, hủy kết bạn và chặn người dùng.

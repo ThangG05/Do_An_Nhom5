@@ -15,4 +15,8 @@ setup môi trường
 python -m venv .venv
 .venv\Scripts\activate
 cd backend 
-pip install -r requirements.txt
+pip install -r requirements.txt  
+
+admin
+super-admin@hvnh.edu.vn
+NM8tp7t1oWlxUs1D1Nud!W

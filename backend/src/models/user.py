@@ -1,6 +1,6 @@
 import uuid
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 class UserResponse(BaseModel):
     id: str
@@ -8,6 +8,7 @@ class UserResponse(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=150)
     bio: str | None = Field(default=None, max_length=5000)
     faculty: str | None = Field(default=None, max_length=150)
     courseYear: str | None = Field(default=None, max_length=50)
@@ -17,6 +18,16 @@ class ProfileUpdateRequest(BaseModel):
     currentCity: str | None = Field(default=None, max_length=150)
     hometown: str | None = Field(default=None, max_length=150)
     socialLinks: dict[str, str] | None = None
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        normalized = " ".join(value.split())
+        if len(normalized) < 2:
+            raise ValueError("Họ và tên phải có ít nhất 2 ký tự.")
+        return normalized
 
 
 class ProfileResponse(BaseModel):

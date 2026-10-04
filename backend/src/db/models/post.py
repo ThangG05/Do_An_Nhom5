@@ -38,6 +38,7 @@ class Post(Base):
     content: Mapped[str] = mapped_column(Text, default="", nullable=False)
     category: Mapped[str] = mapped_column(String(30),default="general",server_default="general",nullable=False)
     listing_data: Mapped[dict | None] = mapped_column(JSONB)
+    location_data: Mapped[dict | None] = mapped_column(JSONB)
     post_type: Mapped[PostType] = mapped_column(Enum(PostType, name="post_type"), nullable=False)
     visibility: Mapped[PostVisibility] = mapped_column(Enum(PostVisibility, name="post_visibility"), nullable=False)
     status: Mapped[PostStatus] = mapped_column(Enum(PostStatus, name="post_status"), nullable=False)

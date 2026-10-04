@@ -88,7 +88,7 @@ export default function ConversationList({
               >
                 {/* Avatar with Online/Offline Dot */}
                 <div className="chat-avatar-wrap">
-                  <div className="participant-avatar">{conv.participantAvatar.startsWith('/') || conv.participantAvatar.startsWith('http') ? <img src={safeImageSrc(conv.participantAvatar)} alt={conv.participantName} /> : conv.participantAvatar}</div>
+                  <div className="participant-avatar"><img src={safeImageSrc(conv.participantAvatar)} alt={conv.participantName} /></div>
                   <span
                     className={`online-status-dot ${
                       conv.isOnline ? "online" : "offline"

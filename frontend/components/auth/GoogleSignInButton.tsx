@@ -42,6 +42,7 @@ declare global {
 
 export default function GoogleSignInButton() {
   const buttonRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -49,6 +50,8 @@ export default function GoogleSignInButton() {
 
   function renderGoogleButton() {
     if (!clientId || !window.google || !buttonRef.current) return;
+    if (initializedRef.current && buttonRef.current.childElementCount > 0) return;
+    initializedRef.current = true;
 
     window.google.accounts.id.initialize({
       client_id: clientId,
@@ -65,7 +68,7 @@ export default function GoogleSignInButton() {
           await clearPreviousAuthSession();
           const tokens = await authenticateWithGoogle(credential);
           saveAuthSession(tokens);
-          router.replace(tokens.user.system_role === 'SUPER_ADMIN' ? '/admin' : '/home');
+          router.replace(tokens.user.system_role === 'SUPER_ADMIN' ? '/admin' : tokens.user.admin_group_slugs.length ? '/group-admin' : '/home');
         } catch (error) {
           setMessage(
             error instanceof Error

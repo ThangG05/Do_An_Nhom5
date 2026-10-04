@@ -1,0 +1,51 @@
+{
+  "complete": true,
+  "generated_at": "2026-09-23T02:17:18.521454+00:00",
+  "cases": 5,
+  "judge": {
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "independent_from_answer_model": false
+  },
+  "metrics": {
+    "faithfulness": 0.925,
+    "answer_correctness": 0.8253642021432945
+  },
+  "results": [
+    {
+      "case_id": "hvnh-003",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.8930940145261548
+      }
+    },
+    {
+      "case_id": "hvnh-004",
+      "scores": {
+        "faithfulness": 0.625,
+        "answer_correctness": 0.6262796465782055
+      }
+    },
+    {
+      "case_id": "hvnh-005",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.8847764032808012
+      }
+    },
+    {
+      "case_id": "hvnh-006",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.728150711801401
+      }
+    },
+    {
+      "case_id": "hvnh-007",
+      "scores": {
+        "faithfulness": 1.0,
+        "answer_correctness": 0.99452023452991
+      }
+    }
+  ]
+}

@@ -21,6 +21,7 @@ export default function OwnProfilePage() {
     friends,
     photos,
     listings,
+    groupPosts,
     activeTab,
     isLoading,
     isError,
@@ -95,7 +96,6 @@ export default function OwnProfilePage() {
         onTabChange={setActiveTab}
         onOpenEditModal={() => setIsEditModalOpen(true)}
         onFriendAction={handleFriendAction}
-        onUpdateAvatarPhoto={() => setIsEditModalOpen(true)}
       />
 
       {/* Main Profile Body Content Area */}
@@ -156,10 +156,7 @@ export default function OwnProfilePage() {
         {/* 3. My Listings Tab Sub-View */}
         {activeTab === 'listings' && (
           <ProfileListingsTab
-            listings={listings}
-            isOwnProfile={isOwnProfile}
-            categoryFilter={listingsCategory}
-            onCategoryChange={setListingsCategory}
+            groupPosts={groupPosts}
           />
         )}
       </main>

@@ -1,0 +1,19 @@
+/* Loaded after legacy chat styles: conversation themes must win over the
+   old fixed blue !important declarations. */
+.messenger-center-panel.chat-theme-blue{--chat-accent:#0866ff;--chat-accent-dark:#0457dc;--chat-accent-soft:#e8f1ff}
+.messenger-center-panel.chat-theme-indigo{--chat-accent:#4f46e5;--chat-accent-dark:#3730a3;--chat-accent-soft:#eeedff}
+.messenger-center-panel.chat-theme-emerald{--chat-accent:#059669;--chat-accent-dark:#047857;--chat-accent-soft:#e1f8ef}
+.messenger-center-panel.chat-theme-rose{--chat-accent:#e11d48;--chat-accent-dark:#be123c;--chat-accent-soft:#ffe8ee}
+.messenger-center-panel.chat-theme-violet{--chat-accent:#7c3aed;--chat-accent-dark:#5b21b6;--chat-accent-soft:#f1eaff}
+.messenger-center-panel.chat-theme-amber{--chat-accent:#d97706;--chat-accent-dark:#b45309;--chat-accent-soft:#fff2dc}
+
+.messenger-center-panel[class*="chat-theme-"] .chat-workspace-header{border-top:4px solid var(--chat-accent)!important}
+.messenger-center-panel[class*="chat-theme-"] .chat-bubble.me{background:linear-gradient(135deg,var(--chat-accent),var(--chat-accent-dark))!important;box-shadow:0 5px 14px color-mix(in srgb,var(--chat-accent) 27%,transparent)!important}
+.messenger-center-panel[class*="chat-theme-"] .send-message-btn{background:var(--chat-accent)!important;box-shadow:0 5px 12px color-mix(in srgb,var(--chat-accent) 28%,transparent)!important}
+.messenger-center-panel[class*="chat-theme-"] .send-message-btn:hover:not(:disabled){background:var(--chat-accent-dark)!important}
+.messenger-center-panel[class*="chat-theme-"] .chat-text-input:focus{border-color:var(--chat-accent)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--chat-accent) 18%,transparent)!important}
+.messenger-center-panel[class*="chat-theme-"] .tool-btn:hover{color:var(--chat-accent)!important}
+
+/* One calm, consistent avatar treatment across the messenger list, header,
+   message stream and conversation details. */
+.participant-avatar{overflow:hidden;border:2px solid #fff!important;border-radius:50%!important;background:#e8f0f7!important;box-shadow:0 2px 7px rgba(18,54,86,.13)!important}.participant-avatar img{width:100%;height:100%;object-fit:cover}.chat-avatar-wrap .online-status-dot{right:-1px;bottom:-1px;width:12px;height:12px;border:2px solid #fff;box-shadow:0 1px 4px rgba(18,54,86,.16)}.header-avatar-wrap .participant-avatar{width:40px!important;height:40px!important}.message-sender-avatar{overflow:hidden;border-radius:50%!important;background:#e8f0f7}.large-avatar-shell .avatar-core{overflow:hidden;border:3px solid #fff!important;background:#e8f0f7!important;box-shadow:0 5px 14px rgba(18,54,86,.14)!important}.large-avatar-shell .avatar-core img{display:block;width:100%;height:100%;border-radius:inherit;object-fit:cover}.large-avatar-shell .status-dot{right:0;bottom:0;border:2px solid #fff;box-shadow:0 1px 4px rgba(18,54,86,.16)}

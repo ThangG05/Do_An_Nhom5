@@ -20,6 +20,10 @@ export interface AuthTokens {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+function notifyAuthChanged(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('hvnh-auth-changed'));
+}
+
 async function readApiError(response: Response, fallback: string): Promise<Error> {
   const payload = (await response.json().catch(() => null)) as
     | { detail?: string | Array<{ msg?: string }> }
@@ -61,7 +65,7 @@ export async function requestRegistrationCode(email: string): Promise<void> {
 export async function verifyRegistrationCode(
   email: string,
   code: string,
-): Promise<{ registration_token: string; expires_in: number }> {
+): Promise<{ registration_token: string; expires_in: number; full_name?: string | null; requires_full_name: boolean }> {
   const response = await fetch(`${API_BASE_URL}/auth/register/verify-code`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -70,21 +74,19 @@ export async function verifyRegistrationCode(
   if (!response.ok) {
     throw await readApiError(response, 'Mã xác thực không hợp lệ.');
   }
-  return response.json() as Promise<{
-    registration_token: string;
-    expires_in: number;
-  }>;
+  return response.json() as Promise<{ registration_token: string; expires_in: number; full_name?: string | null; requires_full_name: boolean }>;
 }
 
 export async function completeRegistration(
   registrationToken: string,
+  fullName: string,
   password: string,
 ): Promise<AuthTokens> {
   const response = await fetch(`${API_BASE_URL}/auth/register/complete`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ registration_token: registrationToken, password }),
+    body: JSON.stringify({ registration_token: registrationToken, full_name: fullName, password }),
   });
   if (!response.ok) {
     throw await readApiError(response, 'Không thể hoàn tất đăng ký.');
@@ -112,6 +114,7 @@ export function saveAuthSession(tokens: AuthTokens): void {
   window.sessionStorage.setItem('hvnh-hub-access-token', tokens.access_token);
   window.sessionStorage.removeItem('hvnh-hub-refresh-token');
   window.sessionStorage.setItem('hvnh-hub-user', JSON.stringify(tokens.user));
+  notifyAuthChanged();
 }
 
 export function getAuthUser(): AuthUser | null {
@@ -127,18 +130,19 @@ export function getAuthUser(): AuthUser | null {
 
 export function updateStoredAvatar(avatarUrl: string): void {
   const user = getAuthUser();
-  if (user) window.sessionStorage.setItem('hvnh-hub-user', JSON.stringify({ ...user, avatar_url: avatarUrl }));
+  if (user) { window.sessionStorage.setItem('hvnh-hub-user', JSON.stringify({ ...user, avatar_url: avatarUrl })); notifyAuthChanged(); }
 }
 
 export function updateStoredFullName(fullName: string): void {
   const user = getAuthUser();
-  if (user) window.sessionStorage.setItem('hvnh-hub-user', JSON.stringify({ ...user, full_name: fullName }));
+  if (user) { window.sessionStorage.setItem('hvnh-hub-user', JSON.stringify({ ...user, full_name: fullName })); notifyAuthChanged(); }
 }
 
 export function clearAuthSession(): void {
   window.sessionStorage.removeItem('hvnh-hub-access-token');
   window.sessionStorage.removeItem('hvnh-hub-refresh-token');
   window.sessionStorage.removeItem('hvnh-hub-user');
+  notifyAuthChanged();
 }
 
 /** Revoke an earlier cookie session before authenticating as another user. */
@@ -205,6 +209,7 @@ export async function restoreAuthSession(): Promise<AuthUser> {
   try {
     const user = await getCurrentUser();
     window.sessionStorage.setItem('hvnh-hub-user', JSON.stringify(user));
+    notifyAuthChanged();
     return user;
   } catch {
     const tokens = await refreshAuthSession();

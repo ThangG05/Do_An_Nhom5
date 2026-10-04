@@ -25,6 +25,7 @@ export interface GroupMember {
   username: string;
   role: 'MEMBER' | 'ADMIN';
   student_code?: string | null;
+  avatar_url?: string | null;
 }
 
 export type GroupPost = Post & {

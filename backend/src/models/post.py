@@ -26,6 +26,13 @@ class EventListingData(BaseModel):
     status: Literal["active", "expired"] = "active"
 
 
+class PostLocationData(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+    address: str | None = Field(default=None, max_length=500)
+
+
 class CreateProfilePostRequest(BaseModel):
     content: str = Field(default="", max_length=10000)
     privacy: Literal["public", "friends", "private"] = "public"
@@ -34,6 +41,7 @@ class CreateProfilePostRequest(BaseModel):
     marketListing: MarketListingData | None = None
     roomListing: RoomListingData | None = None
     eventListing: EventListingData | None = None
+    location: PostLocationData | None = None
 
     @model_validator(mode="after")
     def has_content(self):
@@ -71,12 +79,15 @@ class ProfilePostResponse(BaseModel):
     isLiked: bool = False
     comments: list["CommentResponse"] = Field(default_factory=list)
     groupId: str | None = None
+    groupName: str | None = None
+    groupSlug: str | None = None
     status: str = "APPROVED"
     rejectionReason: str | None = None
     isPinned: bool = False
     marketListing: MarketListingData | None = None
     roomListing: RoomListingData | None = None
     eventListing: EventListingData | None = None
+    location: PostLocationData | None = None
 
 
 class UpdatePostRequest(BaseModel):
@@ -87,6 +98,7 @@ class UpdatePostRequest(BaseModel):
     marketListing: MarketListingData | None = None
     roomListing: RoomListingData | None = None
     eventListing: EventListingData | None = None
+    location: PostLocationData | None = None
 
 
 class CommentCreateRequest(BaseModel):

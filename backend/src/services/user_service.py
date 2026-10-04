@@ -56,6 +56,9 @@ def update_profile(db: Session, user: User, payload: ProfileUpdateRequest) -> Pr
     changes = payload.model_dump(exclude_unset=True)
     mapping = {"courseYear": "cohort", "currentCity": "current_city", "socialLinks": "social_links"}
     for field, value in changes.items():
+        if field == "name":
+            profile.full_name = value
+            continue
         setattr(profile, mapping.get(field, field), value.strip() if isinstance(value, str) else value)
     db.commit()
     db.refresh(profile)

@@ -23,6 +23,7 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const [avatar, setAvatar] = useState(profile.avatar || '');
   const [coverBanner, setCoverBanner] = useState(profile.coverBanner || '');
+  const [name, setName] = useState(profile.name || '');
   const [bio, setBio] = useState(profile.bio || '');
   const [pronouns, setPronouns] = useState(profile.pronouns || '');
   const [workplace, setWorkplace] = useState(profile.workplace || '');
@@ -99,6 +100,7 @@ export default function EditProfileModal({
         await onUploadCover(coverFile);
       }
       await onSave({
+      name: name.trim(),
       coverBanner,
       bio,
       pronouns,
@@ -197,11 +199,14 @@ export default function EditProfileModal({
                 <input
                   type="text"
                   className="form-control"
-                  value={profile.name}
-                  disabled
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  minLength={2}
+                  maxLength={150}
+                  required
                   aria-describedby="identity-name-help"
                 />
-                <small id="identity-name-help">Họ tên được xác thực từ tài khoản HVNH và không thể tự thay đổi.</small>
+                <small id="identity-name-help">Bạn có thể đổi tên hiển thị. Mã sinh viên luôn cố định theo email HVNH và không thể chỉnh sửa.</small>
               </div>
 
               <div className="form-group">

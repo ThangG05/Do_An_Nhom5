@@ -8,6 +8,7 @@ import {
   MarketListingData,
   RoomListingData,
   EventListingData,
+  PostLocation,
   CreatePostPayload,
   Post,
 } from "@/types/post";
@@ -27,8 +28,8 @@ export interface UseCreatePostReturn {
   removeMedia: (id: string) => void;
   taggedFriends: string[];
   setTaggedFriends: React.Dispatch<React.SetStateAction<string[]>>;
-  location: string;
-  setLocation: (loc: string) => void;
+  location: PostLocation | null;
+  setLocation: (loc: PostLocation | null) => void;
   marketListing: MarketListingData;
   setMarketListing: React.Dispatch<React.SetStateAction<MarketListingData>>;
   roomListing: RoomListingData;
@@ -50,7 +51,7 @@ export function useCreatePost(
   const [privacy, setPrivacy] = useState<PostPrivacy>("public");
   const [mediaList, setMediaList] = useState<PostMedia[]>([]);
   const [taggedFriends, setTaggedFriends] = useState<string[]>([]);
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState<PostLocation | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,7 +94,7 @@ export function useCreatePost(
     setPrivacy("public");
     setMediaList([]);
     setTaggedFriends([]);
-    setLocation("");
+    setLocation(null);
     setError(null);
     setMarketListing({
       price: "",
