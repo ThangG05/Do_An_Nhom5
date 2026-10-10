@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Conversation, MessageAttachment } from "@/types/message";
 import { safeImageSrc } from "@/lib/media";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { createReport, fetchConversationShared, setUserBlocked } from "@/lib/api";
 
 interface ChatDetailsPanelProps {
@@ -49,7 +50,7 @@ export default function ChatDetailsPanel({
         {/* Profile Card Summary */}
         <div className="profile-summary-card">
           <div className="large-avatar-shell">
-            <div className="avatar-core"><img src={safeImageSrc(conversation.participantAvatar)} alt={conversation.participantName}/></div>
+            <div className="avatar-core"><UserAvatar src={conversation.participantAvatar} name={conversation.participantName} fallbackClassName="chat-avatar-initials" /></div>
             <span
               className={`status-dot ${
                 conversation.isOnline ? "online" : "offline"

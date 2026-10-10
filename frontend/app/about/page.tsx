@@ -218,7 +218,7 @@ export default function AboutPage() {
                 <input
                   id="fb-email"
                   type="email"
-                  placeholder="tenban@hvnh.edu.vn"
+                  placeholder="Ví dụ: 26A4041111@hvnh.edu.vn"
                   value={feedbackEmail}
                   onChange={(e) => setFeedbackEmail(e.target.value)}
                   required

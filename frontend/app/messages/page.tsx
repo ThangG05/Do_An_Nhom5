@@ -28,8 +28,14 @@ export default function MessagesPage() {
           onStartConversation={messengerState.startConversation}
         />
 
+        {messengerState.loading && <section className="messenger-center-empty" aria-live="polite"><span className="messenger-empty-spinner"/><h2>Đang tải tin nhắn</h2><p>HVNH Hub đang đồng bộ các cuộc trò chuyện của bạn.</p></section>}
+
+        {!messengerState.loading && messengerState.error && <section className="messenger-center-empty error" role="alert"><span>!</span><h2>Không thể tải tin nhắn</h2><p>{messengerState.error}</p><button type="button" onClick={()=>void messengerState.retry()}>Thử lại</button></section>}
+
+        {!messengerState.loading && !messengerState.error && !messengerState.activeConversation && <section className="messenger-center-empty"><span>💬</span><h2>Bắt đầu một cuộc trò chuyện</h2><p>Chọn một người bạn ở danh sách bên trái hoặc tạo tin nhắn mới.</p></section>}
+
         {/* Column 2: Chat Workspace (Center) */}
-        {messengerState.activeConversation && (
+        {!messengerState.loading && !messengerState.error && messengerState.activeConversation && (
           <ChatWorkspace
             activeConversation={messengerState.activeConversation}
             messages={messengerState.activeMessages}

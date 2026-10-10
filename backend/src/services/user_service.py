@@ -7,6 +7,7 @@ from src.db.models.post import Post, PostMedia, PostStatus, PostType, PostVisibi
 from src.db.models.user import Profile, User
 from src.services.storage_service import create_download_url
 from src.models.user import JoinedGroupResponse, ProfileResponse, ProfileUpdateRequest, UserSearchResponse
+from src.core.profile_options import SCHOOL_NAME, derive_course_year
 
 
 def _media_url(db: Session, media_id: uuid.UUID | None, fallback: str) -> str:
@@ -40,8 +41,8 @@ def serialize_profile(db: Session, user: User, viewer_id: uuid.UUID) -> ProfileR
         avatar=_media_url(db, profile.avatar_media_id, "/assets/logo.png"),
         coverBanner=_media_url(db, profile.cover_media_id, "/assets/logo.png"),
         bio=profile.bio or "", pronouns=profile.pronouns or "", studentCode=profile.student_code, faculty=profile.faculty,
-        courseYear=profile.cohort, joinedDate=user.created_at.isoformat(), email=user.email,
-        workplace=profile.workplace or "", education=profile.education or "Học viện Ngân hàng (BAV)",
+        courseYear=derive_course_year(profile.student_code) or profile.cohort, joinedDate=user.created_at.isoformat(), email=user.email,
+        workplace=profile.workplace or "", education=SCHOOL_NAME,
         currentCity=profile.current_city or "", hometown=profile.hometown or "", socialLinks=profile.social_links or {},
         isVerified=user.email_verified_at is not None, friendsCount=friends_count,
         friendshipStatus=friendship_status(db, viewer_id, user.id),
@@ -55,9 +56,15 @@ def update_profile(db: Session, user: User, payload: ProfileUpdateRequest) -> Pr
         raise HTTPException(404, "Không tìm thấy hồ sơ người dùng.")
     changes = payload.model_dump(exclude_unset=True)
     mapping = {"courseYear": "cohort", "currentCity": "current_city", "socialLinks": "social_links"}
+    profile.education = SCHOOL_NAME
+    derived_course_year = derive_course_year(profile.student_code)
+    if derived_course_year:
+        profile.cohort = derived_course_year
     for field, value in changes.items():
         if field == "name":
             profile.full_name = value
+            continue
+        if field in {"education", "courseYear"}:
             continue
         setattr(profile, mapping.get(field, field), value.strip() if isinstance(value, str) else value)
     db.commit()

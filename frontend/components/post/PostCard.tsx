@@ -40,6 +40,8 @@ export default function PostCard({
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
   const [comments, setComments] = useState<Comment[]>(post.comments || []);
   const [loadingAllComments, setLoadingAllComments] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [commentImage,setCommentImage]=useState<File|null>(null);
@@ -81,9 +83,16 @@ export default function PostCard({
     setViewer(authenticatedUser);
     setIsOwner(authenticatedUser?.id === post.author.id);
   }, [authenticatedUser, post.author.id]);
+  useEffect(() => {
+    if (!actionError) return;
+    const timer = window.setTimeout(() => setActionError(''), 6000);
+    return () => window.clearTimeout(timer);
+  }, [actionError]);
   useEffect(()=>{if(lightboxIndex===null)return;const handle=(event:KeyboardEvent)=>{if(event.key==='Escape')setLightboxIndex(null);if(event.key==='ArrowLeft')setLightboxIndex(current=>current===null?null:(current-1+imageMedia.length)%imageMedia.length);if(event.key==='ArrowRight')setLightboxIndex(current=>current===null?null:(current+1)%imageMedia.length);};document.body.style.overflow='hidden';window.addEventListener('keydown',handle);return()=>{document.body.style.overflow='';window.removeEventListener('keydown',handle);};},[lightboxIndex,imageMedia.length]);
 
   const handleLike = async () => {
+    if (isLiking) return;
+    setIsLiking(true);
     const nextIsLiked = !isLiked;
     setIsLiked(nextIsLiked);
     setLikesCount((prev) => (nextIsLiked ? prev + 1 : Math.max(0, prev - 1)));
@@ -96,14 +105,16 @@ export default function PostCard({
       setIsLiked(!nextIsLiked);
       setLikesCount((prev) => nextIsLiked ? Math.max(0, prev - 1) : prev + 1);
       setActionError(error instanceof Error ? error.message : 'Không thể cập nhật lượt thích.');
-    }
+    } finally { setIsLiking(false); }
   };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentInput.trim() && !commentImage) return;
+    if ((!commentInput.trim() && !commentImage) || isSubmittingComment) return;
 
     const value = commentInput.trim();
+    setIsSubmittingComment(true);
+    setActionError('');
     try {
       const created = await addPostComment(post.id, value, replyTo?.id, commentImage || undefined);
       setComments((prev) => [...prev, created]);
@@ -114,7 +125,7 @@ export default function PostCard({
       setReplyTo(null);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : 'Không thể gửi bình luận.');
-    }
+    } finally { setIsSubmittingComment(false); }
   };
 
   const handleEdit = () => setActionMode('edit');
@@ -227,6 +238,8 @@ export default function PostCard({
             type="button"
             className={`post-action-btn ${isLiked ? 'liked' : ''}`}
             onClick={handleLike}
+            disabled={isLiking}
+            aria-busy={isLiking}
           >
             <IconHeart
               size={18}
@@ -260,16 +273,18 @@ export default function PostCard({
                   placeholder={replyTo ? `Trả lời ${replyTo.author.name}...` : 'Viết bình luận...'}
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
+                  disabled={isSubmittingComment}
                 />
                 <label className="comment-image-button" title="Thêm ảnh" aria-label="Thêm ảnh">📷<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>setCommentImage(e.target.files?.[0]||null)}/></label>
               </div>
               <button
                 type="submit"
                 className="comment-submit-btn"
-                disabled={!commentInput.trim()&&!commentImage}
+                disabled={isSubmittingComment||(!commentInput.trim()&&!commentImage)}
                 aria-label="Gửi bình luận"
+                aria-busy={isSubmittingComment}
               >
-                ➤
+                {isSubmittingComment ? '…' : '➤'}
               </button>
             </form>
 
@@ -308,8 +323,8 @@ export default function PostCard({
         {actionError && <div className="post-error-banner">{actionError}</div>}
       </div>
       {lightboxIndex!==null&&imageMedia[lightboxIndex]&&<div className="post-media-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh bài viết" onClick={()=>setLightboxIndex(null)}><button type="button" className="lightbox-close" onClick={()=>setLightboxIndex(null)} aria-label="Đóng">×</button>{imageMedia.length>1&&<button type="button" className="lightbox-prev" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex-1+imageMedia.length)%imageMedia.length);}} aria-label="Ảnh trước">‹</button>}<img src={safeImageSrc(imageMedia[lightboxIndex].url)} alt="Nội dung bài viết" onClick={event=>event.stopPropagation()}/>{imageMedia.length>1&&<button type="button" className="lightbox-next" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex+1)%imageMedia.length);}} aria-label="Ảnh tiếp theo">›</button>}<span className="lightbox-counter">{lightboxIndex+1} / {imageMedia.length}</span></div>}
-      <PostActionModal mode={actionMode} post={post} content={content} privacy={privacy} onClose={()=>setActionMode(null)} onUpdated={updated=>{setContent(updated.content);setPrivacy(updated.privacy);}} onDeleted={()=>setIsDeleted(true)} onMessage={setActionError}/>
-      <CommentActionModal comment={commentAction?.comment||null} mode={commentAction?.mode||null} onClose={()=>setCommentAction(null)} onUpdated={updated=>setComments(current=>current.map(item=>item.id===updated.id?updated:item))} onDeleted={()=>{if(commentAction){setComments(current=>current.filter(item=>item.id!==commentAction.comment.id));setCommentsCount(current=>Math.max(0,current-1));}}} onMessage={setActionError}/>
+      <PostActionModal mode={actionMode} post={post} content={content} privacy={privacy} onClose={()=>setActionMode(null)} onUpdated={updated=>{setContent(updated.content);setPrivacy(updated.privacy);}} onDeleted={()=>setIsDeleted(true)} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
+      <CommentActionModal comment={commentAction?.comment||null} mode={commentAction?.mode||null} onClose={()=>setCommentAction(null)} onUpdated={updated=>setComments(current=>current.map(item=>item.id===updated.id?updated:item))} onDeleted={()=>{if(commentAction){setComments(current=>current.filter(item=>item.id!==commentAction.comment.id));setCommentsCount(current=>Math.max(0,current-1));}}} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
     </article>
   );
 }

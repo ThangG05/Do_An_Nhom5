@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import type { AICitation, AIConversation, AIMessage } from "@/types/ai";
 import AIAnswer from "@/components/ai/AIAnswer";
+import { PetFace } from "@/components/ai/AIPet";
 import { useDialog } from "@/components/ui/DialogProvider";
 import RelativeTime from "@/components/ui/RelativeTime";
 
@@ -28,6 +29,7 @@ export default function AssistantPage() {
     [question, setQuestion] = useState(""),
     [loading, setLoading] = useState(true),
     [sending, setSending] = useState(false),
+    [conversationActionId, setConversationActionId] = useState<string | null>(null),
     [error, setError] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);
   const loadConversations = useCallback(async () => {
@@ -113,21 +115,39 @@ export default function AssistantPage() {
   const rename = async (item: AIConversation) => {
     const title = await dialog.prompt({title:"Đổi tên cuộc hội thoại",message:"Đặt tên ngắn gọn để dễ tìm lại trong lịch sử.",initialValue:item.title||"",placeholder:"Tên cuộc hội thoại...",minLength:1});
     if (!title) return;
-    await renameAIConversation(item.id, title);
-    await loadConversations();
+    setConversationActionId(item.id);
+    setError("");
+    try {
+      await renameAIConversation(item.id, title.trim());
+      await loadConversations();
+      dialog.notify({ title: "Đã đổi tên hội thoại", tone: "success" });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Không thể đổi tên hội thoại.");
+    } finally {
+      setConversationActionId(null);
+    }
   };
   const remove = async (item: AIConversation) => {
     if (!await dialog.confirm({title:"Xóa cuộc hội thoại?",message:"Toàn bộ lịch sử hỏi đáp trong cuộc hội thoại này sẽ bị xóa.",confirmLabel:"Xóa hội thoại",tone:"danger"})) return;
-    await deleteAIConversation(item.id);
-    if (activeId === item.id) newConversation();
-    await loadConversations();
+    setConversationActionId(item.id);
+    setError("");
+    try {
+      await deleteAIConversation(item.id);
+      if (activeId === item.id) newConversation();
+      await loadConversations();
+      dialog.notify({ title: "Đã xóa hội thoại", tone: "success" });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Không thể xóa hội thoại.");
+    } finally {
+      setConversationActionId(null);
+    }
   };
   return (
     <main className="assistant-page">
       <aside className="assistant-sidebar">
         <header>
           <div>
-            <span className="assistant-mark">✦</span>
+            <span className="assistant-mark assistant-pet-mark"><PetFace /></span>
             <div>
               <strong>Trợ lý HVNH</strong>
               <small>Tra cứu có nguồn</small>
@@ -142,6 +162,7 @@ export default function AssistantPage() {
               <button
                 className="assistant-history-main"
                 onClick={() => void openConversation(item.id)}
+                disabled={conversationActionId === item.id}
               >
                 <b>{item.title || "Hội thoại mới"}</b>
                 <RelativeTime value={item.last_message_at || item.created_at}/>
@@ -149,6 +170,7 @@ export default function AssistantPage() {
               <button
                 className="assistant-history-more"
                 onClick={() => void rename(item)}
+                disabled={conversationActionId !== null}
                 title="Đổi tên"
               >
                 ✎
@@ -156,6 +178,7 @@ export default function AssistantPage() {
               <button
                 className="assistant-history-more danger"
                 onClick={() => void remove(item)}
+                disabled={conversationActionId !== null}
                 title="Xóa"
               >
                 ×
@@ -170,7 +193,10 @@ export default function AssistantPage() {
       <section className="assistant-workspace">
         <header className="assistant-topbar">
           <div>
-            <span className="assistant-status-dot" />
+            <span className="assistant-topbar-pet">
+              <PetFace />
+              <i className="assistant-status-dot" title="Đang hoạt động" />
+            </span>
             <div>
               <strong>Trợ lý thông tin Học viện</strong>
               <small>
@@ -183,7 +209,7 @@ export default function AssistantPage() {
         <div className="assistant-thread">
           {!messages.length && !loading ? (
             <section className="assistant-welcome">
-              <span className="assistant-welcome-icon">✦</span>
+              <span className="assistant-welcome-icon assistant-pet-welcome"><PetFace /></span>
               <h1>Bạn cần tìm thông tin gì?</h1>
               <p>
                 Hỏi về quy chế, học vụ, chuẩn đầu ra hoặc thông báo của Học
@@ -205,7 +231,7 @@ export default function AssistantPage() {
                 key={message.id}
               >
                 <div className="assistant-message-avatar">
-                  {message.role === "USER" ? "Bạn" : "✦"}
+                  {message.role === "USER" ? "Bạn" : <PetFace />}
                 </div>
                 <div className="assistant-message-content">
                   <div className="assistant-message-label">
@@ -247,7 +273,7 @@ export default function AssistantPage() {
           )}
           {sending && (
             <article className="assistant-message assistant">
-              <div className="assistant-message-avatar">✦</div>
+              <div className="assistant-message-avatar"><PetFace thinking /></div>
               <div className="assistant-thinking">
                 <i />
                 <i />

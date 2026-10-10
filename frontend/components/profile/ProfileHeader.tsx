@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { UserProfile, ProfileTabType } from '@/types/user';
 import ProfileNavTabs from './ProfileNavTabs';
 import { safeImageSrc } from '@/lib/media';
 import { useDialog } from '@/components/ui/DialogProvider';
+import { IconMoreDots } from '@/components/ui/Icons';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -13,8 +14,11 @@ interface ProfileHeaderProps {
   activeTab: ProfileTabType;
   onTabChange: (tab: ProfileTabType) => void;
   onOpenEditModal: () => void;
-  onFriendAction: (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => void;
+  onFriendAction: (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => Promise<void>;
   onUpdateAvatarPhoto?: (newAvatarUrl: string) => void;
+  onMessage?: () => void;
+  onReport?: () => Promise<void>;
+  onBlock?: () => Promise<void>;
 }
 
 export default function ProfileHeader({
@@ -25,11 +29,24 @@ export default function ProfileHeader({
   onOpenEditModal,
   onFriendAction,
   onUpdateAvatarPhoto,
+  onMessage,
+  onReport,
+  onBlock,
 }: ProfileHeaderProps) {
   const dialog = useDialog();
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
   const [isAvatarViewerOpen, setIsAvatarViewerOpen] = useState(false);
+  const [friendActionPending, setFriendActionPending] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const optionsRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!isOptionsMenuOpen) return;
+    const close = (event: MouseEvent) => { if (!optionsRef.current?.contains(event.target as Node)) setIsOptionsMenuOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsOptionsMenuOpen(false); };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
+  }, [isOptionsMenuOpen]);
 
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,6 +70,22 @@ export default function ProfileHeader({
     }
   };
 
+  const runFriendAction = async (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => {
+    if (friendActionPending) return;
+    setFriendActionPending(true);
+    try {
+      await onFriendAction(action);
+    } catch (error) {
+      dialog.notify({
+        title: 'Không thể cập nhật quan hệ bạn bè',
+        message: error instanceof Error ? error.message : 'Vui lòng thử lại sau.',
+        tone: 'danger',
+      });
+    } finally {
+      setFriendActionPending(false);
+    }
+  };
+
   const renderFriendActionButton = () => {
     switch (profile.friendshipStatus) {
       case 'friends':
@@ -60,7 +93,8 @@ export default function ProfileHeader({
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={() => onFriendAction('unfriend')}
+            onClick={() => runFriendAction('unfriend')}
+            disabled={friendActionPending}
           >
             <span>Bạn bè</span>
           </button>
@@ -70,7 +104,8 @@ export default function ProfileHeader({
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={() => onFriendAction('cancel')}
+            onClick={() => runFriendAction('cancel')}
+            disabled={friendActionPending}
           >
             <span>Đã gửi lời mời</span>
           </button>
@@ -81,14 +116,16 @@ export default function ProfileHeader({
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => onFriendAction('accept')}
+              onClick={() => runFriendAction('accept')}
+              disabled={friendActionPending}
             >
               <span>Xác nhận</span>
             </button>
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => onFriendAction('reject')}
+              onClick={() => runFriendAction('reject')}
+              disabled={friendActionPending}
             >
               <span>Xóa</span>
             </button>
@@ -100,7 +137,8 @@ export default function ProfileHeader({
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => onFriendAction('add')}
+            onClick={() => runFriendAction('add')}
+            disabled={friendActionPending}
           >
             <span>Thêm bạn bè</span>
           </button>
@@ -167,39 +205,37 @@ export default function ProfileHeader({
             ) : (
               <>
                 {renderFriendActionButton()}
-                <Link
-                  href={`/messages?userId=${profile.id}`}
-                  className="btn btn-primary"
-                >
-                  <span>Nhắn tin</span>
-                </Link>
-                <div className="options-dropdown-container">
+                {onMessage ? <button type="button" className="btn btn-primary" onClick={onMessage}>Nhắn tin</button> : <Link href={`/messages?userId=${profile.id}`} className="btn btn-primary">Nhắn tin</Link>}
+                <div className="options-dropdown-container" ref={optionsRef}>
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn btn-secondary profile-options-trigger"
                     onClick={() => setIsOptionsMenuOpen(!isOptionsMenuOpen)}
-                    aria-label="Tùy chọn khác"
+                    aria-label="Tùy chọn trang cá nhân"
+                    aria-expanded={isOptionsMenuOpen}
+                    aria-haspopup="menu"
                   >
-                    <span>Tùy chọn</span>
+                    <IconMoreDots size={21} />
                   </button>
                   {isOptionsMenuOpen && (
-                    <div className="options-menu-popup">
+                    <div className="options-menu-popup" role="menu">
+                      {onReport && <button type="button" role="menuitem" className="menu-item" onClick={() => { setIsOptionsMenuOpen(false); void onReport(); }}><span aria-hidden="true">⚑</span><span>Báo cáo trang cá nhân</span></button>}
+                      {onBlock && <button type="button" role="menuitem" className="menu-item danger" onClick={() => { setIsOptionsMenuOpen(false); void onBlock(); }}><span aria-hidden="true">⊘</span><span>Chặn người dùng</span></button>}
                       <button
                         type="button"
+                        role="menuitem"
                         className="menu-item"
-                        onClick={() => {
-                          navigator.clipboard.writeText(window.location.href);
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(window.location.href);
+                            dialog.notify({ title: 'Đã sao chép liên kết', message: 'Bạn có thể gửi liên kết trang cá nhân này cho người khác.', tone: 'success' });
+                          } catch {
+                            dialog.notify({ title: 'Không thể sao chép', message: 'Trình duyệt chưa cấp quyền truy cập bộ nhớ tạm.', tone: 'danger' });
+                          }
                           setIsOptionsMenuOpen(false);
                         }}
                       >
-                        <span>Sao chép liên kết trang cá nhân</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="menu-item danger"
-                        onClick={() => setIsOptionsMenuOpen(false)}
-                      >
-                        <span>Chặn người dùng</span>
+                        <span aria-hidden="true">🔗</span><span>Sao chép liên kết trang cá nhân</span>
                       </button>
                     </div>
                   )}

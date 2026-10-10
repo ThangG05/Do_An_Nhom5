@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Conversation } from "@/types/message";
-import { safeImageSrc } from "@/lib/media";
+import UserAvatar from "@/components/ui/UserAvatar";
 import NewConversationModal from "./NewConversationModal";
 import RelativeTime from "@/components/ui/RelativeTime";
 
@@ -88,7 +88,7 @@ export default function ConversationList({
               >
                 {/* Avatar with Online/Offline Dot */}
                 <div className="chat-avatar-wrap">
-                  <div className="participant-avatar"><img src={safeImageSrc(conv.participantAvatar)} alt={conv.participantName} /></div>
+                  <div className="participant-avatar"><UserAvatar src={conv.participantAvatar} name={conv.participantName} fallbackClassName="chat-avatar-initials" /></div>
                   <span
                     className={`online-status-dot ${
                       conv.isOnline ? "online" : "offline"

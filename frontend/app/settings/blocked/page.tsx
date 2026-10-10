@@ -1,7 +1,6 @@
 "use client";
 
 import {useCallback,useEffect,useState} from "react";
-import Link from "next/link";
 import {fetchBlockedUsers,setUserBlocked} from "@/lib/api";
 import type {UserFriend} from "@/types/user";
 import {safeImageSrc} from "@/lib/media";
@@ -14,7 +13,7 @@ export default function BlockedUsersPage(){
   useEffect(()=>{void load();},[load]);
   const unblock=async(user:UserFriend)=>{if(!await dialog.confirm({title:'Bỏ chặn người dùng?',message:`${user.name} có thể xem hồ sơ và kết bạn lại với bạn.`,confirmLabel:'Bỏ chặn'}))return;setBusy(user.id);try{await setUserBlocked(user.id,false);setUsers(current=>current.filter(item=>item.id!==user.id));dialog.notify({title:'Đã bỏ chặn người dùng',tone:'success'});}catch(e){setError(e instanceof Error?e.message:"Không thể bỏ chặn người dùng.");}finally{setBusy(null);}};
   return <main className="blocked-page"><section className="blocked-card">
-    <header><div><span>QUYỀN RIÊNG TƯ</span><h1>Danh sách đã chặn</h1><p>Người bị chặn không thể xem hồ sơ, bài viết, kết bạn hoặc nhắn tin với bạn.</p></div><Link href="/settings/password">Đổi mật khẩu</Link></header>
+    <header><div><span>QUYỀN RIÊNG TƯ</span><h1>Danh sách đã chặn</h1><p>Người bị chặn không thể xem hồ sơ, bài viết, kết bạn hoặc nhắn tin với bạn.</p></div></header>
     {error&&<div className="admin-error">{error}</div>}
     {loading?<p className="blocked-empty">Đang tải danh sách...</p>:users.length===0?<div className="blocked-empty"><strong>Bạn chưa chặn ai</strong><p>Các tài khoản bạn chặn sẽ xuất hiện tại đây.</p></div>:<div className="blocked-list">{users.map(user=><article key={user.id}><img src={safeImageSrc(user.avatar)} alt=""/><div><strong>{user.name}</strong><p>@{user.username}{user.faculty?` · ${user.faculty}`:""}</p></div><button disabled={busy===user.id} onClick={()=>void unblock(user)}>{busy===user.id?'Đang xử lý...':'Bỏ chặn'}</button></article>)}</div>}
   </section></main>;

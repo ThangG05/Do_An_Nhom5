@@ -26,6 +26,7 @@ class PostStatus(str, enum.Enum):
     PENDING = "PENDING"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
+    HIDDEN = "HIDDEN"
     DELETED = "DELETED"
 
 

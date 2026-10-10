@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconBell, IconCheck } from "@/components/ui/Icons";
 import { ApiNotification, fetchNotifications, markAllNotificationsRead, removeNotification, setNotificationRead } from "@/lib/api";
-import { safeImageSrc } from "@/lib/media";
+import UserAvatar from "@/components/ui/UserAvatar";
 import RelativeTime from "@/components/ui/RelativeTime";
 
 type Filter = "all" | "unread" | "friends";
@@ -101,7 +101,7 @@ export default function NotificationsPage() {
           {items.map((item) => (
             <article key={item.id} className={`notif-row-item ${item.is_unread ? 'unread' : ''}`} onClick={() => void openNotification(item)}>
               <div className="row-status-dot-col">{item.is_unread && <span className="blue-unread-dot" />}</div>
-              <div className="notif-row-avatar-wrap">{item.actor_avatar ? <img src={safeImageSrc(item.actor_avatar)} alt={item.actor_name} className="notif-user-avatar-img" /> : <div className="notif-icon-badge">{iconFor(item.type)}</div>}</div>
+              <div className="notif-row-avatar-wrap">{item.actor_avatar ? <UserAvatar src={item.actor_avatar} name={item.actor_name} imageClassName="notif-user-avatar-img" fallbackClassName="notif-user-avatar-img user-avatar-initials" /> : <div className="notif-icon-badge">{iconFor(item.type)}</div>}</div>
               <div className="notif-row-content"><p className="notif-text-line"><strong className="sender-name">{item.actor_name}</strong> {item.content}</p><RelativeTime className="notif-time-stamp" value={item.created_at}/></div>
               <div className="notif-row-actions" onClick={(event) => event.stopPropagation()}>
                 <button type="button" className="single-toggle-read-btn" onClick={() => void toggleRead(item)}>{item.is_unread ? 'Đã đọc' : 'Chưa đọc'}</button>

@@ -25,7 +25,7 @@ app = FastAPI(title="HVNH Hub API", version="1.0.0", lifespan=lifespan)
 
 @app.middleware("http")
 async def maintenance_guard(request:Request,call_next):
-    allowed=("/api/v1/auth/","/api/v1/system/status","/docs","/openapi.json","/redoc")
+    allowed=("/api/v1/auth/","/api/v1/system/status","/api/v1/system/public-config","/docs","/openapi.json","/redoc")
     if request.url.path.startswith(allowed):return await call_next(request)
     from src.db.session import SessionLocal
     from src.services.system_service import maintenance

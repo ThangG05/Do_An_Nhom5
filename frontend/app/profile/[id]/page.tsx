@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useProfile } from '@/hooks/useProfile';
 import ProfileHeader from '@/components/profile/ProfileHeader';
@@ -16,11 +16,13 @@ import ProfileListingsTab from '@/components/profile/ProfileListingsTab';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 import { createReport, setUserBlocked } from '@/lib/api';
 import { useDialog } from '@/components/ui/DialogProvider';
+import ProfileChatDock from '@/components/chat/ProfileChatDock';
 
 export default function VisitorProfilePage() {
   const dialog = useDialog();
+  const [chatOpen, setChatOpen] = useState(false);
   const params = useParams();
-  const userId = (params?.id as string) || '102';
+  const userId = params.id as string;
 
   const {
     profile,
@@ -97,18 +99,20 @@ export default function VisitorProfilePage() {
         onTabChange={setActiveTab}
         onOpenEditModal={() => setIsEditModalOpen(true)}
         onFriendAction={handleFriendAction}
+        onMessage={() => setChatOpen(true)}
+        onReport={async () => {
+          const reason = await dialog.prompt({title:'Báo cáo tài khoản',message:`Mô tả hành vi vi phạm của ${profile.name}.`,placeholder:'Lý do báo cáo...',multiline:true,minLength:5,tone:'danger'});
+          if (!reason) return;
+          try { await createReport('USER', profile.id, reason); dialog.notify({title:'Đã gửi báo cáo',message:'Quản trị viên sẽ xem xét nội dung này.',tone:'success'}); }
+          catch (error) { dialog.notify({title:'Không thể gửi báo cáo',message:error instanceof Error ? error.message : undefined,tone:'danger'}); }
+        }}
+        onBlock={async () => {
+          if (!await dialog.confirm({title:'Chặn người dùng?',message:'Hai bên sẽ không thể xem hồ sơ, kết bạn hoặc nhắn tin. Quan hệ bạn bè hiện tại sẽ bị hủy.',confirmLabel:'Chặn người dùng',tone:'danger'})) return;
+          try { await setUserBlocked(profile.id, true); window.location.assign('/home'); }
+          catch (error) { dialog.notify({title:'Không thể chặn người dùng',message:error instanceof Error ? error.message : undefined,tone:'danger'}); }
+        }}
       />
-      {!isOwnProfile && (
-        <div className="profile-report-row">
-          <button type="button" className="btn btn-secondary btn-sm" onClick={async () => {
-            const reason = await dialog.prompt({title:'Báo cáo tài khoản',message:`Mô tả hành vi vi phạm của ${profile.name}.`,placeholder:'Lý do báo cáo...',multiline:true,minLength:5,tone:'danger'});
-            if (!reason) return;
-            try { await createReport('USER', profile.id, reason); dialog.notify({title:'Đã gửi báo cáo',message:'Quản trị viên sẽ xem xét nội dung này.',tone:'success'}); }
-            catch (error) { dialog.notify({title:'Không thể gửi báo cáo',message:error instanceof Error ? error.message : undefined,tone:'danger'}); }
-          }}>Báo cáo tài khoản</button>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={async()=>{if(!await dialog.confirm({title:'Chặn người dùng?',message:'Hai bên sẽ không thể xem hồ sơ, kết bạn hoặc nhắn tin. Quan hệ bạn bè hiện tại sẽ bị hủy.',confirmLabel:'Chặn người dùng',tone:'danger'}))return;try{await setUserBlocked(profile.id,true);window.location.assign('/home');}catch(error){dialog.notify({title:'Không thể chặn người dùng',message:error instanceof Error?error.message:undefined,tone:'danger'});}}}>Chặn người dùng</button>
-        </div>
-      )}
+      {!isOwnProfile && chatOpen && <ProfileChatDock userId={profile.id} name={profile.name} avatar={profile.avatar} onClose={() => setChatOpen(false)} />}
 
       {/* Main Profile Body Content Area */}
       <main className="profile-body-container">

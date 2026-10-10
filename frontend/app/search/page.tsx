@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { searchUsers, type UserSearchResult } from "@/lib/api";
-import { safeImageSrc } from "@/lib/media";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 export default function SearchPage() {
   const params = useSearchParams();
@@ -25,7 +25,7 @@ export default function SearchPage() {
     {error && <div className="user-search-state error">{error}</div>}
     {!loading && !error && <section className="user-search-results">
       {items.map(user => <Link href={`/profile/${user.id}`} className="user-search-card" key={user.id}>
-        <img src={safeImageSrc(user.avatar)} alt="" />
+        <UserAvatar src={user.avatar} name={user.name} imageClassName="user-search-avatar" fallbackClassName="user-search-avatar user-avatar-initials" />
         <div><strong>{user.name}</strong><span>@{user.username}{user.studentCode ? ` · ${user.studentCode}` : ""}</span><small>{user.faculty || "Sinh viên HVNH"}</small></div>
         <b>Xem hồ sơ</b>
       </Link>)}

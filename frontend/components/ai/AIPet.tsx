@@ -19,7 +19,7 @@ const prompts = [
   "Quy định học lại thế nào?",
 ];
 
-function PetFace({ thinking = false }: { thinking?: boolean }) {
+export function PetFace({ thinking = false }: { thinking?: boolean }) {
   return (
     <span
       className={`ai-pet-face${thinking ? " thinking" : ""}`}

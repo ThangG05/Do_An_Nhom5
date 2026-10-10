@@ -10,6 +10,12 @@ function formatJoinedDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 }
 
+const socialNetworks = [
+  { key: 'facebook', label: 'Facebook', icon: 'f' },
+  { key: 'instagram', label: 'Instagram', icon: '◎' },
+  { key: 'linkedin', label: 'LinkedIn', icon: 'in' },
+] as const;
+
 interface ProfileIntroWidgetProps {
   profile: UserProfile;
   isOwnProfile: boolean;
@@ -26,12 +32,19 @@ export default function ProfileIntroWidget({
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bioInput, setBioInput] = useState(profile.bio || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bioError, setBioError] = useState('');
 
   const handleSaveBio = async () => {
     setIsSubmitting(true);
-    await onUpdateBio(bioInput);
-    setIsSubmitting(false);
-    setIsEditingBio(false);
+    setBioError('');
+    try {
+      await onUpdateBio(bioInput.trim());
+      setIsEditingBio(false);
+    } catch (error) {
+      setBioError(error instanceof Error ? error.message : 'Không thể cập nhật tiểu sử. Vui lòng thử lại.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,6 +63,7 @@ export default function ProfileIntroWidget({
               maxLength={150}
               rows={3}
             />
+            {bioError && <p className="bio-inline-error" role="alert">{bioError}</p>}
             <div className="bio-edit-footer">
               <span className="char-count">{150 - bioInput.length} ký tự còn lại</span>
               <div className="bio-btn-group">
@@ -58,6 +72,7 @@ export default function ProfileIntroWidget({
                   className="btn btn-secondary btn-sm"
                   onClick={() => {
                     setBioInput(profile.bio || '');
+                    setBioError('');
                     setIsEditingBio(false);
                   }}
                   disabled={isSubmitting}
@@ -166,6 +181,24 @@ export default function ProfileIntroWidget({
           </li>
         )}
       </ul>
+
+      {socialNetworks.some(({ key }) => Boolean(profile.socialLinks?.[key])) && (
+        <div className="profile-social-links" aria-label="Liên kết mạng xã hội">
+          <h3>Kết nối</h3>
+          <div>
+            {socialNetworks.map(({ key, label, icon }) => {
+              const url = profile.socialLinks?.[key];
+              if (!url) return null;
+              return (
+                <a key={key} href={url} target="_blank" rel="noreferrer noopener">
+                  <span aria-hidden="true">{icon}</span>
+                  <b>{label}</b>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {isOwnProfile && (
         <button

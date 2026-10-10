@@ -68,6 +68,15 @@ def test_user_profile_post_photo_listing_and_social_flow(client, db_session, mak
     comment = client.post(f"/api/v1/posts/{post['id']}/comments", headers=friend_headers, json={"content": "Tôi quan tâm"})
     assert comment.status_code == 201
 
+    deleted = client.delete(f"/api/v1/posts/{post['id']}", headers=headers)
+    assert deleted.status_code == 204, deleted.text
+    deleted_row = db_session.execute(
+        text("SELECT status::text, deleted_at FROM posts WHERE id=:pid"),
+        {"pid": uuid.UUID(post["id"])},
+    ).one()
+    assert deleted_row[0] == "DELETED"
+    assert deleted_row[1] is not None
+
     blocked = client.put(f"/api/v1/users/{friend.id}/block", headers=headers)
     assert blocked.status_code == 200 and blocked.json()["blocked"] is True
     assert client.get(f"/api/v1/users/{user.id}", headers=friend_headers).status_code == 403

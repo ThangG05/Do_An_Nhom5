@@ -1,4 +1,5 @@
 import json,re,unicodedata,uuid
+from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -7,9 +8,19 @@ from src.db.models.user import User
 from src.models.system import KeywordCreate,KeywordResponse,KeywordUpdate,MaintenanceResponse,MaintenanceUpdate
 
 def maintenance(db:Session)->MaintenanceResponse:
- value=db.execute(text("SELECT value FROM system_settings WHERE key='maintenance'")).scalar() or {};return MaintenanceResponse(**value)
+ value=db.execute(text("SELECT value FROM system_settings WHERE key='maintenance'")).scalar() or {}
+ state=MaintenanceResponse(**value)
+ expected_end_at=state.expected_end_at
+ if expected_end_at and expected_end_at.tzinfo is None:
+  expected_end_at=expected_end_at.replace(tzinfo=timezone.utc)
+ if state.enabled and expected_end_at and expected_end_at <= datetime.now(timezone.utc):
+  state=state.model_copy(update={"enabled":False,"expected_end_at":None})
+  db.execute(text("UPDATE system_settings SET value=CAST(:value AS jsonb),updated_at=now() WHERE key='maintenance'"),{"value":json.dumps(state.model_dump(mode='json'),ensure_ascii=False)})
+  db.commit()
+ return state
 def set_maintenance(db:Session,user:User,payload:MaintenanceUpdate)->MaintenanceResponse:
- value=payload.model_dump(mode='json');db.execute(text("INSERT INTO system_settings(key,value,updated_by,updated_at) VALUES('maintenance',CAST(:value AS jsonb),:uid,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_by=EXCLUDED.updated_by,updated_at=now()"),{"value":json.dumps(value,ensure_ascii=False),"uid":user.id});audit(db,user,"MAINTENANCE_UPDATED",None,value);db.commit();return payload
+ state=payload if payload.enabled else payload.model_copy(update={"expected_end_at":None})
+ value=state.model_dump(mode='json');db.execute(text("INSERT INTO system_settings(key,value,updated_by,updated_at) VALUES('maintenance',CAST(:value AS jsonb),:uid,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_by=EXCLUDED.updated_by,updated_at=now()"),{"value":json.dumps(value,ensure_ascii=False),"uid":user.id});audit(db,user,"MAINTENANCE_UPDATED",None,value);db.commit();return state
 def keywords(db:Session)->list[KeywordResponse]:return [KeywordResponse(**r) for r in db.execute(text("SELECT id,keyword,action,is_active,created_at FROM blacklist_keywords ORDER BY created_at DESC")).mappings()]
 def add_keyword(db:Session,user:User,payload:KeywordCreate)->KeywordResponse:
  keyword=payload.keyword.strip().lower()

@@ -41,8 +41,6 @@ def get_or_create_direct(db,actor:User,target:User):
     if is_blocked(db,actor.id,target.id):raise HTTPException(403,"Không thể nhắn tin do quan hệ chặn.")
     if actor.id==target.id: raise HTTPException(400,"Không thể tự nhắn tin cho chính mình.")
     low,high=sorted((actor.id,target.id))
-    friends=db.scalar(text("SELECT EXISTS(SELECT 1 FROM friendships WHERE user_low_id=:low AND user_high_id=:high)").bindparams(low=low,high=high))
-    if not friends: raise HTTPException(403,"Chỉ có thể nhắn tin với bạn bè.")
     db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:pair))"),{"pair":f"{low}:{high}"})
     cid=db.scalar(text("SELECT c.id FROM conversations c JOIN conversation_members a ON a.conversation_id=c.id AND a.user_id=:a JOIN conversation_members b ON b.conversation_id=c.id AND b.user_id=:b WHERE c.type='DIRECT' AND a.left_at IS NULL AND b.left_at IS NULL LIMIT 1"),{"a":actor.id,"b":target.id})
     if cid:return db.get(Conversation,cid)

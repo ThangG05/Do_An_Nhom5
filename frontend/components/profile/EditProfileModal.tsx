@@ -1,8 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { UserProfile } from '@/types/user';
 import { safeImageSrc } from '@/lib/media';
+import {
+  deriveCourseYear,
+  HVNH_FACULTIES,
+  HVNH_SCHOOL_NAME,
+  normalizeSocialUrl,
+  VIETNAM_PROVINCES,
+} from '@/lib/profile-options';
 
 interface EditProfileModalProps {
   profile: UserProfile;
@@ -27,9 +34,9 @@ export default function EditProfileModal({
   const [bio, setBio] = useState(profile.bio || '');
   const [pronouns, setPronouns] = useState(profile.pronouns || '');
   const [workplace, setWorkplace] = useState(profile.workplace || '');
-  const [education, setEducation] = useState(profile.education || '');
+  const [education] = useState(HVNH_SCHOOL_NAME);
   const [faculty, setFaculty] = useState(profile.faculty || '');
-  const [courseYear, setCourseYear] = useState(profile.courseYear || '');
+  const [courseYear, setCourseYear] = useState(deriveCourseYear(profile.studentCode) || profile.courseYear || '');
   const [currentCity, setCurrentCity] = useState(profile.currentCity || '');
   const [hometown, setHometown] = useState(profile.hometown || '');
   const [facebook, setFacebook] = useState(profile.socialLinks?.facebook || '');
@@ -43,9 +50,34 @@ export default function EditProfileModal({
   const [coverError, setCoverError] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setAvatar(profile.avatar || '');
+    setCoverBanner(profile.coverBanner || '');
+    setName(profile.name || '');
+    setBio(profile.bio || '');
+    setPronouns(profile.pronouns || '');
+    setWorkplace(profile.workplace || '');
+    const fixedCourseYear = deriveCourseYear(profile.studentCode) || profile.courseYear || '';
+    setFaculty(profile.faculty || '');
+    setCourseYear(fixedCourseYear);
+    setCurrentCity(profile.currentCity || '');
+    setHometown(profile.hometown || '');
+    setFacebook(profile.socialLinks?.facebook || '');
+    setInstagram(profile.socialLinks?.instagram || '');
+    setLinkedin(profile.socialLinks?.linkedin || '');
+    setAvatarFile(null);
+    setCoverFile(null);
+    setAvatarCaption('');
+    setAvatarError('');
+    setCoverError('');
+    setSaveError('');
+  }, [isOpen, profile]);
 
   if (!isOpen) return null;
 
@@ -92,6 +124,7 @@ export default function EditProfileModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setSaveError('');
     try {
       if (avatarFile && onUploadAvatar) {
         await onUploadAvatar(avatarFile, avatarCaption, avatarVisibility);
@@ -101,30 +134,29 @@ export default function EditProfileModal({
       }
       await onSave({
       name: name.trim(),
-      coverBanner,
       bio,
       pronouns,
       workplace,
       education,
       faculty,
-      courseYear,
+      courseYear: deriveCourseYear(profile.studentCode) || courseYear,
       currentCity,
       hometown,
       socialLinks: {
-        facebook,
-        instagram,
-        linkedin,
+        facebook: normalizeSocialUrl(facebook),
+        instagram: normalizeSocialUrl(instagram),
+        linkedin: normalizeSocialUrl(linkedin),
       },
       });
     } catch (error) {
-      setAvatarError(error instanceof Error ? error.message : 'Không thể lưu ảnh đại diện.');
+      setSaveError(error instanceof Error ? error.message : 'Không thể lưu thay đổi. Vui lòng thử lại.');
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="edit-profile-modal-backdrop" onClick={onClose}>
+    <div className="edit-profile-modal-backdrop" onClick={() => { if (!isSaving) onClose(); }}>
       <div
         className="edit-profile-modal-card"
         onClick={(e) => e.stopPropagation()}
@@ -133,7 +165,7 @@ export default function EditProfileModal({
       >
         <div className="modal-header">
           <h2 className="modal-title">Chỉnh sửa trang cá nhân</h2>
-          <button type="button" className="close-btn" onClick={onClose}>
+          <button type="button" className="close-btn" onClick={onClose} disabled={isSaving}>
             ✕
           </button>
         </div>
@@ -239,12 +271,14 @@ export default function EditProfileModal({
             <div className="form-grid-2col">
               <div className="form-group">
                 <label>Khoa / Chuyên ngành</label>
-                <input
-                  type="text"
+                <select
                   className="form-control"
                   value={faculty}
                   onChange={(e) => setFaculty(e.target.value)}
-                />
+                >
+                  <option value="">Chọn khoa/chuyên ngành</option>
+                  {HVNH_FACULTIES.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
               </div>
 
               <div className="form-group">
@@ -253,9 +287,11 @@ export default function EditProfileModal({
                   type="text"
                   className="form-control"
                   value={courseYear}
-                  onChange={(e) => setCourseYear(e.target.value)}
-                  placeholder="K25 (2023-2027)"
+                  readOnly
+                  aria-readonly="true"
+                  placeholder="Tự động xác định từ mã sinh viên"
                 />
+                <small>Khóa học được xác định tự động từ mã sinh viên {profile.studentCode || ''}.</small>
               </div>
             </div>
 
@@ -266,8 +302,10 @@ export default function EditProfileModal({
                   type="text"
                   className="form-control"
                   value={education}
-                  onChange={(e) => setEducation(e.target.value)}
+                  readOnly
+                  aria-readonly="true"
                 />
+                <small>Thông tin trường được cố định cho tài khoản HVNH.</small>
               </div>
 
               <div className="form-group">
@@ -288,22 +326,26 @@ export default function EditProfileModal({
             <div className="form-grid-2col">
               <div className="form-group">
                 <label>Tỉnh/Thành phố hiện tại</label>
-                <input
-                  type="text"
+                <select
                   className="form-control"
                   value={currentCity}
                   onChange={(e) => setCurrentCity(e.target.value)}
-                />
+                >
+                  <option value="">Chọn tỉnh/thành phố</option>
+                  {VIETNAM_PROVINCES.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
               </div>
 
               <div className="form-group">
                 <label>Quê quán</label>
-                <input
-                  type="text"
+                <select
                   className="form-control"
                   value={hometown}
                   onChange={(e) => setHometown(e.target.value)}
-                />
+                >
+                  <option value="">Chọn tỉnh/thành phố</option>
+                  {VIETNAM_PROVINCES.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
               </div>
             </div>
           </section>
@@ -314,32 +356,36 @@ export default function EditProfileModal({
             <div className="form-group">
               <label>Facebook URL</label>
               <input
-                type="text"
+                type="url"
                 className="form-control"
                 value={facebook}
                 onChange={(e) => setFacebook(e.target.value)}
+                placeholder="https://facebook.com/ten-cua-ban"
               />
             </div>
             <div className="form-group mt-2">
               <label>Instagram URL</label>
               <input
-                type="text"
+                type="url"
                 className="form-control"
                 value={instagram}
                 onChange={(e) => setInstagram(e.target.value)}
+                placeholder="https://instagram.com/ten-cua-ban"
               />
             </div>
             <div className="form-group mt-2">
               <label>LinkedIn URL</label>
               <input
-                type="text"
+                type="url"
                 className="form-control"
                 value={linkedin}
                 onChange={(e) => setLinkedin(e.target.value)}
+                placeholder="https://linkedin.com/in/ten-cua-ban"
               />
             </div>
           </section>
 
+          {saveError && <p className="profile-save-error" role="alert">{saveError}</p>}
           <div className="modal-footer">
             <button
               type="button"

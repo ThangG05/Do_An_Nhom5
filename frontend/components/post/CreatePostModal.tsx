@@ -5,7 +5,12 @@ import { PostCategory, PostPrivacy } from "@/types/post";
 import { UseCreatePostReturn } from "@/hooks/useCreatePost";
 import { AuthUser, getAuthUser, getCurrentUser } from "@/lib/auth";
 import { safeImageSrc } from "@/lib/media";
+import UserAvatar from "@/components/ui/UserAvatar";
 import LocationPicker from "@/components/post/LocationPicker";
+import Link from "next/link";
+import { fetchGroups } from "@/lib/api";
+import type { ApiGroup } from "@/types/group-api";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 interface CreatePostModalProps {
   postState: UseCreatePostReturn;
@@ -37,8 +42,12 @@ const AMENITY_TAGS = [
 ];
 
 export default function CreatePostModal({ postState }: CreatePostModalProps) {
+  const dialog = useDialog();
   const [author, setAuthor] = useState<AuthUser | null>(null);
   const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [groupsError, setGroupsError] = useState(false);
   const {
     isOpen,
     closeModal,
@@ -73,6 +82,14 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
     void getCurrentUser().then(setAuthor).catch(() => {
       // Keep the authenticated session identity visible if /auth/me is temporarily unavailable.
     });
+  }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    setGroupsLoading(true);
+    setGroupsError(false);
+    void fetchGroups().then(rows => { if (active) setGroups(rows); }).catch(() => { if (active) { setGroups([]); setGroupsError(true); } }).finally(() => { if (active) setGroupsLoading(false); });
+    return () => { active = false; };
   }, [isOpen]);
 
   // Close modal on Escape key
@@ -129,6 +146,16 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
     }
   };
 
+  const categorySlug: Record<Exclude<PostCategory, "general">, string> = { market: "pass-do", roommate: "ghep-phong-tim-tro", event: "su-kien", study: "hoc-tap" };
+  const selectedGroup = category === "general" ? null : groups.find(group => group.slug === categorySlug[category]);
+  const needsMembership = !!selectedGroup && !["MEMBER", "ADMIN"].includes(selectedGroup.membership);
+  const groupUnavailable = category !== "general" && (!selectedGroup || groupsLoading || groupsError);
+
+  const publish = async () => {
+    const created = await submitPost();
+    if (created?.status === "PENDING") dialog.notify({ title: "Đã gửi bài chờ duyệt", message: `Bài viết trong ${created.groupName || "nhóm"} sẽ hiển thị sau khi quản trị viên phê duyệt.`, tone: "success" });
+  };
+
   return (
     <div
       className="create-post-overlay"
@@ -157,7 +184,7 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
         <div className="modal-body">
           {/* Author Header */}
           <div className="author-row">
-            <img className="author-avatar author-avatar-real" src={safeImageSrc(author?.avatar_url)} alt={author?.full_name || "Ảnh đại diện"} />
+            <UserAvatar src={author?.avatar_url} name={author?.full_name || author?.username} imageClassName="author-avatar author-avatar-real" fallbackClassName="author-avatar avatar-initials user-avatar-initials" />
             <div className="author-meta">
               <div className="author-name-row">
                 <strong>{author?.full_name || author?.username || "Đang tải thông tin..."}</strong>
@@ -184,6 +211,7 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
                   onChange={(e) => setPrivacy(e.target.value as PostPrivacy)}
                   aria-label="Chọn quyền riêng tư"
                   className="custom-select privacy-select"
+                  disabled={category !== "general"}
                 >
                   {PRIVACY_OPTIONS.map((opt) => (
                     <option key={opt.val} value={opt.val}>
@@ -192,8 +220,11 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
                   ))}
                 </select>
               </div>
+              {selectedGroup && <p className="post-group-destination">Đăng trong nhóm <strong>{selectedGroup.name}</strong> · bài sẽ chờ duyệt</p>}
             </div>
           </div>
+          {needsMembership && <div className="post-group-membership-alert" role="status">Bạn cần tham gia nhóm {selectedGroup?.name} trước khi đăng bài. <Link href={`/groups?group=${selectedGroup?.id}`} onClick={closeModal}>Đi tới nhóm</Link></div>}
+          {groupUnavailable && <div className="post-group-membership-alert" role="status">{groupsLoading ? "Đang kiểm tra nhóm đăng bài..." : "Chưa xác định được nhóm đăng bài. Vui lòng thử mở lại cửa sổ tạo bài viết."}</div>}
 
           {/* Specialized Fields: Market (Pass đồ) */}
           {category === "market" && (
@@ -449,8 +480,8 @@ export default function CreatePostModal({ postState }: CreatePostModalProps) {
           <button
             type="button"
             className="submit-post-btn"
-            disabled={isSubmitting || (!content.trim() && mediaList.length === 0)}
-            onClick={submitPost}
+            disabled={isSubmitting || needsMembership || groupUnavailable || (!content.trim() && mediaList.length === 0)}
+            onClick={() => void publish()}
           >
             {isSubmitting ? (
               <span className="spinner-wrap">

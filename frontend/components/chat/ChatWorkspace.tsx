@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Conversation, Message, RealtimeCallEvent } from "@/types/message";
 import { safeImageSrc } from "@/lib/media";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { searchConversationMessages } from "@/lib/api";
 import RelativeTime from "@/components/ui/RelativeTime";
 
@@ -44,13 +45,14 @@ export default function ChatWorkspace({
 }: ChatWorkspaceProps) {
   const [inputText, setInputText] = useState("");
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [searchQuery,setSearchQuery]=useState(""),[searchResults,setSearchResults]=useState<Message[]|null>(null);
+  const [searchQuery,setSearchQuery]=useState(""),[searchResults,setSearchResults]=useState<Message[]|null>(null),[searchLoading,setSearchLoading]=useState(false);
+  const [sending,setSending]=useState(false),[sendError,setSendError]=useState("");
   const [call,setCall]=useState<{status:'incoming'|'calling'|'active';video:boolean;error?:string}|null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const peerRef=useRef<RTCPeerConnection|null>(null),localStreamRef=useRef<MediaStream|null>(null),remoteStreamRef=useRef<MediaStream|null>(null),pendingOfferRef=useRef<RTCSessionDescriptionInit|null>(null),pendingIceRef=useRef<RTCIceCandidateInit[]>([]),localVideoRef=useRef<HTMLVideoElement>(null),remoteVideoRef=useRef<HTMLVideoElement>(null),remoteAudioRef=useRef<HTMLAudioElement>(null);
 
-  useEffect(()=>{if(!searchOpen){setSearchQuery("");setSearchResults(null);return;}const term=searchQuery.trim();if(!term){setSearchResults(null);return;}const timer=window.setTimeout(()=>{void searchConversationMessages(activeConversation.id,term).then(setSearchResults).catch(()=>setSearchResults([]));},250);return()=>window.clearTimeout(timer);},[searchOpen,searchQuery,activeConversation.id]);
+  useEffect(()=>{if(!searchOpen){setSearchQuery("");setSearchResults(null);setSearchLoading(false);return;}const term=searchQuery.trim();if(!term){setSearchResults(null);setSearchLoading(false);return;}const timer=window.setTimeout(()=>{setSearchLoading(true);void searchConversationMessages(activeConversation.id,term).then(setSearchResults).catch(()=>setSearchResults([])).finally(()=>setSearchLoading(false));},300);return()=>window.clearTimeout(timer);},[searchOpen,searchQuery,activeConversation.id]);
 
   const stopStreams=()=>{localStreamRef.current?.getTracks().forEach(track=>track.stop());remoteStreamRef.current?.getTracks().forEach(track=>track.stop());localStreamRef.current=null;remoteStreamRef.current=null;peerRef.current?.close();peerRef.current=null;pendingOfferRef.current=null;pendingIceRef.current=[];};
   const finishCall=(notify=true,reason='ended')=>{if(notify){try{onSignal({event:'call.end',conversation_id:activeConversation.id,reason});}catch{/* socket already closed */}}stopStreams();setCall(null);};
@@ -68,9 +70,14 @@ export default function ChatWorkspace({
   }, [messages]);
 
   const handleSend = async () => {
-    if (!inputText.trim()) return;
-    await onSendMessage(inputText);
+    const draft = inputText.trim();
+    if (!draft || sending) return;
+    // Clear immediately; restore the draft only when the request fails.
     setInputText("");
+    setSending(true);setSendError("");
+    try{await onSendMessage(draft);}
+    catch(error){setInputText(current=>current||draft);setSendError(error instanceof Error?error.message:'Không thể gửi tin nhắn.');}
+    finally{setSending(false);}
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -83,7 +90,8 @@ export default function ChatWorkspace({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      void onSendMessage('', file);
+      setSending(true);setSendError("");
+      void onSendMessage('', file).catch(error=>setSendError(error instanceof Error?error.message:'Không thể gửi tệp.')).finally(()=>{setSending(false);if(fileInputRef.current)fileInputRef.current.value='';});
     }
   };
 
@@ -103,7 +111,7 @@ export default function ChatWorkspace({
           </button>
 
           <div className="header-avatar-wrap">
-            <div className="participant-avatar"><img src={safeImageSrc(activeConversation.participantAvatar)} alt={activeConversation.participantName} /></div>
+            <div className="participant-avatar"><UserAvatar src={activeConversation.participantAvatar} name={activeConversation.participantName} fallbackClassName="chat-avatar-initials" /></div>
             <span
               className={`online-status-dot ${
                 activeConversation.isOnline ? "online" : "offline"
@@ -152,7 +160,7 @@ export default function ChatWorkspace({
         </div>
       </div>
 
-      {searchOpen&&<div className="conversation-search-bar"><span>⌕</span><input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Tìm nội dung tin nhắn..."/><small>{searchResults?`${searchResults.length} kết quả`:''}</small><button type="button" onClick={onCloseSearch}>✕</button></div>}
+      {searchOpen&&<div className="conversation-search-bar"><span>⌕</span><input autoFocus value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Tìm nội dung tin nhắn..."/><small>{searchLoading?'Đang tìm…':searchResults?`${searchResults.length} kết quả`:''}</small><button type="button" onClick={onCloseSearch}>✕</button></div>}
 
       {/* Messages Scroll Area */}
       <div className="messages-scroll-area">
@@ -169,7 +177,7 @@ export default function ChatWorkspace({
               className={`message-bubble-row ${isMe ? "outgoing" : "incoming"}`}
             >
               {!isMe && (
-                <div className="message-sender-avatar"><img src={safeImageSrc(msg.senderAvatar)} alt={msg.senderName} /></div>
+                <div className="message-sender-avatar"><UserAvatar src={msg.senderAvatar} name={msg.senderName} fallbackClassName="chat-avatar-initials" /></div>
               )}
 
               <div className="bubble-content-wrap">
@@ -204,7 +212,7 @@ export default function ChatWorkspace({
 
       {call&&<div className="call-overlay" role="dialog" aria-modal="true" aria-label="Cuộc gọi">
         <div className="call-stage">
-          {call.video?<><video ref={remoteVideoRef} autoPlay playsInline className="call-remote-video"/><video ref={localVideoRef} autoPlay muted playsInline className="call-local-video"/></>:<><div className="call-audio-avatar"><img src={safeImageSrc(activeConversation.participantAvatar)} alt=""/></div><audio ref={remoteAudioRef} autoPlay/></>}
+          {call.video?<><video ref={remoteVideoRef} autoPlay playsInline className="call-remote-video"/><video ref={localVideoRef} autoPlay muted playsInline className="call-local-video"/></>:<><div className="call-audio-avatar"><UserAvatar src={activeConversation.participantAvatar} name={activeConversation.participantName} fallbackClassName="chat-avatar-initials" /></div><audio ref={remoteAudioRef} autoPlay/></>}
           <h3>{activeConversation.participantName}</h3><p>{call.error|| (call.status==='incoming'?'đang gọi cho bạn':call.status==='calling'?'Đang kết nối...':'Đã kết nối')}</p>
           <div className="call-actions">{call.status==='incoming'&&<button type="button" className="call-accept" onClick={()=>void acceptCall()}>Nhận cuộc gọi</button>}<button type="button" className="call-end" onClick={()=>finishCall(true,call.status==='incoming'?'rejected':'ended')}>{call.status==='incoming'?'Từ chối':'Kết thúc'}</button></div>
         </div>
@@ -218,6 +226,7 @@ export default function ChatWorkspace({
             className="tool-btn"
             title="Đính kèm ảnh"
             onClick={() => fileInputRef.current?.click()}
+            disabled={sending}
           >
             🖼️
           </button>
@@ -226,6 +235,7 @@ export default function ChatWorkspace({
             className="tool-btn"
             title="Đính kèm tệp"
             onClick={() => fileInputRef.current?.click()}
+            disabled={sending}
           >
             📎
           </button>
@@ -259,19 +269,21 @@ export default function ChatWorkspace({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={sending}
           />
         </div>
 
         <button
           type="button"
           className="send-message-btn"
-          disabled={!inputText.trim()}
+          disabled={sending||!inputText.trim()}
           onClick={handleSend}
           title="Gửi tin nhắn"
         >
-          ➤
+          {sending?'…':'➤'}
         </button>
       </div>
+      {sendError&&<div className="chat-send-error" role="alert">{sendError}</div>}
     </main>
   );
 }

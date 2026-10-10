@@ -4,11 +4,16 @@ from fastapi import APIRouter,Depends,Response
 from sqlalchemy.orm import Session
 from src.api.dependencies import CurrentSuperAdmin
 from src.db.session import get_db
-from src.models.system import KeywordCreate,KeywordResponse,KeywordUpdate,MaintenanceResponse,MaintenanceUpdate
+from src.config import settings
+from src.models.system import KeywordCreate,KeywordResponse,KeywordUpdate,MaintenanceResponse,MaintenanceUpdate,PublicClientConfig
 from src.services import system_service
 router=APIRouter(prefix="/system",tags=["System Configuration"]);Db=Annotated[Session,Depends(get_db)]
 @router.get("/status",response_model=MaintenanceResponse)
 def status(db:Db):return system_service.maintenance(db)
+@router.get("/public-config",response_model=PublicClientConfig)
+def public_config():
+    client_id=settings.GOOGLE_CLIENT_ID.strip()
+    return PublicClientConfig(google_client_id=client_id or None)
 @router.put("/admin/maintenance",response_model=MaintenanceResponse)
 def maintenance(payload:MaintenanceUpdate,admin:CurrentSuperAdmin,db:Db):return system_service.set_maintenance(db,admin,payload)
 @router.get("/admin/keywords",response_model=list[KeywordResponse])

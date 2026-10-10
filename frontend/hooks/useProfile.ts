@@ -121,23 +121,19 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
 
   const updateBio = async (newBio: string) => {
     if (!profile) return;
-    try {
-      const updated = await updateUserProfile({ bio: newBio });
-      setProfile(updated);
-    } catch (err: unknown) {
-      console.error('Lỗi cập nhật bio:', err);
-    }
+    const updated = await updateUserProfile({ bio: newBio });
+    setProfile(updated);
   };
 
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!profile) return;
-    try {
-      const updated = await updateUserProfile(data);
-      setProfile((previous) => ({ ...updated, avatar: data.avatar ?? previous?.avatar ?? updated.avatar }));
-      setIsEditModalOpen(false);
-    } catch (err: unknown) {
-      console.error('Lỗi cập nhật hồ sơ:', err);
-    }
+    const updated = await updateUserProfile(data);
+    setProfile((previous) => ({
+      ...updated,
+      avatar: data.avatar ?? previous?.avatar ?? updated.avatar,
+      coverBanner: data.coverBanner ?? previous?.coverBanner ?? updated.coverBanner,
+    }));
+    setIsEditModalOpen(false);
   };
 
   const updateAvatar = async (file: File, caption: string, visibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => {
@@ -152,13 +148,9 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
 
   const handleFriendAction = async (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => {
     if (!profile) return;
-    try {
-      const res = await updateFriendshipStatus(profile.id, action);
-      setProfile((prev) => (prev ? { ...prev, friendshipStatus: res.status as FriendshipStatus } : null));
-      if (action === 'accept' || action === 'unfriend') await loadProfileData();
-    } catch (err: unknown) {
-      console.error('Lỗi tương tác bạn bè:', err);
-    }
+    const res = await updateFriendshipStatus(profile.id, action);
+    setProfile((prev) => (prev ? { ...prev, friendshipStatus: res.status as FriendshipStatus } : null));
+    if (action === 'accept' || action === 'unfriend') await loadProfileData();
   };
 
   const unfriendById = async (friendId: string) => {
@@ -168,14 +160,9 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
   };
 
   const handleCreatePost = async (payload: CreatePostPayload): Promise<Post | null> => {
-    try {
-      const newPost = await createProfilePost(payload);
-      setPosts((prev) => [newPost, ...prev]);
-      return newPost;
-    } catch (err: unknown) {
-      console.error('Lỗi tạo bài viết:', err);
-      return null;
-    }
+    const newPost = await createProfilePost(payload);
+    if (newPost.status === 'APPROVED') setPosts((prev) => [newPost, ...prev]);
+    return newPost;
   };
 
   return {

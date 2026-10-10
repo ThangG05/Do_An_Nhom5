@@ -22,6 +22,7 @@ from src.core.security import (
     verification_code_matches,
     verify_password,
 )
+from src.core.profile_options import SCHOOL_NAME, derive_course_year
 from src.db.models.user import (
     AccountStatus,
     EmailVerificationCode,
@@ -232,7 +233,13 @@ def request_registration_code(email_value: str, db: Session) -> int:
             password_hash=f"!pending:{secrets.token_urlsafe(32)}",
             status=AccountStatus.PENDING,
         )
-        user.profile = Profile(full_name=_make_username(email), student_code=email.split("@", 1)[0])
+        student_code = email.split("@", 1)[0]
+        user.profile = Profile(
+            full_name=_make_username(email),
+            student_code=student_code,
+            education=SCHOOL_NAME,
+            cohort=derive_course_year(student_code),
+        )
         db.add(user)
         try:
             db.flush()
@@ -400,7 +407,13 @@ def authenticate_with_google(
             email_verified_at=now,
             last_login_at=now,
         )
-        user.profile = Profile(full_name=full_name, student_code=email.split("@", 1)[0])
+        student_code = email.split("@", 1)[0]
+        user.profile = Profile(
+            full_name=full_name,
+            student_code=student_code,
+            education=SCHOOL_NAME,
+            cohort=derive_course_year(student_code),
+        )
         db.add(user)
         try:
             db.flush()

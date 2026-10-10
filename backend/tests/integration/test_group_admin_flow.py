@@ -11,6 +11,9 @@ def test_group_join_moderation_and_group_admin_permissions(client, db_session, m
     db_session.execute(text("INSERT INTO group_members(group_id,user_id,role) VALUES(:gid,:uid,'ADMIN')"), {"gid": group_id, "uid": admin.id})
     db_session.commit()
 
+    assert client.get(f"/api/v1/groups/{group_id}/posts", headers=auth_headers(outsider)).status_code == 403
+    assert client.get(f"/api/v1/groups/{group_id}/posts", headers=auth_headers(member)).status_code == 403
+
     join = client.post(f"/api/v1/groups/{group_id}/join", headers=auth_headers(member))
     assert join.status_code == 200
     request_id = db_session.execute(text("SELECT id FROM group_join_requests WHERE group_id=:gid AND user_id=:uid"), {"gid": group_id, "uid": member.id}).scalar_one()
@@ -52,4 +55,10 @@ def test_group_join_moderation_and_group_admin_permissions(client, db_session, m
     feed = client.get(f"/api/v1/groups/{group_id}/posts?sort=pinned", headers=auth_headers(member))
     assert feed.status_code == 200
     assert feed.json()[0]["id"] == post_id and feed.json()[0]["isPinned"] is True
+    assert client.get(f"/api/v1/groups/{group_id}/posts", headers=auth_headers(outsider)).status_code == 403
+    assert client.get(f"/api/v1/posts/{post_id}", headers=auth_headers(outsider)).status_code == 403
+    assert all(item["id"] != post_id for item in client.get("/api/v1/posts/feed", headers=auth_headers(outsider)).json())
+    assert all(item["id"] != post_id for item in client.get(f"/api/v1/users/{member.id}/posts", headers=auth_headers(outsider)).json())
+    assert client.put(f"/api/v1/posts/{post_id}/like", headers=auth_headers(outsider), json={"is_liked": True}).status_code == 403
+    assert client.post(f"/api/v1/posts/{post_id}/comments", headers=auth_headers(outsider), json={"content": "Chưa tham gia nhóm"}).status_code == 403
     assert db_session.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": group_id, "uid": member.id}).scalar_one() == "MEMBER"

@@ -2,6 +2,13 @@ import uuid
 from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
+from src.core.profile_options import (
+    SCHOOL_NAME,
+    normalize_faculty,
+    normalize_province,
+    normalize_social_links,
+)
+
 class UserResponse(BaseModel):
     id: str
     email: str
@@ -28,6 +35,30 @@ class ProfileUpdateRequest(BaseModel):
         if len(normalized) < 2:
             raise ValueError("Họ và tên phải có ít nhất 2 ký tự.")
         return normalized
+
+    @field_validator("faculty")
+    @classmethod
+    def validate_faculty(cls, value: str | None) -> str | None:
+        return normalize_faculty(value)
+
+    @field_validator("currentCity", "hometown")
+    @classmethod
+    def validate_province(cls, value: str | None) -> str | None:
+        return normalize_province(value)
+
+    @field_validator("education")
+    @classmethod
+    def validate_education(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if value.strip() != SCHOOL_NAME:
+            raise ValueError("Trường học được cố định là Học viện Ngân hàng (BAV).")
+        return SCHOOL_NAME
+
+    @field_validator("socialLinks")
+    @classmethod
+    def validate_social_links(cls, value: dict[str, str] | None) -> dict[str, str] | None:
+        return normalize_social_links(value)
 
 
 class ProfileResponse(BaseModel):

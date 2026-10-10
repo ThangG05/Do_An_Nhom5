@@ -21,6 +21,8 @@ import "@/styles/facebook-experience.css";
 import "@/styles/groups-final.css";
 import "@/styles/chat-themes.css";
 import "@/styles/location-picker.css";
+import "@/styles/web-completion.css";
+import "@/styles/feedback-fixes.css";
 
 const appFont=Be_Vietnam_Pro({subsets:["latin","vietnamese"],weight:["400","500","600","700"],variable:"--font-app",display:"swap"});
 export const metadata:Metadata={title:"HVNH Hub - Cộng đồng sinh viên Học viện Ngân hàng",description:"Nền tảng cộng đồng dành cho sinh viên HVNH: trao đổi đồ dùng, tìm trọ, sự kiện, học tập và nhắn tin thời gian thực."};

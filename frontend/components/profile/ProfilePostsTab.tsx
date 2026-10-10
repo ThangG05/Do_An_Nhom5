@@ -71,9 +71,7 @@ export default function ProfilePostsTab({
 
         <div className="filters-right-group">
           {isOwnProfile && (
-            <button type="button" className="btn btn-secondary btn-sm btn-has-icon">
-              ⚙️ Quản lý bài viết
-            </button>
+            <span className="profile-management-hint">Dùng menu từng bài để chỉnh sửa hoặc xóa</span>
           )}
 
           <div className="view-mode-toggle-group">

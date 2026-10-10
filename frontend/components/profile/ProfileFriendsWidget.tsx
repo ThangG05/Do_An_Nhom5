@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { UserFriend, ProfileTabType } from '@/types/user';
-import { safeImageSrc } from '@/lib/media';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 interface ProfileFriendsWidgetProps {
   friends: UserFriend[];
@@ -43,7 +43,7 @@ export default function ProfileFriendsWidget({
               className="friend-grid-card"
             >
               <div className="friend-avatar-wrapper">
-                <img src={safeImageSrc(friend.avatar)} alt={friend.name} />
+                <UserAvatar src={friend.avatar} name={friend.name} fallbackClassName="user-avatar-initials" />
                 {friend.isOnline && <span className="online-indicator" />}
               </div>
               <span className="friend-name-label">{friend.name}</span>

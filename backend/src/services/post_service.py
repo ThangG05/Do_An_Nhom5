@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from src.db.models.media import MediaFile, MediaStatus
 from src.db.models.post import Comment, Post, PostLike, PostMedia, PostStatus, PostType, PostVisibility
-from src.db.models.user import Profile, User
+from src.db.models.user import Profile, SystemRole, User
 from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RoomListingData, UpdatePostRequest
 from src.models.user import UserListingResponse, UserPhotoResponse
 from src.services.storage_service import create_download_url
@@ -21,6 +21,9 @@ def _are_friends(db: Session, first: uuid.UUID, second: uuid.UUID) -> bool:
 
 
 def _can_view(db: Session, post: Post, viewer_id: uuid.UUID) -> bool:
+    viewer = db.get(User, viewer_id)
+    if post.group_id and (not viewer or viewer.system_role != SystemRole.SUPER_ADMIN) and not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": post.group_id, "uid": viewer_id}).first():
+        return False
     return post.author_id == viewer_id or post.visibility == PostVisibility.PUBLIC or (post.visibility == PostVisibility.FRIENDS and _are_friends(db, post.author_id, viewer_id))
 
 
@@ -160,7 +163,15 @@ def create_profile_post(db: Session, user: User, payload: CreateProfilePostReque
     media = list(db.scalars(select(MediaFile).where(MediaFile.id.in_(payload.media_ids))).all()) if payload.media_ids else []
     if len(media) != len(set(payload.media_ids)) or any(item.owner_id != user.id or item.status != MediaStatus.READY for item in media):
         raise HTTPException(400, "Có media không hợp lệ hoặc không thuộc tài khoản này.")
-    post = Post(author_id=user.id, content=payload.content.strip(), category=payload.category, listing_data=_listing_data(payload, payload.category), location_data=payload.location.model_dump() if payload.location else None, post_type=PostType.PROFILE_POST, visibility=PostVisibility(payload.privacy.upper()), status=PostStatus.APPROVED)
+    category_groups = {"market": "pass-do", "roommate": "ghep-phong-tim-tro", "event": "su-kien", "study": "hoc-tap"}
+    group_id = None
+    if payload.category in category_groups:
+        group_id = db.execute(text("SELECT id FROM groups WHERE slug=:slug AND status='ACTIVE'"), {"slug": category_groups[payload.category]}).scalar_one_or_none()
+        if not group_id:
+            raise HTTPException(404, "Không tìm thấy nhóm tương ứng với chuyên mục.")
+        if not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": group_id, "uid": user.id}).first():
+            raise HTTPException(403, "Bạn cần tham gia nhóm trước khi đăng bài trong chuyên mục này.")
+    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=payload.category, listing_data=_listing_data(payload, payload.category), location_data=payload.location.model_dump() if payload.location else None, post_type=PostType.STANDARD if group_id else PostType.PROFILE_POST, visibility=PostVisibility.PUBLIC if group_id else PostVisibility(payload.privacy.upper()), status=PostStatus.PENDING if group_id else PostStatus.APPROVED)
     db.add(post)
     db.flush()
     for index, media_id in enumerate(payload.media_ids):
@@ -180,7 +191,7 @@ def list_profile_posts(db: Session, target: User, viewer: User) -> list[ProfileP
     # former group_id IS NULL filter made a user's approved group posts vanish
     # from their own profile timeline.
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
-    group_visibility = or_(Post.group_id.is_(None), target.id == viewer.id, Post.group_id.in_(member_group_ids))
+    group_visibility = or_(Post.group_id.is_(None), Post.group_id.in_(member_group_ids))
     posts = db.scalars(select(Post).where(Post.author_id == target.id, group_visibility, Post.status == PostStatus.APPROVED, Post.deleted_at.is_(None), Post.visibility.in_(allowed)).order_by(Post.created_at.desc())).all()
     return [_serialize(db, post, viewer.id) for post in posts]
 
@@ -214,7 +225,7 @@ def list_user_group_posts(db: Session, target: User, viewer: User) -> list[Profi
     posts = db.scalars(select(Post).where(
         Post.author_id == target.id,
         Post.group_id.is_not(None),
-        or_(Post.author_id == viewer.id, Post.group_id.in_(member_groups)),
+        Post.group_id.in_(member_groups),
         Post.status == PostStatus.APPROVED,
         Post.deleted_at.is_(None),
     ).order_by(Post.created_at.desc())).all()
@@ -228,7 +239,7 @@ def list_feed(db: Session, viewer: User, limit: int = 30, offset: int = 0, categ
     # Home includes profile posts and approved posts from groups the viewer belongs to.
     # Pending/rejected posts and posts from unrelated groups must never leak into the feed.
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
-    group_scope = or_(Post.group_id.is_(None), Post.author_id == viewer.id, Post.group_id.in_(member_group_ids))
+    group_scope = or_(Post.group_id.is_(None), Post.group_id.in_(member_group_ids))
     filters=[group_scope,Post.author_id.not_in(blocked_ids),Post.status == PostStatus.APPROVED,Post.deleted_at.is_(None),visible]
     if category:
         filters.append(Post.category == category)

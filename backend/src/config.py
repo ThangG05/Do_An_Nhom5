@@ -5,8 +5,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_DIR = Path(__file__).resolve().parents[1]
 _ENV_FILE = Path(os.environ.get("HVNH_ENV_FILE", _BACKEND_DIR / ".env"))
-
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=_ENV_FILE,
@@ -43,6 +41,7 @@ class Settings(BaseSettings):
     R2_PRESIGNED_URL_EXPIRE: int = 900
     MAX_AVATAR_BYTES: int = 5 * 1024 * 1024
     MAX_SHORT_VIDEO_BYTES: int = 100 * 1024 * 1024
+
     MAX_AUDIO_BYTES: int = 25 * 1024 * 1024
     MAX_FILE_BYTES: int = 25 * 1024 * 1024
     LOGIN_MAX_FAILED_ATTEMPTS: int = 5

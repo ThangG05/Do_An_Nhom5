@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.db.models.media import MediaFile, MediaStatus
 from src.db.models.post import Comment, Post, PostLike, PostMedia, PostStatus, PostType, PostVisibility
-from src.db.models.user import User
+from src.db.models.user import SystemRole, User
 from src.models.group import GroupMemberResponse, GroupPostCreateRequest, GroupResponse, JoinRequestResponse, ModerationRequest
 from src.services.post_service import _serialize
 from src.services.storage_service import create_download_url
@@ -26,6 +26,13 @@ def _membership(db: Session, group_id: uuid.UUID, user_id: uuid.UUID) -> str:
         return str(role)
     pending = db.execute(text("SELECT 1 FROM group_join_requests WHERE group_id=:gid AND user_id=:uid AND status='PENDING'"), {"gid": group_id, "uid": user_id}).first()
     return "PENDING" if pending else "NONE"
+
+
+def _require_reader(db: Session, group_id: uuid.UUID, user: User) -> None:
+    if user.system_role == SystemRole.SUPER_ADMIN:
+        return
+    if _membership(db, group_id, user.id) not in {"MEMBER", "ADMIN"}:
+        raise HTTPException(403, "Bạn cần tham gia nhóm để xem và tương tác với bài viết.")
 
 
 def list_groups(db: Session, user: User) -> list[GroupResponse]:
@@ -65,13 +72,14 @@ def leave(db: Session, group_id: uuid.UUID, user: User) -> None:
 def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPostCreateRequest):
     from src.services.system_service import enforce_content
     enforce_content(db,payload.content,allow_review=True)
-    _group(db, group_id)
+    group = _group(db, group_id)
     if _membership(db, group_id, user.id) not in {"MEMBER", "ADMIN"}:
         raise HTTPException(403, "Bạn phải là thành viên của nhóm để đăng bài.")
     media = list(db.scalars(select(MediaFile).where(MediaFile.id.in_(payload.media_ids))).all()) if payload.media_ids else []
     if len(media) != len(set(payload.media_ids)) or any(item.owner_id != user.id or item.status != MediaStatus.READY for item in media):
         raise HTTPException(400, "Media không hợp lệ hoặc không thuộc tài khoản này.")
-    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), post_type=PostType.STANDARD, visibility=PostVisibility.PUBLIC, status=PostStatus.PENDING)
+    category = {"pass-do": "market", "ghep-phong-tim-tro": "roommate", "su-kien": "event", "hoc-tap": "study"}.get(group["slug"], "general")
+    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=category, post_type=PostType.STANDARD, visibility=PostVisibility.PUBLIC, status=PostStatus.PENDING)
     db.add(post); db.flush()
     for index, media_id in enumerate(payload.media_ids):
         db.add(PostMedia(post_id=post.id, media_id=media_id, sort_order=index))
@@ -81,6 +89,7 @@ def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPost
 
 def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = False, query: str = "", sort: str = "latest"):
     _group(db, group_id)
+    _require_reader(db, group_id, user)
     status = PostStatus.PENDING if pending else PostStatus.APPROVED
     statement = select(Post).where(Post.group_id == group_id, Post.status == status, Post.deleted_at.is_(None))
     if query.strip():
@@ -99,6 +108,7 @@ def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = 
 
 def list_my_posts(db: Session, group_id: uuid.UUID, user: User):
     _group(db, group_id)
+    _require_reader(db, group_id, user)
     rows = db.scalars(select(Post).where(
         Post.group_id == group_id, Post.author_id == user.id, Post.deleted_at.is_(None)
     ).order_by(Post.created_at.desc())).all()

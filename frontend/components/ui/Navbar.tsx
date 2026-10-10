@@ -18,6 +18,8 @@ import {
 import { AuthUser, getAccessToken, getAuthUser, logoutSession } from '@/lib/auth';
 import { fetchUnreadMessageCount, fetchUnreadNotificationCount } from '@/lib/api';
 import { useAuthUser } from '@/components/auth/AuthProvider';
+import NavbarQuickPanel from './NavbarQuickPanel';
+import ProfileChatDock from '@/components/chat/ProfileChatDock';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -25,15 +27,21 @@ export default function Navbar() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const quickPanelRef = useRef<HTMLDivElement>(null);
+  const [quickPanel, setQuickPanel] = useState<'messages' | 'notifications' | null>(null);
+  const [dockUser, setDockUser] = useState<{ id: string; name: string; avatar: string } | null>(null);
   const contextUser = useAuthUser();
 
   useEffect(() => {
     setAuthUser(contextUser || getAuthUser());
     setIsProfileMenuOpen(false);
+    setSettingsExpanded(false);
+    setQuickPanel(null);
   }, [pathname, contextUser]);
 
   useEffect(() => {
@@ -51,6 +59,15 @@ export default function Navbar() {
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [isProfileMenuOpen]);
+
+  useEffect(() => {
+    if (!quickPanel) return;
+    const close = (event: MouseEvent) => { if (!quickPanelRef.current?.contains(event.target as Node)) setQuickPanel(null); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setQuickPanel(null); };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
+  }, [quickPanel]);
 
   useEffect(() => {
     const handleRealtime = (event: Event) => {
@@ -121,15 +138,13 @@ export default function Navbar() {
     { label: 'Trang chủ', href: '/home', icon: IconHome },
     { label: 'Trợ lý AI', href: '/assistant', icon: IconAI },
     { label: 'Hội nhóm', href: '/groups', icon: IconGroups },
-    { label: 'Tin nhắn', href: '/messages', icon: IconMessage, badge: messageCount },
-    { label: 'Thông báo', href: '/notifications', icon: IconBell, badge: notificationCount },
   ];
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/group-admin')) return null;
   return (
     <header className="global-navbar-header">
       <div className="navbar-container">
-        {/* 1. Left Brand Logo Asset */}
+        {/* Brand and search */}
         <div className="navbar-brand-col">
           <Link href="/home" className="navbar-brand-link" aria-label="Về trang chủ HVNH Hub">
             <img
@@ -139,6 +154,10 @@ export default function Navbar() {
             />
             <span className="brand-title-text">HVNH Hub</span>
           </Link>
+          <form className="global-search-pill" onSubmit={(event) => { event.preventDefault(); const query=searchQuery.trim(); if(query) router.push(`/search?q=${encodeURIComponent(query)}`); }}>
+            <IconSearch size={16} className="search-pill-icon" />
+            <input type="text" className="search-pill-input" placeholder="Tìm kiếm sinh viên" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} aria-label="Tìm kiếm sinh viên" />
+          </form>
         </div>
 
         {/* 2. Center Core Navigation Links */}
@@ -162,30 +181,22 @@ export default function Navbar() {
                 >
                   <Icon size={20} className="nav-icon-stroke" />
                   <span className="nav-label">{item.label}</span>
-                  {item.badge && item.badge > 0 && (
-                    <span className="nav-badge-pill">{item.badge}</span>
-                  )}
                   {isActive && <div className="active-navy-indicator" />}
                 </Link>
               </div>
             );
           })}
+          <Link href="/messages" className={`global-nav-link navbar-mobile-only ${pathname === '/messages' ? 'active' : ''}`}><IconMessage size={20}/><span className="nav-label">Tin nhắn</span>{messageCount > 0 && <span className="nav-badge-pill">{messageCount}</span>}</Link>
+          <Link href="/notifications" className={`global-nav-link navbar-mobile-only ${pathname === '/notifications' ? 'active' : ''}`}><IconBell size={20}/><span className="nav-label">Thông báo</span>{notificationCount > 0 && <span className="nav-badge-pill">{notificationCount}</span>}</Link>
         </nav>
 
-        {/* 3. Right Utility Area (Global Search Bar & Profile Dropdown Menu) */}
+        {/* Notifications, messages and account */}
         <div className="navbar-right-col">
-          {/* Global Search Pill Input */}
-          <form className="global-search-pill" onSubmit={(event) => { event.preventDefault(); const query=searchQuery.trim(); if(query) router.push(`/search?q=${encodeURIComponent(query)}`); }}>
-            <IconSearch size={16} className="search-pill-icon" />
-            <input
-              type="text"
-              className="search-pill-input"
-              placeholder="Tìm kiếm sinh viên"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Tìm kiếm sinh viên"
-            />
-          </form>
+          <div className="navbar-quick-wrap" ref={quickPanelRef}>
+            <button type="button" className={`navbar-quick-trigger ${quickPanel === 'messages' ? 'active' : ''}`} aria-label="Mở tin nhắn gần đây" aria-expanded={quickPanel === 'messages'} onClick={() => { setIsProfileMenuOpen(false); setQuickPanel(current => current === 'messages' ? null : 'messages'); }}><IconMessage size={21}/>{messageCount > 0 && <span>{messageCount}</span>}</button>
+            <button type="button" className={`navbar-quick-trigger ${quickPanel === 'notifications' ? 'active' : ''}`} aria-label="Mở thông báo gần đây" aria-expanded={quickPanel === 'notifications'} onClick={() => { setIsProfileMenuOpen(false); setQuickPanel(current => current === 'notifications' ? null : 'notifications'); }}><IconBell size={21}/>{notificationCount > 0 && <span>{notificationCount}</span>}</button>
+            {quickPanel && <NavbarQuickPanel kind={quickPanel} onClose={() => setQuickPanel(null)} onChat={setDockUser} />}
+          </div>
 
           {/* User Profile Avatar Dropdown Menu */}
           <div className="utility-dropdown-container" ref={profileMenuRef}>
@@ -239,22 +250,17 @@ export default function Navbar() {
                   </Link>
                 )}
                 {!!authUser?.admin_group_slugs?.length && <Link href="/group-admin" className="pop-menu-row" onClick={() => setIsProfileMenuOpen(false)}><IconSettings size={18}/><span>Quản trị nhóm</span></Link>}
-                <Link
-                  href="/settings/blocked"
-                  className="pop-menu-row"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                >
-                  <IconSettings size={18} />
-                  <span>Danh sách đã chặn</span>
-                </Link>
                 <button
                   type="button"
                   className="pop-menu-row"
-                  onClick={() => { setIsProfileMenuOpen(false); router.push('/settings/password'); }}
+                  aria-expanded={settingsExpanded}
+                  onClick={() => setSettingsExpanded(value => !value)}
                 >
                   <IconSettings size={18} />
                   <span>Cài đặt & Quyền riêng tư</span>
+                  <span aria-hidden="true">{settingsExpanded ? '⌃' : '⌄'}</span>
                 </button>
+                {settingsExpanded && <div className="profile-settings-shortcuts"><Link href="/settings/blocked" onClick={() => setIsProfileMenuOpen(false)}>Danh sách đã chặn</Link><Link href="/settings/password" onClick={() => setIsProfileMenuOpen(false)}>Đổi mật khẩu</Link><Link href="/settings" onClick={() => setIsProfileMenuOpen(false)}>Tất cả cài đặt</Link></div>}
                 <div className="pop-menu-divider" />
                 <button
                   type="button"
@@ -269,6 +275,7 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+      {dockUser && <ProfileChatDock key={dockUser.id} userId={dockUser.id} name={dockUser.name} avatar={dockUser.avatar} onClose={() => setDockUser(null)} />}
     </header>
   );
 }

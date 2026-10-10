@@ -1,10 +1,13 @@
 'use client';
 
 import Script from 'next/script';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { authenticateWithGoogle, clearPreviousAuthSession, saveAuthSession } from '@/lib/auth';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 interface CredentialResponse {
   credential?: string;
@@ -45,8 +48,38 @@ export default function GoogleSignInButton() {
   const initializedRef = useRef(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [configLoaded, setConfigLoaded] = useState(false);
   const router = useRouter();
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+
+    fetch(`${API_BASE_URL}/system/public-config`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Không tải được cấu hình đăng nhập.');
+        return response.json() as Promise<{ google_client_id?: string | null }>;
+      })
+      .then((config) => {
+        if (active) setClientId(config.google_client_id?.trim() || null);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        if (active) setMessage('Không thể đọc cấu hình Google từ backend.');
+      })
+      .finally(() => {
+        if (active) setConfigLoaded(true);
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, []);
 
   function renderGoogleButton() {
     if (!clientId || !window.google || !buttonRef.current) return;
@@ -93,10 +126,18 @@ export default function GoogleSignInButton() {
     });
   }
 
-  if (!clientId) {
+  if (!configLoaded) {
     return (
       <p className="google-auth-message" role="status">
-        Đăng nhập Google chưa được cấu hình.
+        Đang tải đăng nhập Google…
+      </p>
+    );
+  }
+
+  if (!clientId) {
+    return (
+      <p className="google-auth-message google-auth-error" role="alert">
+        Backend chưa cấu hình đăng nhập Google.
       </p>
     );
   }

@@ -5,7 +5,7 @@ import { PostCategory } from "@/types/post";
 import { IconMarket, IconHousing, IconEvent } from "@/components/ui/Icons";
 import { getAuthUser } from "@/lib/auth";
 import { useAuthUser } from "@/components/auth/AuthProvider";
-import { safeImageSrc } from "@/lib/media";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 interface CreatePostCardProps {
   onOpenModal: (category?: PostCategory) => void;
@@ -27,14 +27,12 @@ export default function CreatePostCard({
     if (currentUser) setIdentity({ name: currentUser.full_name || currentUser.username, avatar: currentUser.avatar_url || "" });
   }, [currentUser, userAvatar, userName]);
 
-  const initials = identity.name.trim().split(/\s+/).slice(-2).map(part => part[0]).join('').toUpperCase() || 'U';
-
   return (
     <section className="create-post-card" aria-label="Tạo bài viết mới">
       {/* Upper Row: Avatar + Simulated Input Pill */}
       <div className="card-top-row">
         <div className="card-user-avatar-wrap">
-          {identity.avatar ? <img src={safeImageSrc(identity.avatar)} alt={identity.name} className="create-post-user-avatar" /> : <span className="create-post-user-avatar avatar-initials">{initials}</span>}
+          <UserAvatar src={identity.avatar} name={identity.name} imageClassName="create-post-user-avatar" fallbackClassName="create-post-user-avatar avatar-initials user-avatar-initials" />
         </div>
         <button
           type="button"
@@ -88,6 +86,9 @@ export default function CreatePostCard({
         >
           <IconEvent size={18} color="#0F172A" strokeWidth={1.8} className="action-icon-svg" />
           <span className="action-label">Sự kiện</span>
+        </button>
+        <button type="button" className="quick-action-btn study-action" onClick={() => onOpenModal("study")}>
+          <span className="action-icon-svg" aria-hidden="true">📚</span><span className="action-label">Học tập</span>
         </button>
       </div>
     </section>

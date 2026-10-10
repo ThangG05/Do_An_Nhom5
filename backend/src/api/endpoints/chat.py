@@ -26,7 +26,7 @@ async def conversations(current_user:CurrentUser,db:Annotated[Session,Depends(ge
 @router.post("/conversations/direct",response_model=ConversationResponse)
 def direct(payload:DirectConversationRequest,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
     target=db.get(User,payload.target_user_id)
-    if not target or target.deleted_at is not None:raise HTTPException(404,"Không tìm thấy người dùng.")
+    if not target or target.deleted_at is not None or target.status != AccountStatus.ACTIVE:raise HTTPException(404,"Không tìm thấy người dùng.")
     conv=chat_service.get_or_create_direct(db,current_user,target)
     return next(x for x in chat_service.list_conversations(db,current_user) if x.id==str(conv.id))
 
