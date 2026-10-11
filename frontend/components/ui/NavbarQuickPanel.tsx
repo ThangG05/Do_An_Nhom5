@@ -44,7 +44,7 @@ export default function NavbarQuickPanel({ kind, onClose, onChat }: Props) {
   };
 
   return <section className="navbar-quick-panel" aria-label={kind === "messages" ? "Tin nhắn gần đây" : "Thông báo gần đây"}>
-    <header><h2>{kind === "messages" ? "Đoạn chat" : "Thông báo"}</h2><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
+    <header><h2>{kind === "messages" ? "Đoạn chat" : "Thông báo"}</h2><button type="button" onClick={onClose} aria-label="Đóng bảng nhanh"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button></header>
     <div className="navbar-quick-list">
       {loading && <p className="navbar-quick-empty">Đang tải...</p>}
       {error && <p className="navbar-quick-empty" role="alert">{error}</p>}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { createDirectConversation, fetchMessages, sendChatMessage } from "@/lib/api";
 import { getAuthUser } from "@/lib/auth";
 import { safeImageSrc } from "@/lib/media";
@@ -17,8 +18,11 @@ export default function ProfileChatDock({ userId, name, avatar, onClose }: Props
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [minimized, setMinimized] = useState(false);
+  const [portalReady, setPortalReady] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const currentUserId = getAuthUser()?.id;
+
+  useEffect(() => { setPortalReady(true); }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -45,7 +49,12 @@ export default function ProfileChatDock({ userId, name, avatar, onClose }: Props
     return () => window.removeEventListener("hvnh-realtime", receive);
   }, [conversationId]);
 
-  useEffect(() => { if (!minimized) bottomRef.current?.scrollIntoView({ block: "end" }); }, [messages, minimized]);
+  useEffect(() => {
+    if (!minimized) {
+      const list = bottomRef.current?.parentElement;
+      if (list) list.scrollTop = list.scrollHeight;
+    }
+  }, [messages, minimized]);
 
   const send = async () => {
     const content = draft.trim();
@@ -63,11 +72,15 @@ export default function ProfileChatDock({ userId, name, avatar, onClose }: Props
     } finally { setSending(false); }
   };
 
-  return <aside className={`profile-chat-dock ${minimized ? "minimized" : ""}`} aria-label={`Trò chuyện với ${name}`}>
+  if (!portalReady) return null;
+
+  // A fixed element inside the blurred navbar is positioned relative to the
+  // navbar instead of the viewport. Portaling also keeps it above page content.
+  return createPortal(<aside className={`profile-chat-dock ${minimized ? "minimized" : ""}`} aria-label={`Trò chuyện với ${name}`}>
     <header><img src={safeImageSrc(avatar)} alt="" /><strong>{name}</strong><div><button type="button" onClick={() => setMinimized(value => !value)} aria-label={minimized ? "Mở rộng trò chuyện" : "Thu nhỏ trò chuyện"}>{minimized ? "▢" : "−"}</button><button type="button" onClick={onClose} aria-label="Đóng trò chuyện">×</button></div></header>
     {!minimized && <><div className="profile-chat-messages" aria-live="polite">
       {loading ? <p>Đang mở trò chuyện...</p> : messages.length ? messages.map(message => <div key={message.id} className={`profile-chat-message ${message.senderId === currentUserId ? "mine" : ""}`}><span>{message.content || message.attachments?.map(item => item.name).join(", ") || "Tệp đính kèm"}</span></div>) : !error && <p>Hãy gửi lời chào cho {name}.</p>}
       <div ref={bottomRef} />
     </div><form className="profile-chat-composer" onSubmit={event => { event.preventDefault(); void send(); }}><input value={draft} onChange={event => setDraft(event.target.value)} placeholder="Viết tin nhắn..." aria-label="Viết tin nhắn" disabled={!conversationId || sending}/><button type="submit" disabled={!conversationId || !draft.trim() || sending} aria-label="Gửi tin nhắn">➤</button></form>{error && <p className="profile-chat-error" role="alert">{error}</p>}{conversationId && <Link className="profile-chat-open-all" href={`/messages?conversationId=${encodeURIComponent(conversationId)}`}>Mở toàn bộ cuộc trò chuyện</Link>}</>}
-  </aside>;
+  </aside>, document.body);
 }

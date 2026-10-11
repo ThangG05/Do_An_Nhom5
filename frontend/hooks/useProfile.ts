@@ -38,7 +38,6 @@ export interface UseProfileReturn {
   isOwnProfile: boolean;
   isEditModalOpen: boolean;
   postFilter: string;
-  postViewMode: 'list' | 'grid';
   friendsSearch: string;
   friendsFilter: string;
   photosSubTab: 'of_you' | 'your_photos' | 'albums';
@@ -47,7 +46,6 @@ export interface UseProfileReturn {
   setActiveTab: (tab: ProfileTabType) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
   setPostFilter: (filter: string) => void;
-  setPostViewMode: (mode: 'list' | 'grid') => void;
   setFriendsSearch: (query: string) => void;
   setFriendsFilter: (filter: string) => void;
   setPhotosSubTab: (subTab: 'of_you' | 'your_photos' | 'albums') => void;
@@ -77,7 +75,6 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
 
   const [postFilter, setPostFilter] = useState<string>('all');
-  const [postViewMode, setPostViewMode] = useState<'list' | 'grid'>('list');
   const [friendsSearch, setFriendsSearch] = useState<string>('');
   const [friendsFilter, setFriendsFilter] = useState<string>('all');
   const [photosSubTab, setPhotosSubTab] = useState<'of_you' | 'your_photos' | 'albums'>('your_photos');
@@ -176,7 +173,6 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     isOwnProfile,
     isEditModalOpen,
     postFilter,
-    postViewMode,
     friendsSearch,
     friendsFilter,
     photosSubTab,
@@ -184,7 +180,6 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     setActiveTab,
     setIsEditModalOpen,
     setPostFilter,
-    setPostViewMode,
     setFriendsSearch,
     setFriendsFilter,
     setPhotosSubTab,

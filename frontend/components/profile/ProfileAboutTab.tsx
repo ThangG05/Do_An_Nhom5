@@ -22,7 +22,7 @@ export default function ProfileAboutTab({
     { id: 'overview', label: 'Tổng quan', icon: '📋' },
     { id: 'work_edu', label: 'Công việc và Học vấn', icon: '💼' },
     { id: 'places', label: 'Nơi từng sống', icon: '📍' },
-    { id: 'contact', label: 'Thông tin liên hệ và cơ bản', icon: '📞' },
+    { id: 'contact', label: 'Thông tin liên hệ', icon: '✉️' },
     { id: 'details', label: 'Chi tiết về bạn', icon: '👤' },
   ];
 
@@ -66,7 +66,7 @@ export default function ProfileAboutTab({
                 <li className="info-row">
                   <span className="row-icon">🎓</span>
                   <div className="row-text">
-                    <span>Học tại <strong>{profile.education}</strong> ({profile.courseYear})</span>
+                    <span>Học tại <strong>{profile.education}</strong>{profile.courseYear ? ` · khóa ${profile.courseYear}` : ''}</span>
                   </div>
                 </li>
               )}
@@ -124,7 +124,7 @@ export default function ProfileAboutTab({
                   <span className="detail-icon">💼</span>
                   <div>
                     <strong>{profile.workplace}</strong>
-                    <p className="sub-detail">{profile.role || 'Thành viên'} • Hiện tại</p>
+                    {profile.role && <p className="sub-detail">{profile.role}</p>}
                   </div>
                 </div>
               ) : (
@@ -138,9 +138,7 @@ export default function ProfileAboutTab({
                 <span className="detail-icon">🎓</span>
                 <div>
                   <strong>{profile.education || 'Học viện Ngân hàng'}</strong>
-                  <p className="sub-detail">
-                    {profile.faculty} • khóa {profile.courseYear} • MSSV: {profile.studentCode || 'Đã xác thực'}
-                  </p>
+                  <p className="sub-detail">{[profile.faculty, profile.courseYear && `Khóa ${profile.courseYear}`, profile.studentCode && `MSSV: ${profile.studentCode}`].filter(Boolean).join(' · ')}</p>
                 </div>
               </div>
             </div>
@@ -151,27 +149,30 @@ export default function ProfileAboutTab({
           <section className="about-card-section">
             <h3 className="section-heading">Nơi từng sống</h3>
             <ul className="about-info-rows">
-              <li className="info-row">
+              {profile.currentCity && <li className="info-row">
                 <span className="row-icon">🏠</span>
                 <div className="row-text">
-                  <strong>{profile.currentCity || 'Hà Nội'}</strong>
+                  <strong>{profile.currentCity}</strong>
                   <p className="sub-detail">Thành phố hiện tại</p>
+                  <a className="about-map-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.currentCity)}`} target="_blank" rel="noopener noreferrer">Xem trên bản đồ ↗</a>
                 </div>
-              </li>
-              <li className="info-row">
+              </li>}
+              {profile.hometown && <li className="info-row">
                 <span className="row-icon">📍</span>
                 <div className="row-text">
-                  <strong>{profile.hometown || 'Chưa cập nhật'}</strong>
+                  <strong>{profile.hometown}</strong>
                   <p className="sub-detail">Quê quán</p>
+                  <a className="about-map-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.hometown)}`} target="_blank" rel="noopener noreferrer">Xem trên bản đồ ↗</a>
                 </div>
-              </li>
+              </li>}
             </ul>
+            {!profile.currentCity && !profile.hometown && <p className="empty-subtext">Chưa có thông tin nơi từng sống.</p>}
           </section>
         )}
 
         {activeSection === 'contact' && (
           <section className="about-card-section">
-            <h3 className="section-heading">Thông tin liên hệ và cơ bản</h3>
+            <h3 className="section-heading">Thông tin liên hệ</h3>
 
             <div className="about-group-block">
               <h4 className="group-title">Thông tin liên hệ</h4>

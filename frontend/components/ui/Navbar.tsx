@@ -14,6 +14,7 @@ import {
   IconSettings,
   IconLogout,
   IconAI,
+  IconChevronDown,
 } from './Icons';
 import { AuthUser, getAccessToken, getAuthUser, logoutSession } from '@/lib/auth';
 import { fetchUnreadMessageCount, fetchUnreadNotificationCount } from '@/lib/api';
@@ -43,6 +44,8 @@ export default function Navbar() {
     setSettingsExpanded(false);
     setQuickPanel(null);
   }, [pathname, contextUser]);
+
+  useEffect(() => { setDockUser(null); }, [pathname]);
 
   useEffect(() => {
     if (!isProfileMenuOpen) return;
@@ -193,8 +196,8 @@ export default function Navbar() {
         {/* Notifications, messages and account */}
         <div className="navbar-right-col">
           <div className="navbar-quick-wrap" ref={quickPanelRef}>
-            <button type="button" className={`navbar-quick-trigger ${quickPanel === 'messages' ? 'active' : ''}`} aria-label="Mở tin nhắn gần đây" aria-expanded={quickPanel === 'messages'} onClick={() => { setIsProfileMenuOpen(false); setQuickPanel(current => current === 'messages' ? null : 'messages'); }}><IconMessage size={21}/>{messageCount > 0 && <span>{messageCount}</span>}</button>
-            <button type="button" className={`navbar-quick-trigger ${quickPanel === 'notifications' ? 'active' : ''}`} aria-label="Mở thông báo gần đây" aria-expanded={quickPanel === 'notifications'} onClick={() => { setIsProfileMenuOpen(false); setQuickPanel(current => current === 'notifications' ? null : 'notifications'); }}><IconBell size={21}/>{notificationCount > 0 && <span>{notificationCount}</span>}</button>
+            <button type="button" className={`navbar-quick-trigger ${quickPanel === 'messages' ? 'active' : ''}`} aria-label="Mở tin nhắn gần đây" aria-expanded={quickPanel === 'messages'} onClick={() => { setIsProfileMenuOpen(false); setDockUser(null); setQuickPanel(current => current === 'messages' ? null : 'messages'); }}><IconMessage size={21}/>{messageCount > 0 && <span>{messageCount}</span>}</button>
+            <button type="button" className={`navbar-quick-trigger ${quickPanel === 'notifications' ? 'active' : ''}`} aria-label="Mở thông báo gần đây" aria-expanded={quickPanel === 'notifications'} onClick={() => { setIsProfileMenuOpen(false); setDockUser(null); setQuickPanel(current => current === 'notifications' ? null : 'notifications'); }}><IconBell size={21}/>{notificationCount > 0 && <span>{notificationCount}</span>}</button>
             {quickPanel && <NavbarQuickPanel kind={quickPanel} onClose={() => setQuickPanel(null)} onChat={setDockUser} />}
           </div>
 
@@ -258,7 +261,7 @@ export default function Navbar() {
                 >
                   <IconSettings size={18} />
                   <span>Cài đặt & Quyền riêng tư</span>
-                  <span aria-hidden="true">{settingsExpanded ? '⌃' : '⌄'}</span>
+                  <IconChevronDown size={16} className={`dropdown-chevron ${settingsExpanded ? 'is-open' : ''}`} aria-hidden="true" />
                 </button>
                 {settingsExpanded && <div className="profile-settings-shortcuts"><Link href="/settings/blocked" onClick={() => setIsProfileMenuOpen(false)}>Danh sách đã chặn</Link><Link href="/settings/password" onClick={() => setIsProfileMenuOpen(false)}>Đổi mật khẩu</Link><Link href="/settings" onClick={() => setIsProfileMenuOpen(false)}>Tất cả cài đặt</Link></div>}
                 <div className="pop-menu-divider" />

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.api.endpoints import auth, users, ai_agent, media, posts, notifications, chat, groups, admin, reports, system, locations
+from src.api.endpoints import auth, users, ai_agent, media, posts, notifications, chat, groups, admin, reports, system, locations, feedback
 
 router = APIRouter()
 
@@ -15,3 +15,4 @@ router.include_router(admin.router)
 router.include_router(reports.router)
 router.include_router(system.router)
 router.include_router(locations.router)
+router.include_router(feedback.router)

@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_SENDER_NAME: str = "HVNH Hub"
     SMTP_FROM_EMAIL: str = ""
+    FEEDBACK_TO_EMAIL: str = ""
     R2_ACCOUNT_ID: str = ""
     R2_ACCESS_KEY_ID: str = ""
     R2_SECRET_ACCESS_KEY: str = ""

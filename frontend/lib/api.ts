@@ -25,6 +25,10 @@ export async function api<T>(endpoint: string, options?: RequestInit): Promise<T
   }
 }
 
+export async function sendFeedback(message: string): Promise<void> {
+  await api<{ message: string }>('/feedback', { method: 'POST', body: JSON.stringify({ message }) });
+}
+
 // API Functions Implementation
 export async function fetchUserProfile(userId?: string): Promise<UserProfile> {
   return api<UserProfile>(!userId || userId === 'me' ? '/users/me' : `/users/${userId}`);

@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "HVNH Flutter Web (Google Login)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/mobilehvnh",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": ["--web-hostname", "localhost", "--web-port", "3000"]
+    }
+  ]
+}

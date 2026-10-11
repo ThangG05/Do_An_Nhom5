@@ -38,7 +38,6 @@ export default function VisitorProfilePage() {
     isOwnProfile,
     isEditModalOpen,
     postFilter,
-    postViewMode,
     friendsSearch,
     friendsFilter,
     photosSubTab,
@@ -46,7 +45,6 @@ export default function VisitorProfilePage() {
     setActiveTab,
     setIsEditModalOpen,
     setPostFilter,
-    setPostViewMode,
     setFriendsSearch,
     setFriendsFilter,
     setPhotosSubTab,
@@ -141,9 +139,7 @@ export default function VisitorProfilePage() {
                 posts={posts}
                 isOwnProfile={isOwnProfile}
                 postFilter={postFilter}
-                postViewMode={postViewMode}
                 onFilterChange={setPostFilter}
-                onViewModeChange={setPostViewMode}
                 onCreatePost={handleCreatePost}
               />
             </section>

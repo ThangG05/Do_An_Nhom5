@@ -1,0 +1,28 @@
+/* Test02 feedback: predictable profile rows and unobstructed dialogs. */
+.profile-about-tab-container{align-items:start;grid-template-columns:minmax(210px,250px) minmax(0,1fr);gap:28px;border:1px solid #dce7f0;border-radius:18px}
+.about-subnav-sidebar{min-width:0}
+.about-content-area{min-width:0;padding:2px 0 8px}
+.about-card-section{gap:20px}
+.about-card-section .section-heading{margin:0;padding-bottom:16px;border-bottom:1px solid #e7eef4;color:#102f50;font-size:20px}
+.about-info-rows{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.about-info-rows .info-row,.about-card-section .info-detail-box{display:flex;align-items:flex-start;gap:14px;min-width:0;padding:13px 14px;border:1px solid #e4edf4;border-radius:12px;background:#fbfdff;list-style:none}
+.about-info-rows .row-icon,.about-card-section .detail-icon{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:10px;background:#e9f3fb;font-size:18px}
+.about-info-rows .row-text,.about-card-section .info-detail-box>div{min-width:0;color:#193b59;line-height:1.5;overflow-wrap:anywhere}
+.about-info-rows .row-text strong,.about-card-section .info-detail-box strong{color:#0a3155}
+.about-info-rows .sub-detail,.about-card-section .sub-detail{margin:3px 0 0;color:#698096;font-size:12px}
+.about-card-section .group-title{margin:0 0 11px;color:#193b59;font-size:15px}
+.about-card-section .about-group-block{min-width:0}
+.about-card-section .about-group-block.mt-4{margin-top:6px}
+.about-map-link{display:inline-block;margin-top:6px;color:#176595;font-size:12px;font-weight:700;text-decoration:none}
+.about-map-link:hover{text-decoration:underline}
+.about-card-section .empty-subtext{margin:0;color:#75889b;font-size:13px}
+.edit-profile-modal-backdrop{z-index:1600;padding:clamp(12px,3vh,28px)}
+.edit-profile-modal-card{max-height:calc(100dvh - 32px)}
+.edit-profile-modal-card .modal-header{flex:0 0 auto;background:#fff}
+.navbar-quick-panel>header button{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;padding:0;font-size:initial;line-height:1}
+.navbar-quick-panel>header button:hover{background:#dfeaf2;color:#163f62}
+.profile-friend-menu>.btn{display:flex;align-items:center;gap:9px}
+.profile-friend-menu .options-menu-popup{width:190px}
+.feedback-sender-note{margin:0;padding:12px 14px;border:1px solid #d7e6f1;border-radius:10px;background:#f2f8fc;color:#496a83;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.feedback-sender-note strong{color:#0f385d}
+@media(max-width:760px){.profile-about-tab-container{grid-template-columns:1fr;gap:18px;padding:16px}.about-subnav-menu{flex-direction:row;flex-wrap:wrap}.about-subnav-menu .subnav-item{padding:9px 11px;font-size:12px}.edit-profile-modal-backdrop{padding:8px}.edit-profile-modal-card{max-height:calc(100dvh - 16px)}}

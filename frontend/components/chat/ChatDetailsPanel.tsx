@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Conversation, MessageAttachment } from "@/types/message";
 import { safeImageSrc } from "@/lib/media";
 import UserAvatar from "@/components/ui/UserAvatar";
+import { IconChevronDown } from "@/components/ui/Icons";
 import { createReport, fetchConversationShared, setUserBlocked } from "@/lib/api";
 
 interface ChatDetailsPanelProps {
@@ -97,10 +98,11 @@ export default function ChatDetailsPanel({
           <button
             type="button"
             className="accordion-header"
+            aria-expanded={openCustomization}
             onClick={() => setOpenCustomization((prev) => !prev)}
           >
             <span>🎨 Tùy chỉnh cuộc trò chuyện</span>
-            <span className="chevron">{openCustomization ? "▲" : "▼"}</span>
+            <IconChevronDown size={16} className={`dropdown-chevron ${openCustomization ? "is-open" : ""}`} />
           </button>
 
           {openCustomization && (
@@ -128,10 +130,11 @@ export default function ChatDetailsPanel({
           <button
             type="button"
             className="accordion-header"
+            aria-expanded={openMedia}
             onClick={() => setOpenMedia((prev) => !prev)}
           >
             <span>🖼️ File & Phương tiện đã chia sẻ</span>
-            <span className="chevron">{openMedia ? "▲" : "▼"}</span>
+            <IconChevronDown size={16} className={`dropdown-chevron ${openMedia ? "is-open" : ""}`} />
           </button>
 
           {openMedia && (
@@ -178,10 +181,11 @@ export default function ChatDetailsPanel({
           <button
             type="button"
             className="accordion-header"
+            aria-expanded={openPrivacy}
             onClick={() => setOpenPrivacy((prev) => !prev)}
           >
             <span>🔒 Quyền riêng tư & Hỗ trợ</span>
-            <span className="chevron">{openPrivacy ? "▲" : "▼"}</span>
+            <IconChevronDown size={16} className={`dropdown-chevron ${openPrivacy ? "is-open" : ""}`} />
           </button>
 
           {openPrivacy && (

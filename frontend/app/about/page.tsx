@@ -14,23 +14,28 @@ import {
   IconSend,
 } from "@/components/ui/Icons";
 import { useDialog } from "@/components/ui/DialogProvider";
+import { useAuthUser } from "@/components/auth/AuthProvider";
+import { sendFeedback } from "@/lib/api";
 
 export default function AboutPage() {
   const dialog = useDialog();
-  const [feedbackName, setFeedbackName] = useState("");
-  const [feedbackEmail, setFeedbackEmail] = useState("");
+  const authUser = useAuthUser();
   const [feedbackMsg, setFeedbackMsg] = useState("");
   const [sentStatus, setSentStatus] = useState(false);
 
-  const handleSendFeedback = (e: React.FormEvent) => {
+  const handleSendFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!feedbackEmail || !feedbackMsg) return;
+    if (!feedbackMsg.trim() || sentStatus) return;
     setSentStatus(true);
-    setTimeout(() => {
+    try {
+      await sendFeedback(feedbackMsg.trim());
       setFeedbackMsg("");
-      setSentStatus(false);
       dialog.notify({title:"Đã nhận ý kiến đóng góp",message:"Cảm ơn bạn đã góp ý cho Ban quản trị HVNH Hub.",tone:"success"});
-    }, 1200);
+    } catch (error) {
+      dialog.notify({title:"Chưa gửi được góp ý",message:error instanceof Error ? error.message : "Vui lòng thử lại sau.",tone:"danger"});
+    } finally {
+      setSentStatus(false);
+    }
   };
 
   const coreModules = [
@@ -202,29 +207,7 @@ export default function AboutPage() {
           </div>
 
           <form className="info-contact-form" onSubmit={handleSendFeedback}>
-            <div className="form-two-col">
-              <div className="form-field-wrap">
-                <label htmlFor="fb-name">Họ và tên sinh viên</label>
-                <input
-                  id="fb-name"
-                  type="text"
-                  placeholder="Ví dụ: Nguyễn Văn A"
-                  value={feedbackName}
-                  onChange={(e) => setFeedbackName(e.target.value)}
-                />
-              </div>
-              <div className="form-field-wrap">
-                <label htmlFor="fb-email">Email Học viện (@hvnh.edu.vn)</label>
-                <input
-                  id="fb-email"
-                  type="email"
-                  placeholder="Ví dụ: 26A4041111@hvnh.edu.vn"
-                  value={feedbackEmail}
-                  onChange={(e) => setFeedbackEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            <p className="feedback-sender-note">Gửi với tài khoản: <strong>{authUser?.full_name || authUser?.username || "Đang tải tài khoản"}</strong>{authUser?.email ? ` · ${authUser.email}` : ""}. Thông tin người gửi được xác thực từ phiên đăng nhập.</p>
 
             <div className="form-field-wrap">
               <label htmlFor="fb-msg">Nội dung góp ý / Ý kiến phản hồi</label>
@@ -234,6 +217,8 @@ export default function AboutPage() {
                 placeholder="Nhập nội dung thắc mắc hoặc ý kiến xây dựng ứng dụng..."
                 value={feedbackMsg}
                 onChange={(e) => setFeedbackMsg(e.target.value)}
+                minLength={10}
+                maxLength={4000}
                 required
               />
             </div>

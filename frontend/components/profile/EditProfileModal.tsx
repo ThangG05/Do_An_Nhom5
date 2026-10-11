@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { UserProfile } from '@/types/user';
 import { safeImageSrc } from '@/lib/media';
 import {
@@ -79,7 +80,7 @@ export default function EditProfileModal({
     setSaveError('');
   }, [isOpen, profile]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const handleAvatarFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAvatarError('');
@@ -155,7 +156,7 @@ export default function EditProfileModal({
     }
   };
 
-  return (
+  return createPortal(
     <div className="edit-profile-modal-backdrop" onClick={() => { if (!isSaving) onClose(); }}>
       <div
         className="edit-profile-modal-card"
@@ -401,7 +402,8 @@ export default function EditProfileModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

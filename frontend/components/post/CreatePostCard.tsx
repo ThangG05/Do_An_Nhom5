@@ -88,7 +88,7 @@ export default function CreatePostCard({
           <span className="action-label">Sự kiện</span>
         </button>
         <button type="button" className="quick-action-btn study-action" onClick={() => onOpenModal("study")}>
-          <span className="action-icon-svg" aria-hidden="true">📚</span><span className="action-label">Học tập</span>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="action-icon-svg" aria-hidden="true"><path d="M12 7c-2.5-1.7-5.6-2.1-9-1.5v14c3.4-.6 6.5-.2 9 1.5 2.5-1.7 5.6-2.1 9-1.5v-14c-3.4-.6-6.5-.2-9 1.5Z"/><path d="M12 7v14"/></svg><span className="action-label">Học tập</span>
         </button>
       </div>
     </section>

@@ -94,3 +94,17 @@ def send_verification_code(email: str, code: str) -> None:
         expiry_minutes=settings.OTP_EXPIRE_MINUTES,
         note="Chỉ sử dụng mã này trên website HVNH Hub chính thức.",
     ))
+
+
+def send_user_feedback(*, sender_email: str, sender_name: str, message: str) -> None:
+    recipient = settings.FEEDBACK_TO_EMAIL or settings.SMTP_FROM_EMAIL or settings.SMTP_USERNAME
+    if not recipient:
+        raise EmailDeliveryError("Email nhận góp ý chưa được cấu hình.")
+    body = (
+        '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#17365d">'
+        '<h2>Góp ý mới từ HVNH Hub</h2>'
+        f'<p><strong>Người gửi:</strong> {html.escape(sender_name)} ({html.escape(sender_email)})</p>'
+        f'<p style="white-space:pre-wrap">{html.escape(message)}</p>'
+        '</div>'
+    )
+    _send_email(recipient, "Góp ý từ sinh viên HVNH Hub", body)

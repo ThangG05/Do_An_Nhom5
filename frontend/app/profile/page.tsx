@@ -29,7 +29,6 @@ export default function OwnProfilePage() {
     isOwnProfile,
     isEditModalOpen,
     postFilter,
-    postViewMode,
     friendsSearch,
     friendsFilter,
     photosSubTab,
@@ -37,7 +36,6 @@ export default function OwnProfilePage() {
     setActiveTab,
     setIsEditModalOpen,
     setPostFilter,
-    setPostViewMode,
     setFriendsSearch,
     setFriendsFilter,
     setPhotosSubTab,
@@ -127,9 +125,7 @@ export default function OwnProfilePage() {
                 posts={posts}
                 isOwnProfile={isOwnProfile}
                 postFilter={postFilter}
-                postViewMode={postViewMode}
                 onFilterChange={setPostFilter}
-                onViewModeChange={setPostViewMode}
                 onCreatePost={handleCreatePost}
               />
             </section>

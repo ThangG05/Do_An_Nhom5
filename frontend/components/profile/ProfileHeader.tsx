@@ -6,7 +6,7 @@ import { UserProfile, ProfileTabType } from '@/types/user';
 import ProfileNavTabs from './ProfileNavTabs';
 import { safeImageSrc } from '@/lib/media';
 import { useDialog } from '@/components/ui/DialogProvider';
-import { IconMoreDots } from '@/components/ui/Icons';
+import { IconChevronDown, IconMoreDots } from '@/components/ui/Icons';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -35,10 +35,12 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   const dialog = useDialog();
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
+  const [isFriendMenuOpen, setIsFriendMenuOpen] = useState(false);
   const [isAvatarViewerOpen, setIsAvatarViewerOpen] = useState(false);
   const [friendActionPending, setFriendActionPending] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const optionsRef = useRef<HTMLDivElement | null>(null);
+  const friendMenuRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!isOptionsMenuOpen) return;
     const close = (event: MouseEvent) => { if (!optionsRef.current?.contains(event.target as Node)) setIsOptionsMenuOpen(false); };
@@ -47,6 +49,14 @@ export default function ProfileHeader({
     document.addEventListener('keydown', escape);
     return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
   }, [isOptionsMenuOpen]);
+  useEffect(() => {
+    if (!isFriendMenuOpen) return;
+    const close = (event: MouseEvent) => { if (!friendMenuRef.current?.contains(event.target as Node)) setIsFriendMenuOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsFriendMenuOpen(false); };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
+  }, [isFriendMenuOpen]);
 
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,14 +100,17 @@ export default function ProfileHeader({
     switch (profile.friendshipStatus) {
       case 'friends':
         return (
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => runFriendAction('unfriend')}
-            disabled={friendActionPending}
-          >
-            <span>Bạn bè</span>
-          </button>
+          <div className="options-dropdown-container profile-friend-menu" ref={friendMenuRef}>
+            <button type="button" className="btn btn-secondary" onClick={() => setIsFriendMenuOpen(value => !value)} disabled={friendActionPending} aria-expanded={isFriendMenuOpen} aria-haspopup="menu">
+              <span>Bạn bè</span><IconChevronDown size={16} className={`dropdown-chevron ${isFriendMenuOpen ? 'is-open' : ''}`} />
+            </button>
+            {isFriendMenuOpen && <div className="options-menu-popup" role="menu">
+              <button type="button" role="menuitem" className="menu-item danger" onClick={async () => {
+                setIsFriendMenuOpen(false);
+                if (await dialog.confirm({ title: 'Hủy kết bạn?', message: `Bạn và ${profile.name} sẽ không còn trong danh sách bạn bè.`, confirmLabel: 'Hủy kết bạn', tone: 'danger' })) void runFriendAction('unfriend');
+              }}>Hủy kết bạn</button>
+            </div>}
+          </div>
         );
       case 'pending_sent':
         return (

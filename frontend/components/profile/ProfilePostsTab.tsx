@@ -13,9 +13,7 @@ interface ProfilePostsTabProps {
   posts: Post[];
   isOwnProfile: boolean;
   postFilter: string;
-  postViewMode: 'list' | 'grid';
   onFilterChange: (filter: string) => void;
-  onViewModeChange: (mode: 'list' | 'grid') => void;
   onCreatePost: (payload: CreatePostPayload) => Promise<Post | null>;
 }
 
@@ -24,9 +22,7 @@ export default function ProfilePostsTab({
   posts,
   isOwnProfile,
   postFilter,
-  postViewMode,
   onFilterChange,
-  onViewModeChange,
   onCreatePost,
 }: ProfilePostsTabProps) {
   const createPostState = useCreatePost(onCreatePost);
@@ -74,24 +70,6 @@ export default function ProfilePostsTab({
             <span className="profile-management-hint">Dùng menu từng bài để chỉnh sửa hoặc xóa</span>
           )}
 
-          <div className="view-mode-toggle-group">
-            <button
-              type="button"
-              className={`toggle-btn ${postViewMode === 'list' ? 'active' : ''}`}
-              onClick={() => onViewModeChange('list')}
-              title="Chế độ danh sách"
-            >
-              ☰
-            </button>
-            <button
-              type="button"
-              className={`toggle-btn ${postViewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => onViewModeChange('grid')}
-              title="Chế độ lưới"
-            >
-              ▦
-            </button>
-          </div>
         </div>
       </div>
 
@@ -108,7 +86,7 @@ export default function ProfilePostsTab({
 
       {/* 3. Chronological Post Stream */}
       {filteredPosts.length > 0 ? (
-        <div className={`posts-stream-container ${postViewMode === 'grid' ? 'grid-layout' : 'list-layout'}`}>
+        <div className="posts-stream-container list-layout">
           {filteredPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}

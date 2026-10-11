@@ -1,0 +1,25 @@
+/* Shared dropdown affordance and equal-size friend thumbnails. */
+.dropdown-chevron{display:block;flex:0 0 auto;color:#627d95;transition:transform .18s ease,color .18s ease}
+.dropdown-chevron.is-open{transform:rotate(180deg)}
+.profile-friend-menu>.btn{gap:10px;min-height:40px;padding:0 14px;border:1px solid #d5e2ed;border-radius:10px;background:#f7fafc;color:#0b3157;font-weight:700;box-shadow:0 1px 2px rgba(11,49,87,.04);transition:background .18s ease,border-color .18s ease,box-shadow .18s ease}
+.profile-friend-menu>.btn:hover,.profile-friend-menu>.btn[aria-expanded="true"]{border-color:#9fc3df;background:#edf5fb;box-shadow:0 3px 10px rgba(11,65,111,.09)}
+.profile-friend-menu>.btn:focus-visible,.accordion-header:focus-visible,.pop-menu-row:focus-visible{outline:3px solid #8dbde0;outline-offset:2px}
+.profile-friend-menu .options-menu-popup{min-width:190px}
+.pop-menu-row>.dropdown-chevron{margin-left:auto}
+.accordion-header>.dropdown-chevron{margin-left:12px}
+body select:not([multiple]){appearance:none;-webkit-appearance:none;padding-right:36px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a7590' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease}
+body select:not([multiple]):hover{border-color:#8bb4d3}
+body select:not([multiple]):focus-visible{outline:3px solid #a7cce7;outline-offset:2px}
+.friends-widget .widget-header-row{align-items:flex-start;gap:10px}
+.friends-widget .widget-title-group{display:flex;flex-direction:column;min-width:0}
+.friends-widget .widget-title{margin:0 0 3px;color:#0a3157;line-height:1.35}
+.friends-widget .widget-count-tag{margin:0;color:#647e96;line-height:1.4}
+.friends-widget .widget-see-all-link{flex:0 0 auto;margin-top:1px;min-height:32px;padding:5px 8px;border-radius:8px;text-align:right}
+.friends-widget .friends-grid-3x3{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow:visible;align-items:start}
+.friends-widget .friend-grid-card{display:flex;flex-direction:column;min-width:0;gap:5px;color:#0a3157}
+.friends-widget .friend-avatar-wrapper{display:block;width:100%;aspect-ratio:1/1;min-width:0;overflow:hidden;border:1px solid #dfebf3;border-radius:10px;background:#edf4f9}
+.friends-widget .friend-avatar-wrapper img,.friends-widget .friend-avatar-wrapper>.user-avatar-initials{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;object-position:center;border-radius:inherit}
+.friends-widget .friend-avatar-wrapper>.user-avatar-initials{display:grid}
+.friends-widget .friend-name-label{display:-webkit-box;min-height:2.7em;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.35;text-overflow:ellipsis}
+.friends-widget .friend-grid-card:hover .friend-name-label{text-decoration:underline}
+@media(max-width:390px){.friends-widget .friends-grid-3x3{gap:7px}.friends-widget .widget-see-all-link{font-size:12px}}
