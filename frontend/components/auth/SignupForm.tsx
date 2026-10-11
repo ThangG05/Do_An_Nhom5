@@ -38,13 +38,13 @@ export default function SignupForm() {
     <div className="signup-auth-options">
       <form className="signup-form" onSubmit={handleSubmit} noValidate>
         <div className="signup-field">
-          <span>Nhập email sinh viên</span>
+          <label htmlFor="signup-email">Email sinh viên</label>
           <input
             id="signup-email"
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="@hvnh.edu.vn"
+            placeholder="26A4041111@hvnh.edu.vn"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required

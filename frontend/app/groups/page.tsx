@@ -25,7 +25,33 @@ export default function GroupsPage() {
   const canPost = !!active && (active.membership === "MEMBER" || active.membership === "ADMIN" || auth?.system_role === "SUPER_ADMIN");
   const canRead = canPost;
   const loadGroups = useCallback(async () => { const rows = await fetchGroups(); rows.sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug)); setGroups(rows); setActiveId(value => rows.some(group => group.id === requestedGroupId) ? (requestedGroupId || "") : (value || rows.find(group => order.includes(group.slug))?.id || "")); }, [requestedGroupId]);
-  const load = useCallback(async () => { if (!activeId) return; const selected = groups.find(group => group.id === activeId); const admin = !!selected && (auth?.system_role === "SUPER_ADMIN" || auth?.admin_group_slugs?.includes(selected.slug)); if (!selected || (!admin && !["MEMBER", "ADMIN"].includes(selected.membership))) { setPosts([]); setMyPosts([]); setPending([]); setRequests([]); setMembers([]); return; } const [feed, mine] = await Promise.all([fetchGroupPosts(activeId, query, sort), fetchMyGroupPosts(activeId)]); setPosts(feed); setMyPosts(mine); if (admin) { const [pendingPosts, joinRequests, groupMembers] = await Promise.all([fetchPendingGroupPosts(activeId), fetchGroupJoinRequests(activeId), fetchGroupMembers(activeId)]); setPending(pendingPosts); setRequests(joinRequests); setMembers(groupMembers); } else { setPending([]); setRequests([]); setMembers([]); } }, [activeId, groups, auth, query, sort]);
+  const load = useCallback(async () => {
+    if (!activeId) return;
+    const selected = groups.find(group => group.id === activeId);
+    const admin = !!selected && (auth?.system_role === "SUPER_ADMIN" || auth?.admin_group_slugs?.includes(selected.slug));
+    if (!selected || (!admin && !["MEMBER", "ADMIN"].includes(selected.membership))) {
+      setPosts([]); setMyPosts([]); setPending([]); setRequests([]); setMembers([]);
+      return;
+    }
+    // Start moderation requests alongside the feed instead of after it.
+    const adminData = admin
+      ? Promise.all([fetchPendingGroupPosts(activeId), fetchGroupJoinRequests(activeId), fetchGroupMembers(activeId)])
+          .then(value => ({ value, error: null }), error => ({ value: null, error }))
+      : null;
+    const [feed, mine] = await Promise.all([fetchGroupPosts(activeId, query, sort), fetchMyGroupPosts(activeId)]);
+    setPosts(feed);
+    setMyPosts(mine);
+    if (adminData) {
+      const result = await adminData;
+      if (result.error) throw result.error;
+      if (result.value) {
+        const [pendingPosts, joinRequests, groupMembers] = result.value;
+        setPending(pendingPosts); setRequests(joinRequests); setMembers(groupMembers);
+      }
+    } else {
+      setPending([]); setRequests([]); setMembers([]);
+    }
+  }, [activeId, groups, auth, query, sort]);
   useEffect(() => { setAuth(getAuthUser()); void loadGroups().catch(error => setError(error.message)); }, [loadGroups]);
   useEffect(() => { void load().catch(error => setError(error.message)); }, [load]);
   const act = async (work: () => Promise<unknown>) => { setBusy(true); setError(""); try { await work(); await loadGroups(); await load(); } catch (error) { setError(error instanceof Error ? error.message : "Có lỗi xảy ra."); } finally { setBusy(false); } };

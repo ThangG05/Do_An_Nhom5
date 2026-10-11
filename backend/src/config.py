@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     OTP_RESEND_COOLDOWN_SECONDS: int = 60
     ALLOWED_EMAIL_DOMAIN: str = "hvnh.edu.vn"
     CORS_ORIGINS: str = "http://localhost:3000"
+    # Opt in only for local development: Flutter Web uses a random localhost port.
+    CORS_ALLOW_LOCAL_DEV_ORIGINS: bool = False
     RESEND_API_KEY: str = ""
     RESEND_FROM_EMAIL: str = "HVNH Hub <onboarding@resend.dev>"
     SMTP_HOST: str = ""
@@ -70,5 +72,11 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        if not self.CORS_ALLOW_LOCAL_DEV_ORIGINS:
+            return None
+        return r"^http://(?:localhost|127\.0\.0\.1):[0-9]{1,5}$"
 
 settings = Settings()

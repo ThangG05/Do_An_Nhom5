@@ -1,19 +1,9 @@
 import Link from "next/link";
-import PasswordForm from "../../components/auth/PasswordForm";
+import PasswordForm from "@/components/auth/PasswordForm";
+import PublicAuthShell from "@/components/auth/PublicAuthShell";
 
 export default function PasswordPage() {
-  return (
-    <main className="password-page">
-      <section className="password-screen" aria-labelledby="password-title">
-        <div className="password-content">
-          <h1 id="password-title">Nhập mật khẩu</h1>
-          <p className="password-intro">Giúp bảo vệ tài khoản của bạn</p>
-          <PasswordForm />
-        </div>
-        <p className="password-login">
-          Đã có tài khoản? <Link href="/login">Đăng nhập</Link>
-        </p>
-      </section>
-    </main>
-  );
+  return <PublicAuthShell step="password" title="Hoàn tất tài khoản" description="Đặt mật khẩu an toàn để bắt đầu trải nghiệm HVNH Hub." backHref="/signup" backLabel="Về đăng ký" footer={<>Đã có tài khoản? <Link href="/login">Đăng nhập</Link></>}>
+    <PasswordForm />
+  </PublicAuthShell>;
 }

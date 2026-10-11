@@ -82,7 +82,7 @@ export default function Navbar() {
   }, [pathname, router]);
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!contextUser || !getAccessToken()) {
       setMessageCount(0);
       return;
     }
@@ -90,10 +90,10 @@ export default function Navbar() {
     refreshCount(); window.addEventListener('messages-changed', refreshCount);
     const timer = window.setInterval(refreshCount, 30000);
     return () => { window.removeEventListener('messages-changed', refreshCount); window.clearInterval(timer); };
-  }, [pathname]);
+  }, [contextUser?.id]);
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!contextUser || !getAccessToken()) {
       setNotificationCount(0);
       return;
     }
@@ -102,7 +102,7 @@ export default function Navbar() {
     window.addEventListener('notifications-changed', refreshCount);
     const timer = window.setInterval(refreshCount, 30000);
     return () => { window.removeEventListener('notifications-changed', refreshCount); window.clearInterval(timer); };
-  }, [pathname]);
+  }, [contextUser?.id]);
 
   // Completely hide top navbar on unauthenticated and onboarding flows
   const authRoutes = [

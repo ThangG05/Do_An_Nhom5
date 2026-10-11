@@ -208,8 +208,11 @@ export async function getCurrentUser(accessToken?: string): Promise<AuthUser> {
 export async function restoreAuthSession(): Promise<AuthUser> {
   try {
     const user = await getCurrentUser();
-    window.sessionStorage.setItem('hvnh-hub-user', JSON.stringify(user));
-    notifyAuthChanged();
+    const serialized = JSON.stringify(user);
+    if (window.sessionStorage.getItem('hvnh-hub-user') !== serialized) {
+      window.sessionStorage.setItem('hvnh-hub-user', serialized);
+      notifyAuthChanged();
+    }
     return user;
   } catch {
     const tokens = await refreshAuthSession();

@@ -93,26 +93,23 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     try {
       const profileData = await fetchUserProfile(resolvedUserId);
       setProfile(profileData);
-
-      const [userPosts, userFriends, userPhotos, userListings, userGroupPosts] = await Promise.all([
-        fetchUserPosts(profileData.id),
-        fetchUserFriends(profileData.id),
-        fetchUserPhotos(profileData.id),
-        fetchUserListings(profileData.id),
-        fetchUserGroupPosts(profileData.id),
+      void Promise.allSettled([
+        fetchUserFriends(profileData.id).then(setFriends),
+        fetchUserPhotos(profileData.id).then(setPhotos),
+        fetchUserListings(profileData.id).then(setListings),
+        fetchUserGroupPosts(profileData.id).then(setGroupPosts),
       ]);
-
-      setPosts(userPosts);
-      setFriends(userFriends);
-      setPhotos(userPhotos);
-      setListings(userListings);
-      setGroupPosts(userGroupPosts);
+      setPosts(await fetchUserPosts(profileData.id));
     } catch (err: unknown) {
       setIsError(true);
       setErrorMessage(err instanceof Error ? err.message : 'Không thể tải thông tin hồ sơ.');
-    } finally {
       setIsLoading(false);
+      return;
     }
+
+    // Show the default posts view once its data is ready. The other tabs and
+    // sidebar panels should not keep the entire profile behind a skeleton.
+    setIsLoading(false);
   }, [resolvedUserId]);
 
   useEffect(() => {

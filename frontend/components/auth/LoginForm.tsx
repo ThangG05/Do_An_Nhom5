@@ -45,7 +45,7 @@ export default function LoginForm() {
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="tenban@hvnh.edu.vn"
+            placeholder="26A4041111@hvnh.edu.vn"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -65,9 +65,6 @@ export default function LoginForm() {
           />
         </div>
         <div className="login-options">
-          <label>
-            <input type="checkbox" name="remember" /> Ghi nhớ đăng nhập
-          </label>
           <button
             type="button"
             className="text-action"

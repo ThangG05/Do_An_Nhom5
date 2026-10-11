@@ -6,6 +6,7 @@ import { safeImageSrc } from "@/lib/media";
 import UserAvatar from "@/components/ui/UserAvatar";
 import { searchConversationMessages } from "@/lib/api";
 import RelativeTime from "@/components/ui/RelativeTime";
+import BackArrow from "@/components/ui/BackArrow";
 
 const CHAT_EMOJIS = [
   "😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃",
@@ -107,7 +108,7 @@ export default function ChatWorkspace({
             onClick={onBackMobile}
             aria-label="Quay lại danh sách tin nhắn"
           >
-            ←
+            <BackArrow size={19} />
           </button>
 
           <div className="header-avatar-wrap">

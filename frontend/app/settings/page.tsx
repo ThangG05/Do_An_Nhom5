@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import BackArrow from '@/components/ui/BackArrow';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function SettingsPage() {
     <main className="account-settings-page">
       <section className="account-settings-shell" aria-labelledby="settings-title">
         <header className="account-settings-header">
-          <button type="button" onClick={() => router.back()} aria-label="Quay lại">←</button>
+          <button type="button" className="account-back-button" onClick={() => router.back()} aria-label="Quay lại trang trước"><BackArrow /><span>Quay lại</span></button>
           <div>
             <span>TRUNG TÂM TÀI KHOẢN</span>
             <h1 id="settings-title">Cài đặt và quyền riêng tư</h1>

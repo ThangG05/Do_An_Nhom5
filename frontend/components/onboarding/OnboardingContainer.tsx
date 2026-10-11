@@ -1,209 +1,51 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
-const slides = [
-    {
-        kind: "splash",
-        title: "HVNH Hub",
-        description: "",
-    },
-    {
-        kind: "news",
-        title: "Cập nhật các tin tức mới nhất",
-        description: "Các tin tức mới nhất sẽ được cập nhật liên tục trên ứng dụng",
-    },
-    {
-        kind: "market",
-        title: "Mua bán, trao đổi đồ dùng",
-        description:
-            "Cho phép sinh viên mua bán, trao đổi đồ dùng trên ứng dụng trực tuyến",
-    },
-    {
-        kind: "study",
-        title: "Chia sẻ, tìm kiếm tài liệu học tập",
-        description:
-            "Các kiến thức, tài liệu học tập sẽ được chia sẻ giữa các sinh viên trong trường",
-    },
-    {
-        kind: "roommate",
-        title: "Tìm kiếm bạn ở cùng",
-        description:
-            "Kết nối với các sinh viên có cùng nhu cầu về phòng ở trong trường học",
-    },
-] as const;
-
-const avatarSeeds = ["Mai", "Nam", "Linh", "Khanh", "An", "Tuan"];
-
-function OnboardingProgress({
-    current,
-    onSelect,
-}: {
-    current: number;
-    onSelect: (index: number) => void;
-}) {
-    return (
-        <div className="onboarding-progress" aria-label="Tiến trình giới thiệu">
-            {slides.map((slide, index) => (
-                <button
-                    key={slide.kind}
-                    className={
-                        index === current ? "progress-step active" : "progress-step"
-                    }
-                    type="button"
-                    aria-label={`Chuyển tới màn hình ${index + 1}`}
-                    aria-current={index === current ? "step" : undefined}
-                    onClick={() => onSelect(index)}
-                />
-            ))}
-        </div>
-    );
-}
-
-function AvatarOrbit({ kind }: { kind: string }) {
-    if (kind === "splash") {
-        return (
-            <div className="onboarding-brand-logo-wrap" aria-label="Logo BAV">
-                <img
-                    src="/assets/logo.png"
-                    alt="HVNH Hub - BAV Logo"
-                    className="onboarding-brand-logo"
-                />
-            </div>
-        );
-    }
-
-    const heroSeed =
-        kind === "news"
-            ? "Mai"
-            : kind === "market"
-                ? "Nam"
-                : kind === "study"
-                    ? "Linh"
-                    : "Khanh";
-    return (
-        <div className={`orbit orbit-${kind}`} aria-hidden="true">
-            <div className="orbit-hero">
-                <img
-                    src={`https://api.dicebear.com/9.x/fun-emoji/svg?seed=${heroSeed}`}
-                    alt=""
-                />
-            </div>
-            {avatarSeeds.map((seed, index) => (
-                <span className={`orbit-avatar orbit-avatar-${index}`} key={seed}>
-                    <img
-                        src={`https://api.dicebear.com/9.x/fun-emoji/svg?seed=${seed}`}
-                        alt=""
-                    />
-                </span>
-            ))}
-        </div>
-    );
-}
-
-function Splash({
-    onContinue,
-    onSelect,
-}: {
-    onContinue: () => void;
-    onSelect: (index: number) => void;
-}) {
-    return (
-        <section className="onboarding-screen splash-screen">
-            <span className="orange-orb orb-top" aria-hidden="true" />
-            <span className="orange-orb orb-middle" aria-hidden="true" />
-            <span className="orange-orb orb-bottom" aria-hidden="true" />
-            <div className="splash-content">
-                <AvatarOrbit kind="splash" />
-                <h1>HVNH Hub</h1>
-            </div>
-            <button
-                className="onboarding-primary splash-button"
-                type="button"
-                onClick={onContinue}
-            >
-                Tiếp tục
-            </button>
-            <OnboardingProgress current={0} onSelect={onSelect} />
-        </section>
-    );
-}
-
-function OnboardingSlide({
-    index,
-    onContinue,
-    onSkip,
-    onSelect,
-}: {
-    index: number;
-    onContinue: () => void;
-    onSkip: () => void;
-    onSelect: (index: number) => void;
-}) {
-    const slide = slides[index];
-    return (
-        <section className="onboarding-screen slide-screen">
-            <div className="slide-visual">
-                <AvatarOrbit kind={slide.kind} />
-            </div>
-            <div className="slide-copy">
-                <h1>{slide.title}</h1>
-                <p>{slide.description}</p>
-            </div>
-            <div className="onboarding-actions">
-                <button
-                    className="onboarding-primary"
-                    type="button"
-                    onClick={onContinue}
-                >
-                    Tiếp tục
-                </button>
-                {index < slides.length - 1 ? (
-                    <button
-                        className="onboarding-secondary"
-                        type="button"
-                        onClick={onSkip}
-                    >
-                        Bỏ qua
-                    </button>
-                ) : null}
-            </div>
-            <p className="login-prompt">
-                Đã có tài khoản? <Link href="/login">Đăng nhập</Link>
-            </p>
-            <OnboardingProgress current={index} onSelect={onSelect} />
-        </section>
-    );
-}
+const features = [
+  { icon: "✦", number: "01", title: "Cập nhật mỗi ngày", description: "Theo dõi những thông tin và hoạt động đáng chú ý trong cộng đồng HVNH." },
+  { icon: "◈", number: "02", title: "Hội nhóm theo nhu cầu", description: "Từ học tập, sự kiện đến pass đồ và tìm phòng: tìm đúng nơi để trao đổi." },
+  { icon: "✳", number: "03", title: "Hỏi nhanh, có nguồn", description: "Trợ lý AI giúp bạn tra cứu thông tin Học viện với nguồn tham khảo rõ ràng." },
+];
 
 export default function OnboardingContainer() {
-    const [index, setIndex] = useState(0);
-    const router = useRouter();
+  return <main className="public-landing">
+    <div className="public-landing-glow" aria-hidden="true" />
+    <div className="public-landing-container">
+      <header className="public-landing-nav">
+        <Link href="/" className="public-brand public-brand-light" aria-label="HVNH Hub - Trang chủ"><img src="/assets/logo.png" alt="" /><span>HVNH <b>Hub</b></span></Link>
+        <nav aria-label="Điều hướng giới thiệu"><a href="#tinh-nang">Tính năng</a><a href="#cong-dong">Cộng đồng</a></nav>
+        <div className="public-landing-nav-actions"><Link href="/login" className="public-nav-login">Đăng nhập</Link><Link href="/signup" className="public-nav-signup">Tham gia ngay <span aria-hidden="true">↗</span></Link></div>
+      </header>
 
-    function skipToSignup() {
-        router.push("/signup");
-    }
+      <section className="public-landing-hero" aria-labelledby="public-landing-title">
+        <div className="public-landing-copy">
+          <span className="public-eyebrow"><i /> NƠI SINH VIÊN HVNH KẾT NỐI</span>
+          <h1 id="public-landing-title">Một cộng đồng.<br /><em>Vô vàn kết nối.</em></h1>
+          <p>Học hỏi, chia sẻ và khám phá mọi điều đang diễn ra tại Học viện Ngân hàng — cùng những người bạn thuộc về nơi này.</p>
+          <div className="public-landing-cta"><Link href="/signup" className="public-landing-primary">Bắt đầu cùng HVNH Hub <span aria-hidden="true">→</span></Link><Link href="/login" className="public-landing-secondary">Tôi đã có tài khoản</Link></div>
+          <div className="public-landing-note"><span className="public-note-icons" aria-hidden="true"><i>H</i><i>V</i><i>N</i></span><span>Dành riêng cho email <strong>@hvnh.edu.vn</strong></span></div>
+        </div>
 
-    function continueFromOnboarding() {
-        if (index === slides.length - 1) {
-            router.push("/signup");
-            return;
-        }
-        setIndex(index + 1);
-    }
+        <div className="public-product-stage" aria-label="Hình minh họa giao diện HVNH Hub">
+          <div className="public-product-halo" aria-hidden="true" />
+          <div className="public-product-orbit public-product-orbit-one" aria-hidden="true" />
+          <div className="public-product-orbit public-product-orbit-two" aria-hidden="true" />
+          <span className="public-product-spark public-product-spark-one" aria-hidden="true">✦</span>
+          <span className="public-product-spark public-product-spark-two" aria-hidden="true">✧</span>
+          <div className="public-product-window" aria-hidden="true">
+            <div className="public-product-bar"><span><img src="/assets/logo.png" alt="" /><b>HVNH Hub</b></span><span className="public-product-bar-nav">Trang chủ　 Hội nhóm　 Trợ lý AI</span><span className="public-product-avatar">S</span></div>
+            <div className="public-product-body">
+              <div className="public-product-sidebar"><b>Khám phá</b><span>⌂ <i>Trang chủ</i></span><span>◈ <i>Hội nhóm</i></span><span>✳ <i>Trợ lý AI</i></span><div className="public-product-side-card"><small>GÓC SINH VIÊN</small><strong>Một nơi để chia sẻ mọi điều.</strong></div></div>
+              <div className="public-product-feed"><div className="public-product-greeting"><small>CỘNG ĐỒNG HVNH</small><strong>Chào bạn đến với Hub ✦</strong><span>Có gì mới ở Học viện hôm nay?</span></div><div className="public-product-post"><div className="public-product-post-author"><span>HV</span><b>Cộng đồng sinh viên<small>Bài viết trong Học tập</small></b></div><div className="public-product-post-lines"><i/><i/><i/></div><div className="public-product-post-image"><span>📚</span><b>Chia sẻ kiến thức.<br />Lan tỏa cảm hứng.</b></div><div className="public-product-post-actions">♡ Thích <span>▢ Bình luận</span> ↗ Chia sẻ</div></div></div>
+            </div>
+          </div>
+          <div className="public-floating-card public-floating-group" aria-hidden="true"><span>◈</span><b>Hội nhóm</b><small>Tìm đúng cộng đồng của bạn</small></div>
+          <div className="public-floating-card public-floating-ai" aria-hidden="true"><span>✳</span><b>Trợ lý HVNH</b><small>Tra cứu có nguồn tham khảo</small></div>
+        </div>
+      </section>
 
-    if (index === 0) {
-        return <Splash onContinue={() => setIndex(1)} onSelect={setIndex} />;
-    }
-
-    return (
-        <OnboardingSlide
-            index={index}
-            onContinue={continueFromOnboarding}
-            onSkip={skipToSignup}
-            onSelect={setIndex}
-        />
-    );
+      <section id="tinh-nang" className="public-landing-features" aria-labelledby="public-features-title"><div className="public-section-heading"><span>KHÁM PHÁ HVNH HUB</span><h2 id="public-features-title">Mọi trải nghiệm sinh viên, <em>gói trong một nơi.</em></h2></div><div className="public-feature-grid">{features.map(feature => <article key={feature.number}><div className="public-feature-top"><span>{feature.icon}</span><small>{feature.number}</small></div><h3>{feature.title}</h3><p>{feature.description}</p></article>)}</div></section>
+      <section id="cong-dong" className="public-landing-bottom"><div><span>BẠN ĐÃ SẴN SÀNG?</span><h2>Bắt đầu câu chuyện của bạn tại HVNH.</h2><p>Đăng ký bằng email Học viện hoặc tiếp tục với Google.</p></div><Link href="/signup">Tham gia cộng đồng <span aria-hidden="true">→</span></Link></section>
+      <footer className="public-landing-footer"><span>© HVNH Hub · Không gian kết nối sinh viên</span></footer>
+    </div>
+  </main>;
 }
