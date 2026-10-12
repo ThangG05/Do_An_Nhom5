@@ -136,6 +136,9 @@ class FriendResponse(BaseModel):
     isOnline: bool = False
     role: str = "Sinh viên"
     faculty: str | None = None
+    currentCity: str | None = None
+    hometown: str | None = None
+    connectedAt: str | None = None
     friendshipStatus: str = "friends"
 
 

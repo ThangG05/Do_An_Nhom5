@@ -32,7 +32,11 @@ def _group_ids(db:Session,user:User)->list[uuid.UUID]:
 
 def list_queue(db:Session,user:User,status:str|None=None)->list[ReportResponse]:
     params={"status":status};scope=""
-    if user.system_role!=SystemRole.SUPER_ADMIN:
+    if user.system_role==SystemRole.SUPER_ADMIN:
+        # Group reports belong to the assigned group admin. Keep only groups
+        # without an active admin here so that no report is orphaned.
+        scope=" AND (COALESCE(p.group_id,cp.group_id) IS NULL OR NOT EXISTS (SELECT 1 FROM group_members gm JOIN users gu ON gu.id=gm.user_id WHERE gm.group_id=COALESCE(p.group_id,cp.group_id) AND gm.role='ADMIN' AND gu.status='ACTIVE' AND gu.deleted_at IS NULL))"
+    else:
         ids=_group_ids(db,user)
         if not ids: raise HTTPException(403,"Bạn không có quyền xử lý báo cáo.")
         scope=" AND COALESCE(p.group_id,cp.group_id)=ANY(:groups)";params["groups"]=ids

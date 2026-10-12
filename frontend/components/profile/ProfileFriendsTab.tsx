@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { UserFriend } from '@/types/user';
 import { IconSearch } from '@/components/ui/Icons';
@@ -25,14 +25,19 @@ export default function ProfileFriendsTab({
   onFilterChange,
   onUnfriend,
 }: ProfileFriendsTabProps) {
-  const filteredFriends = friends.filter((f) => {
+  const [city, setCity] = useState('');
+  const [hometown, setHometown] = useState('');
+  const cities = [...new Set(friends.map(friend => friend.currentCity?.trim()).filter((value): value is string => Boolean(value)))].sort();
+  const hometowns = [...new Set(friends.map(friend => friend.hometown?.trim()).filter((value): value is string => Boolean(value)))].sort();
+  const sortedFriends = [...friends].sort((a, b) => (b.connectedAt || '').localeCompare(a.connectedAt || ''));
+  const recentIds = new Set(sortedFriends.slice(0, 12).map(friend => friend.id));
+  const filteredFriends = sortedFriends.filter((f) => {
     const matchesSearch =
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.username.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
+    if (!matchesSearch || (city && f.currentCity !== city) || (hometown && f.hometown !== hometown)) return false;
 
-    if (filter === 'recent') return f.mutualCount > 20;
-    if (filter === 'mutual') return f.mutualCount > 0;
+    if (filter === 'recent') return recentIds.has(f.id);
     return true;
   });
 
@@ -73,13 +78,10 @@ export default function ProfileFriendsTab({
           >
             Đã thêm gần đây
           </button>
-          <button
-            type="button"
-            className={`subnav-tab ${filter === 'mutual' ? 'active' : ''}`}
-            onClick={() => onFilterChange('mutual')}
-          >
-            Bạn chung
-          </button>
+        </div>
+        <div className="friends-location-filters">
+          <label>Thành phố hiện tại <select value={city} onChange={event => setCity(event.target.value)}><option value="">Tất cả</option>{cities.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+          <label>Quê quán <select value={hometown} onChange={event => setHometown(event.target.value)}><option value="">Tất cả</option>{hometowns.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
         </div>
       </div>
 
@@ -97,7 +99,6 @@ export default function ProfileFriendsTab({
                 <Link href={`/profile/${friend.id}`} className="friend-card-name">
                   {friend.name}
                 </Link>
-                <span className="friend-card-username">@{friend.username}</span>
                 {friend.faculty && <span className="friend-card-faculty">{friend.faculty}</span>}
                 {friend.mutualCount > 0 && (
                   <span className="friend-card-mutual">{friend.mutualCount} bạn chung</span>
@@ -128,7 +129,7 @@ export default function ProfileFriendsTab({
           <p className="empty-desc">
             {searchQuery
               ? `Không có kết quả nào khớp với "${searchQuery}".`
-              : 'Danh sách bạn bè trống.'}
+              : 'Hãy thử bỏ bộ lọc hoặc tìm bằng tên khác.'}
           </p>
         </div>
       )}

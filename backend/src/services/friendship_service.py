@@ -77,7 +77,8 @@ def act(db: Session, actor: User, target: User, action: str) -> str:
 
 
 def list_friends(db: Session, owner: User, viewer: User, query: str = "") -> list[FriendResponse]:
-    friend_ids = list(db.scalars(text("SELECT CASE WHEN user_low_id=:uid THEN user_high_id ELSE user_low_id END FROM friendships WHERE user_low_id=:uid OR user_high_id=:uid ORDER BY created_at DESC").bindparams(uid=owner.id)).all())
+    friend_rows = db.execute(text("SELECT CASE WHEN user_low_id=:uid THEN user_high_id ELSE user_low_id END friend_id, created_at FROM friendships WHERE user_low_id=:uid OR user_high_id=:uid ORDER BY created_at DESC"), {"uid": owner.id}).mappings().all()
+    friend_ids = [row["friend_id"] for row in friend_rows]
     if not friend_ids:
         return []
     blocked_ids = select(text("CASE WHEN blocker_id=:viewer THEN blocked_id ELSE blocker_id END")).select_from(text("user_blocks")).where(text("blocker_id=:viewer OR blocked_id=:viewer")).params(viewer=viewer.id)
@@ -86,8 +87,9 @@ def list_friends(db: Session, owner: User, viewer: User, query: str = "") -> lis
         value = f"%{query.strip()}%"
         statement = statement.join(User.profile).where(or_(User.username.ilike(value), text("profiles.full_name ILIKE :value").bindparams(value=value)))
     users = list(db.scalars(statement).unique().all())
+    connected_at = {row["friend_id"]: row["created_at"] for row in friend_rows}
     result = []
     for user in users:
         mutual = db.scalar(text("SELECT count(*) FROM (SELECT CASE WHEN user_low_id=:viewer THEN user_high_id ELSE user_low_id END id FROM friendships WHERE user_low_id=:viewer OR user_high_id=:viewer INTERSECT SELECT CASE WHEN user_low_id=:target THEN user_high_id ELSE user_low_id END id FROM friendships WHERE user_low_id=:target OR user_high_id=:target) m").bindparams(viewer=viewer.id, target=user.id)) or 0
-        result.append(FriendResponse(id=str(user.id), name=user.profile.full_name if user.profile else user.username, username=user.username, avatar=_media_url(db, user.profile.avatar_media_id if user.profile else None, "/assets/logo.png"), mutualCount=mutual, faculty=user.profile.faculty if user.profile else None))
-    return result
+        result.append(FriendResponse(id=str(user.id), name=user.profile.full_name if user.profile else user.username, username=user.username, avatar=_media_url(db, user.profile.avatar_media_id if user.profile else None, "/assets/logo.png"), mutualCount=mutual, faculty=user.profile.faculty if user.profile else None, currentCity=user.profile.current_city if user.profile else None, hometown=user.profile.hometown if user.profile else None, connectedAt=connected_at[user.id].isoformat()))
+    return sorted(result, key=lambda friend: friend.connectedAt or "", reverse=True)

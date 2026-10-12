@@ -146,14 +146,14 @@ export default function SystemConfig() {
               <select value={action} onChange={(event) => setAction(event.target.value as "BLOCK" | "REVIEW")}><option value="BLOCK">Chặn hoàn toàn</option><option value="REVIEW">Chuyển kiểm duyệt</option></select>
               <button type="button" disabled={!keyword.trim() || addingKeyword} onClick={() => void addKeyword()}><span aria-hidden="true">＋</span>{addingKeyword ? "Đang thêm..." : "Thêm từ khóa"}</button>
             </div>
-            {items.map((item) => (
+            <div className="moderation-keyword-list">{items.map((item) => (
               <article key={item.id} aria-busy={busyKeywordId === item.id}>
-                <strong>{item.keyword}</strong>
-                <span>{item.action === "BLOCK" ? "Chặn hoàn toàn" : "Chuyển kiểm duyệt"}</span>
-                <label><input type="checkbox" checked={item.is_active} disabled={busyKeywordId !== null} onChange={(event) => void toggleKeyword(item, event.target.checked)} /> Đang dùng</label>
-                <button type="button" disabled={busyKeywordId !== null} onClick={() => void removeKeyword(item)}><span aria-hidden="true">×</span>{busyKeywordId === item.id ? "Đang xử lý..." : "Xóa"}</button>
+                <div className="keyword-identity"><small>Từ khóa</small><strong>{item.keyword}</strong></div>
+                <span className={`keyword-action ${item.action === 'BLOCK' ? 'blocking' : 'reviewing'}`}>{item.action === "BLOCK" ? "Chặn hoàn toàn" : "Chuyển kiểm duyệt"}</span>
+                <label className="keyword-status"><input type="checkbox" checked={item.is_active} disabled={busyKeywordId !== null} onChange={(event) => void toggleKeyword(item, event.target.checked)} /> {item.is_active ? 'Đang dùng' : 'Đã tắt'}</label>
+                <button type="button" aria-label={`Xóa từ khóa ${item.keyword}`} disabled={busyKeywordId !== null} onClick={() => void removeKeyword(item)}>{busyKeywordId === item.id ? "Đang xử lý..." : "Xóa"}</button>
               </article>
-            ))}
+            ))}</div>
             {!items.length && <p className="admin-empty-state">Chưa có từ khóa kiểm duyệt nào.</p>}
           </div>
         </>

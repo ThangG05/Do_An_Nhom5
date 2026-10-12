@@ -62,6 +62,9 @@ export interface UserFriend {
   isOnline?: boolean;
   role?: string;
   faculty?: string;
+  currentCity?: string | null;
+  hometown?: string | null;
+  connectedAt?: string | null;
   friendshipStatus: FriendshipStatus;
 }
 

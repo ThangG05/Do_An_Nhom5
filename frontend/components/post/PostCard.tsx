@@ -24,6 +24,7 @@ interface PostCardProps {
   onLikeToggle?: (postId: string, isLiked: boolean) => void;
   onAddComment?: (postId: string, commentText: string) => void;
   moderatorGroupId?: string;
+  moderatorActions?: { isPinned: boolean; busy: boolean; onTogglePin: () => void; onRemove: () => void };
   highlightCommentId?: string | null;
 }
 
@@ -32,6 +33,7 @@ export default function PostCard({
   onLikeToggle,
   onAddComment,
   moderatorGroupId,
+  moderatorActions,
   highlightCommentId,
 }: PostCardProps) {
   const dialog = useDialog();
@@ -161,10 +163,13 @@ export default function PostCard({
         <div className="post-more-wrap">
           <button type="button" className="post-more-button" aria-label="Tùy chọn bài viết" aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}>•••</button>
           {menuOpen && <div className="post-more-menu">
-            {isOwner ? <>
+            {moderatorActions ? <>
+              <button type="button" disabled={moderatorActions.busy} onClick={() => { setMenuOpen(false); moderatorActions.onTogglePin(); }}>{moderatorActions.isPinned ? 'Bỏ ghim bài' : 'Ghim bài'}</button>
+              <button type="button" disabled={moderatorActions.busy} className="danger" onClick={() => { setMenuOpen(false); moderatorActions.onRemove(); }}>Gỡ bài khỏi nhóm</button>
+            </> : isOwner ? <>
               <button type="button" onClick={() => { setMenuOpen(false); handleEdit(); }}>✏️ Chỉnh sửa bài viết</button>
               <button type="button" className="danger" onClick={() => { setMenuOpen(false); handleDelete(); }}>🗑️ Xóa bài viết</button>
-            </> : <button type="button" onClick={() => { setMenuOpen(false); handleReport(); }}>⚑ Báo cáo bài viết</button>}
+            </> : !moderatorGroupId && <button type="button" onClick={() => { setMenuOpen(false); handleReport(); }}>⚑ Báo cáo bài viết</button>}
           </div>}
         </div>
       </div>

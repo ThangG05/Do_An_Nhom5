@@ -37,8 +37,17 @@ def test_feedback_email_escapes_untrusted_content(monkeypatch):
     monkeypatch.setattr(email_service.settings, "FEEDBACK_TO_EMAIL", "support@example.test")
     monkeypatch.setattr(email_service, "_send_email", lambda *args: sent.append(args))
 
-    email_service.send_user_feedback(sender_email="student@hvnh.edu.vn", sender_name="<Student>", message="<script>alert(1)</script>")
+    email_service.send_user_feedback(
+        sender_email="student@hvnh.edu.vn",
+        sender_name="<Student>",
+        message="Dòng đầu\n<script>alert(1)</script>",
+    )
 
     assert sent[0][0] == "support@example.test"
+    assert "THÔNG TIN NGƯỜI GỬI" in sent[0][2]
+    assert "NỘI DUNG GÓP Ý" in sent[0][2]
+    assert "mailto:student@hvnh.edu.vn" in sent[0][2]
+    assert "Dòng đầu<br>&lt;script&gt;" in sent[0][2]
+    assert "&lt;Student&gt;" in sent[0][2]
     assert "&lt;script&gt;" in sent[0][2]
     assert "<script>" not in sent[0][2]

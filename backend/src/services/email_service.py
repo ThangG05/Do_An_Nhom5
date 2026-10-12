@@ -2,6 +2,7 @@ import html
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from urllib.parse import quote
 
 import resend
 
@@ -96,15 +97,62 @@ def send_verification_code(email: str, code: str) -> None:
     ))
 
 
+def _feedback_template(*, sender_email: str, sender_name: str, message: str) -> str:
+    safe_name = html.escape(sender_name.strip() or "Sinh viên HVNH")
+    safe_email = html.escape(sender_email.strip())
+    mailto_email = html.escape(quote(sender_email.strip(), safe="@._+-"), quote=True)
+    safe_message = html.escape(message.strip()).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
+
+    return f"""<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Góp ý từ sinh viên HVNH Hub</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#f3f6fb;color:#17365d;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background-color:#f3f6fb;">
+      <tr><td align="center" style="padding:32px 12px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:620px;border-collapse:separate;background-color:#ffffff;border:1px solid #dce5f0;border-radius:18px;overflow:hidden;">
+          <tr><td style="padding:28px 32px 30px;background-color:#0b3158;color:#ffffff;">
+            <div style="font-size:12px;font-weight:700;letter-spacing:2px;color:#f7c948;">HVNH HUB</div>
+            <h1 style="margin:14px 0 8px;font-size:25px;line-height:1.25;font-weight:700;color:#ffffff;">Có góp ý mới từ sinh viên</h1>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#d9e8f7;">Phản hồi được gửi từ biểu mẫu Liên hệ và Góp ý.</p>
+          </td></tr>
+          <tr><td style="padding:30px 32px 28px;">
+            <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:1.4px;color:#607792;">THÔNG TIN NGƯỜI GỬI</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background-color:#f6f9fd;border:1px solid #e2eaf3;border-radius:12px;">
+              <tr><td style="padding:18px 20px;">
+                <div style="font-size:17px;line-height:1.45;font-weight:700;color:#102f52;overflow-wrap:anywhere;word-break:break-word;">{safe_name}</div>
+                <div style="margin-top:5px;font-size:14px;line-height:1.5;overflow-wrap:anywhere;word-break:break-word;"><a href="mailto:{mailto_email}" style="color:#1765a5;text-decoration:none;">{safe_email}</a></div>
+              </td></tr>
+            </table>
+            <p style="margin:27px 0 12px;font-size:12px;font-weight:700;letter-spacing:1.4px;color:#607792;">NỘI DUNG GÓP Ý</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background-color:#fffaf0;border-left:4px solid #f4bd37;border-radius:0 12px 12px 0;">
+              <tr><td style="padding:20px 22px;font-size:16px;line-height:1.7;color:#233b55;overflow-wrap:anywhere;word-break:break-word;">{safe_message}</td></tr>
+            </table>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;margin-top:28px;">
+              <tr><td style="background-color:#0b3158;border-radius:10px;">
+                <a href="mailto:{mailto_email}" style="display:inline-block;padding:13px 21px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">Trả lời góp ý</a>
+              </td></tr>
+            </table>
+          </td></tr>
+          <tr><td style="padding:18px 32px;border-top:1px solid #e7edf5;background-color:#fbfcfe;color:#71849a;font-size:12px;line-height:1.6;">
+            Email này được gửi tự động từ HVNH Hub. Để phản hồi, hãy dùng nút “Trả lời góp ý” hoặc liên hệ địa chỉ người gửi ở trên.
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>"""
+
+
 def send_user_feedback(*, sender_email: str, sender_name: str, message: str) -> None:
     recipient = settings.FEEDBACK_TO_EMAIL or settings.SMTP_FROM_EMAIL or settings.SMTP_USERNAME
     if not recipient:
         raise EmailDeliveryError("Email nhận góp ý chưa được cấu hình.")
-    body = (
-        '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#17365d">'
-        '<h2>Góp ý mới từ HVNH Hub</h2>'
-        f'<p><strong>Người gửi:</strong> {html.escape(sender_name)} ({html.escape(sender_email)})</p>'
-        f'<p style="white-space:pre-wrap">{html.escape(message)}</p>'
-        '</div>'
-    )
-    _send_email(recipient, "Góp ý từ sinh viên HVNH Hub", body)
+    _send_email(recipient, "Góp ý từ sinh viên HVNH Hub", _feedback_template(
+        sender_email=sender_email,
+        sender_name=sender_name,
+        message=message,
+    ))

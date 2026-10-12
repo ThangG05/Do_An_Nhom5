@@ -40,7 +40,7 @@ export interface UseProfileReturn {
   postFilter: string;
   friendsSearch: string;
   friendsFilter: string;
-  photosSubTab: 'of_you' | 'your_photos' | 'albums';
+  photosSubTab: 'your_photos' | 'albums';
   listingsCategory: string;
   // State setters & Actions
   setActiveTab: (tab: ProfileTabType) => void;
@@ -48,7 +48,7 @@ export interface UseProfileReturn {
   setPostFilter: (filter: string) => void;
   setFriendsSearch: (query: string) => void;
   setFriendsFilter: (filter: string) => void;
-  setPhotosSubTab: (subTab: 'of_you' | 'your_photos' | 'albums') => void;
+  setPhotosSubTab: (subTab: 'your_photos' | 'albums') => void;
   setListingsCategory: (category: string) => void;
   updateBio: (newBio: string) => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -77,7 +77,7 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
   const [postFilter, setPostFilter] = useState<string>('all');
   const [friendsSearch, setFriendsSearch] = useState<string>('');
   const [friendsFilter, setFriendsFilter] = useState<string>('all');
-  const [photosSubTab, setPhotosSubTab] = useState<'of_you' | 'your_photos' | 'albums'>('your_photos');
+  const [photosSubTab, setPhotosSubTab] = useState<'your_photos' | 'albums'>('your_photos');
   const [listingsCategory, setListingsCategory] = useState<string>('all');
 
   const resolvedUserId = targetUserId || 'me';
