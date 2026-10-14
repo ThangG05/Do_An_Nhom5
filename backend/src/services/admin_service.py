@@ -5,11 +5,13 @@ from datetime import UTC, datetime
 from fastapi import HTTPException
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 from sqlalchemy.orm import Session
 
 from src.db.models.user import AccountStatus, SystemRole, User
 from src.models.admin import AdminDashboardResponse, AdminUserPage, AdminUserResponse, AuditLogResponse, DisciplineRequest
+
+DEDICATED_ADMIN_SLUGS = {"pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"}
 
 
 def _count(db: Session, sql: str, params: dict | None = None) -> int:
@@ -17,6 +19,19 @@ def _count(db: Session, sql: str, params: dict | None = None) -> int:
 
 
 def dashboard(db: Session) -> AdminDashboardResponse:
+    totals = db.execute(text("""
+        SELECT
+          (SELECT count(*) FROM users WHERE deleted_at IS NULL) AS total_users,
+          (SELECT count(*) FROM users WHERE status='ACTIVE' AND deleted_at IS NULL) AS active_users,
+          (SELECT count(*) FROM users WHERE status='LOCKED' AND deleted_at IS NULL) AS locked_users,
+          (SELECT count(*) FROM users WHERE status='DISABLED' AND deleted_at IS NULL) AS disabled_users,
+          (SELECT count(*) FROM posts WHERE status='PENDING' AND deleted_at IS NULL) AS pending_posts,
+          (SELECT count(*) FROM posts WHERE status='APPROVED' AND deleted_at IS NULL) AS approved_posts,
+          (SELECT count(*) FROM posts WHERE status='REJECTED' AND deleted_at IS NULL) AS rejected_posts,
+          (SELECT count(*) FROM post_likes) AS total_likes,
+          (SELECT count(*) FROM comments WHERE deleted_at IS NULL) AS total_comments,
+          (SELECT count(*) FROM messages WHERE deleted_at IS NULL) AS total_messages
+    """)).mappings().one()
     group_rows = db.execute(text("SELECT g.id,g.name,g.slug,count(DISTINCT gm.user_id) members,count(DISTINCT p.id) FILTER(WHERE p.status='APPROVED' AND p.deleted_at IS NULL) approved_posts,count(DISTINCT p.id) FILTER(WHERE p.status='PENDING' AND p.deleted_at IS NULL) pending_posts FROM groups g LEFT JOIN group_members gm ON gm.group_id=g.id LEFT JOIN posts p ON p.group_id=g.id WHERE g.status='ACTIVE' GROUP BY g.id ORDER BY g.name")).mappings()
     activity_rows = db.execute(text("""
         SELECT day::date AS date,
@@ -27,14 +42,13 @@ def dashboard(db: Session) -> AdminDashboardResponse:
         ORDER BY day
     """)).mappings()
     return AdminDashboardResponse(
-        total_users=_count(db,"SELECT count(*) FROM users WHERE deleted_at IS NULL"),
-        active_users=_count(db,"SELECT count(*) FROM users WHERE status='ACTIVE' AND deleted_at IS NULL"),
-        locked_users=_count(db,"SELECT count(*) FROM users WHERE status='LOCKED' AND deleted_at IS NULL"),
-        disabled_users=_count(db,"SELECT count(*) FROM users WHERE status='DISABLED' AND deleted_at IS NULL"),
-        pending_posts=_count(db,"SELECT count(*) FROM posts WHERE status='PENDING' AND deleted_at IS NULL"),
-        approved_posts=_count(db,"SELECT count(*) FROM posts WHERE status='APPROVED' AND deleted_at IS NULL"),
-        rejected_posts=_count(db,"SELECT count(*) FROM posts WHERE status='REJECTED' AND deleted_at IS NULL"),
-        total_likes=_count(db,"SELECT count(*) FROM post_likes"), total_comments=_count(db,"SELECT count(*) FROM comments WHERE deleted_at IS NULL"), total_messages=_count(db,"SELECT count(*) FROM messages WHERE deleted_at IS NULL"), groups=[dict(row) for row in group_rows], activity=[{"date":row["date"].isoformat(),"new_users":row["new_users"],"posts":row["posts"],"messages":row["messages"]} for row in activity_rows],
+        total_users=totals["total_users"], active_users=totals["active_users"],
+        locked_users=totals["locked_users"], disabled_users=totals["disabled_users"],
+        pending_posts=totals["pending_posts"], approved_posts=totals["approved_posts"],
+        rejected_posts=totals["rejected_posts"], total_likes=totals["total_likes"],
+        total_comments=totals["total_comments"], total_messages=totals["total_messages"],
+        groups=[dict(row) for row in group_rows],
+        activity=[{"date":row["date"].isoformat(),"new_users":row["new_users"],"posts":row["posts"],"messages":row["messages"]} for row in activity_rows],
     )
 
 
@@ -100,8 +114,7 @@ def export_workbook(db: Session) -> BytesIO:
     return output
 
 
-def _serialize_user(db: Session, row) -> AdminUserResponse:
-    groups=[dict(item) for item in db.execute(text("SELECT g.id::text id,g.name,g.slug FROM group_members gm JOIN groups g ON g.id=gm.group_id WHERE gm.user_id=:uid AND gm.role='ADMIN' ORDER BY g.name"),{"uid":row["id"]}).mappings()]
+def _serialize_user(row, groups: list[dict]) -> AdminUserResponse:
     return AdminUserResponse(id=str(row["id"]),email=row["email"],username=row["username"],full_name=row["full_name"],student_code=row["student_code"],faculty=row["faculty"],status=str(row["status"]),system_role=str(row["system_role"]),admin_groups=groups,created_at=row["created_at"].isoformat(),last_login_at=row["last_login_at"].isoformat() if row["last_login_at"] else None,suspended_until=row["suspended_until"].isoformat() if row["suspended_until"] else None,warning_count=row["warning_count"] or 0)
 
 
@@ -111,8 +124,20 @@ def users(db: Session, q: str, account_status: str | None, limit: int, offset: i
     if account_status: where.append("u.status::text=:status");params["status"]=account_status
     clause=" AND ".join(where)
     total=_count(db,f"SELECT count(*) FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE {clause}",params)
-    rows=db.execute(text(f"SELECT u.id,u.email,u.username,u.status,u.system_role,u.created_at,u.last_login_at,u.suspended_until,u.warning_count,COALESCE(p.full_name,u.username) full_name,p.student_code,p.faculty FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE {clause} ORDER BY u.created_at DESC LIMIT :limit OFFSET :offset"),params).mappings()
-    return AdminUserPage(items=[_serialize_user(db,row) for row in rows],total=total,limit=limit,offset=offset)
+    rows=db.execute(text(f"SELECT u.id,u.email,u.username,u.status,u.system_role,u.created_at,u.last_login_at,u.suspended_until,u.warning_count,COALESCE(p.full_name,u.username) full_name,p.student_code,p.faculty FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE {clause} ORDER BY u.created_at DESC LIMIT :limit OFFSET :offset"),params).mappings().all()
+    groups_by_user: dict[uuid.UUID, list[dict]] = {row["id"]: [] for row in rows}
+    if groups_by_user:
+        group_query = text("""
+            SELECT gm.user_id, g.id::text AS id, g.name, g.slug
+            FROM group_members gm JOIN groups g ON g.id=gm.group_id
+            WHERE gm.user_id IN :user_ids AND gm.role='ADMIN'
+            ORDER BY g.name
+        """).bindparams(bindparam("user_ids", expanding=True))
+        for group in db.execute(group_query, {"user_ids": list(groups_by_user)}).mappings():
+            groups_by_user[group["user_id"]].append({
+                "id": group["id"], "name": group["name"], "slug": group["slug"],
+            })
+    return AdminUserPage(items=[_serialize_user(row, groups_by_user[row["id"]]) for row in rows],total=total,limit=limit,offset=offset)
 
 
 def _target(db: Session, user_id: uuid.UUID, actor: User) -> User:
@@ -136,11 +161,14 @@ def set_status(db: Session, user_id: uuid.UUID, actor: User, value: str, reason:
 
 def set_group_admin(db: Session, user_id: uuid.UUID, group_id: uuid.UUID, actor: User, grant: bool) -> None:
     target=_target(db,user_id,actor)
-    group=db.execute(text("SELECT name FROM groups WHERE id=:id AND status='ACTIVE'"),{"id":group_id}).scalar_one_or_none()
+    group=db.execute(text("SELECT name,slug FROM groups WHERE id=:id AND status='ACTIVE'"),{"id":group_id}).mappings().first()
     if not group: raise HTTPException(404,"Không tìm thấy nhóm.")
+    account_slug=target.email.lower().split("@",1)[0].removeprefix("admin-") if target.email.lower().endswith("@hvnh.edu.vn") else ""
+    if grant and account_slug in DEDICATED_ADMIN_SLUGS and target.email.lower().startswith("admin-") and group["slug"]!=account_slug:
+        raise HTTPException(409,"Tài khoản admin chuyên trách chỉ được quản lý nhóm tương ứng với email của mình.")
     if grant: db.execute(text("INSERT INTO group_members(group_id,user_id,role) VALUES(:gid,:uid,'ADMIN') ON CONFLICT(group_id,user_id) DO UPDATE SET role='ADMIN'"),{"gid":group_id,"uid":target.id})
     else: db.execute(text("DELETE FROM group_members WHERE group_id=:gid AND user_id=:uid AND role='ADMIN'"),{"gid":group_id,"uid":target.id})
-    _audit(db,actor,"GROUP_ADMIN_GRANTED" if grant else "GROUP_ADMIN_REVOKED",target.id,{"group_id":str(group_id),"group_name":group})
+    _audit(db,actor,"GROUP_ADMIN_GRANTED" if grant else "GROUP_ADMIN_REVOKED",target.id,{"group_id":str(group_id),"group_name":group["name"]})
     db.commit()
 
 

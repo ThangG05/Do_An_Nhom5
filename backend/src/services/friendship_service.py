@@ -2,14 +2,16 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy import delete, or_, select, text
+from sqlalchemy import bindparam, delete, or_, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.db.models.friendship import FriendRequest, FriendRequestStatus, Friendship
-from src.db.models.user import User
+from src.db.models.media import MediaFile, MediaStatus
+from src.db.models.user import Profile, User
 from src.models.user import FriendResponse
-from src.services.user_service import _media_url, friendship_status
+from src.services.storage_service import create_download_url
+from src.services.user_service import friendship_status
 
 
 def _pair(first: uuid.UUID, second: uuid.UUID) -> tuple[uuid.UUID, uuid.UUID]:
@@ -82,14 +84,46 @@ def list_friends(db: Session, owner: User, viewer: User, query: str = "") -> lis
     if not friend_ids:
         return []
     blocked_ids = select(text("CASE WHEN blocker_id=:viewer THEN blocked_id ELSE blocker_id END")).select_from(text("user_blocks")).where(text("blocker_id=:viewer OR blocked_id=:viewer")).params(viewer=viewer.id)
-    statement = select(User).where(User.id.in_(friend_ids), User.id.not_in(blocked_ids), User.deleted_at.is_(None))
+    statement = select(User, Profile).outerjoin(Profile, Profile.user_id == User.id).where(
+        User.id.in_(friend_ids), User.id.not_in(blocked_ids), User.deleted_at.is_(None)
+    )
     if query.strip():
         value = f"%{query.strip()}%"
-        statement = statement.join(User.profile).where(or_(User.username.ilike(value), text("profiles.full_name ILIKE :value").bindparams(value=value)))
-    users = list(db.scalars(statement).unique().all())
+        statement = statement.where(or_(User.username.ilike(value), Profile.full_name.ilike(value)))
+    user_rows = db.execute(statement).all()
+    avatar_ids = {profile.avatar_media_id for _, profile in user_rows if profile and profile.avatar_media_id}
+    avatars = {media.id: media for media in db.scalars(select(MediaFile).where(
+        MediaFile.id.in_(avatar_ids), MediaFile.status == MediaStatus.READY
+    )).all()} if avatar_ids else {}
+    visible_ids = [user.id for user, _ in user_rows]
+    mutual_query = text("""
+        WITH viewer_friends AS (
+            SELECT CASE WHEN user_low_id = :viewer THEN user_high_id ELSE user_low_id END AS id
+            FROM friendships WHERE user_low_id = :viewer OR user_high_id = :viewer
+        ), target_friends AS (
+            SELECT user_low_id AS target_id, user_high_id AS mutual_id
+            FROM friendships WHERE user_low_id IN :ids
+            UNION ALL
+            SELECT user_high_id AS target_id, user_low_id AS mutual_id
+            FROM friendships WHERE user_high_id IN :ids
+        )
+        SELECT target_id, count(*) AS mutual_count
+        FROM target_friends JOIN viewer_friends ON viewer_friends.id = target_friends.mutual_id
+        GROUP BY target_id
+    """).bindparams(bindparam("ids", expanding=True))
+    mutual_counts = dict(db.execute(mutual_query, {"viewer": viewer.id, "ids": visible_ids}).all()) if visible_ids else {}
     connected_at = {row["friend_id"]: row["created_at"] for row in friend_rows}
     result = []
-    for user in users:
-        mutual = db.scalar(text("SELECT count(*) FROM (SELECT CASE WHEN user_low_id=:viewer THEN user_high_id ELSE user_low_id END id FROM friendships WHERE user_low_id=:viewer OR user_high_id=:viewer INTERSECT SELECT CASE WHEN user_low_id=:target THEN user_high_id ELSE user_low_id END id FROM friendships WHERE user_low_id=:target OR user_high_id=:target) m").bindparams(viewer=viewer.id, target=user.id)) or 0
-        result.append(FriendResponse(id=str(user.id), name=user.profile.full_name if user.profile else user.username, username=user.username, avatar=_media_url(db, user.profile.avatar_media_id if user.profile else None, "/assets/logo.png"), mutualCount=mutual, faculty=user.profile.faculty if user.profile else None, currentCity=user.profile.current_city if user.profile else None, hometown=user.profile.hometown if user.profile else None, connectedAt=connected_at[user.id].isoformat()))
+    for user, profile in user_rows:
+        avatar_media = avatars.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
+        result.append(FriendResponse(
+            id=str(user.id), name=profile.full_name if profile else user.username,
+            username=user.username,
+            avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png",
+            mutualCount=mutual_counts.get(user.id, 0),
+            faculty=profile.faculty if profile else None,
+            currentCity=profile.current_city if profile else None,
+            hometown=profile.hometown if profile else None,
+            connectedAt=connected_at[user.id].isoformat(),
+        ))
     return sorted(result, key=lambda friend: friend.connectedAt or "", reverse=True)

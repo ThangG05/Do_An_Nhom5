@@ -14,10 +14,9 @@ import {
   IconSettings,
   IconLogout,
   IconAI,
-  IconChevronDown,
 } from './Icons';
 import { AuthUser, getAccessToken, getAuthUser, logoutSession } from '@/lib/auth';
-import { fetchUnreadMessageCount, fetchUnreadNotificationCount } from '@/lib/api';
+import { fetchHeaderUnreadCounts } from '@/lib/api';
 import { useAuthUser } from '@/components/auth/AuthProvider';
 import NavbarQuickPanel from './NavbarQuickPanel';
 import ProfileChatDock from '@/components/chat/ProfileChatDock';
@@ -28,7 +27,6 @@ export default function Navbar() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [settingsExpanded, setSettingsExpanded] = useState(false);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
@@ -41,7 +39,6 @@ export default function Navbar() {
   useEffect(() => {
     setAuthUser(contextUser || getAuthUser());
     setIsProfileMenuOpen(false);
-    setSettingsExpanded(false);
     setQuickPanel(null);
   }, [pathname, contextUser]);
 
@@ -87,24 +84,28 @@ export default function Navbar() {
   useEffect(() => {
     if (!contextUser || !getAccessToken()) {
       setMessageCount(0);
-      return;
-    }
-    const refreshCount = () => { void fetchUnreadMessageCount().then(setMessageCount).catch(() => undefined); };
-    refreshCount(); window.addEventListener('messages-changed', refreshCount);
-    const timer = window.setInterval(refreshCount, 30000);
-    return () => { window.removeEventListener('messages-changed', refreshCount); window.clearInterval(timer); };
-  }, [contextUser?.id]);
-
-  useEffect(() => {
-    if (!contextUser || !getAccessToken()) {
       setNotificationCount(0);
       return;
     }
-    const refreshCount = () => { void fetchUnreadNotificationCount().then(setNotificationCount).catch(() => undefined); };
+    let active = true;
+    const refreshCount = () => {
+      void fetchHeaderUnreadCounts().then(counts => {
+        if (active) {
+          setMessageCount(counts.messages);
+          setNotificationCount(counts.notifications);
+        }
+      }).catch(() => undefined);
+    };
     refreshCount();
+    window.addEventListener('messages-changed', refreshCount);
     window.addEventListener('notifications-changed', refreshCount);
     const timer = window.setInterval(refreshCount, 30000);
-    return () => { window.removeEventListener('notifications-changed', refreshCount); window.clearInterval(timer); };
+    return () => {
+      active = false;
+      window.removeEventListener('messages-changed', refreshCount);
+      window.removeEventListener('notifications-changed', refreshCount);
+      window.clearInterval(timer);
+    };
   }, [contextUser?.id]);
 
   // Completely hide top navbar on unauthenticated and onboarding flows
@@ -253,17 +254,14 @@ export default function Navbar() {
                   </Link>
                 )}
                 {!!authUser?.admin_group_slugs?.length && <Link href="/group-admin" className="pop-menu-row" onClick={() => setIsProfileMenuOpen(false)}><IconSettings size={18}/><span>Quản trị nhóm</span></Link>}
-                <button
-                  type="button"
+                <Link
+                  href="/settings"
                   className="pop-menu-row"
-                  aria-expanded={settingsExpanded}
-                  onClick={() => setSettingsExpanded(value => !value)}
+                  onClick={() => setIsProfileMenuOpen(false)}
                 >
                   <IconSettings size={18} />
                   <span>Cài đặt & Quyền riêng tư</span>
-                  <IconChevronDown size={16} className={`dropdown-chevron ${settingsExpanded ? 'is-open' : ''}`} aria-hidden="true" />
-                </button>
-                {settingsExpanded && <div className="profile-settings-shortcuts"><Link href="/settings/blocked" onClick={() => setIsProfileMenuOpen(false)}>Danh sách đã chặn</Link><Link href="/settings/password" onClick={() => setIsProfileMenuOpen(false)}>Đổi mật khẩu</Link><Link href="/settings" onClick={() => setIsProfileMenuOpen(false)}>Tất cả cài đặt</Link></div>}
+                </Link>
                 <div className="pop-menu-divider" />
                 <button
                   type="button"

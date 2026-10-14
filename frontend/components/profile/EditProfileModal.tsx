@@ -12,9 +12,12 @@ import {
   VIETNAM_PROVINCES,
 } from '@/lib/profile-options';
 
+export type ProfileEditSection = 'details' | 'avatar' | 'cover';
+
 interface EditProfileModalProps {
   profile: UserProfile;
   isOpen: boolean;
+  initialSection?: ProfileEditSection;
   onClose: () => void;
   onSave: (data: Partial<UserProfile>) => Promise<void>;
   onUploadAvatar?: (file: File, caption: string, visibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => Promise<void>;
@@ -24,6 +27,7 @@ interface EditProfileModalProps {
 export default function EditProfileModal({
   profile,
   isOpen,
+  initialSection = 'details',
   onClose,
   onSave,
   onUploadAvatar,
@@ -55,9 +59,41 @@ export default function EditProfileModal({
 
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
+  const modalRef = useRef<HTMLDialogElement>(null);
+  const avatarButtonRef = useRef<HTMLButtonElement>(null);
+  const coverButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const editingProfileId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
+    const modal = modalRef.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    modal?.showModal();
+    document.body.style.overflow = 'hidden';
+    const frame = requestAnimationFrame(() => {
+      const target = initialSection === 'cover' ? coverButtonRef.current
+        : initialSection === 'avatar' ? avatarButtonRef.current : closeButtonRef.current;
+      target?.focus({ preventScroll: true });
+      if (initialSection !== 'details') target?.closest('section')?.scrollIntoView({ block: 'start' });
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      modal?.close();
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus({ preventScroll: true });
+    };
+  }, [isOpen, initialSection]);
+
+  useEffect(() => () => { if (avatar.startsWith('blob:')) URL.revokeObjectURL(avatar); }, [avatar]);
+  useEffect(() => () => { if (coverBanner.startsWith('blob:')) URL.revokeObjectURL(coverBanner); }, [coverBanner]);
+
+  useEffect(() => {
+    if (!isOpen) { editingProfileId.current = null; return; }
+    // Uploads update the parent profile. Do not discard the other unsaved fields.
+    if (editingProfileId.current === profile.id) return;
+    editingProfileId.current = profile.id;
     setAvatar(profile.avatar || '');
     setCoverBanner(profile.coverBanner || '');
     setName(profile.name || '');
@@ -157,16 +193,16 @@ export default function EditProfileModal({
   };
 
   return createPortal(
-    <div className="edit-profile-modal-backdrop" onClick={() => { if (!isSaving) onClose(); }}>
+    <dialog ref={modalRef} className="edit-profile-modal-backdrop profile-edit-dialog" aria-labelledby="profile-edit-title"
+      onCancel={(event) => { event.preventDefault(); if (!isSaving) onClose(); }}
+      onClick={(event) => { if (event.target === event.currentTarget && !isSaving) onClose(); }}>
       <div
         className="edit-profile-modal-card"
         onClick={(e) => e.stopPropagation()}
-        aria-modal="true"
-        role="dialog"
       >
         <div className="modal-header">
-          <h2 className="modal-title">Chỉnh sửa trang cá nhân</h2>
-          <button type="button" className="close-btn" onClick={onClose} disabled={isSaving}>
+          <h2 id="profile-edit-title" className="modal-title">Chỉnh sửa trang cá nhân</h2>
+          <button ref={closeButtonRef} type="button" className="close-btn" aria-label="Đóng chỉnh sửa" onClick={onClose} disabled={isSaving}>
             ✕
           </button>
         </div>
@@ -177,6 +213,7 @@ export default function EditProfileModal({
             <div className="section-header-row">
               <h3>Ảnh đại diện</h3>
               <button
+                ref={avatarButtonRef}
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => avatarInputRef.current?.click()}
@@ -212,7 +249,7 @@ export default function EditProfileModal({
           <section className="form-section">
             <div className="section-header-row">
               <h3>Ảnh bìa</h3>
-              <button type="button" className="btn btn-secondary" onClick={() => coverInputRef.current?.click()}>
+              <button ref={coverButtonRef} type="button" className="btn btn-secondary" onClick={() => coverInputRef.current?.click()}>
                 Tải ảnh bìa từ máy tính
               </button>
               <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleCoverFileSelect} />
@@ -402,7 +439,7 @@ export default function EditProfileModal({
           </div>
         </form>
       </div>
-    </div>,
+    </dialog>,
     document.body,
   );
 }

@@ -1,0 +1,62 @@
+.comment-mention-menu {
+  position: absolute;
+  z-index: 35;
+  right: 0;
+  bottom: calc(100% + 9px);
+  left: 0;
+  display: grid;
+  max-height: min(320px, 42vh);
+  gap: 3px;
+  overflow: auto;
+  padding: 7px;
+  border: 1px solid #d8e3ec;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(12, 43, 72, .18);
+}
+.comment-mention-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #173a58;
+  text-align: left;
+  cursor: pointer;
+}
+.comment-mention-menu button:hover,
+.comment-mention-menu button.active { background: #edf5fb; }
+.comment-mention-menu img {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.comment-mention-menu button span { display: grid; min-width: 0; gap: 2px; }
+.comment-mention-menu strong,
+.comment-mention-menu small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.comment-mention-menu strong { color: #173a58; font-size: 12px; }
+.comment-mention-menu small { color: #71879a; font-size: 11px; }
+.comment-mention-loading { padding: 12px; color: #71879a; font-size: 12px; text-align: center; }
+.comment-author-name { display: inline-block; text-decoration: none; }
+.comment-author-name:hover { text-decoration: underline; }
+.comment-mention-link { color: inherit; text-decoration: none; }
+.comment-mention-link:hover { text-decoration: underline; }
+.comment-mention { color: #0b568c; font-weight: 800; }
+:root[data-theme="dark"] .comment-mention-menu {
+  border-color: #405363;
+  background: #1a2632;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .4);
+}
+:root[data-theme="dark"] .comment-mention-menu button { color: #e5edf5; }
+:root[data-theme="dark"] .comment-mention-menu button:hover,
+:root[data-theme="dark"] .comment-mention-menu button.active { background: #293b4b; }
+:root[data-theme="dark"] .comment-mention-menu strong { color: #edf4fa; }
+:root[data-theme="dark"] .comment-mention-menu small,
+:root[data-theme="dark"] .comment-mention-loading { color: #b6c4d1; }
+:root[data-theme="dark"] .comment-author-name { color: #e5edf5 !important; }
+:root[data-theme="dark"] .comment-mention { color: #83c5f4 !important; }

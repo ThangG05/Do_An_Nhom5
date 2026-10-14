@@ -13,7 +13,7 @@ import ProfileAboutTab from '@/components/profile/ProfileAboutTab';
 import ProfileFriendsTab from '@/components/profile/ProfileFriendsTab';
 import ProfilePhotosTab from '@/components/profile/ProfilePhotosTab';
 import ProfileListingsTab from '@/components/profile/ProfileListingsTab';
-import EditProfileModal from '@/components/profile/EditProfileModal';
+import EditProfileModal, { type ProfileEditSection } from '@/components/profile/EditProfileModal';
 import { createReport, setUserBlocked } from '@/lib/api';
 import { useDialog } from '@/components/ui/DialogProvider';
 import ProfileChatDock from '@/components/chat/ProfileChatDock';
@@ -21,6 +21,7 @@ import ProfileChatDock from '@/components/chat/ProfileChatDock';
 export default function VisitorProfilePage() {
   const dialog = useDialog();
   const [chatOpen, setChatOpen] = useState(false);
+  const [editSection, setEditSection] = useState<ProfileEditSection>('details');
   const params = useParams();
   const userId = params.id as string;
 
@@ -51,11 +52,18 @@ export default function VisitorProfilePage() {
     setListingsCategory,
     updateBio,
     updateProfile,
+    updateAvatar,
+    updateCover,
     handleFriendAction,
     unfriendById,
     handleCreatePost,
     refetchData,
   } = useProfile(userId);
+
+  const openEditModal = (section: ProfileEditSection = 'details') => {
+    setEditSection(section);
+    setIsEditModalOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -95,7 +103,7 @@ export default function VisitorProfilePage() {
         isOwnProfile={isOwnProfile}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onOpenEditModal={() => setIsEditModalOpen(true)}
+        onOpenEditModal={openEditModal}
         onFriendAction={handleFriendAction}
         onMessage={() => setChatOpen(true)}
         onReport={async () => {
@@ -122,15 +130,12 @@ export default function VisitorProfilePage() {
                 profile={profile}
                 isOwnProfile={isOwnProfile}
                 onUpdateBio={updateBio}
-                onOpenEditModal={() => setIsEditModalOpen(true)}
+                onOpenEditModal={() => openEditModal()}
               />
 
-              <ProfileListingsWidget
-                listings={listings}
-                onSeeAllListings={setActiveTab}
-              />
-              <ProfilePhotosWidget photos={photos} onSeeAllPhotos={setActiveTab} />
               <ProfileFriendsWidget friends={friends} friendsCount={profile.friendsCount} onSeeAllFriends={setActiveTab} />
+              {photos.length > 0 && <ProfilePhotosWidget photos={photos} onSeeAllPhotos={setActiveTab} />}
+              {listings.length > 0 && <ProfileListingsWidget listings={listings} onSeeAllListings={setActiveTab} />}
             </aside>
 
             <section className="profile-right-timeline">
@@ -151,7 +156,7 @@ export default function VisitorProfilePage() {
           <ProfileAboutTab
             profile={profile}
             isOwnProfile={isOwnProfile}
-            onOpenEditModal={() => setIsEditModalOpen(true)}
+            onOpenEditModal={() => openEditModal()}
           />
         )}
 
@@ -175,8 +180,11 @@ export default function VisitorProfilePage() {
       <EditProfileModal
         profile={profile}
         isOpen={isEditModalOpen}
+        initialSection={editSection}
         onClose={() => setIsEditModalOpen(false)}
         onSave={updateProfile}
+        onUploadAvatar={updateAvatar}
+        onUploadCover={updateCover}
       />
     </div>
   );

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from src.api.dependencies import CurrentUser
 from src.db.session import get_db
-from src.models.notification import MessageResponse, NotificationCountResponse, NotificationPageResponse, NotificationReadRequest, NotificationResponse
+from src.models.notification import HeaderUnreadCountsResponse, MessageResponse, NotificationCountResponse, NotificationPageResponse, NotificationReadRequest, NotificationResponse
 from src.services import notification_service
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
@@ -20,6 +20,12 @@ def get_notifications(current_user: CurrentUser, db: Annotated[Session, Depends(
 @router.get("/unread-count", response_model=NotificationCountResponse)
 def get_unread_count(current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
     return NotificationCountResponse(unread_count=notification_service.unread_count(db, current_user.id))
+
+
+@router.get("/header-counts", response_model=HeaderUnreadCountsResponse)
+def get_header_counts(current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
+    notifications, messages = notification_service.header_unread_counts(db, current_user.id)
+    return HeaderUnreadCountsResponse(notifications=notifications, messages=messages)
 
 
 @router.patch("/{notification_id}", response_model=NotificationResponse)

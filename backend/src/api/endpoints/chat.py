@@ -1,9 +1,10 @@
-import json,uuid
+import asyncio,json,uuid
 from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter,Depends,HTTPException,WebSocket,WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 from src.api.dependencies import CurrentUser
 from src.db.models.chat import ConversationMember
 from src.db.models.user import AccountStatus,User
@@ -16,11 +17,14 @@ router=APIRouter(prefix="/chat",tags=["Chat"])
 
 @router.get("/conversations",response_model=list[ConversationResponse])
 async def conversations(current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
-    rows=chat_service.list_conversations(db,current_user)
-    for row in rows:
-        if row.participantId:
-            row.isOnline=await manager.is_online(uuid.UUID(row.participantId))
-            row.lastActive="Đang hoạt động" if row.isOnline else "Ngoại tuyến"
+    rows = await run_in_threadpool(chat_service.list_conversations, db, current_user)
+    online = await asyncio.gather(*(
+        manager.is_online(uuid.UUID(row.participantId)) if row.participantId else asyncio.sleep(0, result=False)
+        for row in rows
+    ))
+    for row, is_online in zip(rows, online):
+        row.isOnline = is_online
+        row.lastActive = "Đang hoạt động" if is_online else "Ngoại tuyến"
     return rows
 
 @router.post("/conversations/direct",response_model=ConversationResponse)
@@ -32,8 +36,15 @@ def direct(payload:DirectConversationRequest,current_user:CurrentUser,db:Annotat
 
 @router.get("/conversations/{conversation_id}/messages",response_model=list[MessageResponse])
 async def messages(conversation_id:uuid.UUID,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)],limit:int=50,before:datetime|None=None):
-    result=chat_service.list_messages(db,conversation_id,current_user,min(max(limit,1),100),before)
-    peers=list(db.scalars(select(ConversationMember.user_id).where(ConversationMember.conversation_id==conversation_id,ConversationMember.user_id!=current_user.id,ConversationMember.left_at.is_(None))).all())
+    def load():
+        result = chat_service.list_messages(db, conversation_id, current_user, min(max(limit, 1), 100), before)
+        peers = list(db.scalars(select(ConversationMember.user_id).where(
+            ConversationMember.conversation_id == conversation_id,
+            ConversationMember.user_id != current_user.id,
+            ConversationMember.left_at.is_(None),
+        )).all())
+        return result, peers
+    result, peers = await run_in_threadpool(load)
     await manager.send_users(peers,{"event":"messages.seen","conversation_id":str(conversation_id),"seen_by":str(current_user.id)})
     return result
 
@@ -47,14 +58,23 @@ def shared_attachments(conversation_id:uuid.UUID,current_user:CurrentUser,db:Ann
 
 @router.patch("/conversations/{conversation_id}/settings",status_code=204)
 async def conversation_settings(conversation_id:uuid.UUID,payload:ConversationSettingsRequest,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
-    chat_service.update_settings(db,conversation_id,current_user,payload)
-    recipients=list(db.scalars(select(ConversationMember.user_id).where(ConversationMember.conversation_id==conversation_id,ConversationMember.left_at.is_(None))).all())
+    def update_and_recipients():
+        chat_service.update_settings(db, conversation_id, current_user, payload)
+        return list(db.scalars(select(ConversationMember.user_id).where(
+            ConversationMember.conversation_id == conversation_id, ConversationMember.left_at.is_(None)
+        )).all())
+    recipients = await run_in_threadpool(update_and_recipients)
     await manager.send_users(recipients,{"event":"conversation.updated","conversation_id":str(conversation_id)})
 
 @router.post("/conversations/{conversation_id}/messages",response_model=MessageResponse,status_code=201)
 async def send_message(conversation_id:uuid.UUID,payload:SendMessageRequest,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
-    message=chat_service.send(db,conversation_id,current_user,payload)
-    recipients=list(db.scalars(select(ConversationMember.user_id).where(ConversationMember.conversation_id==conversation_id,ConversationMember.left_at.is_(None))).all())
+    def send_and_recipients():
+        message = chat_service.send(db, conversation_id, current_user, payload)
+        recipients = list(db.scalars(select(ConversationMember.user_id).where(
+            ConversationMember.conversation_id == conversation_id, ConversationMember.left_at.is_(None)
+        )).all())
+        return message, recipients
+    message, recipients = await run_in_threadpool(send_and_recipients)
     await manager.send_users(recipients,{"event":"message.created","conversation_id":str(conversation_id),"message":message.model_dump(mode="json")})
     await manager.send_users([uid for uid in recipients if uid!=current_user.id],{"event":"notification.created","type":"MESSAGE"})
     return message
@@ -70,17 +90,27 @@ async def websocket_ticket(current_user:CurrentUser):
 
 @router.websocket("/ws")
 async def websocket_chat(websocket:WebSocket,ticket:str):
-    db=SessionLocal()
     connected=False;uid=None;peers=[]
     try:
         try:uid=await manager.consume_ticket(ticket)
         except Exception:uid=None
         if uid is None:await websocket.close(code=4401);return
-        user=db.get(User,uid)
-        if not user or user.status!=AccountStatus.ACTIVE:await websocket.close(code=4403);return
+        def initial_state():
+            with SessionLocal() as db:
+                user = db.get(User, uid)
+                if not user or user.status != AccountStatus.ACTIVE:
+                    return False, []
+                peers = list(db.scalars(select(ConversationMember.user_id).where(
+                    ConversationMember.user_id != uid, ConversationMember.left_at.is_(None),
+                    ConversationMember.conversation_id.in_(select(ConversationMember.conversation_id).where(
+                        ConversationMember.user_id == uid, ConversationMember.left_at.is_(None)
+                    ))
+                )).all())
+                return True, peers
+        valid, peers = await run_in_threadpool(initial_state)
+        if not valid:await websocket.close(code=4403);return
         await manager.connect(uid,websocket)
         connected=True
-        peers=list(db.scalars(select(ConversationMember.user_id).where(ConversationMember.user_id!=uid,ConversationMember.left_at.is_(None),ConversationMember.conversation_id.in_(select(ConversationMember.conversation_id).where(ConversationMember.user_id==uid,ConversationMember.left_at.is_(None))))).all())
         await manager.send_users(peers,{"event":"presence.changed","user_id":str(uid),"online":True})
         try:
             while True:
@@ -93,9 +123,18 @@ async def websocket_chat(websocket:WebSocket,ticket:str):
                 if event not in {"call.offer","call.answer","call.ice","call.end"}:continue
                 try:cid=uuid.UUID(str(data.get("conversation_id","")))
                 except ValueError:continue
-                membership=db.get(ConversationMember,(cid,uid))
-                if not membership or membership.left_at is not None:continue
-                recipients=list(db.scalars(select(ConversationMember.user_id).where(ConversationMember.conversation_id==cid,ConversationMember.user_id!=uid,ConversationMember.left_at.is_(None))).all())
+                def event_recipients():
+                    with SessionLocal() as db:
+                        membership = db.get(ConversationMember, (cid, uid))
+                        if not membership or membership.left_at is not None:
+                            return None
+                        return list(db.scalars(select(ConversationMember.user_id).where(
+                            ConversationMember.conversation_id == cid,
+                            ConversationMember.user_id != uid,
+                            ConversationMember.left_at.is_(None),
+                        )).all())
+                recipients = await run_in_threadpool(event_recipients)
+                if recipients is None:continue
                 outgoing={"event":event,"conversation_id":str(cid),"from_user_id":str(uid)}
                 if event in {"call.offer","call.answer"} and isinstance(data.get("sdp"),dict):outgoing["sdp"]=data["sdp"]
                 if event=="call.offer":outgoing["video"]=bool(data.get("video"))
@@ -108,4 +147,3 @@ async def websocket_chat(websocket:WebSocket,ticket:str):
         if connected and uid is not None:
             await manager.disconnect(uid,websocket)
             if not await manager.is_online(uid):await manager.send_users(peers,{"event":"presence.changed","user_id":str(uid),"online":False})
-        db.close()

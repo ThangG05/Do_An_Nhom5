@@ -4,6 +4,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { UserProfile, ProfileTabType } from '@/types/user';
 import ProfileNavTabs from './ProfileNavTabs';
+import ProfileImageViewer from './ProfileImageViewer';
+import type { ProfileEditSection } from './EditProfileModal';
 import { safeImageSrc } from '@/lib/media';
 import { useDialog } from '@/components/ui/DialogProvider';
 import { IconChevronDown, IconMoreDots } from '@/components/ui/Icons';
@@ -13,9 +15,8 @@ interface ProfileHeaderProps {
   isOwnProfile: boolean;
   activeTab: ProfileTabType;
   onTabChange: (tab: ProfileTabType) => void;
-  onOpenEditModal: () => void;
+  onOpenEditModal: (section?: ProfileEditSection) => void;
   onFriendAction: (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => Promise<void>;
-  onUpdateAvatarPhoto?: (newAvatarUrl: string) => void;
   onMessage?: () => void;
   onReport?: () => Promise<void>;
   onBlock?: () => Promise<void>;
@@ -28,7 +29,6 @@ export default function ProfileHeader({
   onTabChange,
   onOpenEditModal,
   onFriendAction,
-  onUpdateAvatarPhoto,
   onMessage,
   onReport,
   onBlock,
@@ -36,9 +36,8 @@ export default function ProfileHeader({
   const dialog = useDialog();
   const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
   const [isFriendMenuOpen, setIsFriendMenuOpen] = useState(false);
-  const [isAvatarViewerOpen, setIsAvatarViewerOpen] = useState(false);
+  const [viewingImage, setViewingImage] = useState<'avatar' | 'cover' | null>(null);
   const [friendActionPending, setFriendActionPending] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const optionsRef = useRef<HTMLDivElement | null>(null);
   const friendMenuRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -57,28 +56,6 @@ export default function ProfileHeader({
     document.addEventListener('keydown', escape);
     return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
   }, [isFriendMenuOpen]);
-
-  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      dialog.notify({title:'Tệp không hợp lệ',message:'Vui lòng chọn ảnh JPEG, PNG hoặc WEBP.',tone:'danger'});
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      dialog.notify({title:'Ảnh quá lớn',message:'Kích thước ảnh tối đa là 5 MB.',tone:'danger'});
-      return;
-    }
-
-    const localPreviewUrl = URL.createObjectURL(file);
-    if (onUpdateAvatarPhoto) {
-      onUpdateAvatarPhoto(localPreviewUrl);
-    } else {
-      onOpenEditModal();
-    }
-  };
 
   const runFriendAction = async (action: 'add' | 'accept' | 'reject' | 'unfriend' | 'cancel') => {
     if (friendActionPending) return;
@@ -161,25 +138,23 @@ export default function ProfileHeader({
 
   return (
     <header className="profile-header-container">
-      {/* Hidden Native Avatar File Input */}
-      <input
-        ref={avatarInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handleAvatarFileChange}
-      />
-
       <div className="profile-cover-banner">
-        <img src={safeImageSrc(profile.coverBanner)} alt={`Ảnh bìa của ${profile.name}`} className="cover-banner-img" />
-        <div className="cover-banner-gradient-overlay" aria-hidden="true" />
+        <button type="button" className="profile-cover-view" onClick={() => setViewingImage('cover')} aria-label={`Xem ảnh bìa của ${profile.name}`}>
+          <img src={safeImageSrc(profile.coverBanner)} alt={`Ảnh bìa của ${profile.name}`} className="cover-banner-img" />
+          <span className="cover-banner-gradient-overlay" aria-hidden="true" />
+          <span className="profile-cover-view-label" aria-hidden="true">Xem ảnh bìa</span>
+        </button>
+        {isOwnProfile && <button type="button" className="profile-cover-edit" onClick={() => onOpenEditModal('cover')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 6h4l2-3h4l2 3h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z" /><circle cx="12" cy="12" r="4" /></svg>
+          <span>Đổi ảnh bìa</span>
+        </button>}
       </div>
 
       {/* Elevated Profile Info Card */}
       <div className="profile-info-section">
         <div className="profile-info-content">
           {/* Avatar Container with Online Indicator */}
-          <button type="button" className="profile-avatar-wrapper profile-avatar-button" onClick={() => setIsAvatarViewerOpen(true)} aria-label={`Xem ảnh đại diện của ${profile.name}`}>
+          <button type="button" className="profile-avatar-wrapper profile-avatar-button" onClick={() => setViewingImage('avatar')} aria-label={`Xem ảnh đại diện của ${profile.name}`}>
             <img
               src={safeImageSrc(profile.avatar)}
               alt={profile.name}
@@ -211,7 +186,7 @@ export default function ProfileHeader({
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={onOpenEditModal}
+                onClick={() => onOpenEditModal()}
               >
                 <span>Chỉnh sửa trang cá nhân</span>
               </button>
@@ -267,7 +242,14 @@ export default function ProfileHeader({
           friendsCount={profile.friendsCount}
         />
       </div>
-      {isAvatarViewerOpen && <div className="profile-avatar-viewer" role="presentation" onClick={() => setIsAvatarViewerOpen(false)}><section role="dialog" aria-modal="true" aria-label="Ảnh đại diện" onClick={(event) => event.stopPropagation()}><button type="button" className="profile-avatar-viewer-close" onClick={() => setIsAvatarViewerOpen(false)} aria-label="Đóng">×</button><img src={safeImageSrc(profile.avatar)} alt={`Ảnh đại diện của ${profile.name}`}/>{isOwnProfile && <button type="button" className="profile-avatar-change-action" onClick={() => { setIsAvatarViewerOpen(false); onOpenEditModal(); }}>Đổi ảnh đại diện</button>}</section></div>}
+      {viewingImage && <ProfileImageViewer
+        key={`${profile.id}-${viewingImage}`}
+        src={viewingImage === 'cover' ? profile.coverBanner : profile.avatar}
+        name={profile.name}
+        kind={viewingImage}
+        onClose={() => setViewingImage(null)}
+        onEdit={isOwnProfile ? () => { setViewingImage(null); onOpenEditModal(viewingImage); } : undefined}
+      />}
     </header>
   );
 }

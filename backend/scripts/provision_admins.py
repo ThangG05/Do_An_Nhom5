@@ -54,6 +54,24 @@ def create_user(db, email: str, username: str, full_name: str, role: SystemRole)
     return user, initial_password
 
 
+def assign_dedicated_group(db, admin: User, group: dict) -> None:
+    """Keep a dedicated group-admin account scoped to its one named group."""
+    expected_email = f"{local_name(group['slug'])}@hvnh.edu.vn"
+    if admin.email.lower() != expected_email or admin.system_role != SystemRole.USER:
+        raise ValueError("Dedicated admin account does not match its group.")
+    db.execute(
+        text("DELETE FROM group_members WHERE user_id=:user_id AND group_id<>:group_id AND role='ADMIN'"),
+        {"user_id": admin.id, "group_id": group["id"]},
+    )
+    db.execute(
+        text(
+            "INSERT INTO group_members (group_id,user_id,role) VALUES (:group_id,:user_id,'ADMIN') "
+            "ON CONFLICT (group_id,user_id) DO UPDATE SET role='ADMIN'"
+        ),
+        {"group_id": group["id"], "user_id": admin.id},
+    )
+
+
 def main() -> None:
     credentials = []
     with SessionLocal.begin() as db:
@@ -82,13 +100,7 @@ def main() -> None:
                 f"Quản trị nhóm {group['name']}",
                 SystemRole.USER,
             )
-            db.execute(
-                text(
-                    "INSERT INTO group_members (group_id,user_id,role) VALUES (:group_id,:user_id,'ADMIN') "
-                    "ON CONFLICT (group_id,user_id) DO UPDATE SET role='ADMIN'"
-                ),
-                {"group_id": group["id"], "user_id": admin.id},
-            )
+            assign_dedicated_group(db, admin, group)
             credentials.append({"scope": group["slug"], "email": admin.email, "password": initial_password or "UNCHANGED"})
 
     print(json.dumps(credentials, ensure_ascii=False, indent=2))

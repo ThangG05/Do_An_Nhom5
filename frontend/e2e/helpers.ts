@@ -13,5 +13,5 @@ export async function login(page: Page, state: E2EState, role: keyof E2EState['e
   await page.locator('input[name="email"]').fill(state.emails[role]);
   await page.locator('input[name="password"]').fill(state.password);
   await page.locator('button[type="submit"]').click();
-  await expect(page).toHaveURL(role === 'super_admin' ? /\/admin$/ : /\/home$/);
+  await expect(page).toHaveURL(role === 'super_admin' ? /\/admin$/ : role === 'group_admin' ? /\/group-admin$/ : /\/home$/);
 }

@@ -5,6 +5,7 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import {DialogProvider} from "@/components/ui/DialogProvider";
 import {AuthProvider} from "@/components/auth/AuthProvider";
 import {RealtimeProvider} from "@/components/realtime/RealtimeProvider";
+import {ThemeProvider} from "@/components/theme/ThemeProvider";
 import "./globals.css";
 import "@/styles/pages/home.css";import "@/styles/pages/profile.css";import "@/styles/pages/groups.css";import "@/styles/pages/notifications.css";import "@/styles/pages/info.css";
 import "@/styles/post-polish.css";import "@/styles/post-actions.css";import "@/styles/comment-actions.css";import "@/styles/modern-system.css";import "@/styles/polish-final.css";import "@/styles/not-found.css";
@@ -27,7 +28,10 @@ import "@/styles/public-entry.css";
 import "@/styles/test02-feedback.css";
 import "@/styles/dropdown-and-friends.css";
 import "@/styles/test03-feedback.css";
+import "@/styles/profile-refresh.css";
+import "@/styles/comment-mentions.css";
+import "@/styles/dark-theme.css";
 
 const appFont=Be_Vietnam_Pro({subsets:["latin","vietnamese"],weight:["400","500","600","700"],variable:"--font-app",display:"swap"});
 export const metadata:Metadata={title:"HVNH Hub - Cộng đồng sinh viên Học viện Ngân hàng",description:"Nền tảng cộng đồng dành cho sinh viên HVNH: trao đổi đồ dùng, tìm trọ, sự kiện, học tập và nhắn tin thời gian thực."};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="vi" className={appFont.variable} data-scroll-behavior="smooth"><body className={appFont.className}><AuthProvider><RealtimeProvider><DialogProvider><a className="skip-link" href="#main-content">Bỏ qua điều hướng</a><Navbar/><div className="app-main-body-content" id="main-content"><AuthGuard>{children}</AuthGuard></div></DialogProvider></RealtimeProvider></AuthProvider></body></html>}
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="vi" className={appFont.variable} data-scroll-behavior="smooth" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html:"try{var t=localStorage.getItem('hvnh-hub-theme');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}}catch{}"}} /></head><body className={appFont.className}><ThemeProvider><AuthProvider><RealtimeProvider><DialogProvider><a className="skip-link" href="#main-content">Bỏ qua điều hướng</a><Navbar/><div className="app-main-body-content" id="main-content"><AuthGuard>{children}</AuthGuard></div></DialogProvider></RealtimeProvider></AuthProvider></ThemeProvider></body></html>}

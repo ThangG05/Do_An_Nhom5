@@ -11,11 +11,20 @@ def test_group_join_moderation_and_group_admin_permissions(client, db_session, m
     db_session.execute(text("INSERT INTO group_members(group_id,user_id,role) VALUES(:gid,:uid,'ADMIN')"), {"gid": group_id, "uid": admin.id})
     db_session.commit()
 
+    def membership_for(user):
+        response = client.get("/api/v1/groups", headers=auth_headers(user))
+        assert response.status_code == 200, response.text
+        return next(group["membership"] for group in response.json() if group["id"] == str(group_id))
+
+    assert membership_for(outsider) == "NONE"
+    assert membership_for(admin) == "ADMIN"
+
     assert client.get(f"/api/v1/groups/{group_id}/posts", headers=auth_headers(outsider)).status_code == 403
     assert client.get(f"/api/v1/groups/{group_id}/posts", headers=auth_headers(member)).status_code == 403
 
     join = client.post(f"/api/v1/groups/{group_id}/join", headers=auth_headers(member))
     assert join.status_code == 200
+    assert membership_for(member) == "PENDING"
     request_id = db_session.execute(text("SELECT id FROM group_join_requests WHERE group_id=:gid AND user_id=:uid"), {"gid": group_id, "uid": member.id}).scalar_one()
 
     forbidden = client.get(f"/api/v1/groups/{group_id}/admin/join-requests", headers=auth_headers(outsider))
@@ -30,6 +39,7 @@ def test_group_join_moderation_and_group_admin_permissions(client, db_session, m
         json={"decision": "APPROVE"},
     )
     assert approved_member.status_code == 204
+    assert membership_for(member) == "MEMBER"
 
     created = client.post(
         f"/api/v1/groups/{group_id}/posts",

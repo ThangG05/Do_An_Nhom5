@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from src.db.models.media import MediaFile, MediaStatus
 from src.db.models.post import Comment, Post, PostLike, PostMedia, PostStatus, PostType, PostVisibility
 from src.db.models.user import Profile, SystemRole, User
-from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RoomListingData, UpdatePostRequest
+from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentMentionResponse, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RoomListingData, UpdatePostRequest
 from src.models.user import UserListingResponse, UserPhotoResponse
 from src.services.storage_service import create_download_url
 
@@ -39,7 +39,67 @@ def _comment_response(db: Session, comment: Comment) -> CommentResponse:
         attached = db.get(MediaFile, comment.media_id)
         if attached and attached.status == MediaStatus.READY:
             image_url = create_download_url(attached)
-    return CommentResponse(id=str(comment.id), author=CommentAuthorResponse(id=str(user.id), name=user.profile.full_name if user.profile else user.username, avatar=avatar), content=comment.content, createdAt=comment.created_at.isoformat(), parentId=str(comment.parent_id) if comment.parent_id else None, imageUrl=image_url)
+    return CommentResponse(id=str(comment.id), author=CommentAuthorResponse(id=str(user.id), name=user.profile.full_name if user.profile else user.username, avatar=avatar), content=comment.content, createdAt=comment.created_at.isoformat(), parentId=str(comment.parent_id) if comment.parent_id else None, imageUrl=image_url, mentions=_comment_mention_responses(comment.mentions))
+
+
+def _comment_mention_responses(values: list[dict] | None) -> list[CommentMentionResponse]:
+    return [CommentMentionResponse(userId=str(item["user_id"]), name=item["name"], username=item["username"], start=item["start"], end=item["end"]) for item in (values or [])]
+
+
+def _validate_comment_mentions(db: Session, author: User, content: str, mentions: list, allowed_nonfriend_ids: set[uuid.UUID] | None = None) -> list[dict]:
+    result: list[dict] = []
+    used_ids: set[uuid.UUID] = set()
+    previous_end = -1
+    for mention in sorted(mentions, key=lambda item: item.start):
+        if mention.user_id in used_ids or mention.start < previous_end or mention.end <= mention.start or mention.end > len(content):
+            raise HTTPException(400, "Thông tin người được gắn thẻ không hợp lệ.")
+        target = db.get(User, mention.user_id)
+        can_mention = target and (target.id in (allowed_nonfriend_ids or set()) or _are_friends(db, author.id, target.id))
+        if not target or target.deleted_at is not None or target.id == author.id or not can_mention:
+            raise HTTPException(400, "Bạn chỉ có thể gắn thẻ bạn bè của mình.")
+        name = target.profile.full_name if target.profile else target.username
+        expected = f"@{name}"
+        if content[mention.start:mention.end] != expected:
+            raise HTTPException(400, "Tên người được gắn thẻ không khớp với nội dung bình luận.")
+        result.append({"user_id": str(target.id), "name": name, "username": target.username, "start": mention.start, "end": mention.end})
+        used_ids.add(target.id)
+        previous_end = mention.end
+    return result
+
+
+def _comment_responses(db: Session, comments: list[Comment]) -> list[CommentResponse]:
+    if not comments:
+        return []
+    author_ids = {comment.user_id for comment in comments}
+    author_rows = db.execute(select(User, Profile).outerjoin(
+        Profile, Profile.user_id == User.id
+    ).where(User.id.in_(author_ids))).all()
+    authors = {user.id: (user, profile) for user, profile in author_rows}
+    media_ids = {comment.media_id for comment in comments if comment.media_id}
+    media_ids.update(profile.avatar_media_id for _, profile in author_rows if profile and profile.avatar_media_id)
+    media = {item.id: item for item in db.scalars(select(MediaFile).where(
+        MediaFile.id.in_(media_ids), MediaFile.status == MediaStatus.READY
+    )).all()} if media_ids else {}
+    result = []
+    for comment in comments:
+        author = authors.get(comment.user_id)
+        if not author:
+            continue
+        user, profile = author
+        avatar = media.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
+        attachment = media.get(comment.media_id) if comment.media_id else None
+        result.append(CommentResponse(
+            id=str(comment.id),
+            author=CommentAuthorResponse(
+                id=str(user.id), name=profile.full_name if profile else user.username,
+                avatar=create_download_url(avatar) if avatar else "/assets/logo.png",
+            ),
+            content=comment.content, createdAt=comment.created_at.isoformat(),
+            parentId=str(comment.parent_id) if comment.parent_id else None,
+            imageUrl=create_download_url(attachment) if attachment else None,
+            mentions=_comment_mention_responses(comment.mentions),
+        ))
+    return result
 
 
 def _listing_data(payload: CreateProfilePostRequest | UpdatePostRequest, category: str) -> dict | None:
@@ -70,7 +130,7 @@ def _serialize(db: Session, post: Post, viewer_id: uuid.UUID) -> ProfilePostResp
     liked = db.get(PostLike, (post.id, viewer_id)) is not None
     listing = post.listing_data or {}
     group = db.execute(text("SELECT name,slug FROM groups WHERE id=:gid"), {"gid": post.group_id}).mappings().first() if post.group_id else None
-    return ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=author.profile.full_name if author.profile else author.username, avatar=avatar), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=media_items, likesCount=likes, commentsCount=len(comment_rows), isLiked=liked, comments=[_comment_response(db, item) for item in comment_rows], groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None)
+    return ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=author.profile.full_name if author.profile else author.username, avatar=avatar), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=media_items, likesCount=likes, commentsCount=len(comment_rows), isLiked=liked, comments=_comment_responses(db, comment_rows), groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None)
 
 
 def _media_kind(mime_type: str) -> str:
@@ -89,8 +149,11 @@ def _serialize_feed_posts(db: Session, posts: list[Post], viewer_id: uuid.UUID) 
         return []
     post_ids = [post.id for post in posts]
     author_ids = {post.author_id for post in posts}
-    authors = {user.id: user for user in db.scalars(select(User).where(User.id.in_(author_ids))).all()}
-    profiles = {profile.user_id: profile for profile in db.scalars(select(Profile).where(Profile.user_id.in_(author_ids))).all()}
+    author_rows = db.execute(select(User, Profile).outerjoin(
+        Profile, Profile.user_id == User.id
+    ).where(User.id.in_(author_ids))).all()
+    authors = {user.id: user for user, _ in author_rows}
+    profiles = {profile.user_id: profile for _, profile in author_rows if profile}
     avatar_ids = {profile.avatar_media_id for profile in profiles.values() if profile.avatar_media_id}
 
     links = db.scalars(select(PostMedia).where(PostMedia.post_id.in_(post_ids)).order_by(PostMedia.post_id, PostMedia.sort_order)).all()
@@ -101,31 +164,39 @@ def _serialize_feed_posts(db: Session, posts: list[Post], viewer_id: uuid.UUID) 
         if media := media_by_id.get(link.media_id):
             media_by_post[link.post_id].append(media)
 
-    like_counts = dict(db.execute(select(PostLike.post_id, func.count()).where(PostLike.post_id.in_(post_ids)).group_by(PostLike.post_id)).all())
-    comment_counts = dict(db.execute(select(Comment.post_id, func.count()).where(Comment.post_id.in_(post_ids), Comment.deleted_at.is_(None)).group_by(Comment.post_id)).all())
-    liked_post_ids = set(db.scalars(select(PostLike.post_id).where(PostLike.post_id.in_(post_ids), PostLike.user_id == viewer_id)).all())
+    engagement_rows = db.execute(select(
+        Post.id,
+        select(func.count()).select_from(PostLike).where(PostLike.post_id == Post.id).scalar_subquery(),
+        select(func.count()).select_from(Comment).where(
+            Comment.post_id == Post.id, Comment.deleted_at.is_(None)
+        ).scalar_subquery(),
+        select(PostLike.post_id).where(
+            PostLike.post_id == Post.id, PostLike.user_id == viewer_id
+        ).exists(),
+    ).where(Post.id.in_(post_ids))).all()
+    engagement = {post_id: (likes, comments, liked) for post_id, likes, comments, liked in engagement_rows}
 
     # A home card only needs a preview. Windowing keeps one popular post from
     # loading thousands of comments during a feed request.
     ranked_comments = select(Comment.id.label("comment_id"), func.row_number().over(partition_by=Comment.post_id, order_by=Comment.created_at.desc()).label("rank")).where(Comment.post_id.in_(post_ids), Comment.deleted_at.is_(None)).subquery()
-    preview_comments = db.scalars(select(Comment).join(ranked_comments, Comment.id == ranked_comments.c.comment_id).where(ranked_comments.c.rank <= 3).order_by(Comment.post_id, Comment.created_at)).all()
-    comment_user_ids = {comment.user_id for comment in preview_comments}
-    comment_users = {user.id: user for user in db.scalars(select(User).where(User.id.in_(comment_user_ids))).all()} if comment_user_ids else {}
-    comment_profiles = {profile.user_id: profile for profile in db.scalars(select(Profile).where(Profile.user_id.in_(comment_user_ids))).all()} if comment_user_ids else {}
+    preview_rows = db.execute(select(Comment, User, Profile)
+        .join(ranked_comments, Comment.id == ranked_comments.c.comment_id)
+        .join(User, User.id == Comment.user_id)
+        .outerjoin(Profile, Profile.user_id == User.id)
+        .where(ranked_comments.c.rank <= 3)
+        .order_by(Comment.post_id, Comment.created_at)).all()
+    preview_comments = [comment for comment, _, _ in preview_rows]
+    comment_profiles = {profile.user_id: profile for _, _, profile in preview_rows if profile}
     comment_avatar_ids = {profile.avatar_media_id for profile in comment_profiles.values() if profile.avatar_media_id}
     comment_media_ids = {comment.media_id for comment in preview_comments if comment.media_id}
     extra_media_ids = (comment_avatar_ids | comment_media_ids) - set(media_by_id)
     if extra_media_ids:
         media_by_id.update({media.id: media for media in db.scalars(select(MediaFile).where(MediaFile.id.in_(extra_media_ids), MediaFile.status == MediaStatus.READY)).all()})
     comments_by_post: dict[uuid.UUID, list[CommentResponse]] = {post_id: [] for post_id in post_ids}
-    for comment in preview_comments:
-        user = comment_users.get(comment.user_id)
-        if not user:
-            continue
-        profile = comment_profiles.get(user.id)
+    for comment, user, profile in preview_rows:
         avatar_media = media_by_id.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
         attached = media_by_id.get(comment.media_id) if comment.media_id else None
-        comments_by_post[comment.post_id].append(CommentResponse(id=str(comment.id), author=CommentAuthorResponse(id=str(user.id), name=profile.full_name if profile else user.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), content=comment.content, createdAt=comment.created_at.isoformat(), parentId=str(comment.parent_id) if comment.parent_id else None, imageUrl=create_download_url(attached) if attached else None))
+        comments_by_post[comment.post_id].append(CommentResponse(id=str(comment.id), author=CommentAuthorResponse(id=str(user.id), name=profile.full_name if profile else user.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), content=comment.content, createdAt=comment.created_at.isoformat(), parentId=str(comment.parent_id) if comment.parent_id else None, imageUrl=create_download_url(attached) if attached else None, mentions=_comment_mention_responses(comment.mentions)))
 
     group_ids = {post.group_id for post in posts if post.group_id}
     group_query = text("SELECT id,name,slug FROM groups WHERE id IN :group_ids").bindparams(bindparam("group_ids", expanding=True))
@@ -136,7 +207,8 @@ def _serialize_feed_posts(db: Session, posts: list[Post], viewer_id: uuid.UUID) 
         profile = profiles.get(author.id)
         avatar_media = media_by_id.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
         listing, group = post.listing_data or {}, groups.get(post.group_id)
-        result.append(ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=profile.full_name if profile else author.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=[PostMediaResponse(id=str(media.id), url=create_download_url(media), type=_media_kind(media.mime_type), name=media.original_name, size=media.file_size) for media in media_by_post[post.id]], likesCount=like_counts.get(post.id, 0), commentsCount=comment_counts.get(post.id, 0), isLiked=post.id in liked_post_ids, comments=comments_by_post[post.id], groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None))
+        likes, comments, liked = engagement.get(post.id, (0, 0, False))
+        result.append(ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=profile.full_name if profile else author.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=[PostMediaResponse(id=str(media.id), url=create_download_url(media), type=_media_kind(media.mime_type), name=media.original_name, size=media.file_size) for media in media_by_post[post.id]], likesCount=likes, commentsCount=comments, isLiked=liked, comments=comments_by_post[post.id], groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None))
     return result
 
 
@@ -193,7 +265,7 @@ def list_profile_posts(db: Session, target: User, viewer: User) -> list[ProfileP
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
     group_visibility = or_(Post.group_id.is_(None), Post.group_id.in_(member_group_ids))
     posts = db.scalars(select(Post).where(Post.author_id == target.id, group_visibility, Post.status == PostStatus.APPROVED, Post.deleted_at.is_(None), Post.visibility.in_(allowed)).order_by(Post.created_at.desc())).all()
-    return [_serialize(db, post, viewer.id) for post in posts]
+    return _serialize_feed_posts(db, posts, viewer.id)
 
 
 def list_user_photos(db: Session, target: User, viewer: User) -> list[UserPhotoResponse]:
@@ -229,7 +301,7 @@ def list_user_group_posts(db: Session, target: User, viewer: User) -> list[Profi
         Post.status == PostStatus.APPROVED,
         Post.deleted_at.is_(None),
     ).order_by(Post.created_at.desc())).all()
-    return [_serialize(db, post, viewer.id) for post in posts]
+    return _serialize_feed_posts(db, posts, viewer.id)
 
 
 def list_feed(db: Session, viewer: User, limit: int = 30, offset: int = 0, category: str | None = None, cursor: str | None = None) -> tuple[list[ProfilePostResponse], str | None]:
@@ -272,13 +344,21 @@ def get_post_response(db: Session, post_id: uuid.UUID, viewer: User) -> ProfileP
     return _serialize(db, get_visible_post(db, post_id, viewer), viewer.id)
 
 
-def list_comments(db: Session, post_id: uuid.UUID, viewer: User, limit: int = 100) -> list[CommentResponse]:
+def list_comments(db: Session, post_id: uuid.UUID, viewer: User, limit: int = 100, focus_comment_id: uuid.UUID | None = None) -> list[CommentResponse]:
     """Load a full comment thread only after the reader explicitly opens it."""
     get_visible_post(db, post_id, viewer)
     rows = db.scalars(
         select(Comment).where(Comment.post_id == post_id, Comment.deleted_at.is_(None)).order_by(Comment.created_at).limit(limit)
     ).all()
-    return [_comment_response(db, comment) for comment in rows]
+    if focus_comment_id and all(comment.id != focus_comment_id for comment in rows):
+        focused = db.scalar(select(Comment).where(
+            Comment.id == focus_comment_id,
+            Comment.post_id == post_id,
+            Comment.deleted_at.is_(None),
+        ))
+        if focused:
+            rows = sorted([*rows, focused], key=lambda comment: comment.created_at)
+    return _comment_responses(db, rows)
 
 
 def set_like(db: Session, post_id: uuid.UUID, user: User, desired: bool) -> tuple[bool, int]:
@@ -305,6 +385,7 @@ def add_comment(db: Session, post_id: uuid.UUID, user: User, payload: CommentCre
     from src.services.system_service import enforce_content
     enforce_content(db,payload.content)
     post = get_visible_post(db, post_id, user)
+    parent = None
     if payload.parent_id:
         parent = db.get(Comment, payload.parent_id)
         if not parent or parent.post_id != post.id or parent.deleted_at is not None:
@@ -314,13 +395,23 @@ def add_comment(db: Session, post_id: uuid.UUID, user: User, payload: CommentCre
         media = db.get(MediaFile, payload.media_id)
         if not media or media.owner_id != user.id or media.status != MediaStatus.READY or not media.mime_type.startswith("image/"):
             raise HTTPException(400, "Ảnh bình luận không hợp lệ.")
-    comment = Comment(post_id=post.id, user_id=user.id, parent_id=payload.parent_id, media_id=media.id if media else None, content=payload.content.strip())
+    content = payload.content.strip()
+    mentions = _validate_comment_mentions(db, user, content, payload.mentions, {parent.user_id} if parent else set())
+    comment = Comment(post_id=post.id, user_id=user.id, parent_id=payload.parent_id, media_id=media.id if media else None, content=content, mentions=mentions)
     db.add(comment)
     db.flush()
     notification_payload = {"post_id": str(post.id), "comment_id": str(comment.id)}
+    notified_user_ids = {post.author_id}
     _notify(db, post.author_id, user, "COMMENT", "Bài viết có bình luận mới", "đã bình luận bài viết của bạn", post.id, notification_payload)
     if payload.parent_id and parent.user_id != post.author_id:
         _notify(db, parent.user_id, user, "COMMENT", "Bình luận của bạn có phản hồi mới", "đã trả lời bình luận của bạn", post.id, notification_payload)
+        notified_user_ids.add(parent.user_id)
+    for mention in mentions:
+        recipient_id = uuid.UUID(mention["user_id"])
+        if recipient_id in notified_user_ids or recipient_id == user.id:
+            continue
+        _notify(db, recipient_id, user, "COMMENT", "Bạn được nhắc đến trong bình luận", "đã nhắc đến bạn trong một bình luận", post.id, notification_payload)
+        notified_user_ids.add(recipient_id)
     db.commit()
     db.refresh(comment)
     return _comment_response(db, comment)
@@ -370,7 +461,17 @@ def update_comment(db:Session,comment_id:uuid.UUID,user:User,payload:CommentUpda
     comment=db.get(Comment,comment_id)
     if not comment or comment.deleted_at is not None: raise HTTPException(404,"Không tìm thấy bình luận.")
     if comment.user_id!=user.id: raise HTTPException(403,"Bạn chỉ có thể sửa bình luận của mình.")
-    comment.content=payload.content.strip();comment.updated_at=datetime.now(timezone.utc);db.commit();db.refresh(comment)
+    updated_content = payload.content.strip()
+    preserved_mentions = []
+    search_from = 0
+    for mention in comment.mentions or []:
+        label = f"@{mention.get('name', '')}"
+        start = updated_content.find(label, search_from) if label != "@" else -1
+        if start >= 0:
+            end = start + len(label)
+            preserved_mentions.append({**mention, "start": start, "end": end})
+            search_from = end
+    comment.content=updated_content;comment.mentions=preserved_mentions;comment.updated_at=datetime.now(timezone.utc);db.commit();db.refresh(comment)
     return _comment_response(db,comment)
 
 def delete_comment(db:Session,comment_id:uuid.UUID,user:User)->None:

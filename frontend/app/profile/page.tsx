@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileIntroWidget from '@/components/profile/ProfileIntroWidget';
@@ -12,9 +12,10 @@ import ProfileAboutTab from '@/components/profile/ProfileAboutTab';
 import ProfileFriendsTab from '@/components/profile/ProfileFriendsTab';
 import ProfilePhotosTab from '@/components/profile/ProfilePhotosTab';
 import ProfileListingsTab from '@/components/profile/ProfileListingsTab';
-import EditProfileModal from '@/components/profile/EditProfileModal';
+import EditProfileModal, { type ProfileEditSection } from '@/components/profile/EditProfileModal';
 
 export default function OwnProfilePage() {
+  const [editSection, setEditSection] = useState<ProfileEditSection>('details');
   const {
     profile,
     posts,
@@ -49,6 +50,11 @@ export default function OwnProfilePage() {
     handleCreatePost,
     refetchData,
   } = useProfile();
+
+  const openEditModal = (section: ProfileEditSection = 'details') => {
+    setEditSection(section);
+    setIsEditModalOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -92,7 +98,7 @@ export default function OwnProfilePage() {
         isOwnProfile={isOwnProfile}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onOpenEditModal={() => setIsEditModalOpen(true)}
+        onOpenEditModal={openEditModal}
         onFriendAction={handleFriendAction}
       />
 
@@ -107,15 +113,12 @@ export default function OwnProfilePage() {
                 profile={profile}
                 isOwnProfile={isOwnProfile}
                 onUpdateBio={updateBio}
-                onOpenEditModal={() => setIsEditModalOpen(true)}
+                onOpenEditModal={() => openEditModal()}
               />
 
-              <ProfileListingsWidget
-                listings={listings}
-                onSeeAllListings={setActiveTab}
-              />
-              <ProfilePhotosWidget photos={photos} onSeeAllPhotos={setActiveTab} />
               <ProfileFriendsWidget friends={friends} friendsCount={profile.friendsCount} onSeeAllFriends={setActiveTab} />
+              {photos.length > 0 && <ProfilePhotosWidget photos={photos} onSeeAllPhotos={setActiveTab} />}
+              {listings.length > 0 && <ProfileListingsWidget listings={listings} onSeeAllListings={setActiveTab} />}
             </aside>
 
             {/* Right Column (Timeline Feed: 65%) */}
@@ -137,7 +140,7 @@ export default function OwnProfilePage() {
           <ProfileAboutTab
             profile={profile}
             isOwnProfile={isOwnProfile}
-            onOpenEditModal={() => setIsEditModalOpen(true)}
+            onOpenEditModal={() => openEditModal()}
           />
         )}
 
@@ -161,6 +164,7 @@ export default function OwnProfilePage() {
       <EditProfileModal
         profile={profile}
         isOpen={isEditModalOpen}
+        initialSection={editSection}
         onClose={() => setIsEditModalOpen(false)}
         onSave={updateProfile}
         onUploadAvatar={updateAvatar}

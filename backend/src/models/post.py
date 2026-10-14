@@ -101,10 +101,17 @@ class UpdatePostRequest(BaseModel):
     location: PostLocationData | None = None
 
 
+class CommentMentionInput(BaseModel):
+    user_id: uuid.UUID
+    start: int = Field(ge=0)
+    end: int = Field(gt=0)
+
+
 class CommentCreateRequest(BaseModel):
     content: str = Field(default="", max_length=2000)
     parent_id: uuid.UUID | None = None
     media_id: uuid.UUID | None = None
+    mentions: list[CommentMentionInput] = Field(default_factory=list, max_length=20)
     @model_validator(mode="after")
     def has_content_or_media(self):
         if not self.content.strip() and not self.media_id: raise ValueError("Bình luận phải có nội dung hoặc ảnh.")
@@ -120,6 +127,14 @@ class CommentAuthorResponse(BaseModel):
     avatar: str
 
 
+class CommentMentionResponse(BaseModel):
+    userId: str
+    name: str
+    username: str
+    start: int
+    end: int
+
+
 class CommentResponse(BaseModel):
     id: str
     author: CommentAuthorResponse
@@ -127,6 +142,7 @@ class CommentResponse(BaseModel):
     createdAt: str
     parentId: str | None = None
     imageUrl: str | None = None
+    mentions: list[CommentMentionResponse] = Field(default_factory=list)
 
 
 class LikeResponse(BaseModel):

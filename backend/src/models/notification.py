@@ -31,6 +31,11 @@ class NotificationCountResponse(BaseModel):
     unread_count: int
 
 
+class HeaderUnreadCountsResponse(BaseModel):
+    notifications: int
+    messages: int
+
+
 class NotificationReadRequest(BaseModel):
     is_read: bool = True
 

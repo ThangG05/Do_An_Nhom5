@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+import uuid
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 
 from src.api.routes import router
 from src.agents.rag_runtime import rag_lifespan
 from src.config import settings
 from src.services.realtime_service import manager
+from src.services.maintenance_cache import MaintenanceCache
 
 
 @asynccontextmanager
@@ -22,25 +25,35 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="HVNH Hub API", version="1.0.0", lifespan=lifespan)
+app.state.maintenance_cache = MaintenanceCache()
+
+
+def _can_bypass_maintenance(token: str) -> bool:
+    from src.db.session import SessionLocal
+    from src.core.security import decode_access_token
+    from src.db.models.user import User, SystemRole
+    with SessionLocal() as db:
+        user = db.get(User, uuid.UUID(decode_access_token(token)))
+        return bool(user and user.system_role == SystemRole.SUPER_ADMIN)
 
 @app.middleware("http")
 async def maintenance_guard(request:Request,call_next):
     allowed=("/api/v1/auth/","/api/v1/system/status","/api/v1/system/public-config","/docs","/openapi.json","/redoc")
     if request.url.path.startswith(allowed):return await call_next(request)
-    from src.db.session import SessionLocal
-    from src.services.system_service import maintenance
-    from src.core.security import decode_access_token
-    from src.db.models.user import User,SystemRole
-    with SessionLocal() as db:
-        state=maintenance(db)
-        if state.enabled:
-            bypass=False;header=request.headers.get("authorization","")
-            if header.startswith("Bearer "):
-                try:
-                    user=db.get(User,__import__('uuid').UUID(decode_access_token(header[7:])))
-                    bypass=bool(user and user.system_role==SystemRole.SUPER_ADMIN)
-                except Exception:pass
-            if not bypass:return JSONResponse(status_code=503,content={"detail":state.message,"maintenance":True,"expected_end_at":state.expected_end_at.isoformat() if state.expected_end_at else None})
+    state = await request.app.state.maintenance_cache.get()
+    if state.enabled:
+        bypass = False
+        header = request.headers.get("authorization", "")
+        if header.startswith("Bearer "):
+            try:
+                bypass = await run_in_threadpool(_can_bypass_maintenance, header[7:])
+            except Exception:
+                pass
+        if not bypass:
+            return JSONResponse(status_code=503, content={
+                "detail": state.message, "maintenance": True,
+                "expected_end_at": state.expected_end_at.isoformat() if state.expected_end_at else None,
+            })
     return await call_next(request)
 
 @app.middleware("http")
@@ -65,7 +78,10 @@ async def rate_limit_guard(request:Request,call_next):
                     from src.core.security import decode_access_token
                     identifier=f"user:{decode_access_token(auth[7:])}"
                 except Exception:pass
-            with SessionLocal() as db:allowed,retry=consume(db,identifier,bucket)
+            def check_limit():
+                with SessionLocal() as db:
+                    return consume(db, identifier, bucket)
+            allowed, retry = await run_in_threadpool(check_limit)
             if not allowed:return JSONResponse(status_code=429,content={"detail":"Bạn thao tác quá nhanh. Vui lòng thử lại sau."},headers={"Retry-After":str(retry)})
     return await call_next(request)
 

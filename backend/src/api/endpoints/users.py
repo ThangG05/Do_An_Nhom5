@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 from src.api.dependencies import CurrentUser
 from src.db.session import get_db
 from src.db.models.user import User
@@ -116,11 +117,16 @@ def get_friends(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Ses
 
 @router.post("/{user_id}/friendship", response_model=FriendshipActionResponse)
 async def change_friendship(user_id: uuid.UUID, payload: FriendshipActionRequest, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
-    target = db.get(User, user_id)
-    if target is None or target.deleted_at is not None:
-        raise HTTPException(404, "Không tìm thấy người dùng.")
-    result=FriendshipActionResponse(status=friendship_service.act(db, current_user, target, payload.action))
-    if payload.action in {"add","accept"}:await manager.send_users([target.id],{"event":"notification.created","type":"FRIEND_REQUEST"})
+    def change():
+        target = db.get(User, user_id)
+        if target is None or target.deleted_at is not None:
+            raise HTTPException(404, "Không tìm thấy người dùng.")
+        status = friendship_service.act(db, current_user, target, payload.action)
+        return status, target.id
+    status, target_id = await run_in_threadpool(change)
+    result = FriendshipActionResponse(status=status)
+    if payload.action in {"add", "accept"}:
+        await manager.send_users([target_id], {"event": "notification.created", "type": "FRIEND_REQUEST"})
     return result
 
 @router.put("/{user_id}/block",response_model=BlockResponse)

@@ -8,6 +8,9 @@ cd backend -> copy .env.example .env ( tạo file .env để lưu key trong dự
 cd frontend -> npm run dev ( chạy fe)
 
 cd backend -> uvicorn src.main:app --reload --port 8000 (chạy be)
+cd mobilehvnh
+flutter pub get
+flutter run -d chrome --web-port=5000
 
 Các tài liệu hướng dẫn style fe ở trong doc
 
@@ -17,6 +20,9 @@ python -m venv .venv
 cd backend 
 pip install -r requirements.txt  
 
-admin
 super-admin@hvnh.edu.vn
-NM8tp7t1oWlxUs1D1Nud!W
+admin-hoc-tap@hvnh.edu.vn
+admin-su-kien@hvnh.edu.vn
+admin-ghep-phong-tim-tro@hvnh.edu.vn
+admin-pass-do@hvnh.edu.vn
+Hvnh1234

@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from src.api.dependencies import CurrentUser
 from src.db.session import get_db
@@ -24,8 +25,8 @@ def feed(response: Response, current_user: CurrentUser, db: Annotated[Session, D
 
 
 @router.get("/{post_id}/comments", response_model=list[CommentResponse])
-def comments(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int, Query(ge=1, le=100)] = 100):
-    return post_service.list_comments(db, post_id, current_user, limit)
+def comments(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int, Query(ge=1, le=100)] = 100, focus_comment_id: uuid.UUID | None = None):
+    return post_service.list_comments(db, post_id, current_user, limit, focus_comment_id)
 
 
 @router.get("/{post_id}", response_model=ProfilePostResponse)
@@ -35,21 +36,30 @@ def get_post(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Sessio
 
 @router.put("/{post_id}/like", response_model=LikeResponse)
 async def like(post_id: uuid.UUID, payload: LikeRequest, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
-    liked, count = post_service.set_like(db, post_id, current_user, payload.is_liked)
-    post=db.get(Post,post_id)
-    if payload.is_liked and post and post.author_id!=current_user.id: await manager.send_users([post.author_id],{"event":"notification.created","type":"POST_LIKE"})
+    def update():
+        liked, count = post_service.set_like(db, post_id, current_user, payload.is_liked)
+        post = db.get(Post, post_id)
+        return liked, count, post.author_id if post else None
+    liked, count, author_id = await run_in_threadpool(update)
+    if payload.is_liked and author_id and author_id != current_user.id:
+        await manager.send_users([author_id],{"event":"notification.created","type":"POST_LIKE"})
     return LikeResponse(isLiked=liked, likesCount=count)
 
 
 @router.post("/{post_id}/comments", response_model=CommentResponse, status_code=201)
 async def comment(post_id: uuid.UUID, payload: CommentCreateRequest, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
-    result=post_service.add_comment(db, post_id, current_user, payload)
-    post=db.get(Post,post_id)
-    recipients={post.author_id} if post and post.author_id!=current_user.id else set()
-    if payload.parent_id:
-        from src.db.models.post import Comment
-        parent=db.get(Comment,payload.parent_id)
-        if parent and parent.user_id!=current_user.id:recipients.add(parent.user_id)
+    def add_and_recipients():
+        result = post_service.add_comment(db, post_id, current_user, payload)
+        post = db.get(Post, post_id)
+        recipients = {post.author_id} if post and post.author_id != current_user.id else set()
+        if payload.parent_id:
+            from src.db.models.post import Comment
+            parent = db.get(Comment, payload.parent_id)
+            if parent and parent.user_id != current_user.id:
+                recipients.add(parent.user_id)
+        recipients.update(mention.user_id for mention in payload.mentions if mention.user_id != current_user.id)
+        return result, recipients
+    result, recipients = await run_in_threadpool(add_and_recipients)
     await manager.send_users(recipients,{"event":"notification.created","type":"COMMENT"})
     return result
 

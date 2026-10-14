@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Post, Comment } from '@/types/post';
+import { Post, Comment, CommentMention } from '@/types/post';
 import { IconHeart, IconMessage } from '@/components/ui/Icons';
-import { addPostComment, fetchPostComments, removeGroupComment, setPostLike } from '@/lib/api';
+import { addPostComment, fetchPostComments, fetchUserFriends, removeGroupComment, setPostLike } from '@/lib/api';
 import { AuthUser, getAuthUser } from '@/lib/auth';
 import { useAuthUser } from '@/components/auth/AuthProvider';
 import PostActionModal from '@/components/post/PostActionModal';
@@ -12,6 +12,24 @@ import CommentActionModal from '@/components/post/CommentActionModal';
 import { safeImageSrc } from '@/lib/media';
 import { useDialog } from '@/components/ui/DialogProvider';
 import RelativeTime from '@/components/ui/RelativeTime';
+import type { UserFriend } from '@/types/user';
+
+function renderCommentContent(content: string, mentions: CommentMention[] = []) {
+  const validMentions = [...mentions]
+    .filter(mention => mention.start >= 0 && mention.end <= content.length && mention.end > mention.start)
+    .sort((a, b) => a.start - b.start);
+  if (!validMentions.length) return content;
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+  validMentions.forEach((mention, index) => {
+    if (mention.start < cursor || content.slice(mention.start, mention.end) !== `@${mention.name}`) return;
+    if (mention.start > cursor) parts.push(content.slice(cursor, mention.start));
+    parts.push(<Link href={`/profile/${mention.userId}`} className="comment-mention-link" key={`${mention.userId}-${index}`}><strong className="comment-mention">{content.slice(mention.start, mention.end)}</strong></Link>);
+    cursor = mention.end;
+  });
+  if (cursor < content.length) parts.push(content.slice(cursor));
+  return parts.length ? parts : content;
+}
 
 const privacyLabel = {
   public: { icon: '🌐', label: 'Công khai' },
@@ -46,6 +64,15 @@ export default function PostCard({
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
   const [commentInput, setCommentInput] = useState('');
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionStart, setMentionStart] = useState(0);
+  const [mentionFriends, setMentionFriends] = useState<UserFriend[]>([]);
+  const [mentionFriendsLoaded, setMentionFriendsLoaded] = useState(false);
+  const [mentionLoading, setMentionLoading] = useState(false);
+  const [mentionActiveIndex, setMentionActiveIndex] = useState(0);
+  const [selectedMentions, setSelectedMentions] = useState<CommentMention[]>([]);
+  const commentInputRef = useRef<HTMLInputElement>(null);
+  const mentionFriendsRequestStarted = useRef(false);
   const [commentImage,setCommentImage]=useState<File|null>(null);
   const [replyTo,setReplyTo]=useState<Comment|null>(null);
   const [content, setContent] = useState(post.content);
@@ -59,6 +86,95 @@ export default function PostCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewer, setViewer] = useState<AuthUser | null>(null);
   const authenticatedUser = useAuthUser();
+  const mentionMatches = mentionQuery === null ? [] : mentionFriends.filter((friend) => {
+    const query = mentionQuery.trim().toLocaleLowerCase();
+    return !query || friend.name.toLocaleLowerCase().includes(query) || friend.username.toLocaleLowerCase().includes(query);
+  }).slice(0, 8);
+
+  useEffect(() => {
+    if (mentionQuery === null || !authenticatedUser?.id || mentionFriendsLoaded || mentionFriendsRequestStarted.current) return;
+    mentionFriendsRequestStarted.current = true;
+    setMentionLoading(true);
+    void fetchUserFriends(authenticatedUser.id).then((friends) => {
+      setMentionFriends(friends);
+      setMentionFriendsLoaded(true);
+    }).catch(() => {
+      setMentionFriendsLoaded(true);
+    }).finally(() => {
+      setMentionLoading(false);
+    });
+  }, [mentionQuery, authenticatedUser?.id, mentionFriendsLoaded]);
+
+  useEffect(() => setMentionActiveIndex(0), [mentionQuery]);
+
+  const updateMentionQuery = (value: string, caret: number) => {
+    const beforeCaret = value.slice(0, caret);
+    const atIndex = beforeCaret.lastIndexOf('@');
+    if (atIndex < 0 || (atIndex > 0 && !/\s/.test(beforeCaret[atIndex - 1]))) {
+      setMentionQuery(null);
+      return;
+    }
+    const query = beforeCaret.slice(atIndex + 1);
+    if (/[\n@]/.test(query)) {
+      setMentionQuery(null);
+      return;
+    }
+    setMentionStart(atIndex);
+    setMentionQuery(query);
+  };
+
+  const updateSelectedMentions = (value: string) => {
+    const previous = commentInput;
+    let prefix = 0;
+    while (prefix < previous.length && prefix < value.length && previous[prefix] === value[prefix]) prefix += 1;
+    let suffix = 0;
+    while (suffix < previous.length - prefix && suffix < value.length - prefix && previous[previous.length - suffix - 1] === value[value.length - suffix - 1]) suffix += 1;
+    const replacedEnd = previous.length - suffix;
+    const delta = value.length - previous.length;
+    setSelectedMentions(current => current.flatMap(mention => {
+      let next = mention;
+      if (mention.start >= replacedEnd && mention.start >= prefix) next = { ...mention, start: mention.start + delta, end: mention.end + delta };
+      else if (mention.end > prefix) return [];
+      return value.slice(next.start, next.end) === `@${next.name}` ? [next] : [];
+    }));
+  };
+
+  const insertMention = (friend: UserFriend) => {
+    const input = commentInputRef.current;
+    const caret = input?.selectionStart ?? commentInput.length;
+    const label = `@${friend.name}`;
+    const next = `${commentInput.slice(0, mentionStart)}${label} ${commentInput.slice(caret)}`;
+    const end = mentionStart + label.length;
+    setSelectedMentions(current => [...current.filter(mention => mention.end <= mentionStart || mention.start >= caret), {
+      userId: friend.id, name: friend.name, username: friend.username, start: mentionStart, end,
+    }].sort((a, b) => a.start - b.start));
+    const nextCaret = end + 1;
+    setCommentInput(next);
+    setMentionQuery(null);
+    requestAnimationFrame(() => {
+      input?.focus();
+      input?.setSelectionRange(nextCaret, nextCaret);
+    });
+  };
+
+  const handleCommentKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (mentionQuery === null || mentionMatches.length === 0) {
+      if (event.key === 'Escape') setMentionQuery(null);
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setMentionActiveIndex(index => (index + 1) % mentionMatches.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setMentionActiveIndex(index => (index - 1 + mentionMatches.length) % mentionMatches.length);
+    } else if (event.key === 'Enter' || event.key === 'Tab') {
+      event.preventDefault();
+      insertMention(mentionMatches[mentionActiveIndex] || mentionMatches[0]);
+    } else if (event.key === 'Escape') {
+      setMentionQuery(null);
+    }
+  };
   const loadAllComments = async () => {
     if (loadingAllComments || comments.length >= commentsCount) return;
     setLoadingAllComments(true);
@@ -69,7 +185,7 @@ export default function PostCard({
   useEffect(() => {
     if (!highlightCommentId) return;
     setIsCommentSectionOpen(true);
-    void fetchPostComments(post.id).then(setComments).catch(error => setActionError(error instanceof Error ? error.message : 'Không thể tải bình luận.'));
+    void fetchPostComments(post.id, 100, highlightCommentId).then(setComments).catch(error => setActionError(error instanceof Error ? error.message : 'Không thể tải bình luận.'));
   }, [highlightCommentId, post.id]);
   useEffect(() => {
     if (!highlightCommentId || !comments.some(comment => comment.id === highlightCommentId)) return;
@@ -115,14 +231,21 @@ export default function PostCard({
     if ((!commentInput.trim() && !commentImage) || isSubmittingComment) return;
 
     const value = commentInput.trim();
+    const leadingTrim = commentInput.length - commentInput.trimStart().length;
+    const mentions = selectedMentions
+      .filter(mention => commentInput.slice(mention.start, mention.end) === `@${mention.name}`)
+      .map(mention => ({ user_id: mention.userId, start: mention.start - leadingTrim, end: mention.end - leadingTrim }))
+      .filter(mention => mention.start >= 0 && mention.end <= value.length);
     setIsSubmittingComment(true);
     setActionError('');
     try {
-      const created = await addPostComment(post.id, value, replyTo?.id, commentImage || undefined);
+      const created = await addPostComment(post.id, value, replyTo?.id, commentImage || undefined, mentions);
       setComments((prev) => [...prev, created]);
       setCommentsCount((prev) => prev + 1);
       onAddComment?.(post.id, value);
       setCommentInput('');
+      setSelectedMentions([]);
+      setMentionQuery(null);
       setCommentImage(null);
       setReplyTo(null);
     } catch (error) {
@@ -277,9 +400,22 @@ export default function PostCard({
                   className="comment-input-field"
                   placeholder={replyTo ? `Trả lời ${replyTo.author.name}...` : 'Viết bình luận...'}
                   value={commentInput}
-                  onChange={(e) => setCommentInput(e.target.value)}
+                  ref={commentInputRef}
+                  onChange={(e) => {
+                    updateSelectedMentions(e.target.value);
+                    setCommentInput(e.target.value);
+                    updateMentionQuery(e.target.value, e.target.selectionStart ?? e.target.value.length);
+                  }}
+                  onKeyDown={handleCommentKeyDown}
                   disabled={isSubmittingComment}
                 />
+                {mentionQuery !== null && (mentionLoading || mentionMatches.length > 0) && <div className="comment-mention-menu" role="listbox" aria-label="Gợi ý bạn bè để gắn thẻ">
+                  {mentionLoading && <div className="comment-mention-loading">Đang tìm bạn bè…</div>}
+                  {!mentionLoading && mentionMatches.map((friend, index) => <button type="button" role="option" aria-selected={index === mentionActiveIndex} className={index === mentionActiveIndex ? 'active' : ''} key={friend.id} onMouseDown={event => event.preventDefault()} onClick={() => insertMention(friend)}>
+                    <img src={friend.avatar || '/assets/logo.png'} alt="" />
+                    <span><strong>{friend.name}</strong><small>@{friend.username}</small></span>
+                  </button>)}
+                </div>}
                 <label className="comment-image-button" title="Thêm ảnh" aria-label="Thêm ảnh">📷<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>setCommentImage(e.target.files?.[0]||null)}/></label>
               </div>
               <button
@@ -306,13 +442,13 @@ export default function PostCard({
                     />
                     <div className="comment-content-column">
                       <div className="comment-bubble">
-                        <div className="comment-author-name">{c.author.name}</div>
-                        <p className="comment-text-body">{c.content}</p>
+                        <Link href={`/profile/${c.author.id}`} className="comment-author-name">{c.author.name}</Link>
+                        <p className="comment-text-body">{renderCommentContent(c.content, c.mentions)}</p>
                         {c.imageUrl&&<img className="comment-attached-image" src={safeImageSrc(c.imageUrl)} alt="Ảnh bình luận"/>}
                       </div>
                       <div className="comment-meta-row">
                         <RelativeTime className="comment-timestamp" value={c.createdAt}/>
-                        <button type="button" className="comment-reply-button" onClick={()=>{setReplyTo(c);setCommentInput(`@${c.author.name} `);}}>Trả lời</button>
+                        <button type="button" className="comment-reply-button" onClick={()=>{const label=`@${c.author.name}`;setReplyTo(c);setCommentInput(`${label} `);setSelectedMentions([{userId:c.author.id,name:c.author.name,start:0,end:label.length}]);setMentionQuery(null);}}>Trả lời</button>
                         {moderatorGroupId&&c.author.id!==getAuthUser()?.id&&<button type="button" className="comment-reply-button" onClick={()=>{void dialog.confirm({title:'Xóa bình luận khỏi nhóm?',message:'Bình luận sẽ không còn hiển thị với thành viên.',confirmLabel:'Xóa bình luận',tone:'danger'}).then(ok=>{if(ok)return removeGroupComment(moderatorGroupId,c.id).then(()=>{setComments(current=>current.filter(item=>item.id!==c.id));setCommentsCount(current=>Math.max(0,current-1));dialog.notify({title:'Đã xóa bình luận',tone:'success'});});}).catch(e=>setActionError(e instanceof Error?e.message:'Không thể xóa bình luận.'));}}>Xóa khỏi nhóm</button>}
                         <div className="comment-manage-actions">{c.author.id===getAuthUser()?.id?<><button onClick={()=>setCommentAction({comment:c,mode:'edit'})}>Sửa</button><button onClick={()=>setCommentAction({comment:c,mode:'delete'})}>Xóa</button></>:<button onClick={()=>setCommentAction({comment:c,mode:'report'})}>Báo cáo</button>}</div>
                       </div>

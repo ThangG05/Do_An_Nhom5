@@ -1,37 +1,161 @@
 "use client";
-import {useCallback,useEffect,useMemo,useState} from "react";
+
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import PostCard from "@/components/post/PostCard";
+import PendingGroupPostCard from "@/components/admin/PendingGroupPostCard";
 import ReportQueue from "@/components/admin/ReportQueue";
-import {decideGroupJoin,fetchGroupJoinRequests,fetchGroupMembers,fetchGroupPosts,fetchGroups,fetchPendingGroupPosts,kickGroupMember,moderateGroupPost,removeApprovedGroupPost,setGroupPostPinned} from "@/lib/api";
+import {
+  decideGroupJoin, fetchGroupJoinRequests, fetchGroupMembers, fetchGroupPosts,
+  fetchGroups, fetchPendingGroupPosts, kickGroupMember, moderateGroupPost,
+  removeApprovedGroupPost, setGroupPostPinned,
+} from "@/lib/api";
 import {getAuthUser} from "@/lib/auth";
-import type {ApiGroup,GroupJoinRequest,GroupMember,GroupPost} from "@/types/group-api";
+import type {ApiGroup, GroupJoinRequest, GroupMember, GroupPost} from "@/types/group-api";
 import {useDialog} from "@/components/ui/DialogProvider";
 import RelativeTime from "@/components/ui/RelativeTime";
 import {safeImageSrc} from "@/lib/media";
 
-type Tab="overview"|"pending"|"posts"|"members"|"reports";
-export default function GroupAdminPage(){
- const dialog=useDialog();
- const params=useSearchParams();
- const [groups,setGroups]=useState<ApiGroup[]>([]),[groupId,setGroupId]=useState(""),[pending,setPending]=useState<GroupPost[]>([]),[posts,setPosts]=useState<GroupPost[]>([]),[joins,setJoins]=useState<GroupJoinRequest[]>([]),[members,setMembers]=useState<GroupMember[]>([]),[tab,setTab]=useState<Tab>("overview"),[query,setQuery]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false);
- const active=groups.find(g=>g.id===groupId);
- const loadGroups=useCallback(async()=>{const auth=getAuthUser(),all=await fetchGroups();const scoped=auth?.system_role==='SUPER_ADMIN'?all:all.filter(g=>auth?.admin_group_slugs?.includes(g.slug));setGroups(scoped);const requested=params.get('groupId');const accountSlug=auth?.email?.split('@')[0]?.replace(/^admin-/, '');const preferred=scoped.find(g=>g.slug===accountSlug);setGroupId(current=>requested&&scoped.some(g=>g.id===requested)?requested:current&&scoped.some(g=>g.id===current)?current:preferred?.id||scoped[0]?.id||"");},[params]);
- const load=useCallback(async()=>{if(!groupId)return;const [waiting,approved,requests,people]=await Promise.all([fetchPendingGroupPosts(groupId),fetchGroupPosts(groupId),fetchGroupJoinRequests(groupId),fetchGroupMembers(groupId,query)]);setPending(waiting);setPosts(approved);setJoins(requests);setMembers(people);},[groupId,query]);
- useEffect(()=>{void loadGroups().catch(e=>setError(e.message));},[loadGroups]);useEffect(()=>{void load().catch(e=>setError(e.message));},[load]);
- const act=async(work:()=>Promise<unknown>)=>{setBusy(true);setError("");try{await work();await load();await loadGroups();}catch(e){setError(e instanceof Error?e.message:"Không thể thực hiện thao tác.");}finally{setBusy(false);}};
- const removePost=async(post:GroupPost)=>{const reason=await dialog.prompt({title:'Gỡ bài đã duyệt',message:'Tác giả sẽ nhận được lý do gỡ bài.',placeholder:'Nhập lý do gỡ bài...',multiline:true,minLength:3,tone:'danger'});if(reason)await act(()=>removeApprovedGroupPost(groupId,post.id,reason));};
- const rejectPost=async(post:GroupPost)=>{const reason=await dialog.prompt({title:'Từ chối bài viết',message:`Nêu lý do để ${post.author.name} biết cách chỉnh sửa.`,placeholder:'Lý do từ chối...',multiline:true,minLength:3,tone:'danger'});if(reason)await act(()=>moderateGroupPost(groupId,post.id,'REJECT',reason));};
- const kickMember=async(member:GroupMember)=>{if(await dialog.confirm({title:'Mời thành viên khỏi nhóm?',message:`${member.name} sẽ mất quyền truy cập nội dung dành cho thành viên.`,confirmLabel:'Mời khỏi nhóm',tone:'danger'}))await act(()=>kickGroupMember(groupId,member.id));};
- const stats=useMemo(()=>[{label:"Chờ duyệt",value:pending.length},{label:"Yêu cầu gia nhập",value:joins.length},{label:"Thành viên",value:active?.member_count||members.length},{label:"Bài đang hiển thị",value:posts.length}],[pending.length,joins.length,active,members.length,posts.length]);
- if(!groups.length&&!error)return <main className="group-admin-page"><div className="group-admin-empty"><h1>Không có nhóm được phân công</h1><p>Super Admin cần gán bạn làm Admin của ít nhất một nhóm.</p></div></main>;
- return <main className="group-admin-page"><header className="group-admin-hero"><div><span>GROUP ADMIN WORKSPACE</span><h1>Quản trị nhóm {active?.name || ""}</h1><p>Mọi dữ liệu và thao tác đều giới hạn trong nhóm được phân công.</p></div>{groups.length>1&&<select value={groupId} aria-label="Chọn nhóm quản trị" onChange={e=>{setGroupId(e.target.value);setTab("overview");}}>{groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</select>}</header>
- {error&&<div className="group-admin-error">{error}</div>}
- <section className="group-admin-stats">{stats.map(s=><article key={s.label}><b>{s.value}</b><span>{s.label}</span></article>)}</section>
- <nav className="group-admin-nav">{([['overview','Tổng quan'],['pending',`Kiểm duyệt${pending.length>0?` (${pending.length})`:''}`],['posts','Bài đã duyệt'],['members',`Thành viên${members.length>0?` (${members.length})`:''}`],['reports','Báo cáo']] as [Tab,string][]).map(([id,label])=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>
- {tab==='overview'&&<section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid"><button onClick={()=>setTab('pending')}><b>{pending.length}</b><span>Bài đang chờ quyết định</span></button><button onClick={()=>setTab('members')}><b>{joins.length}</b><span>Yêu cầu tham gia mới</span></button><button onClick={()=>setTab('reports')}><b>→</b><span>Mở hàng chờ báo cáo</span></button></div></section>}
- {tab==='pending'&&<section className="group-admin-panel"><h2>Hàng chờ kiểm duyệt</h2>{pending.map(p=><article className="moderation-row" key={p.id}><div><strong>{p.author.name}</strong><p>{p.content||"Bài viết chỉ có tệp đính kèm"}</p><RelativeTime value={p.createdAt}/></div><div><button disabled={busy} onClick={()=>act(()=>moderateGroupPost(groupId,p.id,'APPROVE'))}>Phê duyệt</button><button disabled={busy} className="danger" onClick={()=>{void rejectPost(p);}}>Từ chối</button></div></article>)}{!pending.length&&<p className="admin-empty-state">Không có bài chờ duyệt.</p>}</section>}
- {tab==='posts'&&<section className="group-admin-panel"><h2>Bài viết đang hiển thị</h2>{posts.map(p=><div className="managed-post" key={p.id}><PostCard post={p} moderatorGroupId={groupId} moderatorActions={{isPinned:p.isPinned,busy,onTogglePin:()=>{void act(()=>setGroupPostPinned(groupId,p.id,!p.isPinned));},onRemove:()=>{void removePost(p);}}}/></div>)}{!posts.length&&<p className="admin-empty-state">Nhóm chưa có bài đã duyệt.</p>}</section>}
- {tab==='members'&&<section className="group-admin-panel"><div className="panel-title-row"><h2>Thành viên và yêu cầu gia nhập</h2><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Tìm theo tên hoặc mã sinh viên"/></div>{joins.map(r=><article className="moderation-row join" key={r.id}><div><strong>{r.name}</strong><p>@{r.username}</p></div><div><button onClick={()=>act(()=>decideGroupJoin(groupId,r.id,'APPROVE'))}>Chấp nhận</button><button className="danger" onClick={()=>act(()=>decideGroupJoin(groupId,r.id,'REJECT'))}>Từ chối</button></div></article>)}<div className="member-table">{members.map(m=><article key={m.id}><div className="member-identity"><img src={safeImageSrc(m.avatar_url)} alt=""/><span><strong>{m.name}</strong><small>@{m.username} · {m.student_code||'Chưa có MSSV'}</small></span></div><b>{m.role}</b>{m.role==='MEMBER'&&<button className="danger" onClick={()=>void kickMember(m)}>Mời khỏi nhóm</button>}</article>)}</div>{!members.length&&<p className="admin-empty-state">Không tìm thấy thành viên.</p>}</section>}
- {tab==='reports'&&groupId&&<ReportQueue groupId={groupId}/>}</main>;
+type Tab = "overview" | "pending" | "posts" | "members" | "reports";
+const dedicatedSlugs = new Set(["pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"]);
+
+function dedicatedSlug(email?: string): string | null {
+  const match = /^admin-([a-z-]+)@hvnh\.edu\.vn$/i.exec(email || "");
+  return match && dedicatedSlugs.has(match[1]) ? match[1] : null;
+}
+
+export default function GroupAdminPage() {
+  const dialog = useDialog();
+  const params = useSearchParams();
+  const previousRequested = useRef<string | null>(null);
+  const loadVersion = useRef(0);
+  const busyRef = useRef(false);
+  const [groups, setGroups] = useState<ApiGroup[]>([]);
+  const [groupId, setGroupId] = useState("");
+  const [pending, setPending] = useState<GroupPost[]>([]);
+  const [posts, setPosts] = useState<GroupPost[]>([]);
+  const [joins, setJoins] = useState<GroupJoinRequest[]>([]);
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [tab, setTab] = useState<Tab>("overview");
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
+  const [loadingGroups, setLoadingGroups] = useState(true);
+  const [loadingContent, setLoadingContent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const active = groups.find(group => group.id === groupId);
+
+  const loadGroups = useCallback(async () => {
+    const auth = getAuthUser();
+    const all = await fetchGroups();
+    // The API membership is live; local auth data can be stale after a role change.
+    const owned = auth?.system_role === "SUPER_ADMIN" ? all : all.filter(group => group.membership === "ADMIN");
+    const assigned = auth?.system_role === "SUPER_ADMIN" ? null : dedicatedSlug(auth?.email);
+    const scoped = assigned ? owned.filter(group => group.slug === assigned) : owned;
+    setGroups(scoped);
+    setError(assigned && !scoped.length ? "Tài khoản quản trị chưa được gán đúng nhóm. Vui lòng liên hệ Super Admin." : "");
+
+    const requested = params.get("groupId");
+    const routeChanged = previousRequested.current !== requested;
+    previousRequested.current = requested;
+    setGroupId(current => {
+      if (assigned) return scoped[0]?.id || "";
+      if (routeChanged && requested && scoped.some(group => group.id === requested)) return requested;
+      if (current && scoped.some(group => group.id === current)) return current;
+      if (requested && scoped.some(group => group.id === requested)) return requested;
+      return scoped[0]?.id || "";
+    });
+  }, [params]);
+
+  const load = useCallback(async () => {
+    const version = ++loadVersion.current;
+    if (!groupId) return;
+    setLoadingContent(true);
+    try {
+      const [waiting, approved, requests, people] = await Promise.all([
+        fetchPendingGroupPosts(groupId), fetchGroupPosts(groupId),
+        fetchGroupJoinRequests(groupId), fetchGroupMembers(groupId, query),
+      ]);
+      if (version !== loadVersion.current) return;
+      setPending(waiting);
+      setPosts(approved);
+      setJoins(requests);
+      setMembers(people);
+    } finally {
+      if (version === loadVersion.current) setLoadingContent(false);
+    }
+  }, [groupId, query]);
+
+  useEffect(() => {
+    void loadGroups().catch(cause => setError(cause instanceof Error ? cause.message : "Không tải được nhóm quản trị.")).finally(() => setLoadingGroups(false));
+  }, [loadGroups]);
+  useEffect(() => {
+    setPending([]);
+    setPosts([]);
+    setJoins([]);
+    setMembers([]);
+  }, [groupId]);
+  useEffect(() => { void load().catch(cause => setError(cause instanceof Error ? cause.message : "Không tải được dữ liệu nhóm.")); }, [load]);
+
+  const act = async (work: () => Promise<unknown>) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setError("");
+    try { await work(); await load(); await loadGroups(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Không thể thực hiện thao tác."); }
+    finally { busyRef.current = false; setBusy(false); }
+  };
+  const removePost = async (post: GroupPost) => {
+    const reason = await dialog.prompt({title: "Gỡ bài đã duyệt", message: "Tác giả sẽ nhận được lý do gỡ bài.", placeholder: "Nhập lý do gỡ bài...", multiline: true, minLength: 3, tone: "danger"});
+    if (reason) await act(() => removeApprovedGroupPost(groupId, post.id, reason));
+  };
+  const rejectPost = async (post: GroupPost) => {
+    const reason = await dialog.prompt({title: "Từ chối bài viết", message: `Nêu lý do để ${post.author.name} biết cách chỉnh sửa.`, placeholder: "Lý do từ chối...", multiline: true, minLength: 3, tone: "danger"});
+    if (reason) await act(() => moderateGroupPost(groupId, post.id, "REJECT", reason));
+  };
+  const kickMember = async (member: GroupMember) => {
+    if (await dialog.confirm({title: "Mời thành viên khỏi nhóm?", message: `${member.name} sẽ mất quyền truy cập nội dung dành cho thành viên.`, confirmLabel: "Mời khỏi nhóm", tone: "danger"})) await act(() => kickGroupMember(groupId, member.id));
+  };
+  const stats = useMemo(() => [
+    {label: "Chờ duyệt", value: pending.length},
+    {label: "Yêu cầu gia nhập", value: joins.length},
+    {label: "Thành viên", value: active?.member_count ?? members.length},
+    {label: "Bài đang hiển thị", value: posts.length},
+  ], [pending.length, joins.length, active?.member_count, members.length, posts.length]);
+
+  if (loadingGroups) return <main className="group-admin-page"><div className="group-admin-empty">Đang tải nhóm quản trị...</div></main>;
+  if (!groups.length) return <main className="group-admin-page"><div className="group-admin-empty"><h1>Không có nhóm được phân công</h1><p>{error || "Super Admin cần gán bạn làm Admin của một nhóm."}</p></div></main>;
+
+  return <main className="group-admin-page">
+    <header className="group-admin-hero"><div><span>GROUP ADMIN WORKSPACE</span><h1>Quản trị nhóm {active?.name || ""}</h1><p>Mọi dữ liệu và thao tác đều giới hạn trong nhóm được phân công.</p></div>
+      {groups.length > 1 && <select value={groupId} aria-label="Chọn nhóm quản trị" onChange={event => { setGroupId(event.target.value); setTab("overview"); }}>{groups.map(group => <option key={group.id} value={group.id}>{group.name}</option>)}</select>}
+    </header>
+    {error && <div className="group-admin-error" role="alert">{error}</div>}
+    <section className="group-admin-stats">{stats.map(stat => <article key={stat.label}><b>{stat.value}</b><span>{stat.label}</span></article>)}</section>
+    <nav className="group-admin-nav" aria-label="Mục quản trị nhóm">{([
+      ["overview", "Tổng quan"], ["pending", `Kiểm duyệt${pending.length ? ` (${pending.length})` : ""}`],
+      ["posts", "Bài đã duyệt"], ["members", `Thành viên${members.length ? ` (${members.length})` : ""}`], ["reports", "Báo cáo"],
+    ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}</button>)}</nav>
+
+    {tab === "overview" && <section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid">
+      <button type="button" onClick={() => setTab("pending")}><b>{pending.length}</b><span>Bài đang chờ quyết định</span></button>
+      <button type="button" onClick={() => setTab("members")}><b>{joins.length}</b><span>Yêu cầu tham gia mới</span></button>
+      <button type="button" onClick={() => setTab("reports")}><b>→</b><span>Mở hàng chờ báo cáo</span></button>
+    </div></section>}
+
+    {tab === "pending" && <section className="group-admin-panel group-pending-panel"><div className="group-pending-heading"><div><span>KIỂM DUYỆT NỘI DUNG</span><h2>Bài viết chờ phê duyệt</h2><p>Xem đầy đủ bài viết trước khi quyết định hiển thị trong nhóm.</p></div><b>{pending.length} bài chờ</b></div>
+      <div className="group-pending-list">{!loadingContent && pending.map(post => <PendingGroupPostCard key={post.id} post={post} groupName={active?.name || ""} busy={busy} onApprove={() => { void act(() => moderateGroupPost(groupId, post.id, "APPROVE")); }} onReject={() => { void rejectPost(post); }} />)}</div>
+      {loadingContent ? <p className="admin-empty-state" role="status">Đang tải bài chờ duyệt...</p> : !pending.length && <p className="admin-empty-state">Không có bài chờ duyệt trong nhóm này.</p>}
+    </section>}
+
+    {tab === "posts" && <section className="group-admin-panel"><h2>Bài viết đang hiển thị</h2>{posts.map(post => <div className="managed-post" key={post.id}><PostCard post={post} moderatorGroupId={groupId} moderatorActions={{isPinned: post.isPinned, busy, onTogglePin: () => { void act(() => setGroupPostPinned(groupId, post.id, !post.isPinned)); }, onRemove: () => { void removePost(post); }}} /></div>)}{!posts.length && <p className="admin-empty-state">Nhóm chưa có bài đã duyệt.</p>}</section>}
+
+    {tab === "members" && <section className="group-admin-panel"><div className="panel-title-row"><h2>Thành viên và yêu cầu gia nhập</h2><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm theo tên hoặc mã sinh viên" /></div>
+      {joins.map(request => <article className="moderation-row join" key={request.id}><div><strong>{request.name}</strong><p>@{request.username}</p></div><div><button type="button" disabled={busy} onClick={() => { void act(() => decideGroupJoin(groupId, request.id, "APPROVE")); }}>Chấp nhận</button><button type="button" disabled={busy} className="danger" onClick={() => { void act(() => decideGroupJoin(groupId, request.id, "REJECT")); }}>Từ chối</button></div></article>)}
+      <div className="member-table">{members.map(member => <article key={member.id}><div className="member-identity"><img src={safeImageSrc(member.avatar_url)} alt="" /><span><strong>{member.name}</strong><small>@{member.username} · {member.student_code || "Chưa có MSSV"}</small></span></div><b>{member.role}</b>{member.role === "MEMBER" && <button type="button" disabled={busy} className="danger" onClick={() => { void kickMember(member); }}>Mời khỏi nhóm</button>}</article>)}</div>
+      {!members.length && <p className="admin-empty-state">Không tìm thấy thành viên.</p>}
+    </section>}
+
+    {tab === "reports" && groupId && <ReportQueue groupId={groupId} />}
+  </main>;
 }

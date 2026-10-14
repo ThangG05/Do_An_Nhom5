@@ -69,6 +69,14 @@ export interface CommentAuthor {
   avatar: string;
 }
 
+export interface CommentMention {
+  userId: string;
+  name: string;
+  username?: string;
+  start: number;
+  end: number;
+}
+
 export interface Comment {
   id: string;
   author: CommentAuthor;
@@ -76,6 +84,7 @@ export interface Comment {
   createdAt: string;
   parentId?: string | null;
   imageUrl?: string | null;
+  mentions?: CommentMention[];
 }
 
 export interface Post {

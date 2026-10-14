@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import BackArrow from '@/components/ui/BackArrow';
+import { useTheme, type ThemeMode } from '@/components/theme/ThemeProvider';
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { mode, setMode } = useTheme();
 
   return (
     <main className="account-settings-page">
@@ -15,16 +17,26 @@ export default function SettingsPage() {
           <div>
             <span>TRUNG TÂM TÀI KHOẢN</span>
             <h1 id="settings-title">Cài đặt và quyền riêng tư</h1>
-            <p>Quản lý hồ sơ, bảo mật và những người bạn không muốn tương tác.</p>
+            <p>Quản lý giao diện, bảo mật và những người bạn không muốn tương tác.</p>
           </div>
         </header>
 
+        <section className="account-theme-card" aria-labelledby="theme-title">
+          <span className="account-theme-icon" aria-hidden="true">{mode === 'dark' ? '🌙' : '☀️'}</span>
+          <div className="account-theme-copy">
+            <h2 id="theme-title">Giao diện</h2>
+            <p>Chọn nền sáng hoặc tối cho HVNH Hub. Lựa chọn được lưu trên thiết bị này.</p>
+          </div>
+          <div className="account-theme-options" role="group" aria-label="Chọn giao diện">
+            {(['light', 'dark'] as ThemeMode[]).map((value) => (
+              <button key={value} type="button" aria-pressed={mode === value} className={mode === value ? 'active' : ''} onClick={() => setMode(value)}>
+                <span aria-hidden="true">{value === 'light' ? '☀' : '☾'}</span>{value === 'light' ? 'Sáng' : 'Tối'}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <div className="account-settings-grid">
-          <Link href="/profile" className="account-settings-card">
-            <span className="account-settings-icon" aria-hidden="true">👤</span>
-            <div><strong>Thông tin cá nhân</strong><p>Cập nhật tên, khoa, nơi ở và liên kết mạng xã hội.</p></div>
-            <b aria-hidden="true">›</b>
-          </Link>
           <Link href="/settings/password" className="account-settings-card">
             <span className="account-settings-icon" aria-hidden="true">🔐</span>
             <div><strong>Mật khẩu và bảo mật</strong><p>Đổi mật khẩu và thu hồi các phiên đăng nhập cũ.</p></div>

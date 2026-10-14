@@ -12,7 +12,7 @@ class PostVisibilityTests(unittest.TestCase):
         self.author=uuid.uuid4();self.viewer=uuid.uuid4();self.db=Mock()
 
     def post(self,visibility):
-        return SimpleNamespace(author_id=self.author,visibility=visibility)
+        return SimpleNamespace(author_id=self.author,visibility=visibility,group_id=None)
 
     def test_public_post_is_visible(self):
         self.assertTrue(_can_view(self.db,self.post(PostVisibility.PUBLIC),self.viewer))

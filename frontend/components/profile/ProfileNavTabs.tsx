@@ -21,6 +21,8 @@ export default function ProfileNavTabs({
   const tabs: { id: ProfileTabType; label: string; count?: number }[] = [
     { id: 'posts', label: 'Bài viết' },
     { id: 'about', label: 'Giới thiệu' },
+    { id: 'friends', label: 'Bạn bè', count: friendsCount },
+    { id: 'photos', label: 'Ảnh', count: photosCount },
     { id: 'listings', label: 'Bài đăng hội nhóm', count: listingsCount },
   ];
 

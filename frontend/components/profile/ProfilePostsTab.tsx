@@ -36,44 +36,6 @@ export default function ProfilePostsTab({
 
   return (
     <div className="profile-posts-tab-content">
-      {/* 1. Feed Filters & Management Bar */}
-      <div className="feed-filters-bar-card">
-        <div className="filters-left-group">
-          <h2 className="feed-section-title">Bài viết</h2>
-          <div className="filter-chips-row">
-            <button
-              type="button"
-              className={`filter-chip ${postFilter === 'all' ? 'active' : ''}`}
-              onClick={() => onFilterChange('all')}
-            >
-              Tất cả bài viết
-            </button>
-            <button
-              type="button"
-              className={`filter-chip ${postFilter === 'market' ? 'active' : ''}`}
-              onClick={() => onFilterChange('market')}
-            >
-              Pass đồ
-            </button>
-            <button
-              type="button"
-              className={`filter-chip ${postFilter === 'roommate' ? 'active' : ''}`}
-              onClick={() => onFilterChange('roommate')}
-            >
-              Ghép phòng
-            </button>
-          </div>
-        </div>
-
-        <div className="filters-right-group">
-          {isOwnProfile && (
-            <span className="profile-management-hint">Dùng menu từng bài để chỉnh sửa hoặc xóa</span>
-          )}
-
-        </div>
-      </div>
-
-      {/* 2. In-Profile Create Post Card (Own Profile only) */}
       {isOwnProfile && (
         <div className="in-profile-create-post-wrapper">
           <CreatePostCard
@@ -84,7 +46,47 @@ export default function ProfilePostsTab({
         </div>
       )}
 
-      {/* 3. Chronological Post Stream */}
+      <div className="feed-filters-bar-card">
+        <div className="profile-feed-heading">
+          <h2 className="feed-section-title">Bài viết</h2>
+          <span className="profile-feed-count">{filteredPosts.length} bài</span>
+        </div>
+        <div className="filter-chips-row" role="group" aria-label="Lọc bài viết theo danh mục">
+          <button
+            type="button"
+            className={`filter-chip ${postFilter === 'all' ? 'active' : ''}`}
+            onClick={() => onFilterChange('all')}
+            aria-pressed={postFilter === 'all'}
+          >
+            Tất cả
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${postFilter === 'market' ? 'active' : ''}`}
+            onClick={() => onFilterChange('market')}
+            aria-pressed={postFilter === 'market'}
+          >
+            Pass đồ
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${postFilter === 'roommate' ? 'active' : ''}`}
+            onClick={() => onFilterChange('roommate')}
+            aria-pressed={postFilter === 'roommate'}
+          >
+            Ghép phòng
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${postFilter === 'event' ? 'active' : ''}`}
+            onClick={() => onFilterChange('event')}
+            aria-pressed={postFilter === 'event'}
+          >
+            Sự kiện
+          </button>
+        </div>
+      </div>
+
       {filteredPosts.length > 0 ? (
         <div className="posts-stream-container list-layout">
           {filteredPosts.map((post) => (
@@ -92,14 +94,22 @@ export default function ProfilePostsTab({
           ))}
         </div>
       ) : (
-        /* 4. Empty State */
         <div className="empty-feed-card">
-          <div className="empty-feed-icon">📝</div>
-          <h3 className="empty-feed-title">Chưa có bài viết nào</h3>
+          <div className="empty-feed-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 4h8a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+              <path d="M9 9h6M9 13h6M9 17h4" />
+            </svg>
+          </div>
+          <h3 className="empty-feed-title">
+            {postFilter === 'all' ? 'Chưa có bài viết nào' : 'Chưa có bài viết trong mục này'}
+          </h3>
           <p className="empty-feed-desc">
-            {isOwnProfile
-              ? 'Hãy chia sẻ suy nghĩ, thông tin học tập hoặc bài niêm yết đầu tiên của bạn!'
-              : 'Người dùng này chưa đăng bài viết nào.'}
+            {postFilter !== 'all'
+              ? 'Thử chọn danh mục khác để xem những bài đã đăng.'
+              : isOwnProfile
+              ? 'Chia sẻ một khoảnh khắc hoặc điều thú vị với bạn bè HVNH.'
+              : 'Chưa có bài viết nào được chia sẻ với bạn.'}
           </p>
         </div>
       )}

@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from sqlalchemy import func, select, text
+from sqlalchemy import and_, func, select, text
 from sqlalchemy.orm import Session
 from src.db.models.chat import Conversation,ConversationMember,ConversationType,Message,MessageAttachment,MessageReceipt,MessageType
 from src.db.models.media import MediaFile,MediaStatus
-from src.db.models.user import User
+from src.db.models.user import Profile, User
 from src.models.chat import AttachmentResponse,ConversationResponse,ConversationSettingsRequest,MessageResponse,SendMessageRequest,SharedAttachmentsResponse
 from src.services.storage_service import create_download_url
 
@@ -60,12 +60,61 @@ def _message(db,m:Message,viewer_id):
         receipt=db.get(MessageReceipt,(m.id,viewer_id));status="seen" if receipt and receipt.seen_at else "delivered" if receipt and receipt.delivered_at else "sent"
     return MessageResponse(id=str(m.id),conversationId=str(m.conversation_id),senderId=str(m.sender_id or ""),senderName=sender.profile.full_name if sender and sender.profile else sender.username if sender else "Người dùng",senderAvatar=_avatar(db,sender),content=m.content or "",timestamp=m.created_at.isoformat(),status=status,type="image" if atts and atts[0].type=="image" else "file" if atts else "text",attachments=atts)
 
+
+def _messages_batch(db: Session, rows: list[Message], viewer_id: uuid.UUID) -> list[MessageResponse]:
+    if not rows:
+        return []
+    message_ids = [message.id for message in rows]
+    sender_ids = {message.sender_id for message in rows if message.sender_id}
+    senders = {user.id: user for user in db.scalars(select(User).where(User.id.in_(sender_ids))).all()} if sender_ids else {}
+    profiles = {profile.user_id: profile for profile in db.scalars(select(Profile).where(Profile.user_id.in_(sender_ids))).all()} if sender_ids else {}
+    avatar_ids = {profile.avatar_media_id for profile in profiles.values() if profile.avatar_media_id}
+    links = db.scalars(select(MessageAttachment).where(MessageAttachment.message_id.in_(message_ids))
+        .order_by(MessageAttachment.message_id, MessageAttachment.media_id)).all()
+    media_ids = avatar_ids | {link.media_id for link in links}
+    media_by_id = {media.id: media for media in db.scalars(select(MediaFile).where(
+        MediaFile.id.in_(media_ids), MediaFile.status == MediaStatus.READY
+    )).all()} if media_ids else {}
+    attachments: dict[uuid.UUID, list[AttachmentResponse]] = {message_id: [] for message_id in message_ids}
+    for link in links:
+        media = media_by_id.get(link.media_id)
+        if media:
+            attachments[link.message_id].append(_attachment(media))
+    receipts: dict[uuid.UUID, list[MessageReceipt]] = {message_id: [] for message_id in message_ids}
+    for receipt in db.scalars(select(MessageReceipt).where(MessageReceipt.message_id.in_(message_ids))).all():
+        receipts[receipt.message_id].append(receipt)
+
+    result = []
+    for message in rows:
+        sender = senders.get(message.sender_id)
+        profile = profiles.get(message.sender_id)
+        avatar_media = media_by_id.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
+        files = attachments[message.id]
+        message_receipts = receipts[message.id]
+        if message.sender_id == viewer_id:
+            status = ("seen" if message_receipts and any(receipt.seen_at for receipt in message_receipts) else
+                      "delivered" if message_receipts and all(receipt.delivered_at for receipt in message_receipts) else "sent")
+        else:
+            viewer_receipt = next((receipt for receipt in message_receipts if receipt.user_id == viewer_id), None)
+            status = "seen" if viewer_receipt and viewer_receipt.seen_at else "delivered" if viewer_receipt and viewer_receipt.delivered_at else "sent"
+        result.append(MessageResponse(
+            id=str(message.id), conversationId=str(message.conversation_id), senderId=str(message.sender_id or ""),
+            senderName=profile.full_name if profile else sender.username if sender else "Người dùng",
+            senderAvatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png",
+            content=message.content or "", timestamp=message.created_at.isoformat(), status=status,
+            type="image" if files and files[0].type == "image" else "file" if files else "text",
+            attachments=files,
+        ))
+    return result
+
 def list_messages(db,cid,viewer,limit=50,before=None):
     _member(db,cid,viewer.id);_ensure_not_blocked(db,cid,viewer.id);q=select(Message).where(Message.conversation_id==cid,Message.deleted_at.is_(None));
     if before:q=q.where(Message.created_at<before)
     rows=list(reversed(db.scalars(q.order_by(Message.created_at.desc()).limit(limit)).all()));now=datetime.now(timezone.utc)
-    db.execute(text("UPDATE message_receipts r SET delivered_at=COALESCE(delivered_at,:now), seen_at=COALESCE(seen_at,:now) FROM messages m WHERE r.message_id=m.id AND m.conversation_id=:cid AND r.user_id=:uid AND r.seen_at IS NULL"),{"now":now,"cid":cid,"uid":viewer.id});db.commit()
-    return [_message(db,m,viewer.id) for m in rows]
+    db.execute(text("UPDATE message_receipts r SET delivered_at=COALESCE(delivered_at,:now), seen_at=COALESCE(seen_at,:now) FROM messages m WHERE r.message_id=m.id AND m.conversation_id=:cid AND r.user_id=:uid AND r.seen_at IS NULL"),{"now":now,"cid":cid,"uid":viewer.id})
+    result = _messages_batch(db, rows, viewer.id)
+    db.commit()
+    return result
 
 def send(db,cid,user,payload:SendMessageRequest):
     from src.services.system_service import enforce_content
@@ -92,17 +141,81 @@ def send(db,cid,user,payload:SendMessageRequest):
     conv=db.get(Conversation,cid);conv.last_message_at=now;conv.updated_at=now;db.commit();db.refresh(msg);return _message(db,msg,user.id)
 
 def list_conversations(db,user):
-    from src.services.realtime_service import manager
-    from src.services.block_service import is_blocked
-    ids=db.scalars(select(ConversationMember.conversation_id).where(ConversationMember.user_id==user.id,ConversationMember.left_at.is_(None))).all();result=[]
+    viewer_members = db.scalars(select(ConversationMember).where(
+        ConversationMember.user_id == user.id, ConversationMember.left_at.is_(None)
+    )).all()
+    if not viewer_members:
+        return []
+    ids = [member.conversation_id for member in viewer_members]
+    viewer_by_conversation = {member.conversation_id: member for member in viewer_members}
+    conversations = {conv.id: conv for conv in db.scalars(select(Conversation).where(Conversation.id.in_(ids))).all()}
+    other_members = db.scalars(select(ConversationMember).where(
+        ConversationMember.conversation_id.in_(ids), ConversationMember.user_id != user.id,
+        ConversationMember.left_at.is_(None)
+    )).all()
+    other_by_conversation = {}
+    for member in other_members:
+        other_by_conversation.setdefault(member.conversation_id, member)
+    other_ids = {member.user_id for member in other_by_conversation.values()}
+    others, profiles, avatars = {}, {}, {}
+    if other_ids:
+        peer_rows = db.execute(
+            select(User, Profile, MediaFile)
+            .outerjoin(Profile, Profile.user_id == User.id)
+            .outerjoin(MediaFile, and_(
+                MediaFile.id == Profile.avatar_media_id,
+                MediaFile.status == MediaStatus.READY,
+            ))
+            .where(User.id.in_(other_ids))
+        ).all()
+        for peer, profile, avatar in peer_rows:
+            others[peer.id] = peer
+            if profile:
+                profiles[peer.id] = profile
+            if avatar:
+                avatars[avatar.id] = avatar
+    blocked_ids = set(db.scalars(text(
+        "SELECT CASE WHEN blocker_id=:uid THEN blocked_id ELSE blocker_id END "
+        "FROM user_blocks WHERE blocker_id=:uid OR blocked_id=:uid"
+    ), {"uid": user.id}).all())
+
+    ranked = select(Message.id.label("message_id"), func.row_number().over(
+        partition_by=Message.conversation_id, order_by=Message.created_at.desc()
+    ).label("rank")).where(Message.conversation_id.in_(ids), Message.deleted_at.is_(None)).subquery()
+    last_messages = {item.conversation_id: item for item in db.scalars(
+        select(Message).join(ranked, Message.id == ranked.c.message_id).where(ranked.c.rank == 1)
+    ).all()}
+    unread = dict(db.execute(select(Message.conversation_id, func.count()).select_from(MessageReceipt)
+        .join(Message, Message.id == MessageReceipt.message_id)
+        .where(Message.conversation_id.in_(ids), MessageReceipt.user_id == user.id,
+               MessageReceipt.seen_at.is_(None))
+        .group_by(Message.conversation_id)).all())
+    result = []
     for cid in ids:
-        conv=db.get(Conversation,cid);other_id=db.scalar(select(ConversationMember.user_id).where(ConversationMember.conversation_id==cid,ConversationMember.user_id!=user.id,ConversationMember.left_at.is_(None)));other=db.get(User,other_id) if other_id else None
-        if other_id and is_blocked(db,user.id,other_id):continue
-        last=db.scalar(select(Message).where(Message.conversation_id==cid,Message.deleted_at.is_(None)).order_by(Message.created_at.desc()).limit(1));unread=db.scalar(select(func.count()).select_from(MessageReceipt).join(Message,Message.id==MessageReceipt.message_id).where(Message.conversation_id==cid,MessageReceipt.user_id==user.id,MessageReceipt.seen_at.is_(None))) or 0
-        viewer_member=db.get(ConversationMember,(cid,user.id));other_member=db.get(ConversationMember,(cid,other_id)) if other_id else None
-        display_name=other_member.nickname if other_member and other_member.nickname else other.profile.full_name if other and other.profile else other.username if other else conv.title or "Cuộc trò chuyện"
-        result.append(ConversationResponse(id=str(cid),participantId=str(other.id) if other else "",participantName=display_name,participantAvatar=_avatar(db,other),lastMessageSnippet=last.content if last and last.content else "[Media]" if last else "",lastMessageTime=last.created_at.isoformat() if last else conv.created_at.isoformat(),unreadCount=unread,bio=other.profile.bio or "" if other and other.profile else "",role=f"Sinh viên - {other.profile.faculty}" if other and other.profile and other.profile.faculty else "Sinh viên",theme=conv.theme or "blue",nickname=other_member.nickname if other_member else None,isMuted=viewer_member.is_muted if viewer_member else False))
-    return sorted(result,key=lambda x:x.lastMessageTime,reverse=True)
+        conv = conversations.get(cid)
+        if conv is None:
+            continue
+        other_member = other_by_conversation.get(cid)
+        other_id = other_member.user_id if other_member else None
+        if other_id in blocked_ids:
+            continue
+        other = others.get(other_id)
+        profile = profiles.get(other_id)
+        avatar_media = avatars.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
+        last = last_messages.get(cid)
+        display_name = (other_member.nickname if other_member and other_member.nickname else
+                        profile.full_name if profile else other.username if other else conv.title or "Cuộc trò chuyện")
+        result.append(ConversationResponse(
+            id=str(cid), participantId=str(other.id) if other else "", participantName=display_name,
+            participantAvatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png",
+            lastMessageSnippet=last.content if last and last.content else "[Media]" if last else "",
+            lastMessageTime=last.created_at.isoformat() if last else conv.created_at.isoformat(),
+            unreadCount=unread.get(cid, 0), bio=profile.bio or "" if profile else "",
+            role=f"Sinh viên - {profile.faculty}" if profile and profile.faculty else "Sinh viên",
+            theme=conv.theme or "blue", nickname=other_member.nickname if other_member else None,
+            isMuted=viewer_by_conversation[cid].is_muted,
+        ))
+    return sorted(result, key=lambda item: item.lastMessageTime, reverse=True)
 
 def unread_count(db,uid):return db.scalar(select(func.count()).select_from(MessageReceipt).where(MessageReceipt.user_id==uid,MessageReceipt.seen_at.is_(None))) or 0
 
@@ -120,7 +233,7 @@ def search_messages(db:Session,cid:uuid.UUID,user:User,query:str,limit:int=50):
     _member(db,cid,user.id);_ensure_not_blocked(db,cid,user.id);term=query.strip()
     if not term:return []
     rows=list(reversed(db.scalars(select(Message).where(Message.conversation_id==cid,Message.deleted_at.is_(None),Message.content.ilike(f"%{term}%")).order_by(Message.created_at.desc()).limit(limit)).all()))
-    return [_message(db,row,user.id) for row in rows]
+    return _messages_batch(db, rows, user.id)
 
 def shared_attachments(db:Session,cid:uuid.UUID,user:User,limit:int=100)->SharedAttachmentsResponse:
     _member(db,cid,user.id);_ensure_not_blocked(db,cid,user.id)

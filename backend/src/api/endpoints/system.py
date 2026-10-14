@@ -1,6 +1,6 @@
 import uuid
 from typing import Annotated
-from fastapi import APIRouter,Depends,Response
+from fastapi import APIRouter,Depends,Request,Response
 from sqlalchemy.orm import Session
 from src.api.dependencies import CurrentSuperAdmin
 from src.db.session import get_db
@@ -15,7 +15,12 @@ def public_config():
     client_id=settings.GOOGLE_CLIENT_ID.strip()
     return PublicClientConfig(google_client_id=client_id or None)
 @router.put("/admin/maintenance",response_model=MaintenanceResponse)
-def maintenance(payload:MaintenanceUpdate,admin:CurrentSuperAdmin,db:Db):return system_service.set_maintenance(db,admin,payload)
+def maintenance(payload:MaintenanceUpdate,admin:CurrentSuperAdmin,db:Db,request:Request):
+    result = system_service.set_maintenance(db,admin,payload)
+    cache = getattr(request.app.state, "maintenance_cache", None)
+    if cache is not None:
+        cache.invalidate()
+    return result
 @router.get("/admin/keywords",response_model=list[KeywordResponse])
 def keywords(admin:CurrentSuperAdmin,db:Db):return system_service.keywords(db)
 @router.post("/admin/keywords",response_model=KeywordResponse,status_code=201)

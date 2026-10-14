@@ -3,6 +3,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from src.api.dependencies import CurrentGroupAdmin, CurrentUser
 from src.db.session import get_db
@@ -57,8 +58,11 @@ def pending_members(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: DbSession
 @router.patch("/{group_id}/admin/join-requests/{request_id}", status_code=204)
 async def decide_member(group_id: uuid.UUID, request_id: uuid.UUID, payload: JoinRequestDecision, admin: CurrentGroupAdmin, db: DbSession):
     from sqlalchemy import text
-    target_id=db.execute(text("SELECT user_id FROM group_join_requests WHERE id=:id AND group_id=:gid"),{"id":request_id,"gid":group_id}).scalar()
-    group_service.decide_join(db, group_id, request_id, admin, payload.decision == "APPROVE")
+    def decide():
+        target_id = db.execute(text("SELECT user_id FROM group_join_requests WHERE id=:id AND group_id=:gid"), {"id": request_id, "gid": group_id}).scalar()
+        group_service.decide_join(db, group_id, request_id, admin, payload.decision == "APPROVE")
+        return target_id
+    target_id = await run_in_threadpool(decide)
     if target_id:await manager.send_users([target_id],{"event":"notification.created","type":"SYSTEM"})
     return Response(status_code=204)
 
@@ -70,7 +74,7 @@ def members(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: DbSession, q: str
 
 @router.delete("/{group_id}/admin/members/{user_id}", status_code=204)
 async def kick(group_id: uuid.UUID, user_id: uuid.UUID, admin: CurrentGroupAdmin, db: DbSession):
-    group_service.kick_member(db, group_id, user_id, admin)
+    await run_in_threadpool(group_service.kick_member, db, group_id, user_id, admin)
     await manager.send_users([user_id],{"event":"notification.created","type":"SYSTEM"})
     return Response(status_code=204)
 
@@ -82,9 +86,8 @@ def pending_posts(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: DbSession):
 
 @router.patch("/{group_id}/admin/posts/{post_id}/moderate", response_model=ProfilePostResponse)
 async def moderate(group_id: uuid.UUID, post_id: uuid.UUID, payload: ModerationRequest, admin: CurrentGroupAdmin, db: DbSession):
-    result=group_service.moderate_post(db, group_id, post_id, admin, payload)
-    post=db.get(Post,post_id)
-    if post:await manager.send_users([post.author_id],{"event":"notification.created","type":"POST_REVIEW"})
+    result = await run_in_threadpool(group_service.moderate_post, db, group_id, post_id, admin, payload)
+    await manager.send_users([uuid.UUID(result.author.id)],{"event":"notification.created","type":"POST_REVIEW"})
     return result
 
 
@@ -96,15 +99,23 @@ def pin(group_id: uuid.UUID, post_id: uuid.UUID, payload: PinRequest, admin: Cur
 
 @router.delete("/{group_id}/admin/comments/{comment_id}", status_code=204)
 async def remove_comment(group_id: uuid.UUID, comment_id: uuid.UUID, admin: CurrentGroupAdmin, db: DbSession):
-    comment=db.get(Comment,comment_id);author_id=comment.user_id if comment else None
-    group_service.delete_comment(db, group_id, comment_id, admin)
+    def remove():
+        comment = db.get(Comment, comment_id)
+        author_id = comment.user_id if comment else None
+        group_service.delete_comment(db, group_id, comment_id, admin)
+        return author_id
+    author_id = await run_in_threadpool(remove)
     if author_id:await manager.send_users([author_id],{"event":"notification.created","type":"SYSTEM"})
     return Response(status_code=204)
 
 
 @router.delete("/{group_id}/admin/posts/{post_id}", status_code=204)
 async def remove_approved_post(group_id: uuid.UUID, post_id: uuid.UUID, payload: RemovePostRequest, admin: CurrentGroupAdmin, db: DbSession):
-    post=db.get(Post,post_id);author_id=post.author_id if post else None
-    group_service.remove_approved_post(db,group_id,post_id,admin,payload.reason)
+    def remove():
+        post = db.get(Post, post_id)
+        author_id = post.author_id if post else None
+        group_service.remove_approved_post(db, group_id, post_id, admin, payload.reason)
+        return author_id
+    author_id = await run_in_threadpool(remove)
     if author_id:await manager.send_users([author_id],{"event":"notification.created","type":"POST_REVIEW"})
     return Response(status_code=204)

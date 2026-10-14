@@ -8,6 +8,7 @@ import { getAuthUser, logoutSession, type AuthUser } from "@/lib/auth";
 import "../admin/admin-shell.css";
 import "./group-admin-shell.css";
 import "./group-admin-fixes.css";
+import "./group-pending-post.css";
 import "./member-ui.css";
 import "./member-alignment.css";
 

@@ -9,7 +9,7 @@ from src.db.models.media import MediaFile, MediaStatus
 from src.db.models.post import Comment, Post, PostLike, PostMedia, PostStatus, PostType, PostVisibility
 from src.db.models.user import SystemRole, User
 from src.models.group import GroupMemberResponse, GroupPostCreateRequest, GroupResponse, JoinRequestResponse, ModerationRequest
-from src.services.post_service import _serialize
+from src.services.post_service import _serialize, _serialize_feed_posts
 from src.services.storage_service import create_download_url
 
 
@@ -36,7 +36,24 @@ def _require_reader(db: Session, group_id: uuid.UUID, user: User) -> None:
 
 
 def list_groups(db: Session, user: User) -> list[GroupResponse]:
-    rows = db.execute(text("SELECT g.id,g.name,g.slug,g.description,count(gm.user_id) member_count FROM groups g LEFT JOIN group_members gm ON gm.group_id=g.id WHERE g.status='ACTIVE' GROUP BY g.id ORDER BY g.name")).mappings()
+    rows = db.execute(text("""
+        SELECT g.id, g.name, g.slug, g.description,
+               count(gm.user_id) AS member_count,
+               COALESCE(
+                   (SELECT own.role::text FROM group_members own
+                    WHERE own.group_id = g.id AND own.user_id = :uid),
+                   CASE WHEN EXISTS (
+                       SELECT 1 FROM group_join_requests request
+                       WHERE request.group_id = g.id AND request.user_id = :uid
+                         AND request.status = 'PENDING'
+                   ) THEN 'PENDING' ELSE 'NONE' END
+               ) AS membership
+        FROM groups g
+        LEFT JOIN group_members gm ON gm.group_id = g.id
+        WHERE g.status = 'ACTIVE'
+        GROUP BY g.id
+        ORDER BY g.name
+    """), {"uid": user.id}).mappings()
     return [
         GroupResponse(
             id=str(row["id"]),
@@ -44,7 +61,7 @@ def list_groups(db: Session, user: User) -> list[GroupResponse]:
             slug=row["slug"],
             description=row["description"] or "",
             member_count=row["member_count"],
-            membership=_membership(db, row["id"], user.id),
+            membership=row["membership"],
         )
         for row in rows
     ]
@@ -103,7 +120,7 @@ def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = 
     else:
         statement = statement.order_by(Post.is_pinned.desc(), Post.created_at.desc())
     rows = db.scalars(statement).all()
-    return [_serialize(db, item, user.id) for item in rows]
+    return _serialize_feed_posts(db, rows, user.id)
 
 
 def list_my_posts(db: Session, group_id: uuid.UUID, user: User):
@@ -112,7 +129,7 @@ def list_my_posts(db: Session, group_id: uuid.UUID, user: User):
     rows = db.scalars(select(Post).where(
         Post.group_id == group_id, Post.author_id == user.id, Post.deleted_at.is_(None)
     ).order_by(Post.created_at.desc())).all()
-    return [_serialize(db, item, user.id) for item in rows]
+    return _serialize_feed_posts(db, rows, user.id)
 
 
 def join_requests(db: Session, group_id: uuid.UUID) -> list[JoinRequestResponse]:

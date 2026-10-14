@@ -193,7 +193,7 @@ export async function setPostLike(postId: string, isLiked: boolean): Promise<{ i
   return api(`/posts/${postId}/like`, { method: 'PUT', body: JSON.stringify({ is_liked: isLiked }) });
 }
 
-export async function addPostComment(postId: string, content: string, parentId?: string, image?: File): Promise<import('@/types/post').Comment> {
+export async function addPostComment(postId: string, content: string, parentId?: string, image?: File, mentions: { user_id: string; start: number; end: number }[] = []): Promise<import('@/types/post').Comment> {
   let mediaId: string | undefined;
   if (image) {
     const form=new FormData(); form.append('file',image);
@@ -201,10 +201,11 @@ export async function addPostComment(postId: string, content: string, parentId?:
     if(!response.ok)throw new Error('Không thể tải ảnh bình luận lên R2.');
     mediaId=((await response.json()) as {media_id:string}).media_id;
   }
-  return api(`/posts/${postId}/comments`, { method: 'POST', body: JSON.stringify({ content, parent_id: parentId, media_id: mediaId }) });
+  return api(`/posts/${postId}/comments`, { method: 'POST', body: JSON.stringify({ content, parent_id: parentId, media_id: mediaId, mentions }) });
 }
-export async function fetchPostComments(postId: string, limit = 100): Promise<import('@/types/post').Comment[]> {
-  return api(`/posts/${postId}/comments?limit=${limit}`);
+export async function fetchPostComments(postId: string, limit = 100, focusCommentId?: string): Promise<import('@/types/post').Comment[]> {
+  const focus = focusCommentId ? `&focus_comment_id=${encodeURIComponent(focusCommentId)}` : '';
+  return api(`/posts/${postId}/comments?limit=${limit}${focus}`);
 }
 
 export async function editPost(postId: string, content: string, privacy?: Post['privacy'], category?:Post['category'],mediaIds?:string[]): Promise<Post> {
@@ -248,6 +249,10 @@ export async function fetchNotifications(limit = 30, offset = 0, filter: 'all' |
 export async function fetchUnreadNotificationCount(): Promise<number> {
   const result = await api<{ unread_count: number }>('/notifications/unread-count');
   return result.unread_count;
+}
+
+export async function fetchHeaderUnreadCounts(): Promise<{ notifications: number; messages: number }> {
+  return api('/notifications/header-counts');
 }
 
 export async function setNotificationRead(id: string, isRead: boolean): Promise<ApiNotification> {

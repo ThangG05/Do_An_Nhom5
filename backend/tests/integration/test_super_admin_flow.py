@@ -13,6 +13,7 @@ def test_super_admin_dashboard_account_role_and_audit_flow(client, db_session, m
     dashboard = client.get("/api/v1/admin/dashboard", headers=admin_headers)
     assert dashboard.status_code == 200
     assert dashboard.json()["total_users"] >= 3
+    assert dashboard.json()["total_users"] == db_session.scalar(text("SELECT count(*) FROM users WHERE deleted_at IS NULL"))
 
     users = client.get(f"/api/v1/admin/users?q={target.username}", headers=admin_headers)
     assert users.status_code == 200
@@ -26,6 +27,9 @@ def test_super_admin_dashboard_account_role_and_audit_flow(client, db_session, m
     )
     assert grant.status_code == 204
     assert client.get(f"/api/v1/groups/{active_group['id']}/admin/members", headers=auth_headers(target)).status_code == 200
+    assigned = client.get(f"/api/v1/admin/users?q={target.username}", headers=admin_headers)
+    assert assigned.status_code == 200
+    assert any(group["id"] == str(active_group["id"]) for group in assigned.json()["items"][0]["admin_groups"])
 
     warning = client.post(
         f"/api/v1/admin/users/{target.id}/discipline",

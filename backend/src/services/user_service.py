@@ -80,7 +80,25 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
     rows = db.execute(
         __import__('sqlalchemy').text("""
             SELECT u.id, u.username, p.full_name, p.student_code, p.faculty,
-                   p.avatar_media_id
+                   p.avatar_media_id,
+                   CASE
+                     WHEN EXISTS (
+                       SELECT 1 FROM friendships f
+                       WHERE (f.user_low_id = :viewer AND f.user_high_id = u.id)
+                          OR (f.user_high_id = :viewer AND f.user_low_id = u.id)
+                     ) THEN 'friends'
+                     WHEN EXISTS (
+                       SELECT 1 FROM friend_requests request
+                       WHERE request.sender_id = :viewer AND request.receiver_id = u.id
+                         AND request.status = 'PENDING'
+                     ) THEN 'pending_sent'
+                     WHEN EXISTS (
+                       SELECT 1 FROM friend_requests request
+                       WHERE request.receiver_id = :viewer AND request.sender_id = u.id
+                         AND request.status = 'PENDING'
+                     ) THEN 'pending_received'
+                     ELSE 'none'
+                   END AS friendship_status
             FROM users u
             JOIN profiles p ON p.user_id = u.id
             WHERE u.id <> :viewer
@@ -101,13 +119,18 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
         """),
         {"viewer": viewer.id, "pattern": pattern, "term": term, "limit": limit},
     ).mappings().all()
+    avatar_ids = {row["avatar_media_id"] for row in rows if row["avatar_media_id"]}
+    avatars = {media.id: media for media in db.scalars(select(MediaFile).where(
+        MediaFile.id.in_(avatar_ids), MediaFile.status == MediaStatus.READY
+    )).all()} if avatar_ids else {}
     result: list[UserSearchResponse] = []
     for row in rows:
+        avatar = avatars.get(row["avatar_media_id"])
         result.append(UserSearchResponse(
             id=str(row["id"]), name=row["full_name"], username=row["username"],
-            avatar=_media_url(db, row["avatar_media_id"], "/assets/logo.png"),
+            avatar=create_download_url(avatar) if avatar else "/assets/logo.png",
             mutualCount=0, faculty=row["faculty"], studentCode=row["student_code"],
-            friendshipStatus=friendship_status(db, viewer.id, row["id"]),
+            friendshipStatus=row["friendship_status"],
         ))
     return result
 

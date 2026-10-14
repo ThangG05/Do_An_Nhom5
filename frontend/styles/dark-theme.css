@@ -1,0 +1,336 @@
+/* Persistent, opt-in dark theme. The default theme remains the existing HVNH light palette. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --hub-bg: #101821;
+  --hub-card: #1a2632;
+  --hub-navy: #d4eaff;
+  --hub-blue: #65b6ef;
+  --hub-text: #e5edf5;
+  --hub-muted: #a3b2c1;
+  --hub-line: #344352;
+  --hub-shadow: 0 8px 24px rgba(0, 0, 0, .22);
+  --surface-canvas: #101821;
+  --surface-raised: #1a2632;
+  --surface-soft: #202e3b;
+  --text-strong: #e5edf5;
+  --text-body: #c5d0dc;
+  --text-muted: #a3b2c1;
+  --line-soft: #344352;
+  --line-strong: #46596a;
+  --focus: #65b6ef;
+  --user-bg: #101821;
+  --user-surface: #1a2632;
+  --user-soft: #202e3b;
+  --user-ink: #e5edf5;
+  --user-body: #c5d0dc;
+  --user-muted: #a3b2c1;
+  --user-line: #344352;
+  --user-brand: #75bce9;
+  --user-brand-hover: #9bd1f4;
+  --fb-bg: #101821;
+  --fb-surface: #1a2632;
+  --fb-text: #e5edf5;
+  --fb-muted: #a3b2c1;
+  --fb-line: #344352;
+  --fb-brand: #2879b5;
+  --paper: #1a2632;
+  --ink: #e5edf5;
+  --muted: #a3b2c1;
+  --navy: #75bce9;
+}
+
+:root[data-theme="dark"] {
+  background: #101821 !important;
+}
+:root[data-theme="dark"] html,
+:root[data-theme="dark"] body {
+  background: #101821 !important;
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .app-main-body-content,
+:root[data-theme="dark"] .home-page-single-column,
+:root[data-theme="dark"] .profile-workspace-wrapper,
+:root[data-theme="dark"] .account-settings-page,
+:root[data-theme="dark"] .messenger-page-layout,
+:root[data-theme="dark"] .notifications-page,
+:root[data-theme="dark"] .live-groups-page,
+:root[data-theme="dark"] .group-admin-page,
+:root[data-theme="dark"] .user-search-page,
+:root[data-theme="dark"] .blocked-page,
+:root[data-theme="dark"] .assistant-page {
+  background-color: #101821 !important;
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .home-page-single-column::before { opacity: .22; }
+
+:root[data-theme="dark"] .global-navbar-header,
+:root[data-theme="dark"] .account-settings-shell,
+:root[data-theme="dark"] .account-settings-card,
+:root[data-theme="dark"] .account-theme-card,
+:root[data-theme="dark"] .profile-header-container,
+:root[data-theme="dark"] .profile-info-section,
+:root[data-theme="dark"] .profile-nav-tabs-container,
+:root[data-theme="dark"] .profile-widget-card,
+:root[data-theme="dark"] .profile-posts-tab-content .feed-filters-bar-card,
+:root[data-theme="dark"] .create-post-card,
+:root[data-theme="dark"] .post-card-item,
+:root[data-theme="dark"] .feed-filter-bar,
+:root[data-theme="dark"] .home-user-shortcut,
+:root[data-theme="dark"] .home-side-card,
+:root[data-theme="dark"] .home-quick-links,
+:root[data-theme="dark"] .profile-group-posts-tab,
+:root[data-theme="dark"] .live-group-summary,
+:root[data-theme="dark"] .live-group-composer,
+:root[data-theme="dark"] .live-admin-panel,
+:root[data-theme="dark"] .group-admin-panel,
+:root[data-theme="dark"] .admin-users,
+:root[data-theme="dark"] .admin-console,
+:root[data-theme="dark"] .notification-main-card,
+:root[data-theme="dark"] .messenger-3col-workspace,
+:root[data-theme="dark"] .messenger-left-panel,
+:root[data-theme="dark"] .messenger-center-panel,
+:root[data-theme="dark"] .chat-modal-card,
+:root[data-theme="dark"] .utility-popup-card,
+:root[data-theme="dark"] .post-action-modal,
+:root[data-theme="dark"] .comment-action-modal,
+:root[data-theme="dark"] .edit-profile-modal-card,
+:root[data-theme="dark"] .system-dialog-card,
+:root[data-theme="dark"] .profile-photo-panel,
+:root[data-theme="dark"] .profile-edit-dialog .edit-profile-modal-card,
+:root[data-theme="dark"] .live-group-card,
+:root[data-theme="dark"] .group-card,
+:root[data-theme="dark"] .admin-card,
+:root[data-theme="dark"] .empty-feed-card {
+  border-color: #344352 !important;
+  background-color: #1a2632 !important;
+  color: #e5edf5 !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .2) !important;
+}
+:root[data-theme="dark"] .assistant-sidebar,
+:root[data-theme="dark"] .assistant-workspace,
+:root[data-theme="dark"] .assistant-topbar,
+:root[data-theme="dark"] .assistant-composer,
+:root[data-theme="dark"] .assistant-message-content > p,
+:root[data-theme="dark"] .assistant-thinking,
+:root[data-theme="dark"] .assistant-citations,
+:root[data-theme="dark"] .assistant-welcome button,
+:root[data-theme="dark"] .live-group-tabs button,
+:root[data-theme="dark"] .group-feed-filters,
+:root[data-theme="dark"] .live-empty-card,
+:root[data-theme="dark"] .my-group-posts,
+:root[data-theme="dark"] .notifications-header-card,
+:root[data-theme="dark"] .notif-item-card,
+:root[data-theme="dark"] .friend-matrix-card,
+:root[data-theme="dark"] .friends-header-card,
+:root[data-theme="dark"] .photos-header-card,
+:root[data-theme="dark"] .album-card,
+:root[data-theme="dark"] .profile-about-card,
+:root[data-theme="dark"] .profile-friends-widget,
+:root[data-theme="dark"] .profile-photos-widget {
+  border-color: #344352 !important;
+  background-color: #1a2632 !important;
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .assistant-welcome h1,
+:root[data-theme="dark"] .assistant-message-content > p,
+:root[data-theme="dark"] .assistant-citations > strong,
+:root[data-theme="dark"] .assistant-citations a,
+:root[data-theme="dark"] .assistant-welcome button,
+:root[data-theme="dark"] .live-group-tabs button b,
+:root[data-theme="dark"] .live-group-summary h2,
+:root[data-theme="dark"] .live-group-composer h3,
+:root[data-theme="dark"] .live-group-feed > header h2,
+:root[data-theme="dark"] .my-group-posts h3,
+:root[data-theme="dark"] .notifications-main-title,
+:root[data-theme="dark"] .profile-about-card h2,
+:root[data-theme="dark"] .profile-about-card h3 {
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .assistant-welcome p,
+:root[data-theme="dark"] .assistant-message-label,
+:root[data-theme="dark"] .assistant-citations small,
+:root[data-theme="dark"] .live-group-tabs button small,
+:root[data-theme="dark"] .live-group-summary p,
+:root[data-theme="dark"] .live-group-composer small,
+:root[data-theme="dark"] .live-group-feed > header span,
+:root[data-theme="dark"] .my-group-posts article p {
+  color: #a3b2c1 !important;
+}
+:root[data-theme="dark"] .assistant-sidebar nav > div:hover,
+:root[data-theme="dark"] .assistant-sidebar nav > div.active,
+:root[data-theme="dark"] .live-group-tabs button.active {
+  background: #263746 !important;
+}
+
+:root[data-theme="dark"] .global-navbar-header {
+  background: rgba(20, 31, 42, .96) !important;
+  border-color: #344352 !important;
+}
+:root[data-theme="dark"] .global-nav-link,
+:root[data-theme="dark"] .navbar-center-nav,
+:root[data-theme="dark"] .brand-title-text,
+:root[data-theme="dark"] .account-settings-header h1,
+:root[data-theme="dark"] .account-settings-card,
+:root[data-theme="dark"] .account-settings-card strong,
+:root[data-theme="dark"] .home-welcome h1,
+:root[data-theme="dark"] .home-side-panel h2,
+:root[data-theme="dark"] .home-quick-links a,
+:root[data-theme="dark"] .profile-full-name,
+:root[data-theme="dark"] .profile-widget-card .widget-title,
+:root[data-theme="dark"] .feed-section-title,
+:root[data-theme="dark"] .post-author-name,
+:root[data-theme="dark"] .post-text-content,
+:root[data-theme="dark"] .live-groups-page h1,
+:root[data-theme="dark"] .live-groups-page h2,
+:root[data-theme="dark"] .group-admin-page h1,
+:root[data-theme="dark"] .group-admin-page h2,
+:root[data-theme="dark"] .notifications-page h1,
+:root[data-theme="dark"] .account-theme-card h2 {
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .account-settings-header p,
+:root[data-theme="dark"] .account-settings-card p,
+:root[data-theme="dark"] .account-theme-card p,
+:root[data-theme="dark"] .profile-bio-snippet,
+:root[data-theme="dark"] .profile-username,
+:root[data-theme="dark"] .home-side-panel p,
+:root[data-theme="dark"] .home-quick-links h3,
+:root[data-theme="dark"] .home-quick-links a span,
+:root[data-theme="dark"] .empty-feed-desc,
+:root[data-theme="dark"] .post-stats-row,
+:root[data-theme="dark"] .post-date,
+:root[data-theme="dark"] .account-settings-header span {
+  color: #a3b2c1 !important;
+}
+:root[data-theme="dark"] .global-nav-link:hover,
+:root[data-theme="dark"] .global-nav-link.active,
+:root[data-theme="dark"] .home-shortcut-list a:hover,
+:root[data-theme="dark"] .home-user-shortcut:hover,
+:root[data-theme="dark"] .post-action-btn:hover,
+:root[data-theme="dark"] .profile-nav-tab-btn:hover {
+  background: #263746 !important;
+  color: #d9efff !important;
+}
+:root[data-theme="dark"] .profile-nav-tab-btn.active,
+:root[data-theme="dark"] .feed-filter-bar button:not(.active),
+:root[data-theme="dark"] .profile-posts-tab-content .filter-chip:not(.active) {
+  background: #263746 !important;
+  color: #d2e0ed !important;
+}
+:root[data-theme="dark"] .profile-posts-tab-content .filter-chip.active,
+:root[data-theme="dark"] .feed-filter-bar button.active {
+  background: #155f91 !important;
+  color: #fff !important;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .global-search-pill,
+:root[data-theme="dark"] .chat-search-box,
+:root[data-theme="dark"] .chat-text-input,
+:root[data-theme="dark"] .chat-modal-search,
+:root[data-theme="dark"] .conversation-search-bar,
+:root[data-theme="dark"] .feed-search-input {
+  border-color: #46596a !important;
+  background-color: #14212d !important;
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder { color: #8fa2b4 !important; }
+:root[data-theme="dark"] select option { background: #1a2632; color: #e5edf5; }
+:root[data-theme="dark"] .profile-widget-card a,
+:root[data-theme="dark"] .account-settings-card:hover,
+:root[data-theme="dark"] .profile-nav-tab-btn { color: #c6d7e6; }
+:root[data-theme="dark"] .profile-posts-tab-content .empty-feed-card { background: #15222e !important; }
+:root[data-theme="dark"] .home-side-tip,
+:root[data-theme="dark"] .home-side-tip p,
+:root[data-theme="dark"] .account-settings-icon,
+:root[data-theme="dark"] .account-theme-icon { background-color: #22394b !important; color: #b8ddf7 !important; }
+:root[data-theme="dark"] .comment-bubble,
+:root[data-theme="dark"] .post-comments-section,
+:root[data-theme="dark"] .profile-nav-tab-btn,
+:root[data-theme="dark"] .profile-posts-tab-content .filter-chip,
+:root[data-theme="dark"] .home-quick-links a,
+:root[data-theme="dark"] .account-settings-header,
+:root[data-theme="dark"] .account-settings-card,
+:root[data-theme="dark"] .conversation-search-bar,
+:root[data-theme="dark"] .chat-modal-card > header,
+:root[data-theme="dark"] .chat-modal-card > footer {
+  border-color: #344352 !important;
+}
+:root[data-theme="dark"] .chat-bubble.them,
+:root[data-theme="dark"] .chat-user-results > button,
+:root[data-theme="dark"] .message-search-results,
+:root[data-theme="dark"] .notification-item,
+:root[data-theme="dark"] .profile-photo-stage { background-color: #14212d !important; color: #e5edf5 !important; }
+:root[data-theme="dark"] .profile-photo-dialog::backdrop { background: rgba(0, 0, 0, .9); }
+
+.account-theme-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 17px;
+  border: 1px solid #dae5ed;
+  border-radius: 15px;
+  background: #f8fbfd;
+}
+.account-theme-icon {
+  display: grid;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 13px;
+  background: #eaf4fb;
+  font-size: 21px;
+}
+.account-theme-copy { min-width: 0; flex: 1; }
+.account-theme-copy h2 { margin: 0 0 3px; color: #143958; font-size: 15px; }
+.account-theme-copy p { margin: 0; color: #6b8092; font-size: 12px; line-height: 1.5; }
+.account-theme-options { display: flex; gap: 4px; padding: 4px; border: 1px solid #d8e3ec; border-radius: 12px; background: #eef3f7; }
+.account-theme-options button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 76px; min-height: 36px; padding: 6px 10px; border: 0; border-radius: 9px; background: transparent; color: #52697d; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.account-theme-options button.active { background: #fff; color: #103b60; box-shadow: 0 2px 8px rgba(19, 54, 86, .12); }
+.account-theme-options button:focus-visible { outline: 3px solid #8cb9d9; outline-offset: 2px; }
+:root[data-theme="dark"] .account-theme-options { border-color: #3a4b5b; background: #14212d; }
+:root[data-theme="dark"] .account-theme-options button { color: #aebdca; }
+:root[data-theme="dark"] .account-theme-options button.active { background: #2b4052; color: #e5edf5; }
+:root[data-theme="dark"] .account-theme-options button:not(.active) { color: #d0dbe5; }
+:root[data-theme="dark"] .profile-menu-popup .profile-pop-user-info strong { color: #f1f5f9 !important; }
+:root[data-theme="dark"] .profile-menu-popup .profile-pop-user-info small { color: #bdcbd8 !important; }
+:root[data-theme="dark"] .profile-menu-popup .pop-menu-divider { background: #405363 !important; }
+:root[data-theme="dark"] .profile-menu-popup .pop-menu-row { color: #e5edf5 !important; }
+:root[data-theme="dark"] .profile-menu-popup .pop-menu-row svg { color: #b9cddd !important; }
+:root[data-theme="dark"] .profile-menu-popup .pop-menu-row:hover { background: #293b4b !important; color: #ffffff !important; }
+:root[data-theme="dark"] .profile-menu-popup .pop-menu-row.danger { color: #ff8e96 !important; }
+:root[data-theme="dark"] .profile-menu-popup .pop-menu-row.danger:hover { background: #45262c !important; }
+
+/* Last-resort readable typography for page modules whose legacy styles use fixed light-theme colors. */
+:root[data-theme="dark"] :is(.app-main-body-content, .admin-shell, [role="dialog"], .utility-popup-card, .profile-chat-dock)
+  :is(h1, h2, h3, h4, h5, h6) {
+  color: #edf4fa !important;
+}
+:root[data-theme="dark"] :is(.app-main-body-content, .admin-shell, [role="dialog"], .utility-popup-card, .profile-chat-dock)
+  :is(p, span, small, label, time, li, dt, dd, figcaption):not(button *):not(a *) {
+  color: #c3cfda !important;
+}
+:root[data-theme="dark"] :is(.app-main-body-content, .admin-shell, [role="dialog"], .utility-popup-card, .profile-chat-dock)
+  :is(a:not([class]), a[class*="link"], a[class*="Link"]):not(button *) {
+  color: #83c5f4 !important;
+}
+:root[data-theme="dark"] :is(.app-main-body-content, .admin-shell, [role="dialog"], .utility-popup-card, .profile-chat-dock)
+  :is(input, textarea, select, option) {
+  color: #edf4fa !important;
+}
+:root[data-theme="dark"] :is(.app-main-body-content, .admin-shell, [role="dialog"], .utility-popup-card, .profile-chat-dock)
+  :is(input, textarea)::placeholder {
+  color: #aebdca !important;
+  opacity: 1;
+}
+@media (max-width: 680px) {
+  .account-theme-card { align-items: flex-start; flex-wrap: wrap; }
+  .account-theme-copy { flex-basis: calc(100% - 66px); }
+  .account-theme-options { width: 100%; }
+  .account-theme-options button { flex: 1; }
+}
