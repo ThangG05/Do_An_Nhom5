@@ -1,506 +1,113 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
-import { PostCategory, PostPrivacy } from "@/types/post";
-import { UseCreatePostReturn } from "@/hooks/useCreatePost";
-import { AuthUser, getAuthUser, getCurrentUser } from "@/lib/auth";
-import { safeImageSrc } from "@/lib/media";
-import UserAvatar from "@/components/ui/UserAvatar";
-import LocationPicker from "@/components/post/LocationPicker";
-import Link from "next/link";
-import { fetchGroups } from "@/lib/api";
-import type { ApiGroup } from "@/types/group-api";
-import { useDialog } from "@/components/ui/DialogProvider";
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import Link from 'next/link';
+import type { UseCreatePostReturn } from '@/hooks/useCreatePost';
+import { getAuthUser } from '@/lib/auth';
+import { useAuthUser } from '@/components/auth/AuthProvider';
+import { fetchGroups } from '@/lib/api';
+import { GROUP_POST_KINDS, validatePostDraft, type PostFieldErrors } from '@/lib/group-post';
+import type { ApiGroup } from '@/types/group-api';
+import UserAvatar from '@/components/ui/UserAvatar';
+import LocationPicker from './LocationPicker';
+import GroupPostFields from './GroupPostFields';
+import PostCategoryDetails, { CategoryIcon } from './PostCategoryDetails';
+import { useDialog } from '@/components/ui/DialogProvider';
+import styles from './GroupPost.module.css';
 
-interface CreatePostModalProps {
-  postState: UseCreatePostReturn;
-}
-
-const CATEGORY_OPTIONS: { val: PostCategory; label: string; icon: string }[] = [
-  { val: "general", label: "Thảo luận chung", icon: "💬" },
-  { val: "market", label: "Pass đồ / Chợ SV", icon: "🛒" },
-  { val: "roommate", label: "Ghép phòng / Tìm trọ", icon: "🏠" },
-  { val: "event", label: "Sự kiện HVNH", icon: "📅" },
-  { val: "study", label: "Tài liệu Học tập", icon: "📚" },
-];
-
-const PRIVACY_OPTIONS: { val: PostPrivacy; label: string; icon: string }[] = [
-  { val: "public", label: "Công khai", icon: "🌐" },
-  { val: "friends", label: "Bạn bè", icon: "👥" },
-  { val: "private", label: "Chỉ mình tôi", icon: "🔒" },
-];
-
-const AMENITY_TAGS = [
-  "Điều hòa",
-  "Nóng lạnh",
-  "Máy giặt",
-  "Ban công",
-  "Tủ lạnh",
-  "Khép kín",
-  "Không chung chủ",
-  "Có chỗ để xe",
-];
-
-export default function CreatePostModal({ postState }: CreatePostModalProps) {
+export default function CreatePostModal({ postState: s, group }: { postState: UseCreatePostReturn; group?: ApiGroup }) {
+  const currentUser = useAuthUser();
   const dialog = useDialog();
-  const [author, setAuthor] = useState<AuthUser | null>(null);
-  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [author, setAuthor] = useState(currentUser);
   const [groups, setGroups] = useState<ApiGroup[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(false);
   const [groupsError, setGroupsError] = useState(false);
-  const {
-    isOpen,
-    closeModal,
-    content,
-    setContent,
-    category,
-    setCategory,
-    privacy,
-    setPrivacy,
-    mediaList,
-    addMediaFiles,
-    removeMedia,
-    marketListing,
-    setMarketListing,
-    roomListing,
-    setRoomListing,
-    eventListing,
-    setEventListing,
-    location,
-    setLocation,
-    isSubmitting,
-    error,
-    submitPost,
-  } = postState;
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [errors, setErrors] = useState<PostFieldErrors>({});
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const shell = useRef<HTMLElement>(null);
+  const form = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
-    setAuthor(getAuthUser());
-    void getCurrentUser().then(setAuthor).catch(() => {
-      // Keep the authenticated session identity visible if /auth/me is temporarily unavailable.
-    });
-  }, [isOpen]);
+    if (!s.isOpen) return;
+    setAuthor(currentUser || getAuthUser());
+    setErrors({}); setPreview(false);
+    const lastFocus = document.activeElement as HTMLElement;
+    const before = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const timer = window.setTimeout(() => shell.current?.focus(), 0);
+    return () => { window.clearTimeout(timer); document.body.style.overflow = before; lastFocus?.focus(); };
+  }, [s.isOpen, currentUser]);
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!s.isOpen || group) return;
     let active = true;
-    setGroupsLoading(true);
-    setGroupsError(false);
-    void fetchGroups().then(rows => { if (active) setGroups(rows); }).catch(() => { if (active) { setGroups([]); setGroupsError(true); } }).finally(() => { if (active) setGroupsLoading(false); });
+    setGroupsLoading(true); setGroupsError(false);
+    void fetchGroups().then(rows => { if (active) setGroups(rows); }).catch(() => { if (active) setGroupsError(true); }).finally(() => { if (active) setGroupsLoading(false); });
     return () => { active = false; };
-  }, [isOpen]);
+  }, [s.isOpen, group]);
 
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        if (locationPickerOpen) setLocationPickerOpen(false);
-        else closeModal();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, closeModal, locationPickerOpen]);
-
-  // Focus textarea when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => textareaRef.current?.focus(), 100);
+  if (!s.isOpen) return null;
+  const kind = GROUP_POST_KINDS.find(item => item.category === s.category);
+  const selectedGroup = group || groups.find(item => item.slug === kind?.slug);
+  const isGroup = s.category !== 'general';
+  const unavailable = isGroup && !group && (groupsLoading || groupsError || !selectedGroup);
+  const needsMembership = isGroup && !!selectedGroup && !['MEMBER', 'ADMIN'].includes(selectedGroup.membership);
+  const validate = () => {
+    const next = validatePostDraft(s, s.mediaList.length);
+    setErrors(next);
+    if (Object.keys(next).length) {
+      setPreview(false);
+      window.setTimeout(() => {
+        const invalid = form.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+        invalid?.scrollIntoView({ block: 'center', behavior: 'smooth' }); invalid?.focus();
+      }, 0);
+      return false;
     }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      addMediaFiles(e.target.files);
-    }
+    return true;
   };
-
-  const toggleAmenity = (amenity: string) => {
-    setRoomListing((prev) => {
-      const exists = prev.amenities.includes(amenity);
-      return {
-        ...prev,
-        amenities: exists
-          ? prev.amenities.filter((a) => a !== amenity)
-          : [...prev.amenities, amenity],
-      };
-    });
-  };
-
-  const getPlaceholder = () => {
-    switch (category) {
-      case "market":
-        return "Mô tả sản phẩm bạn muốn pass (tình trạng, lý do nhượng lại, liên hệ)...";
-      case "roommate":
-        return "Mô tả yêu cầu ở ghép hoặc thông tin phòng trọ cho thuê...";
-      case "event":
-        return "Chi tiết về sự kiện, chương trình hoặc hoạt động câu lạc bộ...";
-      case "study":
-        return "Chia sẻ đề thi, giáo trình, tài liệu môn học...";
-      default:
-        return `Bạn đang nghĩ gì thế${author?.full_name ? `, ${author.full_name}` : ""}?`;
-    }
-  };
-
-  const categorySlug: Record<Exclude<PostCategory, "general">, string> = { market: "pass-do", roommate: "ghep-phong-tim-tro", event: "su-kien", study: "hoc-tap" };
-  const selectedGroup = category === "general" ? null : groups.find(group => group.slug === categorySlug[category]);
-  const needsMembership = !!selectedGroup && !["MEMBER", "ADMIN"].includes(selectedGroup.membership);
-  const groupUnavailable = category !== "general" && (!selectedGroup || groupsLoading || groupsError);
-
   const publish = async () => {
-    const created = await submitPost();
-    if (created?.status === "PENDING") dialog.notify({ title: "Đã gửi bài chờ duyệt", message: `Bài viết trong ${created.groupName || "nhóm"} sẽ hiển thị sau khi quản trị viên phê duyệt.`, tone: "success" });
+    if (!validate() || unavailable || needsMembership || s.isSubmitting) return;
+    const created = await s.submitPost();
+    if (created?.status === 'PENDING') dialog.notify({ title: 'Đã gửi bài chờ duyệt', message: 'Bài viết trong ' + (created.groupName || kind?.label) + ' sẽ xuất hiện sau khi quản trị viên phê duyệt.', tone: 'success' });
   };
+  const draft = { category: s.category, marketListing: s.category === 'market' ? s.marketListing : undefined, roomListing: s.category === 'roommate' ? s.roomListing : undefined, eventListing: s.category === 'event' ? s.eventListing : undefined, studyListing: s.category === 'study' ? s.studyListing : undefined, media: s.mediaList };
 
-  return (
-    <div
-      className="create-post-overlay"
-      onClick={closeModal}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="create-post-title"
-    >
-      <div
-        className="create-post-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="modal-header">
-          <h2 id="create-post-title">Tạo bài viết mới</h2>
-          <button
-            type="button"
-            className="modal-close-btn"
-            onClick={closeModal}
-            aria-label="Đóng bảng tạo bài viết"
-          >
-            ✕
-          </button>
+  return createPortal(<div className={styles.overlay} onMouseDown={e => { if (e.target === e.currentTarget && !locationOpen) s.closeModal(); }}>
+    <section ref={shell} tabIndex={-1} className={styles.shell} data-category={s.category} role="dialog" aria-modal="true" aria-labelledby="gp-dialog-title" onKeyDown={e => {
+      if (e.key === 'Escape') { e.stopPropagation(); if (locationOpen) setLocationOpen(false); else s.closeModal(); }
+      if (e.key === 'Tab') {
+        const nodes = Array.from(shell.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]') || []).filter(el => el.getClientRects().length);
+        const first = nodes[0], last = nodes[nodes.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === shell.current)) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && (document.activeElement === last || document.activeElement === shell.current)) { e.preventDefault(); first?.focus(); }
+      }
+    }}>
+      <header className={styles.header}><div className={styles.headerTitle}><span className={styles.iconTile}>{kind ? <CategoryIcon category={s.category} size={25} /> : '＋'}</span><div><small>CHIA SẺ CÙNG CỘNG ĐỒNG</small><h2 id="gp-dialog-title">{kind ? 'Tạo bài · ' + kind.label : 'Tạo bài viết'}</h2></div></div><button type="button" className={styles.close} disabled={s.isSubmitting} onClick={s.closeModal} aria-label="Đóng bảng tạo bài viết">×</button></header>
+      {!group && <nav className={styles.kindGrid} aria-label="Chọn nơi đăng bài">{GROUP_POST_KINDS.map(item => <button key={item.category} type="button" disabled={s.isSubmitting} data-category={item.category} aria-pressed={s.category === item.category} className={styles.kindCard} onClick={() => { s.setCategory(item.category); s.setLocation(null); setErrors({}); setPreview(false); }}><span className={styles.iconTile}><CategoryIcon category={item.category} /></span><span><strong>{item.label}</strong><small>{item.description}</small></span></button>)}<button type="button" className={styles.textButton} disabled={s.isSubmitting} aria-pressed={s.category === 'general'} onClick={() => { s.setCategory('general'); setErrors({}); setPreview(false); }}>Bài viết cá nhân</button></nav>}
+      <div className={styles.author}><UserAvatar src={author?.avatar_url} name={author?.full_name || author?.username} imageClassName={styles.avatar} fallbackClassName={styles.avatar} /><div><strong>{author?.full_name || author?.username || 'Bạn'}</strong><span>{isGroup ? 'Đăng trong ' + (selectedGroup?.name || kind?.label) + ' · Chờ quản trị viên duyệt' : 'Chia sẻ trên trang cá nhân của bạn'}</span></div></div>
+      {(unavailable || needsMembership) && <div className={styles.notice} role="status">{unavailable ? groupsLoading ? 'Đang kiểm tra nhóm đăng bài…' : 'Không tải được nhóm. Hãy đóng và mở lại để thử lại.' : <>Bạn cần tham gia nhóm trước khi đăng bài. <Link href={'/groups?group=' + selectedGroup?.id} onClick={s.closeModal}>Đi tới nhóm →</Link></>}</div>}
+      <form ref={form} noValidate onSubmit={e => { e.preventDefault(); void publish(); }} className={styles.form}>
+        <div className={styles.workspace}>
+          <fieldset disabled={s.isSubmitting} className={styles.editor} hidden={preview}>
+            <div className={styles.sectionHeading}><strong>Thông tin bài đăng</strong><small><span className={styles.required}>*</span> Bắt buộc</small></div>
+            {!isGroup && <label className={styles.privacy}>Ai có thể xem?<select value={s.privacy} onChange={e => s.setPrivacy(e.target.value as typeof s.privacy)}><option value="public">Công khai</option><option value="friends">Bạn bè</option><option value="private">Chỉ mình tôi</option></select></label>}
+            <GroupPostFields state={s} errors={errors} onPickLocation={() => setLocationOpen(true)} />
+            {(s.category === 'general' || s.category === 'study') && <button type="button" className={styles.textButton} onClick={() => setLocationOpen(true)}>⌖ {s.location?.name || 'Thêm vị trí (tùy chọn)'}</button>}
+            <div className={styles.uploadSection}><div className={styles.sectionHeading}><strong>Ảnh / Video / Tài liệu</strong><small>Tùy chọn · {s.mediaList.length}/10</small></div><button type="button" className={styles.dropzone} onClick={() => fileInput.current?.click()}><span aria-hidden="true">＋</span><strong>Thêm tệp đính kèm</strong><small>Ảnh, video hoặc tài liệu · Tối đa 10 tệp</small></button><input ref={fileInput} type="file" hidden multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/webm,application/pdf,text/plain,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip" onChange={e => { if (e.target.files) s.addMediaFiles(e.target.files); e.target.value = ''; }} />
+              {s.mediaList.length > 0 && <div className={styles.attachments}>{s.mediaList.map(item => <div key={item.id} className={styles.attachment}>{item.type === 'image' ? <img src={item.url} alt={item.name || 'Ảnh đính kèm'} /> : <span className={styles.fileIcon}>{item.type === 'video' ? '▶' : item.type === 'audio' ? '♫' : '▤'}</span>}<div><strong>{item.name}</strong><small>{item.uploadStatus === 'uploading' ? 'Đang tải ' + (item.uploadProgress || 0) + '%' : item.uploadStatus === 'complete' ? 'Đã tải lên' : item.uploadStatus === 'error' ? item.uploadError || 'Tải lên lỗi' : ((item.size || 0) / 1024 / 1024).toFixed(1) + ' MB'}</small></div><button type="button" onClick={() => s.removeMedia(item.id)} aria-label={'Xóa ' + item.name}>×</button></div>)}</div>}
+            </div>
+          </fieldset>
+          <aside className={styles.previewPanel + (preview ? ' ' + styles.previewExpanded : '')} aria-label="Xem trước bài đăng">
+            <div className={styles.sectionHeading}><strong>Xem trước bài đăng</strong><span className={styles.liveDot}>Trực tiếp</span></div><article className={styles.previewCard}><div className={styles.previewAuthor}><UserAvatar src={author?.avatar_url} name={author?.full_name || author?.username} imageClassName={styles.avatar} fallbackClassName={styles.avatar} /><div><strong>{author?.full_name || author?.username || 'Bạn'}</strong><small>{kind?.label || 'Trang cá nhân'} · Vừa xong</small></div></div><PostCategoryDetails post={draft} /><p className={styles.previewText}>{s.content || 'Nội dung chia sẻ sẽ hiển thị tại đây.'}</p>{s.mediaList.slice(0, preview ? 10 : 2).map(item => <div key={item.id} className={styles.previewMedia}>{item.type === 'image' ? <img src={item.url} alt={item.name || 'Ảnh xem trước'} /> : item.type === 'video' ? <video src={item.url} controls preload="metadata" /> : item.type === 'audio' ? <audio src={item.url} controls /> : <span>▤ {item.name}</span>}</div>)}{!preview && s.mediaList.length > 2 && <small className={styles.moreFiles}>+{s.mediaList.length - 2} tệp khác</small>}<div className={styles.previewFooter}><span>♡ Thích</span><span>◯ Bình luận</span></div></article><p className={styles.previewHint}>{isGroup ? 'Bài đăng sẽ hiển thị trong nhóm và các bảng tin được phép sau khi duyệt.' : 'Kiểm tra nội dung và quyền riêng tư trước khi chia sẻ.'}</p>
+          </aside>
         </div>
-
-        <div className="modal-body">
-          {/* Author Header */}
-          <div className="author-row">
-            <UserAvatar src={author?.avatar_url} name={author?.full_name || author?.username} imageClassName="author-avatar author-avatar-real" fallbackClassName="author-avatar avatar-initials user-avatar-initials" />
-            <div className="author-meta">
-              <div className="author-name-row">
-                <strong>{author?.full_name || author?.username || "Đang tải thông tin..."}</strong>
-              </div>
-
-              <div className="selector-group">
-                {/* Category Dropdown */}
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as PostCategory)}
-                  aria-label="Chọn chuyên mục đăng bài"
-                  className="custom-select"
-                >
-                  {CATEGORY_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.icon} {opt.label}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Privacy Dropdown */}
-                <select
-                  value={privacy}
-                  onChange={(e) => setPrivacy(e.target.value as PostPrivacy)}
-                  aria-label="Chọn quyền riêng tư"
-                  className="custom-select privacy-select"
-                  disabled={category !== "general"}
-                >
-                  {PRIVACY_OPTIONS.map((opt) => (
-                    <option key={opt.val} value={opt.val}>
-                      {opt.icon} {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {selectedGroup && <p className="post-group-destination">Đăng trong nhóm <strong>{selectedGroup.name}</strong> · bài sẽ chờ duyệt</p>}
-            </div>
-          </div>
-          {needsMembership && <div className="post-group-membership-alert" role="status">Bạn cần tham gia nhóm {selectedGroup?.name} trước khi đăng bài. <Link href={`/groups?group=${selectedGroup?.id}`} onClick={closeModal}>Đi tới nhóm</Link></div>}
-          {groupUnavailable && <div className="post-group-membership-alert" role="status">{groupsLoading ? "Đang kiểm tra nhóm đăng bài..." : "Chưa xác định được nhóm đăng bài. Vui lòng thử mở lại cửa sổ tạo bài viết."}</div>}
-
-          {/* Specialized Fields: Market (Pass đồ) */}
-          {category === "market" && (
-            <div className="specialized-box market-box">
-              <div className="box-title">🛒 Thông tin sản phẩm Pass đồ</div>
-              <div className="form-grid-2">
-                <div className="field-unit">
-                  <label htmlFor="market-price">Giá thanh lý (VNĐ)</label>
-                  <input
-                    id="market-price"
-                    type="text"
-                    placeholder="VD: 150.000đ hoặc Thỏa thuận"
-                    value={marketListing.price}
-                    onChange={(e) =>
-                      setMarketListing((prev) => ({ ...prev, price: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="field-unit">
-                  <label htmlFor="market-condition">Tình trạng đồ</label>
-                  <select
-                    id="market-condition"
-                    value={marketListing.condition}
-                    onChange={(e) =>
-                      setMarketListing((prev) => ({ ...prev, condition: e.target.value }))
-                    }
-                    className="custom-select"
-                  >
-                    <option value="Mới 100% (Chưa dùng)">Mới 100% (Chưa dùng)</option>
-                    <option value="Đã qua sử dụng (Tốt)">Đã qua sử dụng (Tốt)</option>
-                    <option value="Cũ / Cần sang tay nhanh">Cũ / Cần sang tay nhanh</option>
-                  </select>
-                </div>
-              </div>
-              <div className="field-unit" style={{ marginTop: "10px" }}>
-                <label htmlFor="market-location">Khu vực giao dịch</label>
-                <input
-                  id="market-location"
-                  type="text"
-                  placeholder="VD: KTX HVNH, Cổng Chùa Bộc, Tòa D..."
-                  value={marketListing.location}
-                  onChange={(e) =>
-                    setMarketListing((prev) => ({ ...prev, location: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Specialized Fields: Roommate (Ghép phòng / Phòng trọ) */}
-          {category === "roommate" && (
-            <div className="specialized-box room-box">
-              <div className="box-title">🏠 Thông tin Phòng trọ / Ở ghép</div>
-              <div className="form-grid-2">
-                <div className="field-unit">
-                  <label htmlFor="room-price">Giá thuê/tháng</label>
-                  <input
-                    id="room-price"
-                    type="text"
-                    placeholder="VD: 2.500.000đ/tháng"
-                    value={roomListing.rentPerMonth}
-                    onChange={(e) =>
-                      setRoomListing((prev) => ({ ...prev, rentPerMonth: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="field-unit">
-                  <label htmlFor="room-area">Diện tích (m²)</label>
-                  <input
-                    id="room-area"
-                    type="text"
-                    placeholder="VD: 25 m²"
-                    value={roomListing.area}
-                    onChange={(e) =>
-                      setRoomListing((prev) => ({ ...prev, area: e.target.value }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="field-unit" style={{ marginTop: "10px" }}>
-                <label>Tiện ích phòng:</label>
-                <div className="tags-flex">
-                  {AMENITY_TAGS.map((tag) => {
-                    const selected = roomListing.amenities.includes(tag);
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        className={`tag-chip ${selected ? "active" : ""}`}
-                        onClick={() => toggleAmenity(tag)}
-                      >
-                        {selected ? "✓ " : "+ "}
-                        {tag}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Specialized Fields: Event (Sự kiện) */}
-          {category === "event" && (
-            <div className="specialized-box event-box">
-              <div className="box-title">📅 Thông tin Sự kiện HVNH</div>
-              <div className="form-grid-2">
-                <div className="field-unit">
-                  <label htmlFor="event-date">Ngày diễn ra</label>
-                  <input
-                    id="event-date"
-                    type="date"
-                    value={eventListing.eventDate}
-                    onChange={(e) =>
-                      setEventListing((prev) => ({ ...prev, eventDate: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="field-unit">
-                  <label htmlFor="event-time">Thời gian</label>
-                  <input
-                    id="event-time"
-                    type="text"
-                    placeholder="VD: 18:00 - 21:00"
-                    value={eventListing.eventTime}
-                    onChange={(e) =>
-                      setEventListing((prev) => ({ ...prev, eventTime: e.target.value }))
-                    }
-                  />
-                </div>
-              </div>
-              <div className="form-grid-2" style={{ marginTop: "10px" }}>
-                <div className="field-unit">
-                  <label htmlFor="event-location">Địa điểm</label>
-                  <input
-                    id="event-location"
-                    type="text"
-                    placeholder="VD: Hội trường D1, Sân bóng..."
-                    value={eventListing.location}
-                    onChange={(e) =>
-                      setEventListing((prev) => ({ ...prev, location: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="field-unit">
-                  <label htmlFor="event-organizer">Đơn vị tổ chức</label>
-                  <input
-                    id="event-organizer"
-                    type="text"
-                    placeholder="VD: Đoàn Thanh niên, CLB..."
-                    value={eventListing.organizer}
-                    onChange={(e) =>
-                      setEventListing((prev) => ({ ...prev, organizer: e.target.value }))
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Main Text Content Input */}
-          <div className="post-input-container">
-            <textarea
-              ref={textareaRef}
-              className="post-textarea"
-              placeholder={getPlaceholder()}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={4}
-            />
-          </div>
-
-          {/* Location Tag Badge */}
-          {location && (
-            <div className="location-badge">
-              📍 <span title={location.address || location.name}>{location.name}</span>
-              <button
-                type="button"
-                onClick={() => setLocation(null)}
-                aria-label="Xóa địa điểm"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          {/* Media Attachments Preview Grid */}
-          {mediaList.length > 0 && (
-            <div className="media-preview-grid">
-              {mediaList.map((m) => (
-                <div key={m.id} className="preview-item">
-                  {m.type === "image" ? (
-                    <img src={safeImageSrc(m.url)} alt="Xem trước ảnh đăng bài" />
-                  ) : m.type === "audio" ? (
-                    <audio src={m.url} controls />
-                  ) : (
-                    <video src={m.url} controls />
-                  )}
-                  {m.uploadStatus&&m.uploadStatus!=="pending"&&<div className={`media-upload-state ${m.uploadStatus}`}><span>{m.uploadStatus==="uploading"?`${m.uploadProgress||0}%`:m.uploadStatus==="complete"?"Đã tải lên":"Tải lên lỗi"}</span><i style={{width:`${m.uploadProgress||0}%`}}/>{m.uploadError&&<small>{m.uploadError}</small>}</div>}
-                  <button
-                    type="button"
-                    className="remove-media-btn"
-                    onClick={() => removeMedia(m.id)}
-                    aria-label="Xóa tệp này"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Add-to-post Action Toolbar */}
-          <div className="add-to-post-bar">
-            <span>Thêm vào bài viết của bạn</span>
-            <div className="action-icons">
-              {/* Photo/Video upload trigger */}
-              <button
-                type="button"
-                className="action-icon-btn photo-btn"
-                title="Tải ảnh / video"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                🖼️ <small>Ảnh/Video</small>
-              </button>
-
-              {/* Tag activity / location trigger */}
-              <button
-                type="button"
-                className="action-icon-btn location-btn"
-                title="Thêm địa điểm"
-                onClick={() => setLocationPickerOpen(true)}
-              >
-                📍 <small>Địa điểm</small>
-              </button>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/webm,application/pdf,text/plain,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip"
-              multiple
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
-          </div>
-
-          {/* Error Banner */}
-          {error && <div className="post-error-banner">{error}</div>}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="submit-post-btn"
-            disabled={isSubmitting || needsMembership || groupUnavailable || (!content.trim() && mediaList.length === 0)}
-            onClick={() => void publish()}
-          >
-            {isSubmitting ? (
-              <span className="spinner-wrap">
-                <span className="inline-spinner" /> Đang đăng...
-              </span>
-            ) : (
-              "Đăng bài viết"
-            )}
-          </button>
-        </div>
-        <LocationPicker
-          open={locationPickerOpen}
-          onClose={() => setLocationPickerOpen(false)}
-          onSelect={(selectedLocation) => {
-            setLocation(selectedLocation);
-            setLocationPickerOpen(false);
-          }}
-        />
-      </div>
-    </div>
-  );
+        {s.error && <div className={styles.errorBanner} role="alert">{s.error}</div>}
+        <footer className={styles.footer}><span>{isGroup ? 'Chia sẻ đúng nhóm, kết nối đúng người.' : 'Một chia sẻ nhỏ, thêm một kết nối.'}</span><button type="button" className={styles.secondary} disabled={s.isSubmitting} onClick={() => { if (preview) setPreview(false); else if (validate()) setPreview(true); }}>{preview ? '← Chỉnh sửa' : 'Xem trước'}</button><button type="submit" className={styles.primary} disabled={s.isSubmitting || unavailable || needsMembership}>{s.isSubmitting ? 'Đang gửi…' : isGroup ? 'Gửi bài chờ duyệt' : 'Đăng bài'}</button></footer>
+      </form>
+      <LocationPicker open={locationOpen} onClose={() => setLocationOpen(false)} onSelect={place => { s.setLocation(place); if (s.category === 'market') s.setMarketListing(p => ({ ...p, location: place.name })); if (s.category === 'roommate') s.setRoomListing(p => ({ ...p, location: place.name })); if (s.category === 'event') s.setEventListing(p => ({ ...p, location: place.name })); setLocationOpen(false); }} />
+    </section>
+  </div>, document.body);
 }

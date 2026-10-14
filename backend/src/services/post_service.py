@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from src.db.models.media import MediaFile, MediaStatus
 from src.db.models.post import Comment, Post, PostLike, PostMedia, PostStatus, PostType, PostVisibility
 from src.db.models.user import Profile, SystemRole, User
-from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentMentionResponse, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RoomListingData, UpdatePostRequest
+from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentMentionResponse, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RoomListingData, StudyListingData, validate_group_fields, UpdatePostRequest
 from src.models.user import UserListingResponse, UserPhotoResponse
 from src.services.storage_service import create_download_url
 
@@ -107,8 +107,14 @@ def _listing_data(payload: CreateProfilePostRequest | UpdatePostRequest, categor
         "market": payload.marketListing,
         "roommate": payload.roomListing,
         "event": payload.eventListing,
+        "study": payload.studyListing,
     }.get(category)
-    return value.model_dump() if value is not None else None
+    if value is None:
+        return None
+    data = {key: item.strip() if isinstance(item, str) else item for key, item in value.model_dump().items()}
+    if getattr(payload, "form_version", 1) == 2:
+        data["_form_version"] = 2
+    return data
 
 
 def _serialize(db: Session, post: Post, viewer_id: uuid.UUID) -> ProfilePostResponse:
@@ -130,7 +136,7 @@ def _serialize(db: Session, post: Post, viewer_id: uuid.UUID) -> ProfilePostResp
     liked = db.get(PostLike, (post.id, viewer_id)) is not None
     listing = post.listing_data or {}
     group = db.execute(text("SELECT name,slug FROM groups WHERE id=:gid"), {"gid": post.group_id}).mappings().first() if post.group_id else None
-    return ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=author.profile.full_name if author.profile else author.username, avatar=avatar), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=media_items, likesCount=likes, commentsCount=len(comment_rows), isLiked=liked, comments=_comment_responses(db, comment_rows), groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None)
+    return ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=author.profile.full_name if author.profile else author.username, avatar=avatar), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=media_items, likesCount=likes, commentsCount=len(comment_rows), isLiked=liked, comments=_comment_responses(db, comment_rows), groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, studyListing=StudyListingData(**listing) if post.category == "study" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None)
 
 
 def _media_kind(mime_type: str) -> str:
@@ -208,7 +214,7 @@ def _serialize_feed_posts(db: Session, posts: list[Post], viewer_id: uuid.UUID) 
         avatar_media = media_by_id.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
         listing, group = post.listing_data or {}, groups.get(post.group_id)
         likes, comments, liked = engagement.get(post.id, (0, 0, False))
-        result.append(ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=profile.full_name if profile else author.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=[PostMediaResponse(id=str(media.id), url=create_download_url(media), type=_media_kind(media.mime_type), name=media.original_name, size=media.file_size) for media in media_by_post[post.id]], likesCount=likes, commentsCount=comments, isLiked=liked, comments=comments_by_post[post.id], groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None))
+        result.append(ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=profile.full_name if profile else author.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=[PostMediaResponse(id=str(media.id), url=create_download_url(media), type=_media_kind(media.mime_type), name=media.original_name, size=media.file_size) for media in media_by_post[post.id]], likesCount=likes, commentsCount=comments, isLiked=liked, comments=comments_by_post[post.id], groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, studyListing=StudyListingData(**listing) if post.category == "study" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None))
     return result
 
 
@@ -230,8 +236,10 @@ def _encode_feed_cursor(post: Post) -> str:
 
 def create_profile_post(db: Session, user: User, payload: CreateProfilePostRequest) -> ProfilePostResponse:
     from src.services.system_service import enforce_content
-    if payload.content.strip():
-        enforce_content(db,payload.content)
+    listing = _listing_data(payload, payload.category)
+    searchable_text = "\n".join([payload.content, *[str((listing or {}).get(key, "")) for key in ("productName", "eventName", "subjectName")]])
+    if searchable_text.strip():
+        enforce_content(db, searchable_text, allow_review=payload.category != "general")
     media = list(db.scalars(select(MediaFile).where(MediaFile.id.in_(payload.media_ids))).all()) if payload.media_ids else []
     if len(media) != len(set(payload.media_ids)) or any(item.owner_id != user.id or item.status != MediaStatus.READY for item in media):
         raise HTTPException(400, "Có media không hợp lệ hoặc không thuộc tài khoản này.")
@@ -423,15 +431,37 @@ def update_post(db: Session, post_id: uuid.UUID, user: User, payload: UpdatePost
         raise HTTPException(404, "Không tìm thấy bài viết.")
     if post.author_id != user.id:
         raise HTTPException(403, "Bạn chỉ có thể sửa bài viết của mình.")
+    if payload.category and payload.category != post.category:
+        raise HTTPException(422, "Không thể chuyển nhóm của bài đã đăng. Hãy tạo bài trong nhóm phù hợp.")
+    supplied_listing = _listing_data(payload, post.category)
+    merged_listing = {**(post.listing_data or {}), **(supplied_listing or {})}
+    if merged_listing.get("_form_version") == 2:
+        try:
+            validate_group_fields(post.category, payload.content, merged_listing)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+    elif not payload.content.strip():
+        media_count = len(payload.media_ids) if payload.media_ids is not None else db.scalar(select(func.count()).select_from(PostMedia).where(PostMedia.post_id == post.id))
+        if not media_count:
+            raise HTTPException(422, "Bài viết phải có nội dung hoặc tệp đính kèm.")
+    from src.services.system_service import enforce_content
+    searchable_text = "\n".join([payload.content, *[str(merged_listing.get(key, "")) for key in ("productName", "eventName", "subjectName")]])
+    enforce_content(db, searchable_text, allow_review=bool(post.group_id))
     post.content = payload.content.strip()
-    if payload.privacy:
+    if post.group_id:
+        post.visibility = PostVisibility.PUBLIC
+        post.status = PostStatus.PENDING
+        post.rejection_reason = None
+        post.reviewed_by = None
+        post.reviewed_at = None
+    elif payload.privacy:
         post.visibility = PostVisibility(payload.privacy.upper())
     previous_category = post.category
     if payload.category:
         post.category = payload.category
-    listing_fields_supplied = any((payload.marketListing, payload.roomListing, payload.eventListing))
+    listing_fields_supplied = any((payload.marketListing, payload.roomListing, payload.eventListing, payload.studyListing))
     if listing_fields_supplied or (payload.category and payload.category != previous_category):
-        post.listing_data = _listing_data(payload, post.category)
+        post.listing_data = merged_listing
     if payload.location is not None:
         post.location_data = payload.location.model_dump()
     if payload.media_ids is not None:

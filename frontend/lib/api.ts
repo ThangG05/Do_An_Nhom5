@@ -14,8 +14,9 @@ export async function api<T>(endpoint: string, options?: RequestInit): Promise<T
       ...options,
     });
     if (!res.ok) {
-      const payload = await res.json().catch(() => null) as {detail?:string}|null;
-      throw new Error(payload?.detail || `API error: ${res.statusText}`);
+      const payload = await res.json().catch(() => null) as {detail?: string | {msg?: string}[]}|null;
+      const detail = payload?.detail;
+      throw new Error(typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map(item => item.msg || 'Dữ liệu không hợp lệ.').join('\n') : `API error: ${res.statusText}`);
     }
     if (res.status === 204) return undefined as T;
     return await res.json();
@@ -120,7 +121,7 @@ async function uploadWithProgress(file:File,mediaId:string,onProgress?:CreatePos
   return response;
 }
 
-export async function createProfilePost(payload: CreatePostPayload): Promise<Post> {
+export async function createProfilePost(payload: CreatePostPayload, groupId?: string): Promise<Post> {
   const mediaIds = await Promise.all(payload.media.map(async (item) => {
     if(item.uploadedMediaId)return item.uploadedMediaId;
     if (!item.file) throw new Error('Không tìm thấy tệp media gốc.');
@@ -133,16 +134,18 @@ export async function createProfilePost(payload: CreatePostPayload): Promise<Pos
     payload.onUploadProgress?.(item.id,100,'complete',undefined,mediaId);
     return mediaId;
   }));
-  return api<Post>('/users/me/posts', {
+  return api<Post>(groupId ? `/groups/${groupId}/posts` : '/users/me/posts', {
     method: 'POST',
     body: JSON.stringify({
       content: payload.content,
+      form_version: 2,
       privacy: payload.privacy,
       category: payload.category,
       media_ids: mediaIds,
       marketListing: payload.marketListing,
       roomListing: payload.roomListing,
       eventListing: payload.eventListing,
+      studyListing: payload.studyListing,
       location: payload.location,
     }),
   });
@@ -208,8 +211,8 @@ export async function fetchPostComments(postId: string, limit = 100, focusCommen
   return api(`/posts/${postId}/comments?limit=${limit}${focus}`);
 }
 
-export async function editPost(postId: string, content: string, privacy?: Post['privacy'], category?:Post['category'],mediaIds?:string[]): Promise<Post> {
-  return api(`/posts/${postId}`, { method: 'PATCH', body: JSON.stringify({ content, privacy, category,media_ids:mediaIds }) });
+export async function editPost(postId: string, content: string, privacy?: Post['privacy'], category?:Post['category'],mediaIds?:string[], details?: Pick<CreatePostPayload, 'marketListing' | 'roomListing' | 'eventListing' | 'studyListing' | 'location'>): Promise<Post> {
+  return api(`/posts/${postId}`, { method: 'PATCH', body: JSON.stringify({ content, privacy, category, media_ids:mediaIds, ...(details || {}), ...(details ? { form_version: 2 } : {}) }) });
 }
 export async function editComment(commentId:string,content:string):Promise<import('@/types/post').Comment>{return api(`/posts/comments/${commentId}`,{method:'PATCH',body:JSON.stringify({content})});}
 export async function deleteComment(commentId:string):Promise<void>{await api(`/posts/comments/${commentId}`,{method:'DELETE'});}

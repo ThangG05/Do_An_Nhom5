@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { validatePostDraft } from "@/lib/group-post";
 import {
   PostCategory,
   PostPrivacy,
@@ -8,6 +9,7 @@ import {
   MarketListingData,
   RoomListingData,
   EventListingData,
+  StudyListingData,
   PostLocation,
   CreatePostPayload,
   Post,
@@ -36,6 +38,8 @@ export interface UseCreatePostReturn {
   setRoomListing: React.Dispatch<React.SetStateAction<RoomListingData>>;
   eventListing: EventListingData;
   setEventListing: React.Dispatch<React.SetStateAction<EventListingData>>;
+  studyListing: StudyListingData;
+  setStudyListing: React.Dispatch<React.SetStateAction<StudyListingData>>;
   isSubmitting: boolean;
   error: string | null;
   submitPost: () => Promise<Post | null>;
@@ -54,26 +58,33 @@ export function useCreatePost(
   const [location, setLocation] = useState<PostLocation | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submittingRef = useRef(false);
+  const mediaRef = useRef(mediaList);
+  mediaRef.current = mediaList;
+  useEffect(() => () => { mediaRef.current.forEach(item => { if (item.url.startsWith('blob:')) URL.revokeObjectURL(item.url); }); }, []);
+  const [studyListing, setStudyListing] = useState<StudyListingData>({ subjectName: "" });
 
   // Specialized listing state defaults
   const [marketListing, setMarketListing] = useState<MarketListingData>({
     price: "",
-    condition: "Đã qua sử dụng (Tốt)",
-    location: "Ký túc xá HVNH",
+    productName: "",
+    condition: "",
+    location: "",
   });
 
   const [roomListing, setRoomListing] = useState<RoomListingData>({
     rentPerMonth: "",
     area: "",
-    amenities: ["Điều hòa", "Nóng lạnh", "Khép kín"],
-    location: "Chùa Bộc, Đống Đa",
+    amenities: [],
+    location: "",
   });
 
   const [eventListing, setEventListing] = useState<EventListingData>({
+    eventName: "",
     eventDate: "",
-    eventTime: "18:00",
-    location: "Hội trường D1, HVNH",
-    organizer: "CLB Sinh viên HVNH",
+    eventTime: "",
+    location: "",
+    organizer: "",
   });
 
   const openModal = useCallback((initialCategory?: PostCategory) => {
@@ -85,10 +96,13 @@ export function useCreatePost(
   }, []);
 
   const closeModal = useCallback(() => {
+    if (submittingRef.current) return;
     setIsOpen(false);
   }, []);
 
   const resetForm = useCallback(() => {
+    mediaRef.current.forEach(item => { if (item.url.startsWith('blob:')) URL.revokeObjectURL(item.url); });
+    setStudyListing({ subjectName: "" });
     setContent("");
     setCategory("general");
     setPrivacy("public");
@@ -98,25 +112,33 @@ export function useCreatePost(
     setError(null);
     setMarketListing({
       price: "",
-      condition: "Đã qua sử dụng (Tốt)",
-      location: "Ký túc xá HVNH",
+      productName: "",
+      condition: "",
+      location: "",
     });
     setRoomListing({
       rentPerMonth: "",
       area: "",
-      amenities: ["Điều hòa", "Nóng lạnh", "Khép kín"],
-      location: "Chùa Bộc, Đống Đa",
+      amenities: [],
+      location: "",
     });
     setEventListing({
+      eventName: "",
       eventDate: "",
-      eventTime: "18:00",
-      location: "Hội trường D1, HVNH",
-      organizer: "CLB Sinh viên HVNH",
+      eventTime: "",
+      location: "",
+      organizer: "",
     });
   }, []);
 
   const addMediaFiles = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
+    if (fileArray.length + mediaRef.current.length > 10) { setError("Mỗi bài được đính kèm tối đa 10 tệp."); return; }
+    const allowed = /\.(jpe?g|png|webp|mp4|webm|mov|mp3|m4a|ogg|wav|pdf|txt|docx?|xlsx?|pptx?|zip)$/i;
+    if (fileArray.some(file => !allowed.test(file.name) || !file.size)) { setError("Tệp rỗng hoặc định dạng không hỗ trợ. Chọn ảnh JPG/PNG/WebP, video, âm thanh, PDF, Office, TXT hoặc ZIP."); return; }
+    const oversized = fileArray.find(file => file.size > (/\.(jpe?g|png|webp)$/i.test(file.name) ? 5 : /\.(mp4|webm|mov)$/i.test(file.name) ? 100 : 25) * 1024 * 1024);
+    if (oversized) { setError(`Tệp ${oversized.name} quá lớn. Ảnh tối đa 5 MB, video 100 MB, âm thanh và tài liệu 25 MB.`); return; }
+    setError(null);
     const newMedia: PostMedia[] = fileArray.map((file, idx) => ({
       id: `${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
       url: URL.createObjectURL(file),
@@ -135,11 +157,13 @@ export function useCreatePost(
   }, []);
 
   const submitPost = useCallback(async (): Promise<Post | null> => {
-    if (!content.trim() && mediaList.length === 0) {
-      setError("Vui lòng nhập nội dung bài viết hoặc tải lên hình ảnh.");
+    if (submittingRef.current) return null;
+    const errors = validatePostDraft({ content, category, marketListing, roomListing, eventListing, studyListing }, mediaList.length);
+    if (Object.keys(errors).length) {
+      setError(Object.values(errors)[0]);
       return null;
     }
-
+    submittingRef.current = true;
     setIsSubmitting(true);
     setError(null);
 
@@ -154,6 +178,7 @@ export function useCreatePost(
         marketListing: category === "market" ? marketListing : undefined,
         roomListing: category === "roommate" ? roomListing : undefined,
         eventListing: category === "event" ? eventListing : undefined,
+        studyListing: category === "study" ? studyListing : undefined,
         onUploadProgress: (mediaId, progress, status, uploadError, uploadedMediaId) => setMediaList(previous => previous.map(item => item.id === mediaId ? {...item, uploadProgress: progress, uploadStatus: status, uploadError, uploadedMediaId: uploadedMediaId||item.uploadedMediaId} : item)),
       };
 
@@ -162,13 +187,14 @@ export function useCreatePost(
       if (!createdPost) throw new Error("Đăng bài không thành công.");
 
       resetForm();
-      closeModal();
+      setIsOpen(false);
       return createdPost;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Đăng bài không thành công. Vui lòng thử lại.";
       setError(msg);
       return null;
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   }, [
@@ -181,6 +207,7 @@ export function useCreatePost(
     marketListing,
     roomListing,
     eventListing,
+    studyListing,
     onPostCreated,
     resetForm,
     closeModal,
@@ -209,6 +236,8 @@ export function useCreatePost(
     setRoomListing,
     eventListing,
     setEventListing,
+    studyListing,
+    setStudyListing,
     isSubmitting,
     error,
     submitPost,

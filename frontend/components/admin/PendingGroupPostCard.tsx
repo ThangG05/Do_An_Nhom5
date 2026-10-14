@@ -5,6 +5,7 @@ import UserAvatar from "@/components/ui/UserAvatar";
 import RelativeTime from "@/components/ui/RelativeTime";
 import {safeImageSrc} from "@/lib/media";
 import type {GroupPost} from "@/types/group-api";
+import PostCategoryDetails from "@/components/post/PostCategoryDetails";
 
 const categoryLabels: Record<string, string> = {
   general: "Bài viết",
@@ -37,11 +38,9 @@ export default function PendingGroupPostCard({post, groupName, busy, onApprove, 
     </header>
 
     <div className="pending-group-post-body">
+      <PostCategoryDetails post={post} />
       {post.content && <p className="pending-group-post-text">{post.content}</p>}
       {post.location?.name && <p className="pending-group-post-location">📍 {post.location.name}</p>}
-      {post.marketListing && <div className="pending-group-post-detail"><strong>Pass đồ</strong><span>Giá: {post.marketListing.price || "Chưa rõ"}</span><span>Địa điểm: {post.marketListing.location || "Chưa rõ"}</span></div>}
-      {post.roomListing && <div className="pending-group-post-detail"><strong>Ghép phòng</strong><span>Giá thuê: {post.roomListing.rentPerMonth || "Chưa rõ"}</span><span>Địa điểm: {post.roomListing.location || "Chưa rõ"}</span></div>}
-      {post.eventListing && <div className="pending-group-post-detail"><strong>Sự kiện</strong><span>{post.eventListing.eventDate} {post.eventListing.eventTime}</span><span>{post.eventListing.location}</span></div>}
       {!!visuals.length && <div className={`pending-group-post-media ${visuals.length === 1 ? "single" : "multiple"}`}>
         {visuals.map(item => item.type === "image"
           ? <img key={item.id} src={safeImageSrc(item.url)} alt={item.name || "Ảnh đính kèm bài viết"} />
@@ -50,7 +49,7 @@ export default function PendingGroupPostCard({post, groupName, busy, onApprove, 
       {!!attachments.length && <div className="pending-group-post-attachments">{attachments.map(item => item.type === "audio"
         ? <div key={item.id} className="pending-group-post-attachment"><span aria-hidden="true">♫</span><div><strong>{item.name || "Âm thanh"}</strong><audio src={item.url} controls preload="metadata" /></div></div>
         : <a key={item.id} className="pending-group-post-attachment" href={item.url} target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span><strong>{item.name || "Tệp đính kèm"}</strong></a>)}</div>}
-      {!post.content && !visuals.length && !attachments.length && <p className="pending-group-post-text pending-group-post-empty">Bài viết không có nội dung hiển thị.</p>}
+      {!post.content && !post.marketListing?.productName && !visuals.length && !attachments.length && <p className="pending-group-post-text pending-group-post-empty">Bài viết không có nội dung hiển thị.</p>}
     </div>
 
     <footer className="pending-group-post-footer">

@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import HTTPException
-from sqlalchemy import func, select, text
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.orm import Session
 
 from src.db.models.media import MediaFile, MediaStatus
@@ -88,7 +88,6 @@ def leave(db: Session, group_id: uuid.UUID, user: User) -> None:
 
 def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPostCreateRequest):
     from src.services.system_service import enforce_content
-    enforce_content(db,payload.content,allow_review=True)
     group = _group(db, group_id)
     if _membership(db, group_id, user.id) not in {"MEMBER", "ADMIN"}:
         raise HTTPException(403, "Bạn phải là thành viên của nhóm để đăng bài.")
@@ -96,7 +95,17 @@ def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPost
     if len(media) != len(set(payload.media_ids)) or any(item.owner_id != user.id or item.status != MediaStatus.READY for item in media):
         raise HTTPException(400, "Media không hợp lệ hoặc không thuộc tài khoản này.")
     category = {"pass-do": "market", "ghep-phong-tim-tro": "roommate", "su-kien": "event", "hoc-tap": "study"}.get(group["slug"], "general")
-    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=category, post_type=PostType.STANDARD, visibility=PostVisibility.PUBLIC, status=PostStatus.PENDING)
+    from src.services.post_service import _listing_data
+    from src.models.post import validate_group_fields
+    listing = _listing_data(payload, category)
+    if payload.form_version == 2:
+        try:
+            validate_group_fields(category, payload.content, listing)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+    searchable_text = "\n".join([payload.content, *[str((listing or {}).get(key, "")) for key in ("productName", "eventName", "subjectName")]])
+    enforce_content(db, searchable_text, allow_review=True)
+    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=category, listing_data=listing, location_data=payload.location.model_dump() if payload.location else None, post_type=PostType.STANDARD, visibility=PostVisibility.PUBLIC, status=PostStatus.PENDING)
     db.add(post); db.flush()
     for index, media_id in enumerate(payload.media_ids):
         db.add(PostMedia(post_id=post.id, media_id=media_id, sort_order=index))
@@ -110,7 +119,11 @@ def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = 
     status = PostStatus.PENDING if pending else PostStatus.APPROVED
     statement = select(Post).where(Post.group_id == group_id, Post.status == status, Post.deleted_at.is_(None))
     if query.strip():
-        statement = statement.where(Post.content.ilike(f"%{query.strip()}%"))
+        pattern = f"%{query.strip()}%"
+        statement = statement.where(or_(Post.content.ilike(pattern), *[
+            Post.listing_data[key].astext.ilike(pattern)
+            for key in ("productName", "eventName", "subjectName", "location")
+        ]))
     if sort == "featured":
         likes = select(func.count()).select_from(PostLike).where(PostLike.post_id == Post.id).scalar_subquery()
         comments = select(func.count()).select_from(Comment).where(Comment.post_id == Post.id, Comment.deleted_at.is_(None)).scalar_subquery()

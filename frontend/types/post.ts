@@ -16,6 +16,7 @@ export interface PostMedia {
 }
 
 export interface MarketListingData {
+  productName?: string;
   price: string;
   condition: string;
   location: string;
@@ -29,10 +30,15 @@ export interface RoomListingData {
 }
 
 export interface EventListingData {
+  eventName?: string;
   eventDate: string;
   eventTime: string;
   location: string;
   organizer: string;
+}
+
+export interface StudyListingData {
+  subjectName: string;
 }
 
 export interface PostLocation {
@@ -52,6 +58,7 @@ export interface CreatePostPayload {
   marketListing?: MarketListingData;
   roomListing?: RoomListingData;
   eventListing?: EventListingData;
+  studyListing?: StudyListingData;
   onUploadProgress?: (mediaId: string, progress: number, status: 'uploading' | 'complete' | 'error', error?: string, uploadedMediaId?: string) => void;
 }
 
@@ -102,6 +109,7 @@ export interface Post {
   marketListing?: MarketListingData;
   roomListing?: RoomListingData;
   eventListing?: EventListingData;
+  studyListing?: StudyListingData;
   location?: PostLocation | null;
   groupId?: string;
   groupName?: string | null;

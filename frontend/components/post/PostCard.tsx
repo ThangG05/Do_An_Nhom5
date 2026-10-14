@@ -8,6 +8,7 @@ import { addPostComment, fetchPostComments, fetchUserFriends, removeGroupComment
 import { AuthUser, getAuthUser } from '@/lib/auth';
 import { useAuthUser } from '@/components/auth/AuthProvider';
 import PostActionModal from '@/components/post/PostActionModal';
+import PostCategoryDetails from '@/components/post/PostCategoryDetails';
 import CommentActionModal from '@/components/post/CommentActionModal';
 import { safeImageSrc } from '@/lib/media';
 import { useDialog } from '@/components/ui/DialogProvider';
@@ -47,13 +48,15 @@ interface PostCardProps {
 }
 
 export default function PostCard({
-  post,
+  post: initialPost,
   onLikeToggle,
   onAddComment,
   moderatorGroupId,
   moderatorActions,
   highlightCommentId,
 }: PostCardProps) {
+  const [post, setPost] = useState(initialPost);
+  useEffect(() => setPost(initialPost), [initialPost]);
   const dialog = useDialog();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
@@ -299,6 +302,7 @@ export default function PostCard({
 
       {/* 2. Post Body Content */}
       <div className="post-card-body">
+        <PostCategoryDetails post={post} />
         <p className="post-text-content">{content}</p>
 
         {post.location && (
@@ -315,13 +319,6 @@ export default function PostCard({
           ) : <span className="post-location-link" title={post.location.address || post.location.name}><span aria-hidden="true">📍</span> {post.location.name}</span>
         )}
 
-        {post.marketListing && (
-          <div className="post-special-badge market-badge">
-            <span>
-              🛒 Pass đồ: <strong>{post.marketListing.price}</strong> — {post.marketListing.location}
-            </span>
-          </div>
-        )}
 
         {visualMedia.length > 0 && (
           <div className={`post-media-gallery count-${visualMedia.length}`}>
@@ -464,7 +461,7 @@ export default function PostCard({
         {actionError && <div className="post-error-banner">{actionError}</div>}
       </div>
       {lightboxIndex!==null&&imageMedia[lightboxIndex]&&<div className="post-media-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh bài viết" onClick={()=>setLightboxIndex(null)}><button type="button" className="lightbox-close" onClick={()=>setLightboxIndex(null)} aria-label="Đóng">×</button>{imageMedia.length>1&&<button type="button" className="lightbox-prev" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex-1+imageMedia.length)%imageMedia.length);}} aria-label="Ảnh trước">‹</button>}<img src={safeImageSrc(imageMedia[lightboxIndex].url)} alt="Nội dung bài viết" onClick={event=>event.stopPropagation()}/>{imageMedia.length>1&&<button type="button" className="lightbox-next" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex+1)%imageMedia.length);}} aria-label="Ảnh tiếp theo">›</button>}<span className="lightbox-counter">{lightboxIndex+1} / {imageMedia.length}</span></div>}
-      <PostActionModal mode={actionMode} post={post} content={content} privacy={privacy} onClose={()=>setActionMode(null)} onUpdated={updated=>{setContent(updated.content);setPrivacy(updated.privacy);}} onDeleted={()=>setIsDeleted(true)} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
+      <PostActionModal mode={actionMode} post={post} content={content} privacy={privacy} onClose={()=>setActionMode(null)} onUpdated={updated=>{setPost(updated);setContent(updated.content);setPrivacy(updated.privacy);if(updated.status === "PENDING")setIsDeleted(true);}} onDeleted={()=>setIsDeleted(true)} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
       <CommentActionModal comment={commentAction?.comment||null} mode={commentAction?.mode||null} onClose={()=>setCommentAction(null)} onUpdated={updated=>setComments(current=>current.map(item=>item.id===updated.id?updated:item))} onDeleted={()=>{if(commentAction){setComments(current=>current.filter(item=>item.id!==commentAction.comment.id));setCommentsCount(current=>Math.max(0,current-1));}}} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
     </article>
   );

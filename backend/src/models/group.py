@@ -1,6 +1,7 @@
 import uuid
 from typing import Literal
 from pydantic import BaseModel, Field, model_validator
+from src.models.post import MarketListingData, RoomListingData, EventListingData, StudyListingData, PostLocationData
 
 
 class GroupResponse(BaseModel):
@@ -13,12 +14,18 @@ class GroupResponse(BaseModel):
 
 
 class GroupPostCreateRequest(BaseModel):
+    form_version: Literal[1, 2] = 1
     content: str = Field(default="", max_length=10000)
     media_ids: list[uuid.UUID] = Field(default_factory=list, max_length=10)
+    marketListing: MarketListingData | None = None
+    roomListing: RoomListingData | None = None
+    eventListing: EventListingData | None = None
+    studyListing: StudyListingData | None = None
+    location: PostLocationData | None = None
 
     @model_validator(mode="after")
     def validate_content(self):
-        if not self.content.strip() and not self.media_ids:
+        if self.form_version == 1 and not self.content.strip() and not self.media_ids:
             raise ValueError("Bài viết phải có nội dung hoặc media.")
         return self
 
