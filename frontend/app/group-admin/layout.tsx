@@ -100,6 +100,7 @@ export default function GroupAdminLayout({ children }: { children: React.ReactNo
               <div className="group-admin-account-menu" role="menu">
                 <strong>{user.full_name || "Group Admin"}</strong>
                 <span>{user.email}</span>
+                <Link href="/group-admin/password" onClick={() => setAccountOpen(false)}>Đổi mật khẩu</Link>
                 <button type="button" onClick={() => void signOut()} disabled={signingOut}>
                   {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
                 </button>

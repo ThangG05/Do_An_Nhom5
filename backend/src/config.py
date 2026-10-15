@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     SMTP_SENDER_NAME: str = "HVNH Hub"
     SMTP_FROM_EMAIL: str = ""
     FEEDBACK_TO_EMAIL: str = ""
+    # JSON mapping of administrator account emails to operator-controlled recovery inboxes.
+    # Only applies to SUPER_ADMIN or members with ADMIN role in a group.
+    ADMIN_PASSWORD_RECOVERY_EMAILS: str = ""
     R2_ACCOUNT_ID: str = ""
     R2_ACCESS_KEY_ID: str = ""
     R2_SECRET_ACCESS_KEY: str = ""

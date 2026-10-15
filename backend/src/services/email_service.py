@@ -77,10 +77,11 @@ def _otp_template(*, title: str, intro: str, code: str, expiry_minutes: int, not
 </html>"""
 
 
-def send_password_reset_code(email: str, code: str) -> None:
+def send_password_reset_code(email: str, code: str, *, account_email: str | None = None) -> None:
+    account_note = f" cho tài khoản {account_email}" if account_email else ""
     _send_email(email, "Mã khôi phục mật khẩu HVNH Hub", _otp_template(
         title="Khôi phục mật khẩu",
-        intro="Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản HVNH Hub.",
+        intro=f"Bạn vừa yêu cầu đặt lại mật khẩu{account_note} trên HVNH Hub.",
         code=code,
         expiry_minutes=settings.OTP_EXPIRE_MINUTES,
         note="Không chia sẻ mã này với bất kỳ ai, kể cả người tự nhận là nhân viên hỗ trợ.",

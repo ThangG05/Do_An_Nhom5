@@ -5,8 +5,10 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from src.db.models.media import MediaFile,MediaStatus
+from src.db.models.post import Comment, Post
 from src.db.models.user import AccountStatus,SystemRole,User
-from src.models.report import ReportCreateRequest,ReportResolveRequest,ReportResponse
+from src.models.report import ReportCreateRequest,ReportDetailResponse,ReportResolveRequest,ReportResponse,ReportUserPreview
+from src.services import post_service
 from src.services.storage_service import create_download_url
 
 def _target(db:Session,kind:str,target_id:uuid.UUID):
@@ -49,6 +51,54 @@ def list_queue(db:Session,user:User,status:str|None=None)->list[ReportResponse]:
             media=db.get(MediaFile,r["evidence_media_id"]);evidence=create_download_url(media) if media and media.status==MediaStatus.READY else None
         out.append(ReportResponse(id=str(r["id"]),reporter_id=str(r["reporter_id"]) if r["reporter_id"] else None,reporter_name=r["reporter_name"],target_type=str(r["target_type"]),target_id=str(r["target_id"]),reason=r["reason"],status=str(r["status"]),group_id=str(r["group_id"]) if r["group_id"] else None,group_name=r["group_name"],target_summary=r["target_summary"] or "",evidence_url=evidence,resolution_note=r["resolution_note"],created_at=r["created_at"].isoformat(),handled_at=r["handled_at"].isoformat() if r["handled_at"] else None))
     return out
+
+
+def get_detail(db: Session, user: User, report_id: uuid.UUID) -> ReportDetailResponse:
+    report = db.execute(text("""
+        SELECT r.target_type::text target_type, r.target_id,
+               COALESCE(p.group_id, cp.group_id) group_id
+        FROM reports r
+        LEFT JOIN posts p ON r.target_type='POST' AND p.id=r.target_id
+        LEFT JOIN comments c ON r.target_type='COMMENT' AND c.id=r.target_id
+        LEFT JOIN posts cp ON cp.id=c.post_id
+        WHERE r.id=:id
+    """), {"id": report_id}).mappings().first()
+    if not report:
+        raise HTTPException(404, "Không tìm thấy báo cáo.")
+    group_id = report["group_id"]
+    if user.system_role == SystemRole.SUPER_ADMIN:
+        if group_id and db.execute(text("""
+            SELECT 1 FROM group_members gm JOIN users gu ON gu.id=gm.user_id
+            WHERE gm.group_id=:group_id AND gm.role='ADMIN'
+              AND gu.status='ACTIVE' AND gu.deleted_at IS NULL LIMIT 1
+        """), {"group_id": group_id}).first():
+            raise HTTPException(403, "Báo cáo này do quản trị nhóm xử lý.")
+    elif not group_id or group_id not in _group_ids(db, user):
+        raise HTTPException(403, "Báo cáo không thuộc nhóm bạn quản lý.")
+
+    kind, target_id = report["target_type"], report["target_id"]
+    if kind == "USER":
+        target = db.get(User, target_id)
+        if not target or target.deleted_at is not None:
+            return ReportDetailResponse()
+        profile = target.profile
+        media = db.get(MediaFile, profile.avatar_media_id) if profile and profile.avatar_media_id else None
+        return ReportDetailResponse(user=ReportUserPreview(
+            id=str(target.id), name=profile.full_name if profile else target.username,
+            avatar=create_download_url(media) if media and media.status == MediaStatus.READY else "/assets/logo.png",
+            student_code=profile.student_code if profile else None,
+            joined_at=target.created_at.isoformat(), status=target.status.value,
+        ))
+
+    comment = db.get(Comment, target_id) if kind == "COMMENT" else None
+    post_id = comment.post_id if comment else target_id if kind == "POST" else None
+    post = db.get(Post, post_id) if post_id else None
+    if not post or post.deleted_at is not None:
+        return ReportDetailResponse()
+    return ReportDetailResponse(
+        post=post_service._serialize_feed_posts(db, [post], user.id)[0],
+        comment=post_service._comment_response(db, comment) if comment and comment.deleted_at is None else None,
+    )
 
 def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveRequest)->None:
     report=db.execute(text("SELECT * FROM reports WHERE id=:id AND status IN ('PENDING','REVIEWING') FOR UPDATE"),{"id":report_id}).mappings().first()

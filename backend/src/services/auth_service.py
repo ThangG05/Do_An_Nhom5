@@ -1,3 +1,4 @@
+import json
 import re
 import secrets
 import uuid
@@ -449,6 +450,30 @@ def authenticate_with_google(
     return response
 
 
+def _password_reset_recipient(user: User, db: Session) -> str:
+    """Use a trusted operator-configured inbox only for administrator accounts."""
+    configured = settings.ADMIN_PASSWORD_RECOVERY_EMAILS.strip()
+    if not configured:
+        return user.email
+    try:
+        mapping = json.loads(configured)
+    except (TypeError, ValueError) as exc:
+        raise email_service.EmailDeliveryError("Cấu hình email khôi phục quản trị không hợp lệ.") from exc
+    if not isinstance(mapping, dict):
+        raise email_service.EmailDeliveryError("Cấu hình email khôi phục quản trị không hợp lệ.")
+    recipient = mapping.get(user.email.lower())
+    if not recipient:
+        return user.email
+    is_admin = user.system_role == SystemRole.SUPER_ADMIN or bool(db.scalar(text(
+        "SELECT 1 FROM group_members WHERE user_id = :user_id AND role = 'ADMIN' LIMIT 1"
+    ), {"user_id": user.id}))
+    if not is_admin:
+        return user.email
+    if not isinstance(recipient, str) or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", recipient.strip()):
+        raise email_service.EmailDeliveryError("Email khôi phục quản trị không hợp lệ.")
+    return recipient.strip()
+
+
 def request_password_reset(email_value: str, db: Session) -> None:
     email = _validate_hvnh_email(email_value)
     user = db.scalar(select(User).where(func.lower(User.email) == email, User.deleted_at.is_(None)))
@@ -461,7 +486,8 @@ def request_password_reset(email_value: str, db: Session) -> None:
     db.execute(update(PasswordResetCode).where(PasswordResetCode.user_id==user.id,PasswordResetCode.consumed_at.is_(None)).values(consumed_at=now))
     code=f"{secrets.randbelow(10000):04d}"
     db.add(PasswordResetCode(user_id=user.id,code_hash=hash_verification_code(str(user.id),code),expires_at=now+timedelta(minutes=settings.OTP_EXPIRE_MINUTES)))
-    email_service.send_password_reset_code(email,code)
+    recipient = _password_reset_recipient(user, db)
+    email_service.send_password_reset_code(recipient, code, account_email=email if recipient != email else None)
     db.commit()
 
 

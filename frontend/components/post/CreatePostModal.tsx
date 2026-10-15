@@ -51,6 +51,10 @@ export default function CreatePostModal({ postState: s, group }: { postState: Us
 
   if (!s.isOpen) return null;
   const kind = GROUP_POST_KINDS.find(item => item.category === s.category);
+  const availableKinds = GROUP_POST_KINDS.filter(item => {
+    const joined = groups.find(candidate => candidate.slug === item.slug);
+    return joined?.membership === 'MEMBER' || joined?.membership === 'ADMIN';
+  });
   const selectedGroup = group || groups.find(item => item.slug === kind?.slug);
   const isGroup = s.category !== 'general';
   const unavailable = isGroup && !group && (groupsLoading || groupsError || !selectedGroup);
@@ -86,7 +90,7 @@ export default function CreatePostModal({ postState: s, group }: { postState: Us
       }
     }}>
       <header className={styles.header}><div className={styles.headerTitle}><span className={styles.iconTile}>{kind ? <CategoryIcon category={s.category} size={25} /> : '＋'}</span><div><small>CHIA SẺ CÙNG CỘNG ĐỒNG</small><h2 id="gp-dialog-title">{kind ? 'Tạo bài · ' + kind.label : 'Tạo bài viết'}</h2></div></div><button type="button" className={styles.close} disabled={s.isSubmitting} onClick={s.closeModal} aria-label="Đóng bảng tạo bài viết">×</button></header>
-      {!group && <nav className={styles.kindGrid} aria-label="Chọn nơi đăng bài">{GROUP_POST_KINDS.map(item => <button key={item.category} type="button" disabled={s.isSubmitting} data-category={item.category} aria-pressed={s.category === item.category} className={styles.kindCard} onClick={() => { s.setCategory(item.category); s.setLocation(null); setErrors({}); setPreview(false); }}><span className={styles.iconTile}><CategoryIcon category={item.category} /></span><span><strong>{item.label}</strong><small>{item.description}</small></span></button>)}<button type="button" className={styles.textButton} disabled={s.isSubmitting} aria-pressed={s.category === 'general'} onClick={() => { s.setCategory('general'); setErrors({}); setPreview(false); }}>Bài viết cá nhân</button></nav>}
+      {!group && <nav className={styles.kindGrid} aria-label="Chọn nơi đăng bài">{availableKinds.map(item => <button key={item.category} type="button" disabled={s.isSubmitting} data-category={item.category} aria-pressed={s.category === item.category} className={styles.kindCard} onClick={() => { s.setCategory(item.category); s.setLocation(null); setErrors({}); setPreview(false); }}><span className={styles.iconTile}><CategoryIcon category={item.category} /></span><span><strong>{item.label}</strong><small>{item.description}</small></span></button>)}{!availableKinds.length && <p className={styles.noGroups}>Bạn chưa tham gia nhóm nào. <Link href="/groups" onClick={s.closeModal}>Khám phá và tham gia nhóm →</Link></p>}<button type="button" className={styles.textButton} disabled={s.isSubmitting} aria-pressed={s.category === 'general'} onClick={() => { s.setCategory('general'); setErrors({}); setPreview(false); }}>Bài viết cá nhân</button></nav>}
       <div className={styles.author}><UserAvatar src={author?.avatar_url} name={author?.full_name || author?.username} imageClassName={styles.avatar} fallbackClassName={styles.avatar} /><div><strong>{author?.full_name || author?.username || 'Bạn'}</strong><span>{isGroup ? 'Đăng trong ' + (selectedGroup?.name || kind?.label) + ' · Chờ quản trị viên duyệt' : 'Chia sẻ trên trang cá nhân của bạn'}</span></div></div>
       {(unavailable || needsMembership) && <div className={styles.notice} role="status">{unavailable ? groupsLoading ? 'Đang kiểm tra nhóm đăng bài…' : 'Không tải được nhóm. Hãy đóng và mở lại để thử lại.' : <>Bạn cần tham gia nhóm trước khi đăng bài. <Link href={'/groups?group=' + selectedGroup?.id} onClick={s.closeModal}>Đi tới nhóm →</Link></>}</div>}
       <form ref={form} noValidate onSubmit={e => { e.preventDefault(); void publish(); }} className={styles.form}>

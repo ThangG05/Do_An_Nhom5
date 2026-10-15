@@ -12,14 +12,16 @@
 .friends-location-filters label{display:flex;align-items:center;gap:8px;color:#526b80;font-size:12px;font-weight:700}
 .friends-location-filters select{min-width:160px;max-width:240px;min-height:38px;padding:0 32px 0 10px;border:1px solid #d6e3ec;border-radius:9px;background-color:#fff;color:#123b5d;font-size:13px}
 .friends-matrix-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%}
-.friend-matrix-card{display:grid;grid-template-columns:76px minmax(0,1fr);grid-template-areas:'avatar details' 'avatar actions';align-items:center;gap:5px 14px;min-width:0;padding:15px;border-color:#dae5ee;border-radius:15px;box-shadow:0 5px 18px rgba(13,49,79,.045)}
+.friend-matrix-card{display:grid;grid-template-columns:76px minmax(0,1fr) auto;grid-template-areas:'avatar details actions';align-items:center;gap:14px;min-width:0;padding:15px;border-color:#dae5ee;border-radius:15px;box-shadow:0 5px 18px rgba(13,49,79,.045)}
 .friend-card-avatar-link{grid-area:avatar;position:relative;align-self:start;width:76px;height:76px}
 .friend-card-avatar-link .friend-matrix-avatar{width:76px;height:76px;border-radius:13px;object-fit:cover}
 .friend-card-details{grid-area:details;display:flex;flex-direction:column;gap:3px;min-width:0;overflow:hidden}
 .friend-card-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0a3157}
 .friend-card-faculty,.friend-card-mutual{color:#6a8195;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.friend-card-actions{grid-area:actions;display:flex;gap:7px;flex-wrap:wrap;min-width:0;margin-top:3px}
+.friend-card-actions{grid-area:actions;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;min-width:0;margin-left:auto}
 .friend-card-actions .btn{min-width:0;min-height:32px;padding:6px 10px;border-radius:8px;font-size:12px;white-space:nowrap}
+.friends-action-error{margin:12px 0;padding:10px 14px;border:1px solid #fecaca;border-radius:10px;background:#fff1f2;color:#991b1b}
+@media(max-width:900px){.friend-matrix-card{grid-template-columns:68px minmax(0,1fr);grid-template-areas:'avatar details' 'avatar actions'}.friend-card-actions{justify-content:flex-start;margin-left:0}.friend-card-avatar-link,.friend-card-avatar-link .friend-matrix-avatar{width:68px;height:68px}}
 .album-detail-heading{display:flex;align-items:center;gap:16px;margin:0 0 18px}
 .album-detail-heading button{border:1px solid #d5e2ec;border-radius:10px;background:#fff;color:#0d4a77;padding:9px 12px;font-weight:700;cursor:pointer}
 .album-detail-heading h3{margin:0;color:#0a3157}.album-detail-heading span{font-size:12px;color:#71879a}

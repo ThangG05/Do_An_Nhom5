@@ -112,6 +112,26 @@ def list_friends(db: Session, owner: User, viewer: User, query: str = "") -> lis
         GROUP BY target_id
     """).bindparams(bindparam("ids", expanding=True))
     mutual_counts = dict(db.execute(mutual_query, {"viewer": viewer.id, "ids": visible_ids}).all()) if visible_ids else {}
+    viewer_friend_ids: set[uuid.UUID] = set()
+    pending_by_id: dict[uuid.UUID, str] = {}
+    if viewer.id != owner.id and visible_ids:
+        friendship_rows = db.execute(text("""
+            SELECT user_low_id, user_high_id FROM friendships
+            WHERE (user_low_id=:viewer AND user_high_id IN :ids)
+               OR (user_high_id=:viewer AND user_low_id IN :ids)
+        """).bindparams(bindparam("ids", expanding=True)), {"viewer": viewer.id, "ids": visible_ids}).all()
+        viewer_friend_ids = {high if low == viewer.id else low for low, high in friendship_rows}
+        pending_rows = db.execute(text("""
+            SELECT sender_id, receiver_id FROM friend_requests
+            WHERE status='PENDING' AND
+              ((sender_id=:viewer AND receiver_id IN :ids)
+               OR (receiver_id=:viewer AND sender_id IN :ids))
+        """).bindparams(bindparam("ids", expanding=True)), {"viewer": viewer.id, "ids": visible_ids}).all()
+        pending_by_id = {
+            receiver if sender == viewer.id else sender:
+                "pending_sent" if sender == viewer.id else "pending_received"
+            for sender, receiver in pending_rows
+        }
     connected_at = {row["friend_id"]: row["created_at"] for row in friend_rows}
     result = []
     for user, profile in user_rows:
@@ -125,5 +145,6 @@ def list_friends(db: Session, owner: User, viewer: User, query: str = "") -> lis
             currentCity=profile.current_city if profile else None,
             hometown=profile.hometown if profile else None,
             connectedAt=connected_at[user.id].isoformat(),
+            friendshipStatus=("self" if user.id == viewer.id else "friends" if viewer.id == owner.id or user.id in viewer_friend_ids else pending_by_id.get(user.id, "none")),
         ))
     return sorted(result, key=lambda friend: friend.connectedAt or "", reverse=True)

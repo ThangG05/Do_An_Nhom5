@@ -143,3 +143,27 @@ test('approved group cards show typed metadata instead of only body text', async
   await expect(page.getByText('20/12/2026 · 08:00 (giờ Việt Nam)')).toBeVisible();
   await expect(page.getByText('Sân trường', { exact: false })).toBeVisible();
 });
+
+test('home composer only offers groups the user has joined', async ({ page }) => {
+  await setup(page);
+  await page.route('**/api/v1/groups', route => route.fulfill({ json: groups.map(group => ({ ...group, membership: ['event', 'study'].includes(group.id) ? 'MEMBER' : 'NONE' })) }));
+  await page.goto('/home');
+  await page.getByRole('button', { name: 'Sự kiện', exact: true }).click();
+  const destinations = page.getByRole('navigation', { name: 'Chọn nơi đăng bài' });
+  await expect(destinations.getByRole('button', { name: /^Sự kiện/ })).toBeVisible();
+  await expect(destinations.getByRole('button', { name: /^Học tập/ })).toBeVisible();
+  await expect(destinations.getByRole('button', { name: /^Pass đồ/ })).toHaveCount(0);
+  await expect(destinations.getByRole('button', { name: /^Ghép phòng/ })).toHaveCount(0);
+  await expect(page.getByText('Đăng trong Sự kiện · Chờ quản trị viên duyệt')).toBeVisible();
+});
+
+test('home composer directs users to join when they open an unjoined group shortcut', async ({ page }) => {
+  await setup(page);
+  await page.route('**/api/v1/groups', route => route.fulfill({ json: groups.map(group => ({ ...group, membership: 'NONE' })) }));
+  await page.goto('/home');
+  await page.getByRole('button', { name: 'Sự kiện', exact: true }).click();
+  await expect(page.getByText('Bạn chưa tham gia nhóm nào.')).toBeVisible();
+  await expect(page.getByRole('link', { name: /Khám phá và tham gia nhóm/ })).toBeVisible();
+  await expect(page.getByText('Bạn cần tham gia nhóm trước khi đăng bài.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Gửi bài chờ duyệt', exact: true })).toBeDisabled();
+});

@@ -361,6 +361,7 @@ export async function disciplineAdminUser(userId:string,action:'WARN'|'SUSPEND'|
 export async function fetchAdminAuditLogs():Promise<import('@/types/admin').AdminAuditLog[]>{return api('/admin/audit-logs?limit=100');}
 export async function createReport(target_type:'USER'|'POST'|'COMMENT',target_id:string,reason:string,evidence_media_id?:string):Promise<void>{await api('/reports',{method:'POST',body:JSON.stringify({target_type,target_id,reason,evidence_media_id})});}
 export async function fetchReportQueue(status=''):Promise<import('@/types/report').ApiReport[]>{return api(`/reports/admin?status=${encodeURIComponent(status)}`);}
+export async function fetchReportDetail(reportId:string):Promise<import('@/types/report').ReportDetail>{return api(`/reports/admin/${encodeURIComponent(reportId)}`);}
 export async function resolveReport(id:string,decision:'RESOLVE'|'REJECT',action:'NONE'|'HIDE_CONTENT'|'LOCK_USER'|'DISABLE_USER',note:string):Promise<void>{await api(`/reports/admin/${id}`,{method:'PATCH',body:JSON.stringify({decision,action,note})});}
 export async function requestPasswordReset(email:string):Promise<void>{await api('/auth/password/forgot',{method:'POST',body:JSON.stringify({email})});}
 export async function resetPassword(email:string,code:string,newPassword:string):Promise<void>{await api('/auth/password/reset',{method:'POST',body:JSON.stringify({email,code,new_password:newPassword})});}

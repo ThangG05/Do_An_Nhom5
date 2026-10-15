@@ -31,6 +31,7 @@ import "@/styles/test03-feedback.css";
 import "@/styles/profile-refresh.css";
 import "@/styles/comment-mentions.css";
 import "@/styles/dark-theme.css";
+import "@/styles/test04-feedback.css";
 
 const appFont=Be_Vietnam_Pro({subsets:["latin","vietnamese"],weight:["400","500","600","700"],variable:"--font-app",display:"swap"});
 export const metadata:Metadata={title:"HVNH Hub - Cộng đồng sinh viên Học viện Ngân hàng",description:"Nền tảng cộng đồng dành cho sinh viên HVNH: trao đổi đồ dùng, tìm trọ, sự kiện, học tập và nhắn tin thời gian thực."};

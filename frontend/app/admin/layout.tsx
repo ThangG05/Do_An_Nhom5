@@ -117,6 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Link href="/admin" onClick={() => setAccountOpen(false)}><i>▦</i><span><b>Trung tâm quản trị</b><small>Về trang tổng quan</small></span></Link>
                   <Link href="/admin/audit" onClick={() => setAccountOpen(false)}><i>≡</i><span><b>Nhật ký hoạt động</b><small>Xem lịch sử quản trị</small></span></Link>
                   <Link href="/admin/settings" onClick={() => setAccountOpen(false)}><i>⚙</i><span><b>Cài đặt hệ thống</b><small>Bảo trì và kiểm duyệt</small></span></Link>
+                  <Link href="/admin/password" onClick={() => setAccountOpen(false)}><i>◆</i><span><b>Đổi mật khẩu</b><small>Bảo vệ tài khoản quản trị</small></span></Link>
                 </nav>
                 <button type="button" className="admin-menu-logout" onClick={() => void signOut()} disabled={signingOut}><i>↪</i> {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}</button>
               </div>

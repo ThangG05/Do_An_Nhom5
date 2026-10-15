@@ -29,6 +29,8 @@
 .kindCard small { display: block; font-size: 10px; line-height: 1.5; margin-top: 3px; color: var(--muted); }
 .kindCard[aria-pressed="true"], .kindCard:hover { border-color: var(--accent); background: var(--tint); box-shadow: 0 0 0 1px var(--accent); }
 .kindGrid > .textButton { grid-column: 1 / -1; justify-self: start; padding: 4px 0; font-size: 11px; }
+.noGroups { grid-column: 1 / -1; margin: 2px 0; padding: 12px 14px; border: 1px solid var(--line); background: var(--hub-bg, #f4f7fb); border-radius: 12px; color: var(--muted); font-size: 11px; }
+.noGroups a { color: var(--accent); font-weight: 600; margin-left: 4px; }
 .textButton { background: transparent; border: 0; padding: 8px 0; color: var(--accent); font-weight: 600; font-size: 12px; text-align: left; }
 .author { display: flex; align-items: center; justify-content: flex-start; gap: 11px; padding: 20px 28px; }
 .author > div { display: grid; gap: 4px; min-width: 0; text-align: left; }
