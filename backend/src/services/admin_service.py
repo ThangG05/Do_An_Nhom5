@@ -1,6 +1,7 @@
 import uuid
 from io import BytesIO
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 from openpyxl import Workbook
@@ -9,7 +10,8 @@ from sqlalchemy import bindparam, text
 from sqlalchemy.orm import Session
 
 from src.db.models.user import AccountStatus, SystemRole, User
-from src.models.admin import AdminDashboardResponse, AdminUserPage, AdminUserResponse, AuditLogResponse, DisciplineRequest
+from src.models.admin import (AdminDashboardResponse, AdminUserPage, AdminUserResponse,
+                              AuditLogResponse, DisciplineRequest, RAGUserUsageResponse)
 
 DEDICATED_ADMIN_SLUGS = {"pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"}
 
@@ -114,11 +116,46 @@ def export_workbook(db: Session) -> BytesIO:
     return output
 
 
-def _serialize_user(row, groups: list[dict]) -> AdminUserResponse:
-    return AdminUserResponse(id=str(row["id"]),email=row["email"],username=row["username"],full_name=row["full_name"],student_code=row["student_code"],faculty=row["faculty"],status=str(row["status"]),system_role=str(row["system_role"]),admin_groups=groups,created_at=row["created_at"].isoformat(),last_login_at=row["last_login_at"].isoformat() if row["last_login_at"] else None,suspended_until=row["suspended_until"].isoformat() if row["suspended_until"] else None,warning_count=row["warning_count"] or 0)
+def _serialize_user(row, groups: list[dict], usage: dict | None = None) -> AdminUserResponse:
+    usage = usage or {}
+    return AdminUserResponse(id=str(row["id"]),email=row["email"],username=row["username"],full_name=row["full_name"],student_code=row["student_code"],faculty=row["faculty"],status=str(row["status"]),system_role=str(row["system_role"]),admin_groups=groups,created_at=row["created_at"].isoformat(),last_login_at=row["last_login_at"].isoformat() if row["last_login_at"] else None,suspended_until=row["suspended_until"].isoformat() if row["suspended_until"] else None,warning_count=row["warning_count"] or 0,rag_input_tokens=usage.get("input_tokens"),rag_output_tokens=usage.get("output_tokens"),rag_total_tokens=usage.get("total_tokens"),rag_usage_calls=usage.get("usage_calls",0),rag_usage_missing=usage.get("usage_missing",0))
 
 
-def users(db: Session, q: str, account_status: str | None, limit: int, offset: int) -> AdminUserPage:
+def _usage_bounds(period: str, start_date: date | None, end_date: date | None):
+    zone = ZoneInfo("Asia/Ho_Chi_Minh")
+    today = datetime.now(zone).date()
+    if period == "custom":
+        if start_date is None or end_date is None or start_date > end_date:
+            raise HTTPException(400, "Cần chọn khoảng ngày hợp lệ.")
+        first, last = start_date, end_date
+    elif period == "all":
+        return None, None
+    else:
+        days = {"today": 1, "7d": 7, "30d": 30}[period]
+        first, last = today - timedelta(days=days-1), today
+    return (datetime.combine(first, time.min, zone).astimezone(UTC),
+            datetime.combine(last + timedelta(days=1), time.min, zone).astimezone(UTC))
+
+
+def _usage_totals(db: Session, user_ids: list[uuid.UUID], start, end) -> dict[uuid.UUID, dict]:
+    if not user_ids:
+        return {}
+    statement = text("""
+        SELECT user_id,sum(input_tokens)::bigint input_tokens,sum(output_tokens)::bigint output_tokens,
+               sum(total_tokens)::bigint total_tokens,count(*) usage_calls,
+               count(*) FILTER(WHERE total_tokens IS NULL) usage_missing
+        FROM rag_token_usage WHERE user_id IN :ids
+          AND (:start IS NULL OR created_at >= :start) AND (:end IS NULL OR created_at < :end)
+        GROUP BY user_id
+    """).bindparams(bindparam("ids", expanding=True))
+    return {row["user_id"]: dict(row) for row in db.execute(statement,
+             {"ids": user_ids, "start": start, "end": end}).mappings()}
+
+
+def users(db: Session, q: str, account_status: str | None, limit: int, offset: int,
+          period: str = "30d", start_date: date | None = None,
+          end_date: date | None = None) -> AdminUserPage:
+    start, end = _usage_bounds(period, start_date, end_date)
     where=["u.deleted_at IS NULL"];params={"pattern":f"%{q.strip()}%","limit":limit,"offset":offset}
     if q.strip(): where.append("(u.email ILIKE :pattern OR u.username ILIKE :pattern OR p.full_name ILIKE :pattern OR p.student_code ILIKE :pattern OR p.faculty ILIKE :pattern)")
     if account_status: where.append("u.status::text=:status");params["status"]=account_status
@@ -137,7 +174,38 @@ def users(db: Session, q: str, account_status: str | None, limit: int, offset: i
             groups_by_user[group["user_id"]].append({
                 "id": group["id"], "name": group["name"], "slug": group["slug"],
             })
-    return AdminUserPage(items=[_serialize_user(row, groups_by_user[row["id"]]) for row in rows],total=total,limit=limit,offset=offset)
+    usage = _usage_totals(db, list(groups_by_user), start, end)
+    return AdminUserPage(items=[_serialize_user(row, groups_by_user[row["id"]], usage.get(row["id"])) for row in rows],total=total,limit=limit,offset=offset)
+
+
+def user_rag_usage(db: Session, user_id: uuid.UUID, period: str = "30d",
+                   start_date: date | None = None, end_date: date | None = None) -> RAGUserUsageResponse:
+    if not db.execute(text("SELECT 1 FROM users WHERE id=:uid AND deleted_at IS NULL"), {"uid": user_id}).first():
+        raise HTTPException(404, "Không tìm thấy tài khoản.")
+    start, end = _usage_bounds(period, start_date, end_date)
+    params = {"uid": user_id, "start": start, "end": end}
+    totals = _usage_totals(db, [user_id], start, end).get(user_id, {})
+    daily = db.execute(text("""
+        SELECT timezone('Asia/Ho_Chi_Minh',created_at)::date AS usage_day,
+               sum(input_tokens)::bigint input_tokens,sum(output_tokens)::bigint output_tokens,
+               sum(total_tokens)::bigint total_tokens,count(*) calls
+        FROM rag_token_usage WHERE user_id=:uid
+          AND (:start IS NULL OR created_at >= :start) AND (:end IS NULL OR created_at < :end)
+        GROUP BY 1 ORDER BY 1
+    """), params).mappings().all()
+    calls = db.execute(text("""
+        SELECT id,created_at,provider,model,input_tokens,output_tokens,total_tokens,status,usage_source
+        FROM rag_token_usage WHERE user_id=:uid
+          AND (:start IS NULL OR created_at >= :start) AND (:end IS NULL OR created_at < :end)
+        ORDER BY created_at DESC,id DESC LIMIT 100
+    """), params).mappings().all()
+    return RAGUserUsageResponse(user_id=user_id,input_tokens=totals.get("input_tokens"),
+        output_tokens=totals.get("output_tokens"),total_tokens=totals.get("total_tokens"),
+        usage_calls=totals.get("usage_calls",0),usage_missing=totals.get("usage_missing",0),
+        daily=[{"date":row["usage_day"].isoformat(),"input_tokens":row["input_tokens"],
+                "output_tokens":row["output_tokens"],"total_tokens":row["total_tokens"],
+                "calls":row["calls"]} for row in daily],
+        calls=[{**dict(row),"created_at":row["created_at"].isoformat()} for row in calls])
 
 
 def _target(db: Session, user_id: uuid.UUID, actor: User) -> User:

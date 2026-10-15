@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import text
 
 from src.db.models.user import SystemRole
@@ -19,6 +21,26 @@ def test_super_admin_dashboard_account_role_and_audit_flow(client, db_session, m
     assert users.status_code == 200
     assert users.json()["total"] == 1
     assert users.json()["items"][0]["id"] == str(target.id)
+
+    request_id = uuid.uuid4()
+    for index, counts in enumerate(((10, 4, 14, "provider"), (None, None, None, "missing")), 1):
+        db_session.execute(text("""
+            INSERT INTO rag_token_usage(user_id,request_id,call_index,provider,model,
+                                        input_tokens,output_tokens,total_tokens,usage_source,status)
+            VALUES(:uid,:rid,:idx,'gemini','gemini-test',:input,:output,:total,:source,'SUCCESS')
+        """), {"uid": target.id, "rid": request_id, "idx": index,
+               "input": counts[0], "output": counts[1], "total": counts[2], "source": counts[3]})
+    db_session.commit()
+    usage_list = client.get(f"/api/v1/admin/users?q={target.username}&period=all", headers=admin_headers)
+    assert usage_list.status_code == 200, usage_list.text
+    assert usage_list.json()["items"][0]["rag_total_tokens"] == 14
+    detail_url = f"/api/v1/admin/users/{target.id}/rag-usage?period=all"
+    assert client.get(detail_url, headers=auth_headers(regular)).status_code == 403
+    detail = client.get(detail_url, headers=admin_headers)
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["usage_calls"] == 2
+    assert detail.json()["usage_missing"] == 1
+    assert detail.json()["input_tokens"] == 10
 
     grant = client.put(
         f"/api/v1/admin/users/{target.id}/group-admin",

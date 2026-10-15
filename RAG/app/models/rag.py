@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, Enum, Float, ForeignKey, Index, String, Text, UniqueConstraint, text
+from sqlalchemy import CheckConstraint, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -168,3 +168,27 @@ class AIMessageCitation(UUIDPrimaryKeyMixin, Base):
                       UniqueConstraint("message_id", "chunk_id", name="uq_ai_citation_chunk"),
                       CheckConstraint("citation_order > 0", name="ck_ai_citation_order"),
                       Index("idx_ai_citations_message", "message_id", "citation_order"))
+
+
+class RAGTokenUsage(UUIDPrimaryKeyMixin, Base):
+    """Provider-reported usage for each billed chat-model call, not embeddings."""
+    __tablename__ = "rag_token_usage"
+    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    request_id: Mapped[UUID]
+    call_index: Mapped[int] = mapped_column(Integer)
+    provider: Mapped[str] = mapped_column(String(40))
+    model: Mapped[str] = mapped_column(String(255))
+    input_tokens: Mapped[int | None] = mapped_column(Integer)
+    output_tokens: Mapped[int | None] = mapped_column(Integer)
+    total_tokens: Mapped[int | None] = mapped_column(Integer)
+    usage_source: Mapped[str] = mapped_column(String(50))
+    status: Mapped[str] = mapped_column(String(30))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
+    __table_args__ = (
+        UniqueConstraint("request_id", "call_index", name="uq_rag_token_usage_call"),
+        CheckConstraint("call_index > 0", name="ck_rag_usage_call_index"),
+        CheckConstraint("input_tokens IS NULL OR input_tokens >= 0", name="ck_rag_usage_input"),
+        CheckConstraint("output_tokens IS NULL OR output_tokens >= 0", name="ck_rag_usage_output"),
+        CheckConstraint("total_tokens IS NULL OR total_tokens >= 0", name="ck_rag_usage_total"),
+        Index("idx_rag_usage_user_time", "user_id", "created_at"),
+    )

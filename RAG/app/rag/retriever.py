@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import re
+from time import perf_counter
 from uuid import UUID
 
 from qdrant_client import models
@@ -18,10 +19,23 @@ from app.llm.security import InputKind, PromptGuard
 from app.models.enums import AIDocumentType, AIVisibility
 from app.models.rag import AIDocument, AIDocumentChunk, AIDocumentVersion
 from app.rag.embeddings import EmbeddingProvider
+from app.rag.query_cache import QueryEmbeddingCache
 from app.rag.reranker import HeuristicReranker, RerankContext
 from app.services.qdrant import get_qdrant_client, qdrant_retry
 
 logger = logging.getLogger(__name__)
+_query_cache: QueryEmbeddingCache | None = None
+
+
+def _get_query_cache() -> QueryEmbeddingCache:
+    global _query_cache
+    settings = get_settings()
+    if _query_cache is None or (_query_cache.max_entries, _query_cache.ttl_seconds) != (
+        settings.retrieval_query_cache_entries, settings.retrieval_query_cache_ttl_seconds
+    ):
+        _query_cache = QueryEmbeddingCache(settings.retrieval_query_cache_entries,
+                                           settings.retrieval_query_cache_ttl_seconds)
+    return _query_cache
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,8 +203,9 @@ class RetrievalService:
                      .limit(self.settings.retrieval_lexical_candidate_k))
         try:
             # Isolate an optional branch so a timeout cannot poison the conversation transaction.
-            async with AsyncSessionLocal() as lexical_session:
-                rows = (await lexical_session.execute(statement)).all()
+            async with asyncio.timeout(self.settings.retrieval_lexical_timeout_seconds):
+                async with AsyncSessionLocal() as lexical_session:
+                    rows = (await lexical_session.execute(statement)).all()
         except (SQLAlchemyError, TimeoutError):
             logger.warning("lexical retrieval unavailable; using vector results only")
             return []
@@ -212,18 +227,29 @@ class RetrievalService:
             if score_threshold is None else score_threshold
 
         async def vector_search():
-            vector = await self.embedder.embed_query(intent.normalized_query)
-            return await qdrant_retry(lambda: self.client.query_points(
+            embedding_started = perf_counter()
+            vector = await _get_query_cache().get_or_embed(
+                self.settings.embedding_model, intent.normalized_query,
+                lambda: self.embedder.embed_query(intent.normalized_query))
+            embedding_ms = round((perf_counter() - embedding_started) * 1000)
+            response = await qdrant_retry(lambda: self.client.query_points(
                 collection_name=self.settings.qdrant_collection, query=vector,
                 query_filter=build_filter(intent, scope), limit=self.settings.retrieval_candidate_k,
                 with_payload=True, with_vectors=False, score_threshold=query_threshold,
             ))
+            return response, embedding_ms
 
         # PostgreSQL full-text search does not depend on the remote embedding call.
         # Running both branches together removes their additive network latency.
-        response, lexical_hits = await asyncio.gather(
+        retrieval_started = perf_counter()
+        (response, embedding_ms), lexical_hits = await asyncio.gather(
             vector_search(), self._lexical_search(intent, scope)
         )
+        logger.info("rag_retrieval_completed", extra={
+            "embedding_ms": embedding_ms,
+            "retrieval_ms": round((perf_counter() - retrieval_started) * 1000),
+            "vector_candidates": len(response.points), "lexical_candidates": len(lexical_hits),
+        })
         vector_hits: list[RetrievalHit] = []
         for point in response.points:
             payload = point.payload or {}

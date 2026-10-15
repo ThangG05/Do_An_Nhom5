@@ -2,8 +2,10 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import text
+import pytest
 
 from src.db.models.media import MediaFile, MediaStatus
+from src.db.models.user import SystemRole
 
 
 def test_user_profile_post_photo_listing_and_social_flow(client, db_session, make_user, auth_headers):
@@ -26,6 +28,20 @@ def test_user_profile_post_photo_listing_and_social_flow(client, db_session, mak
     updated = client.patch("/api/v1/users/me", headers=headers, json={"bio": "Hồ sơ tích hợp", "faculty": "Công nghệ thông tin"})
     assert updated.status_code == 200
     assert updated.json()["bio"] == "Hồ sơ tích hợp"
+
+    # Category posts now belong to their dedicated group and need membership
+    # plus moderation before appearing on a profile or in listings.
+    group_id = db_session.execute(text(
+        "SELECT id FROM groups WHERE slug='pass-do' AND status='ACTIVE'"
+    )).scalar_one_or_none()
+    if group_id is None:
+        pytest.skip("Chưa có nhóm Pass đồ để chạy kiểm thử tích hợp.")
+    for member in (user, friend):
+        db_session.execute(text("""
+            INSERT INTO group_members(group_id,user_id,role) VALUES(:gid,:uid,'MEMBER')
+            ON CONFLICT(group_id,user_id) DO UPDATE SET role='MEMBER'
+        """), {"gid": group_id, "uid": member.id})
+    db_session.commit()
 
     media_id = uuid.uuid4()
     db_session.add(MediaFile(
@@ -52,6 +68,11 @@ def test_user_profile_post_photo_listing_and_social_flow(client, db_session, mak
     post = created.json()
     assert post["marketListing"]["price"] == "100.000đ"
     assert post["media"][0]["url"].startswith("https://r2.test/")
+
+    reviewer = make_user(role=SystemRole.SUPER_ADMIN)
+    approved = client.patch(f"/api/v1/groups/{group_id}/admin/posts/{post['id']}/moderate",
+                            headers=auth_headers(reviewer), json={"decision": "APPROVE"})
+    assert approved.status_code == 200, approved.text
 
     photos = client.get(f"/api/v1/users/{user.id}/photos", headers=friend_headers)
     assert photos.status_code == 200

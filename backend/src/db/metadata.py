@@ -92,6 +92,58 @@ def build_target_metadata() -> MetaData:
         sa.Column("request_count", sa.Integer(), nullable=False, server_default=sa.text("1")),
         sa.Index("idx_rate_limits_cleanup", "window_start"),
     )
+    uuid = postgresql.UUID(as_uuid=True)
+    sa.Table(
+        "subjects", metadata,
+        sa.Column("id", uuid, primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("code", sa.String(40), nullable=False, unique=True),
+        sa.Column("name", sa.String(255), nullable=False),
+        sa.Column("institution", sa.String(150), nullable=False, server_default="Học viện Ngân hàng"),
+        sa.Column("source_note", sa.String(500), nullable=False),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.CheckConstraint("length(trim(code)) > 0 AND length(trim(name)) > 0", name="ck_subject_identity"),
+        sa.Index("idx_subjects_lookup", "is_active", "name"),
+    )
+    sa.Table(
+        "study_documents", metadata,
+        sa.Column("id", uuid, primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("group_id", uuid, sa.ForeignKey("groups.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("subject_id", uuid, sa.ForeignKey("subjects.id", ondelete="RESTRICT"), nullable=False),
+        sa.Column("uploaded_by", uuid, sa.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False),
+        sa.Column("title", sa.String(255), nullable=False),
+        sa.Column("description", sa.Text()),
+        sa.Column("status", sa.String(16), nullable=False, server_default="PENDING"),
+        sa.Column("total_bytes", sa.BigInteger(), nullable=False),
+        sa.Column("file_count", sa.Integer(), nullable=False),
+        sa.Column("reviewed_by", uuid, sa.ForeignKey("users.id", ondelete="SET NULL")),
+        sa.Column("reviewed_at", sa.DateTime(timezone=True)),
+        sa.Column("rejection_reason", sa.String(2000)),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column("deleted_at", sa.DateTime(timezone=True)),
+        sa.CheckConstraint("status IN ('PENDING','APPROVED','REJECTED')", name="ck_study_document_status"),
+        sa.CheckConstraint("total_bytes > 0 AND total_bytes <= 52428800", name="ck_study_document_size"),
+        sa.CheckConstraint("file_count > 0 AND file_count <= 10", name="ck_study_document_files"),
+        sa.Index("idx_study_documents_group_status", "group_id", "status", "created_at"),
+        sa.Index("idx_study_documents_owner", "uploaded_by", "created_at"),
+        sa.Index("idx_study_documents_subject", "subject_id", "created_at"),
+    )
+    sa.Table(
+        "study_document_files", metadata,
+        sa.Column("id", uuid, primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("document_id", uuid, sa.ForeignKey("study_documents.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("r2_object_key", sa.String(500), nullable=False, unique=True),
+        sa.Column("original_name", sa.String(255), nullable=False),
+        sa.Column("mime_type", sa.String(150), nullable=False),
+        sa.Column("extension", sa.String(10), nullable=False),
+        sa.Column("size_bytes", sa.BigInteger(), nullable=False),
+        sa.Column("checksum_sha256", sa.String(64), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column("deleted_at", sa.DateTime(timezone=True)),
+        sa.CheckConstraint("size_bytes > 0 AND size_bytes <= 52428800", name="ck_study_file_size"),
+        sa.Index("idx_study_files_document", "document_id"),
+    )
     return metadata
 
 

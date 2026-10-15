@@ -1,6 +1,7 @@
 """Grounded RAG orchestration with durable conversations and citation snapshots."""
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import logging
 import re
 from time import perf_counter
 from uuid import UUID
@@ -15,9 +16,11 @@ from app.models.rag import AIConversation, AIMessage, AIMessageCitation
 from app.memory.conversation import ConversationMemoryService, PreparedQuestion
 from app.rag.retriever import AccessScope, RetrievalHit, RetrievalService, analyze_query
 from app.rag.citation_verifier import verify_claim_citations
+from app.rag.usage import UsageCollector, activate, reset
 
 
 _CAPITALIZED_WORD = r"[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠƯẠ-Ỹ][\wÀ-ỹ]*"
+logger = logging.getLogger(__name__)
 
 
 def unsupported_named_entities(question: str, hits: list[RetrievalHit]) -> tuple[str, ...]:
@@ -57,10 +60,27 @@ class RAGService:
 
     async def ask(self, question: str, conversation_id: UUID | None = None,
                   access: AccessScope | None = None, user_id: UUID | None = None) -> RAGResult:
+        collector = UsageCollector(user_id)
+        context_token = activate(collector)
+        try:
+            return await self._ask_with_usage(question, conversation_id, access, user_id, collector)
+        finally:
+            reset(context_token)
+            if not collector.saved:
+                try:
+                    await collector.persist_after_error()
+                except Exception:
+                    logger.warning("rag_usage_persist_failed")
+
+    async def _ask_with_usage(self, question: str, conversation_id: UUID | None,
+                              access: AccessScope | None, user_id: UUID | None,
+                              collector: UsageCollector) -> RAGResult:
         started = perf_counter()
         prepared = await ConversationMemoryService(self.session, self.llm).prepare(question, conversation_id, user_id)
+        prepared_at = perf_counter()
         intent = analyze_query(prepared.standalone_question)
         hits = await self.retriever.search(intent.normalized_query, access=access)
+        retrieved_at = perf_counter()
         if self._relative_date_without_fresh_evidence(intent.normalized_query, hits):
             hits = []
         unsupported_entities = unsupported_named_entities(intent.normalized_query, hits)
@@ -74,8 +94,19 @@ class RAGService:
         else:
             answer = LLMAnswer(answer="Tôi chưa tìm thấy thông tin phù hợp trong các nguồn chính thức đã được lập chỉ mục.",
                                refused=True, refusal_reason="insufficient_context", cited_context_ids=[])
-        latency_ms = round((perf_counter() - started) * 1000)
-        return await self._persist(prepared, intent, hits, answer, latency_ms, conversation_id, user_id)
+        generated_at = perf_counter()
+        latency_ms = round((generated_at - started) * 1000)
+        collector.attach(self.session)
+        result = await self._persist(prepared, intent, hits, answer, latency_ms, conversation_id, user_id)
+        collector.saved = True
+        logger.info("rag_request_completed", extra={
+            "memory_ms": round((prepared_at - started) * 1000),
+            "retrieval_ms": round((retrieved_at - prepared_at) * 1000),
+            "answer_ms": round((generated_at - retrieved_at) * 1000),
+            "persistence_ms": round((perf_counter() - generated_at) * 1000),
+            "evidence_count": len(hits), "refused": answer.refused,
+        })
+        return result
 
     async def _answer_with_contract_retry(self, question: str,
                                           blocks: list[ContextBlock]) -> LLMAnswer:

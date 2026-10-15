@@ -1,4 +1,5 @@
 import asyncio
+import subprocess
 
 from app.knowledge.pipeline_worker import RAG_ROOT, _run_module, _safe_stage_diagnostic, next_pipeline_failure
 
@@ -28,16 +29,14 @@ def test_pipeline_stage_runs_from_rag_root(monkeypatch) -> None:
 
     class CompletedProcess:
         returncode = 0
+        stdout = b"pipeline=complete"
 
-        async def communicate(self):
-            return b"pipeline=complete", b""
-
-    async def fake_create_subprocess_exec(*args, **kwargs):
-        captured["args"] = args
+    def fake_run(command, **kwargs):
+        captured["args"] = command
         captured["cwd"] = kwargs.get("cwd")
         return CompletedProcess()
 
-    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_create_subprocess_exec)
+    monkeypatch.setattr(subprocess, "run", fake_run)
     assert asyncio.run(_run_module("scripts.process_source", "--source-id", "test")) == 0
     assert captured["cwd"] == str(RAG_ROOT)
     assert (RAG_ROOT / "scripts" / "process_source.py").is_file()

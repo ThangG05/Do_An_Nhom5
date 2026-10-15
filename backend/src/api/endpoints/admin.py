@@ -1,11 +1,13 @@
 import uuid
+from datetime import date
+from typing import Literal
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from src.api.dependencies import CurrentSuperAdmin
 from src.db.session import get_db
-from src.models.admin import AdminDashboardResponse, AdminUserPage, AccountStatusRequest, GroupRoleRequest, DisciplineRequest, AuditLogResponse
+from src.models.admin import AdminDashboardResponse, AdminUserPage, AccountStatusRequest, GroupRoleRequest, DisciplineRequest, AuditLogResponse, RAGUserUsageResponse
 from src.services import admin_service
 
 router=APIRouter(prefix="/admin",tags=["Super Admin"]);Db=Annotated[Session,Depends(get_db)]
@@ -19,7 +21,10 @@ def export_dashboard(admin:CurrentSuperAdmin,db:Db):
     return StreamingResponse(admin_service.export_workbook(db),media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",headers={"Content-Disposition":f'attachment; filename="{filename}"'})
 
 @router.get("/users",response_model=AdminUserPage)
-def users(admin:CurrentSuperAdmin,db:Db,q:str="",account_status:Annotated[str|None,Query(alias="status")]=None,limit:Annotated[int,Query(ge=1,le=100)]=30,offset:Annotated[int,Query(ge=0)]=0):return admin_service.users(db,q,account_status,limit,offset)
+def users(admin:CurrentSuperAdmin,db:Db,q:str="",account_status:Annotated[str|None,Query(alias="status")]=None,limit:Annotated[int,Query(ge=1,le=100)]=30,offset:Annotated[int,Query(ge=0)]=0,period:Literal["today","7d","30d","custom","all"]="30d",start_date:date|None=None,end_date:date|None=None):return admin_service.users(db,q,account_status,limit,offset,period,start_date,end_date)
+
+@router.get("/users/{user_id}/rag-usage",response_model=RAGUserUsageResponse)
+def rag_usage(user_id:uuid.UUID,admin:CurrentSuperAdmin,db:Db,period:Literal["today","7d","30d","custom","all"]="30d",start_date:date|None=None,end_date:date|None=None):return admin_service.user_rag_usage(db,user_id,period,start_date,end_date)
 
 @router.patch("/users/{user_id}/status",status_code=204)
 def status(user_id:uuid.UUID,payload:AccountStatusRequest,admin:CurrentSuperAdmin,db:Db):admin_service.set_status(db,user_id,admin,payload.status,payload.reason);return Response(status_code=204)

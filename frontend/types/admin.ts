@@ -2,6 +2,10 @@ export interface AdminGroupStat { id:string;name:string;slug:string;members:numb
 export interface AdminActivityPoint { date:string;new_users:number;posts:number;messages:number }
 export interface AdminDashboard { total_users:number;active_users:number;locked_users:number;disabled_users:number;pending_posts:number;approved_posts:number;rejected_posts:number;total_likes:number;total_comments:number;total_messages:number;groups:AdminGroupStat[];activity:AdminActivityPoint[] }
 export interface AdminGroupRef { id:string;name:string;slug:string }
-export interface AdminUser { id:string;email:string;username:string;full_name:string;student_code:string|null;faculty:string|null;status:'PENDING'|'ACTIVE'|'LOCKED'|'DISABLED';system_role:'USER'|'SUPER_ADMIN';admin_groups:AdminGroupRef[];created_at:string;last_login_at:string|null;suspended_until:string|null;warning_count:number }
+export interface AdminUser { id:string;email:string;username:string;full_name:string;student_code:string|null;faculty:string|null;status:'PENDING'|'ACTIVE'|'LOCKED'|'DISABLED';system_role:'USER'|'SUPER_ADMIN';admin_groups:AdminGroupRef[];created_at:string;last_login_at:string|null;suspended_until:string|null;warning_count:number;rag_input_tokens:number|null;rag_output_tokens:number|null;rag_total_tokens:number|null;rag_usage_calls:number;rag_usage_missing:number }
 export interface AdminUserPage { items:AdminUser[];total:number;limit:number;offset:number }
+export type RagPeriod = 'today'|'7d'|'30d'|'custom'|'all';
+export interface RagUsageDay { date:string;input_tokens:number|null;output_tokens:number|null;total_tokens:number|null;calls:number }
+export interface RagUsageCall { id:string;created_at:string;provider:string;model:string;input_tokens:number|null;output_tokens:number|null;total_tokens:number|null;status:string;usage_source:string }
+export interface RagUserUsage { user_id:string;input_tokens:number|null;output_tokens:number|null;total_tokens:number|null;usage_calls:number;usage_missing:number;daily:RagUsageDay[];calls:RagUsageCall[] }
 export interface AdminAuditLog{id:string;actor_name:string;action:string;target_type:string;target_id:string|null;metadata:Record<string,unknown>;created_at:string}

@@ -12,6 +12,7 @@ from app.llm.contracts import (ContextBlock, ConversationSummary, ConversationTu
 from app.llm.prompts import (REWRITE_SYSTEM_INSTRUCTION, SUMMARY_SYSTEM_INSTRUCTION,
                              SYSTEM_INSTRUCTION, answer_guidance)
 from app.llm.security import InputKind, PromptGuard, PromptSecurityError
+from app.rag.usage import capture_deepseek_usage
 
 
 class DeepSeekProvider:
@@ -98,7 +99,19 @@ class DeepSeekProvider:
                     raise LLMServiceError("provider_unavailable", type(exc).__name__) from exc
             else:
                 if response.is_success:
+                    try:
+                        capture_deepseek_usage(response.json(), str(body["model"]))
+                    except (ValueError, TypeError):
+                        pass
                     return response
+                # Some providers bill a failed response and still report usage.
+                try:
+                    error_data = response.json()
+                    if isinstance(error_data, dict) and error_data.get("usage"):
+                        capture_deepseek_usage(error_data, str(body["model"]),
+                                               status=f"HTTP_{response.status_code}")
+                except (ValueError, TypeError):
+                    pass
                 if response.status_code not in {429, 500, 502, 503, 504} or attempt == self.settings.llm_max_retries:
                     code = {
                         400: "invalid_request", 401: "invalid_api_key",

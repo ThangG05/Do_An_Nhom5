@@ -354,7 +354,13 @@ export async function exportAdminDashboard():Promise<void>{
   const filename=disposition.match(/filename="?([^";]+)"?/i)?.[1]||'hvnh-hub-dashboard.xlsx';
   const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=filename;anchor.click();URL.revokeObjectURL(url);
 }
-export async function fetchAdminUsers(q='',status=''):Promise<import('@/types/admin').AdminUserPage>{return api(`/admin/users?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&limit=100`);}
+export function ragPeriodQuery(period:import('@/types/admin').RagPeriod,startDate='',endDate=''){
+  const params=new URLSearchParams({period});
+  if(period==='custom'){params.set('start_date',startDate);params.set('end_date',endDate);}
+  return params.toString();
+}
+export async function fetchAdminUsers(q='',status='',period:import('@/types/admin').RagPeriod='30d',startDate='',endDate=''):Promise<import('@/types/admin').AdminUserPage>{return api(`/admin/users?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&limit=100&${ragPeriodQuery(period,startDate,endDate)}`);}
+export async function fetchAdminUserRagUsage(userId:string,period:import('@/types/admin').RagPeriod='30d',startDate='',endDate=''):Promise<import('@/types/admin').RagUserUsage>{return api(`/admin/users/${userId}/rag-usage?${ragPeriodQuery(period,startDate,endDate)}`);}
 export async function setAdminUserStatus(userId:string,status:'ACTIVE'|'LOCKED'|'DISABLED',reason:string):Promise<void>{await api(`/admin/users/${userId}/status`,{method:'PATCH',body:JSON.stringify({status,reason})});}
 export async function setUserGroupAdmin(userId:string,groupId:string,grant:boolean):Promise<void>{await api(`/admin/users/${userId}/group-admin`,{method:'PUT',body:JSON.stringify({group_id:groupId,grant})});}
 export async function disciplineAdminUser(userId:string,action:'WARN'|'SUSPEND'|'BAN'|'UNLOCK',reason:string,durationDays?:number):Promise<void>{await api(`/admin/users/${userId}/discipline`,{method:'POST',body:JSON.stringify({action,reason,duration_days:durationDays})});}

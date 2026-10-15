@@ -1,4 +1,5 @@
 """Authenticated BAAI/bge-m3 embedding service deployed on Modal."""
+import os
 from typing import Literal
 
 import modal
@@ -13,6 +14,11 @@ VECTOR_DIMENSIONS = 1024
 MAX_BATCH_SIZE = 64
 MAX_TEXT_CHARS = 8_192
 MAX_REQUEST_CHARS = 100_000
+# Keep one embedding worker warm to avoid GPU cold starts on the first question.
+# Set this to 0 when operational cost matters more than first-request latency.
+MIN_EMBEDDING_CONTAINERS = int(os.getenv("MODAL_EMBEDDING_MIN_CONTAINERS", "1"))
+if not 0 <= MIN_EMBEDDING_CONTAINERS <= 3:
+    raise ValueError("MODAL_EMBEDDING_MIN_CONTAINERS must be between 0 and 3")
 
 
 def download_model() -> None:
@@ -64,7 +70,7 @@ class EmbedResponse(BaseModel):
     gpu="T4",
     timeout=10 * 60,
     scaledown_window=5 * 60,
-    min_containers=0,
+    min_containers=MIN_EMBEDDING_CONTAINERS,
     max_containers=3,
 )
 class BgeM3:

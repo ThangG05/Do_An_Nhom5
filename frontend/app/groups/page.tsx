@@ -13,6 +13,7 @@ import { safeImageSrc } from "@/lib/media";
 import type { ApiGroup, GroupJoinRequest, GroupMember, GroupPost } from "@/types/group-api";
 import { useDialog } from "@/components/ui/DialogProvider";
 import RelativeTime from "@/components/ui/RelativeTime";
+import StudyLibrary from "@/components/group/StudyLibrary";
 
 const order = ["pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"];
 const icons: Record<string, string> = { "pass-do": "🛍️", "ghep-phong-tim-tro": "🏠", "su-kien": "📅", "hoc-tap": "📚" };
@@ -21,6 +22,7 @@ export default function GroupsPage() {
   const dialog = useDialog(); const searchParams = useSearchParams(); const requestedGroupId = searchParams.get("group");
   const [groups, setGroups] = useState<ApiGroup[]>([]), [activeId, setActiveId] = useState(""), [posts, setPosts] = useState<GroupPost[]>([]), [myPosts, setMyPosts] = useState<GroupPost[]>([]), [pending, setPending] = useState<GroupPost[]>([]), [requests, setRequests] = useState<GroupJoinRequest[]>([]), [members, setMembers] = useState<GroupMember[]>([]);
   const [tab, setTab] = useState<"posts" | "requests" | "members">("posts"), [query, setQuery] = useState(""), [sort, setSort] = useState<"latest" | "featured" | "pinned">("latest"), [showMine, setShowMine] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const [studyTab, setStudyTab] = useState<"posts" | "library">("posts");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [auth, setAuth] = useState<ReturnType<typeof getAuthUser>>(null);
   const active = groups.find(group => group.id === activeId);
@@ -31,6 +33,7 @@ export default function GroupsPage() {
   const load = useCallback(async () => {
     if (!activeId) return;
     const selected = groups.find(group => group.id === activeId);
+    if (selected?.slug === "hoc-tap" && studyTab === "library") return;
     const admin = !!selected && (auth?.system_role === "SUPER_ADMIN" || auth?.admin_group_slugs?.includes(selected.slug));
     if (!selected || (!admin && !["MEMBER", "ADMIN"].includes(selected.membership))) {
       setPosts([]); setMyPosts([]); setPending([]); setRequests([]); setMembers([]);
@@ -53,16 +56,17 @@ export default function GroupsPage() {
     } else {
       setPending([]); setRequests([]); setMembers([]);
     }
-  }, [activeId, groups, auth, debouncedQuery, sort]);
+  }, [activeId, groups, auth, debouncedQuery, sort, studyTab]);
   const loadMine = useCallback(async () => {
     const selected = groups.find(group => group.id === activeId);
+    if (selected?.slug === "hoc-tap" && studyTab === "library") return;
     const admin = !!selected && (auth?.system_role === "SUPER_ADMIN" || auth?.admin_group_slugs?.includes(selected.slug));
     if (!showMine || !selected || (!admin && !["MEMBER", "ADMIN"].includes(selected.membership))) {
       setMyPosts([]);
       return;
     }
     setMyPosts(await fetchMyGroupPosts(activeId));
-  }, [activeId, groups, auth, showMine]);
+  }, [activeId, groups, auth, showMine, studyTab]);
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 300);
     return () => window.clearTimeout(timer);
@@ -78,8 +82,11 @@ export default function GroupsPage() {
     <nav className="live-group-tabs">{groups.filter(group => order.includes(group.slug)).map(group => <button key={group.id} className={group.id === activeId ? "active" : ""} onClick={() => { setActiveId(group.id); setQuery(""); setDebouncedQuery(""); setShowMine(false); }}><b>{icons[group.slug]} {group.name}</b><small>{group.member_count} thành viên</small></button>)}</nav>
     {active && <>
       <section className="live-group-summary"><div><h2>{icons[active.slug]} {active.name}</h2><p>{active.description}</p></div><div>{isAdmin && <Link className="group-admin-entry" href={`/group-admin?groupId=${active.id}`}>Mở trung tâm quản trị</Link>}{active.membership === "NONE" && <button disabled={busy} onClick={() => act(() => requestGroupJoin(active.id))}>Tham gia nhóm</button>}{active.membership === "PENDING" && <button disabled>Đang chờ duyệt</button>}{active.membership === "MEMBER" && <button disabled={busy} className="secondary" onClick={() => act(() => leaveGroup(active.id))}>Rời nhóm</button>}{active.membership === "ADMIN" && <span className="live-admin-badge">Group Admin</span>}</div></section>
+      {active.slug === "hoc-tap" && <nav className="study-group-switch" aria-label="Khu vực nhóm Học tập"><button type="button" className={studyTab === "posts" ? "active" : ""} onClick={() => setStudyTab("posts")}>Bài viết</button><button type="button" className={studyTab === "library" ? "active" : ""} onClick={() => setStudyTab("library")}>Kho tài liệu</button></nav>}
+      {active.slug === "hoc-tap" && studyTab === "library" ? <StudyLibrary key={active.id} groupId={active.id} isAdmin={!!isAdmin} canRead={canRead} /> : <>
       {canPost && <GroupPostComposer key={active.id} group={active} onSubmitted={post => { setShowMine(true); setMyPosts(previous => [post, ...previous.filter(item => item.id !== post.id)]); }} />}
       {isAdmin && <section className="live-admin-panel"><header><div><span>TRUNG TÂM KIỂM DUYỆT</span><h2>Quản trị {active.name}</h2></div><nav><button className={tab === "posts" ? "active" : ""} onClick={() => setTab("posts")}>Bài chờ ({pending.length})</button><button className={tab === "requests" ? "active" : ""} onClick={() => setTab("requests")}>Xin vào nhóm ({requests.length})</button><button className={tab === "members" ? "active" : ""} onClick={() => setTab("members")}>Thành viên ({members.length})</button></nav></header><div className="live-admin-list">{tab === "posts" && pending.map(post => <article key={post.id}><div><strong>{post.author.name}</strong><PostCategoryDetails post={post} />{post.content && <p>{post.content}</p>}</div><div><button onClick={() => act(() => moderateGroupPost(active.id, post.id, "APPROVE"))}>Phê duyệt</button><button className="danger" onClick={() => void rejectPost(post)}>Từ chối</button></div></article>)}{tab === "requests" && requests.map(request => <article key={request.id}><div><strong>{request.name}</strong><p>@{request.username}</p></div><div><button onClick={() => act(() => decideGroupJoin(active.id, request.id, "APPROVE"))}>Chấp nhận</button><button className="danger" onClick={() => act(() => decideGroupJoin(active.id, request.id, "REJECT"))}>Từ chối</button></div></article>)}{tab === "members" && members.map(member => <article key={member.id}><div><strong>{member.name}</strong><p>{member.student_code || member.username} · {member.role}</p></div>{member.role === "MEMBER" && <button className="danger" onClick={() => void kickMember(member)}>Mời khỏi nhóm</button>}</article>)}{((tab === "posts" && !pending.length) || (tab === "requests" && !requests.length) || (tab === "members" && !members.length)) && <p className="live-empty">Chưa có dữ liệu.</p>}</div></section>}
   {canRead ? <><section className="group-user-tools"><div className="group-feed-filters"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm trong nhóm…"/><select value={sort} onChange={event => setSort(event.target.value as typeof sort)}><option value="latest">Mới nhất</option><option value="featured">Nổi bật</option><option value="pinned">Đã ghim</option></select><button className={showMine ? "active" : "secondary"} onClick={() => setShowMine(value => !value)}>Bài của tôi{showMine ? ` (${myPosts.length})` : ""}</button></div>{showMine && <div className="my-group-posts"><h3>Trạng thái bài đã gửi</h3>{myPosts.map(post => <article key={post.id}><div><b className={`post-status ${post.status.toLowerCase()}`}>{post.status === "PENDING" ? "Chờ duyệt" : post.status === "APPROVED" ? "Đã duyệt" : "Bị từ chối"}</b><RelativeTime value={post.createdAt}/></div><PostCategoryDetails post={post} />{post.content && <p>{post.content}</p>}{post.rejectionReason && <strong>Lý do: {post.rejectionReason}</strong>}</article>)}{!myPosts.length && <p className="live-empty">Bạn chưa gửi bài nào trong nhóm này.</p>}</div>}</section><section className="live-group-feed"><header><h2>Bài viết trong nhóm</h2><span>{posts.length} bài phù hợp</span></header>{posts.map(post => <div key={post.id} className="live-post-wrap">{post.isPinned && <span className="live-pin-label">📌 Bài viết đã ghim</span>}<PostCard post={post}/>{isAdmin && <button className="live-pin-button" onClick={() => act(() => setGroupPostPinned(active.id, post.id, !post.isPinned))}>{post.isPinned ? "Bỏ ghim" : "Ghim bài"}</button>}</div>)}{!posts.length && <div className="live-empty-card">Không có bài viết phù hợp với bộ lọc.</div>}</section></> : <section className="group-join-gate"><span aria-hidden="true">🔒</span><h2>Tham gia {active.name} để xem bài viết</h2><p>Chỉ thành viên mới xem, thích và bình luận bài trong nhóm. Quản trị viên sẽ duyệt yêu cầu tham gia của bạn.</p>{active.membership === "NONE" && <button type="button" disabled={busy} onClick={() => act(() => requestGroupJoin(active.id))}>Gửi yêu cầu tham gia</button>}{active.membership === "PENDING" && <strong>Yêu cầu của bạn đang chờ duyệt</strong>}</section>}
+      </>}
     </>}{error && <div className="live-group-error">{error}</div>}{isAdmin && active && <ReportQueue groupId={active.id}/>}</main>;
 }

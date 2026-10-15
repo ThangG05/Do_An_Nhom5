@@ -486,4 +486,17 @@ python -m scripts.check_modal_embedding
 ```
 
 The deployment limits each text to 8,192 characters, accepts at most 64 texts and
-100,000 total characters per request, scales to zero, and caps scaling at three GPUs.
+100,000 total characters per request, and caps scaling at three GPUs. By default it
+keeps **one T4 container warm** (`MODAL_EMBEDDING_MIN_CONTAINERS=1`) to avoid the
+first-question cold start. This incurs GPU cost even while idle; set the variable
+to `0` in the shell running `modal deploy` if cost becomes more important than
+first-request latency. Redeploying Modal is required for this setting to take effect.
+
+The API also caches up to 256 query vectors for 15 minutes **per process** and
+coalesces simultaneous identical embedding calls. It stores hashed query keys,
+not question text; retrieval still applies visibility filters for each request.
+`RETRIEVAL_QUERY_CACHE_ENTRIES=0` disables it. Optional PostgreSQL lexical search
+has a three-second timeout and falls back to vector results when it stalls.
+Structured logs `rag_retrieval_completed` and `rag_request_completed` report
+embedding, retrieval, answer-generation and persistence timings without logging
+questions or source text. Compare these stages before changing model or top-k.

@@ -20,6 +20,7 @@ from app.llm.contracts import (
 from app.llm.prompts import (REWRITE_SYSTEM_INSTRUCTION, SUMMARY_SYSTEM_INSTRUCTION,
                              SYSTEM_INSTRUCTION, answer_guidance)
 from app.llm.security import InputKind, PromptGuard, PromptSecurityError
+from app.rag.usage import capture_gemini_usage
 
 
 class GeminiProvider(LLMProvider):
@@ -36,11 +37,13 @@ class GeminiProvider(LLMProvider):
         for attempt in range(max_retries + 1):
             try:
                 async with asyncio.timeout(self.settings.llm_timeout_seconds):
-                    return await self.client.aio.models.generate_content(
+                    response = await self.client.aio.models.generate_content(
                         model=self.settings.llm_model,
                         contents=payload,
                         config=config,
                     )
+                    capture_gemini_usage(response, self.settings.llm_model)
+                    return response
             except TimeoutError as exc:
                 if attempt == max_retries:
                     raise LLMServiceError("timeout", "asyncio_timeout") from exc

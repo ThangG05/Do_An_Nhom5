@@ -72,9 +72,12 @@ class Settings(BaseSettings):
     retrieval_hybrid_enabled: bool = True
     retrieval_reranker: str = "heuristic"
     retrieval_lexical_candidate_k: int = Field(default=20, ge=5, le=100)
+    retrieval_lexical_timeout_seconds: float = Field(default=3.0, gt=0, le=30)
     retrieval_candidate_score_threshold: float = Field(default=0.30, ge=0, le=1)
     retrieval_score_threshold: float = Field(default=0.45, ge=0, le=1)
     retrieval_max_chunks_per_document: int = Field(default=2, ge=1, le=10)
+    retrieval_query_cache_entries: int = Field(default=256, ge=0, le=10000)
+    retrieval_query_cache_ttl_seconds: int = Field(default=900, ge=0, le=86400)
     conversation_recent_messages: int = Field(default=8, ge=2, le=20)
     conversation_summary_trigger_messages: int = Field(default=12, ge=4, le=100)
     conversation_summary_max_chars: int = Field(default=4000, ge=500, le=20000)

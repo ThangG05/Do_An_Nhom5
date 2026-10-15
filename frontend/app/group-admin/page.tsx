@@ -14,9 +14,10 @@ import {getAuthUser} from "@/lib/auth";
 import type {ApiGroup, GroupJoinRequest, GroupMember, GroupPost} from "@/types/group-api";
 import {useDialog} from "@/components/ui/DialogProvider";
 import RelativeTime from "@/components/ui/RelativeTime";
+import StudyLibrary from "@/components/group/StudyLibrary";
 import {safeImageSrc} from "@/lib/media";
 
-type Tab = "overview" | "pending" | "posts" | "members" | "reports";
+type Tab = "overview" | "pending" | "posts" | "members" | "reports" | "documents";
 const dedicatedSlugs = new Set(["pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"]);
 
 function dedicatedSlug(email?: string): string | null {
@@ -135,6 +136,7 @@ export default function GroupAdminPage() {
     <nav className="group-admin-nav" aria-label="Mục quản trị nhóm">{([
       ["overview", "Tổng quan"], ["pending", `Kiểm duyệt${pending.length ? ` (${pending.length})` : ""}`],
       ["posts", "Bài đã duyệt"], ["members", `Thành viên${members.length ? ` (${members.length})` : ""}`], ["reports", "Báo cáo"],
+      ...(active?.slug === "hoc-tap" ? [["documents", "Kho tài liệu"]] : []),
     ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}</button>)}</nav>
 
     {tab === "overview" && <section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid">
@@ -157,5 +159,6 @@ export default function GroupAdminPage() {
     </section>}
 
     {tab === "reports" && groupId && <ReportQueue groupId={groupId} />}
+    {tab === "documents" && active?.slug === "hoc-tap" && <StudyLibrary groupId={groupId} isAdmin canRead />}
   </main>;
 }

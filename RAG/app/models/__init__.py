@@ -7,7 +7,7 @@ from app.models.community import (Comment, Group, GroupMember, MediaFile, Post, 
 from app.models.crawler import AICrawlItem, AICrawlRun, AISource, AISourceURL
 from app.models.enums import *  # noqa: F403
 from app.models.rag import (AIConversation, AIDocument, AIDocumentChunk, AIDocumentRelation, AIDocumentVersion,
-                            AIMessage, AIMessageCitation)
+                            AIMessage, AIMessageCitation, RAGTokenUsage)
 from app.models.social import FriendRequest, Friendship, UserBlock
 
 __all__ = [
@@ -15,6 +15,6 @@ __all__ = [
     "Group", "GroupMember", "Post", "MediaFile", "PostMedia", "Comment", "PostLike", "Report",
     "FriendRequest", "Friendship", "UserBlock", "Conversation", "ConversationMember", "Message",
     "MessageAttachment", "MessageReceipt", "Notification", "AIDocument", "AIDocumentVersion",
-    "AIDocumentChunk", "AIDocumentRelation", "AIConversation", "AIMessage", "AIMessageCitation", "AuditLog",
+    "AIDocumentChunk", "AIDocumentRelation", "AIConversation", "AIMessage", "AIMessageCitation", "RAGTokenUsage", "AuditLog",
     "AISource", "AISourceURL", "AICrawlRun", "AICrawlItem",
 ]

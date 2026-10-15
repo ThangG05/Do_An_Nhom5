@@ -1,6 +1,9 @@
+import asyncio
+from types import SimpleNamespace
 from uuid import uuid4
+import pytest
 from app.models.enums import AIDocumentType
-from app.rag.retriever import (AccessScope, _lexical_scores, _per_document_limit,
+from app.rag.retriever import (AccessScope, RetrievalService, _lexical_scores, _per_document_limit,
                                _rrf, analyze_query, build_filter)
 
 
@@ -66,3 +69,24 @@ def test_rrf_rewards_chunks_found_by_both_retrievers() -> None:
 def test_structured_question_allows_three_chunks_from_one_document() -> None:
     assert _per_document_limit("Mức thu học phí là bao nhiêu?", 2) == 3
     assert _per_document_limit("Giảng viên Triệu Thu Hương là ai?", 2) == 2
+
+
+@pytest.mark.asyncio
+async def test_slow_optional_lexical_branch_times_out_without_failing_retrieval(monkeypatch) -> None:
+    class SlowSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_):
+            return None
+
+        async def execute(self, *_):
+            await asyncio.sleep(1)
+
+    monkeypatch.setattr("app.rag.retriever.AsyncSessionLocal", SlowSession)
+    service = RetrievalService.__new__(RetrievalService)
+    service.session = object()
+    service.settings = SimpleNamespace(retrieval_hybrid_enabled=True,
+                                       retrieval_lexical_candidate_k=20,
+                                       retrieval_lexical_timeout_seconds=0.01)
+    assert await service._lexical_search(analyze_query("Chuẩn đầu ra VSTEP"), AccessScope()) == []

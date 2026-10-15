@@ -11,6 +11,7 @@ const sections = [
   { href: "/admin", label: "Tổng quan", icon: "▦" },
   { href: "/admin/analytics", label: "Thống kê", icon: "⌁" },
   { href: "/admin/groups", label: "Quản lý nhóm", icon: "◉" },
+  { href: "/admin/subjects", label: "Môn học", icon: "▤" },
   { href: "/admin/users", label: "Tài khoản", icon: "♙" },
   { href: "/admin/reports", label: "Báo cáo vi phạm", icon: "!" },
   { href: "/admin/audit", label: "Nhật ký quản trị", icon: "≡" },

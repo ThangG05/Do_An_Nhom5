@@ -32,6 +32,11 @@ class AdminUserResponse(BaseModel):
     last_login_at: str | None = None
     suspended_until: str | None = None
     warning_count: int = 0
+    rag_input_tokens: int | None = None
+    rag_output_tokens: int | None = None
+    rag_total_tokens: int | None = None
+    rag_usage_calls: int = 0
+    rag_usage_missing: int = 0
 
 
 class AdminUserPage(BaseModel):
@@ -39,6 +44,37 @@ class AdminUserPage(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class RAGUsageCallResponse(BaseModel):
+    id: uuid.UUID
+    created_at: str
+    provider: str
+    model: str
+    input_tokens: int | None
+    output_tokens: int | None
+    total_tokens: int | None
+    status: str
+    usage_source: str
+
+
+class RAGUsageDayResponse(BaseModel):
+    date: str
+    input_tokens: int | None
+    output_tokens: int | None
+    total_tokens: int | None
+    calls: int
+
+
+class RAGUserUsageResponse(BaseModel):
+    user_id: uuid.UUID
+    input_tokens: int | None
+    output_tokens: int | None
+    total_tokens: int | None
+    usage_calls: int
+    usage_missing: int
+    daily: list[RAGUsageDayResponse]
+    calls: list[RAGUsageCallResponse]
 
 
 class AccountStatusRequest(BaseModel):

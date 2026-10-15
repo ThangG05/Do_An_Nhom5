@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     R2_ACCESS_KEY_ID: str = ""
     R2_SECRET_ACCESS_KEY: str = ""
     R2_BUCKET_NAME: str = ""
+    # A separate bucket with no public domain/anonymous read access for Study documents.
+    R2_STUDY_BUCKET_NAME: str = ""
     R2_PRESIGNED_URL_EXPIRE: int = 900
     MAX_AVATAR_BYTES: int = 5 * 1024 * 1024
     MAX_SHORT_VIDEO_BYTES: int = 100 * 1024 * 1024

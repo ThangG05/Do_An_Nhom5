@@ -12,6 +12,7 @@ def test_expected_tables_are_registered() -> None:
         "ai_documents", "ai_document_versions", "ai_document_chunks", "ai_document_relations",
         "ai_conversations", "ai_messages", "ai_message_citations", "audit_logs",
         "ai_sources", "ai_source_urls", "ai_crawl_runs", "ai_crawl_items",
+        "rag_token_usage",
     }
     assert Conversation.__tablename__ == "conversations"
     assert Message.__tablename__ == "messages"
