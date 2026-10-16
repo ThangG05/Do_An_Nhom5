@@ -1,0 +1,43 @@
+.universe { position:relative; min-width:0; --space-color:#86baff; }
+.scene { height:490px; position:relative; perspective:1000px; touch-action:pan-y; }
+.world { position:absolute; inset:0; transform-style:preserve-3d; transform:rotateX(var(--look-x,0deg)) rotateY(var(--look-y,0deg)); transition:transform .4s ease-out; }
+.grid { position:absolute; inset:45% -15% -10%; background-image:linear-gradient(#7abde91a 1px,transparent 1px),linear-gradient(90deg,#7abde91a 1px,transparent 1px); background-size:38px 38px; transform:rotateX(65deg); mask-image:radial-gradient(ellipse,#000,transparent 68%); }
+.core { position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); transform-style:preserve-3d; }
+.sphere { width:218px; height:218px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px; border-radius:50%; border:1px solid #b7e4ff90; background:radial-gradient(circle at 28% 18%,#d8f6ff88,transparent 34%),radial-gradient(circle at 50% 40%,#3680ab,#0c355e 65%,#071a36); box-shadow:inset -20px -18px 40px #03152b99,inset 7px 5px 18px #b3e9ff55,0 0 75px #57baff30,0 25px 65px #00132588; animation:levitate 6s ease-in-out infinite; }
+.sphere img { width:62px; height:72px; object-fit:contain; filter:drop-shadow(0 5px 5px #00132966); }
+.sphere strong { color:#fff; font-size:26px; letter-spacing:.08em; text-shadow:0 2px 15px #021732; }
+.sphere strong span { display:block; text-align:center; font-size:10px; letter-spacing:.7em; padding-left:.7em; margin-top:6px; color:#bddff5; }
+.pedestal { position:absolute; width:260px; height:75px; bottom:-65px; left:-21px; border-radius:50%; border:1px solid #b8e9ff66; background:radial-gradient(ellipse,var(--space-color),#307cbf22 45%,#09244166 70%); box-shadow:0 10px 0 #0a2949,0 11px 0 #82d0ff55,0 22px 30px #00142688; opacity:.65; transition:background .4s; }
+.orbit { position:absolute; width:420px; height:420px; top:3%; left:calc(50% - 210px); border:1px solid #98d6ff66; border-radius:50%; transform:rotateX(67deg) rotateZ(-25deg); transform-style:preserve-3d; animation:orbit 22s linear infinite; box-shadow:0 0 12px #73c6ff13; pointer-events:none; }
+.orbit i { position:absolute; top:15%; left:12%; width:13px; height:13px; border-radius:50%; background:#ccefff; box-shadow:0 0 20px #79d7ff,0 0 40px #79d7ff66; }
+.orbit i+i { top:auto; left:auto; right:12%; bottom:15%; width:8px; height:8px; background:#ffdb91; }
+.orbitSecond { width:350px; height:350px; left:calc(50% - 175px); top:10%; border-color:#ffdc7a44; animation-direction:reverse; transform:rotateY(65deg) rotateZ(30deg); }
+.card { position:absolute; z-index:2; display:flex; align-items:center; gap:11px; width:224px; min-height:84px; padding:15px; color:#fff; text-align:left; border:1px solid #cce8ff55; border-radius:20px; background:linear-gradient(125deg,#285379f2,#122e4cee); box-shadow:0 18px 35px #00162d66,inset 0 1px #ffffff26; cursor:pointer; animation:cardFloat 7s ease-in-out infinite; transition:background .25s,border-color .25s,box-shadow .25s; }
+.cards { position:absolute; inset:0; transform-style:preserve-3d; transform:translateZ(25px); pointer-events:none; }
+.card { pointer-events:auto; }
+.card:hover,.card:focus-visible { animation-play-state:paused; }
+.card[data-slot="0"] { left:4%; top:9%; --angle:-9deg; }
+.card[data-slot="1"] { right:-5%; top:20%; --angle:9deg; animation-delay:-2s; }
+.card[data-slot="2"] { left:3%; bottom:18%; --angle:6deg; animation-delay:-4s; }
+.card[data-slot="3"] { right:-4%; bottom:9%; --angle:-6deg; animation-delay:-1s; }
+.card[aria-pressed="true"] { border-color:var(--card-color); box-shadow:0 18px 40px #00162d66,0 0 24px color-mix(in srgb,var(--card-color) 20%,transparent); }
+.card:hover { background:#28577e; }
+.card:focus-visible,.caption button:focus-visible { outline:3px solid #ffdb91; outline-offset:5px; }
+.icon { display:grid; place-items:center; flex:0 0 42px; height:44px; font-size:27px; border-radius:13px; color:var(--card-color); background:color-mix(in srgb,var(--card-color) 14%,transparent); box-shadow:inset 0 1px #ffffff35,0 5px 0 #061d3466; }
+.card small { display:block; font-size:7px; letter-spacing:.09em; color:#b7d1e5; margin-bottom:6px; }
+.card b { font-size:16px; font-weight:600; }
+.arrow { color:var(--card-color); margin-left:auto; }
+.star,.starTwo { position:absolute; color:#ffdd8a; font-size:30px; top:1%; left:65%; animation:levitate 5s ease-in-out infinite; }
+.starTwo { top:auto; left:22%; bottom:5%; color:#91d9ff; font-size:20px; }
+.caption { display:flex; align-items:center; justify-content:space-between; gap:18px; max-width:390px; margin:0 auto; padding:15px 18px; border:1px solid #ffffff25; border-radius:18px; background:#061d3655; }
+.caption strong { font-size:13px; color:var(--space-color); }
+.caption p { font-size:11px; line-height:1.6; color:#c6dceb; margin:5px 0 0; }
+.caption button { flex:none; width:40px; height:40px; border-radius:50%; background:#ffffff12; color:#fff; border:1px solid #ffffff25; cursor:pointer; }
+.hint { text-align:center; font-size:10px; color:#a8c8df; margin:12px 0 0; }
+@keyframes levitate { 50% { transform:translateY(-15px); } }
+@keyframes cardFloat { 0%,100% { transform:translateY(0) rotate(var(--angle)); } 50% { transform:translateY(-15px) rotate(calc(var(--angle) + 3deg)); } }
+@keyframes orbit { from { rotate:0deg; } to { rotate:360deg; } }
+.universe[data-paused="true"] * { animation-play-state:paused!important; }
+@media(max-width:1000px) { .card { width:195px; padding:12px; gap:8px; }.card b { font-size:14px; }.sphere { width:190px; height:190px; }.pedestal { width:220px; left:-15px; } }
+@media(max-width:600px) { .scene { height:390px; }.card { width:166px; min-height:70px; border-radius:16px; padding:10px; }.card small { font-size:6px; }.icon { flex-basis:32px; height:35px; font-size:23px; }.arrow { display:none; }.card[data-slot="0"] { left:0; top:7%; }.card[data-slot="1"] { right:0; top:18%; }.card[data-slot="2"] { left:0; bottom:20%; }.card[data-slot="3"] { right:0; bottom:4%; }.sphere { width:158px; height:158px; gap:6px; }.sphere img { width:45px; height:54px; }.sphere strong { font-size:20px; }.pedestal { width:185px; left:-14px; bottom:-44px; height:50px; }.orbit { width:290px; height:290px; left:calc(50% - 145px); top:10%; }.orbitSecond { width:260px; height:260px; left:calc(50% - 130px); }.caption { margin-top:15px; } }
+@media(prefers-reduced-motion:reduce) { .universe * { animation:none!important; transition:none!important; }.world { transform:none; } }

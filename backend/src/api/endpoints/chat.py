@@ -79,6 +79,18 @@ async def send_message(conversation_id:uuid.UUID,payload:SendMessageRequest,curr
     await manager.send_users([uid for uid in recipients if uid!=current_user.id],{"event":"notification.created","type":"MESSAGE"})
     return message
 
+@router.delete("/conversations/{conversation_id}/messages/{message_id}",response_model=MessageResponse)
+async def recall_message(conversation_id:uuid.UUID,message_id:uuid.UUID,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
+    def recall_and_recipients():
+        message=chat_service.recall(db,conversation_id,message_id,current_user)
+        recipients=list(db.scalars(select(ConversationMember.user_id).where(
+            ConversationMember.conversation_id==conversation_id,ConversationMember.left_at.is_(None)
+        )).all())
+        return message,recipients
+    message,recipients=await run_in_threadpool(recall_and_recipients)
+    await manager.send_users(recipients,{"event":"message.recalled","conversation_id":str(conversation_id),"message":message.model_dump(mode="json")})
+    return message
+
 @router.get("/unread-count",response_model=UnreadMessagesResponse)
 def unread(current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):return UnreadMessagesResponse(unread_count=chat_service.unread_count(db,current_user.id))
 

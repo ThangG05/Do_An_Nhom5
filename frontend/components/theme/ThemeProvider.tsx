@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import MotionExperience from '@/components/ui/MotionExperience';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -46,7 +47,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(() => ({ mode, setMode }), [mode, setMode]);
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={value}><MotionExperience />{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

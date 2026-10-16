@@ -508,4 +508,19 @@ def delete_comment(db:Session,comment_id:uuid.UUID,user:User)->None:
     comment=db.get(Comment,comment_id)
     if not comment or comment.deleted_at is not None: raise HTTPException(404,"Không tìm thấy bình luận.")
     if comment.user_id!=user.id: raise HTTPException(403,"Bạn chỉ có thể xóa bình luận của mình.")
-    comment.deleted_at=datetime.now(timezone.utc);db.commit()
+    soft_delete_comment_thread(db, comment_id)
+    db.execute(text("INSERT INTO audit_logs(actor_id,action,target_type,target_id) VALUES(:actor,'COMMENT_SELF_DELETED','COMMENT',:target)"), {"actor": user.id, "target": comment_id})
+    db.commit()
+
+
+def soft_delete_comment_thread(db: Session, comment_id: uuid.UUID) -> None:
+    """Hide a comment and every nested reply in one database operation."""
+    db.execute(text("""
+        WITH RECURSIVE thread(id) AS (
+            SELECT id FROM comments WHERE id = :comment_id
+            UNION ALL
+            SELECT child.id FROM comments child JOIN thread parent ON child.parent_id = parent.id
+        )
+        UPDATE comments SET deleted_at = now()
+        WHERE id IN (SELECT id FROM thread) AND deleted_at IS NULL
+    """), {"comment_id": comment_id})

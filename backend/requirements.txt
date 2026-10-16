@@ -17,3 +17,4 @@ httpx
 python-multipart
 Pillow
 openpyxl
+python-docx

@@ -123,6 +123,10 @@ def analyze_query(query: str) -> QueryIntent:
 
 def _per_document_limit(query: str, configured: int) -> int:
     """Allow supporting table/procedure chunks while keeping source diversity."""
+    if "học bổng" in query.casefold() and any(
+        phrase in query.casefold() for phrase in ("điều kiện", "tiêu chuẩn", "tiêu chí")
+    ):
+        return max(configured, 4)
     expanded = bool(re.search(
         r"\b(mức thu|học phí|bao nhiêu|hướng dẫn|đăng nhập|truy cập|thủ tục|"
         r"nội dung|trải nghiệm)\b", query, re.IGNORECASE,

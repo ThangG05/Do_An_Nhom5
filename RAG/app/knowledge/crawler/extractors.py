@@ -72,7 +72,17 @@ def _decode_repeatedly(value: str, attempts: int = 3) -> str:
 def pdf_text_requires_ocr(content: str) -> bool:
     tokens = re.findall(r"\w+", content, flags=re.UNICODE)
     single_character_ratio = (sum(len(token) == 1 for token in tokens) / len(tokens)) if tokens else 1.0
-    return len(content) < 40 or (len(tokens) >= 50 and single_character_ratio > 0.55)
+    # Some HVNH PDFs have a broken embedded font map: pypdf returns German
+    # umlauts ("Hoc vien Ngän häng") in place of Vietnamese glyphs. The text
+    # is long enough to pass ordinary quality checks but cannot be searched.
+    wrong_font_glyphs = sum(content.count(char) for char in "äöüÄÖÜ")
+    vietnamese_glyphs = sum(content.count(char) for char in "ăâêôơưđĂÂÊÔƠƯĐ")
+    broken_font_map = (wrong_font_glyphs >= 20 and
+                       wrong_font_glyphs / max(len(content), 1) >= 0.01 and
+                       vietnamese_glyphs * 10 < wrong_font_glyphs)
+    replacement_glyphs = content.count("\ufffd") >= max(10, len(content) // 200)
+    return (len(content) < 40 or (len(tokens) >= 50 and single_character_ratio > 0.55)
+            or broken_font_map or replacement_glyphs)
 
 
 def _discover_html_links(soup: BeautifulSoup, body: bytes, base_url: str) -> tuple[str, ...]:

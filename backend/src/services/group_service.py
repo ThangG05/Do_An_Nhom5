@@ -201,7 +201,7 @@ def kick_member(db: Session, group_id: uuid.UUID, user_id: uuid.UUID, admin: Use
     result = db.execute(text("DELETE FROM group_members WHERE group_id=:gid AND user_id=:uid AND role='MEMBER'"), {"gid": group_id, "uid": user_id})
     if not result.rowcount:
         raise HTTPException(404, "Không tìm thấy thành viên hoặc không thể xóa quản trị viên.")
-    db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Đã rời khỏi nhóm','Bạn đã được Group Admin mời khỏi nhóm.',:actor,'GROUP',:gid)"),{"uid":user_id,"actor":admin.id,"gid":group_id})
+    db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Đã bị xóa khỏi nhóm','Quản trị viên đã xóa bạn khỏi nhóm.',:actor,'GROUP',:gid)"),{"uid":user_id,"actor":admin.id,"gid":group_id})
     db.commit()
 
 
@@ -219,6 +219,7 @@ def delete_comment(db: Session, group_id: uuid.UUID, comment_id: uuid.UUID, admi
     post = db.get(Post, comment.post_id) if comment else None
     if not comment or not post or post.group_id != group_id or comment.deleted_at is not None:
         raise HTTPException(404, "Không tìm thấy bình luận trong nhóm.")
-    comment.deleted_at = datetime.now(UTC)
+    from src.services.post_service import soft_delete_comment_thread
+    soft_delete_comment_thread(db, comment_id)
     db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Bình luận đã bị xóa','Group Admin đã xóa bình luận vi phạm trong nhóm.',:actor,'COMMENT',:ref)"),{"uid":comment.user_id,"actor":admin.id,"ref":comment.id})
     db.commit()

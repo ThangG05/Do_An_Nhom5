@@ -7,6 +7,7 @@ import UserAvatar from "@/components/ui/UserAvatar";
 import { searchConversationMessages } from "@/lib/api";
 import RelativeTime from "@/components/ui/RelativeTime";
 import BackArrow from "@/components/ui/BackArrow";
+import { useDialog } from "@/components/ui/DialogProvider";
 
 const CHAT_EMOJIS = [
   "😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃",
@@ -21,7 +22,8 @@ interface ChatWorkspaceProps {
   activeConversation: Conversation;
   messages: Message[];
   currentUserId: string;
-  onSendMessage: (text: string, file?: File) => Promise<void>;
+  onSendMessage: (text: string, file?: File, replyToId?: string) => Promise<void>;
+  onRecallMessage: (messageId: string) => Promise<void>;
   onToggleDetailsPanel: () => void;
   showDetailsPanel: boolean;
   onBackMobile: () => void;
@@ -36,6 +38,7 @@ export default function ChatWorkspace({
   messages,
   currentUserId,
   onSendMessage,
+  onRecallMessage,
   onToggleDetailsPanel,
   showDetailsPanel,
   onBackMobile,
@@ -45,11 +48,14 @@ export default function ChatWorkspace({
   onCloseSearch,
 }: ChatWorkspaceProps) {
   const [inputText, setInputText] = useState("");
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const dialog = useDialog();
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [searchQuery,setSearchQuery]=useState(""),[searchResults,setSearchResults]=useState<Message[]|null>(null),[searchLoading,setSearchLoading]=useState(false);
   const [sending,setSending]=useState(false),[sendError,setSendError]=useState("");
   const [call,setCall]=useState<{status:'incoming'|'calling'|'active';video:boolean;error?:string}|null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const peerRef=useRef<RTCPeerConnection|null>(null),localStreamRef=useRef<MediaStream|null>(null),remoteStreamRef=useRef<MediaStream|null>(null),pendingOfferRef=useRef<RTCSessionDescriptionInit|null>(null),pendingIceRef=useRef<RTCIceCandidateInit[]>([]),localVideoRef=useRef<HTMLVideoElement>(null),remoteVideoRef=useRef<HTMLVideoElement>(null),remoteAudioRef=useRef<HTMLAudioElement>(null);
 
@@ -73,12 +79,20 @@ export default function ChatWorkspace({
   const handleSend = async () => {
     const draft = inputText.trim();
     if (!draft || sending) return;
+    const selectedReply = replyTo;
     // Clear immediately; restore the draft only when the request fails.
     setInputText("");
+    setReplyTo(null);
     setSending(true);setSendError("");
-    try{await onSendMessage(draft);}
-    catch(error){setInputText(current=>current||draft);setSendError(error instanceof Error?error.message:'Không thể gửi tin nhắn.');}
+    try{await onSendMessage(draft,undefined,selectedReply?.id);}
+    catch(error){setInputText(current=>current||draft);setReplyTo(current=>current||selectedReply);setSendError(error instanceof Error?error.message:'Không thể gửi tin nhắn.');}
     finally{setSending(false);}
+  };
+
+  const handleRecall = async (message: Message) => {
+    if (!await dialog.confirm({title:'Thu hồi tin nhắn?',message:'Mọi người trong cuộc trò chuyện sẽ thấy tin nhắn này đã được thu hồi.',confirmLabel:'Thu hồi',tone:'danger'})) return;
+    try { await onRecallMessage(message.id); if (replyTo?.id === message.id) setReplyTo(null); }
+    catch (error) { setSendError(error instanceof Error ? error.message : 'Không thể thu hồi tin nhắn.'); }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -91,8 +105,10 @@ export default function ChatWorkspace({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const selectedReply = replyTo;
       setSending(true);setSendError("");
-      void onSendMessage('', file).catch(error=>setSendError(error instanceof Error?error.message:'Không thể gửi tệp.')).finally(()=>{setSending(false);if(fileInputRef.current)fileInputRef.current.value='';});
+      setReplyTo(null);
+      void onSendMessage('', file, selectedReply?.id).catch(error=>{setReplyTo(current=>current||selectedReply);setSendError(error instanceof Error?error.message:'Không thể gửi tệp.');}).finally(()=>{setSending(false);if(fileInputRef.current)fileInputRef.current.value='';});
     }
   };
 
@@ -174,8 +190,9 @@ export default function ChatWorkspace({
 
           return (
             <div
+              id={`message-${msg.id}`}
               key={msg.id}
-              className={`message-bubble-row ${isMe ? "outgoing" : "incoming"}`}
+              className={`message-bubble-row ${isMe ? "outgoing" : "incoming"} ${msg.isRecalled ? "recalled" : ""}`}
             >
               {!isMe && (
                 <div className="message-sender-avatar"><UserAvatar src={msg.senderAvatar} name={msg.senderName} fallbackClassName="chat-avatar-initials" /></div>
@@ -183,6 +200,7 @@ export default function ChatWorkspace({
 
               <div className="bubble-content-wrap">
                 <div className={`chat-bubble ${isMe ? "me" : "them"}`}>
+                  {msg.replyTo && <button type="button" className="chat-reply-quote" onClick={() => document.getElementById(`message-${msg.replyTo?.id}`)?.scrollIntoView({behavior:'smooth',block:'center'})}><strong>{msg.replyTo.senderName}</strong><span>{msg.replyTo.content}</span></button>}
                   <p>{msg.content}</p>
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="attachment-preview">
@@ -203,6 +221,7 @@ export default function ChatWorkspace({
                     </span>
                   )}
                 </div>
+                {!msg.isRecalled && <div className="chat-message-actions"><button type="button" onClick={() => {setReplyTo(msg);textInputRef.current?.focus();}}>Trả lời</button>{isMe && <button type="button" onClick={() => void handleRecall(msg)}>Thu hồi</button>}</div>}
               </div>
             </div>
           );
@@ -220,6 +239,7 @@ export default function ChatWorkspace({
       </div>}
 
       {/* Input Toolbar */}
+      {replyTo && <div className="chat-composer-reply"><div><strong>Đang trả lời {replyTo.senderName}</strong><span>{replyTo.content || replyTo.attachments?.[0]?.name || 'Tệp đính kèm'}</span></div><button type="button" onClick={() => setReplyTo(null)} aria-label="Bỏ trả lời">×</button></div>}
       <div className="chat-input-toolbar">
         <div className="toolbar-left-tools">
           <button
@@ -264,6 +284,7 @@ export default function ChatWorkspace({
 
         <div className="input-field-wrap">
           <input
+            ref={textInputRef}
             type="text"
             className="chat-text-input"
             placeholder="Nhập tin nhắn..."

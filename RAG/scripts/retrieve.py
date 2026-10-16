@@ -12,6 +12,7 @@ async def main() -> None:
     parser.add_argument("query"); parser.add_argument("--top-k", type=int, default=None)
     parser.add_argument("--threshold", type=float, default=None)
     parser.add_argument("--show-content", action="store_true")
+    parser.add_argument("--content-chars", type=int, default=600)
     args = parser.parse_args(); embedder = get_embedding_provider()
     try:
         async with AsyncSessionLocal() as session:
@@ -25,7 +26,7 @@ async def main() -> None:
             page = f" pages={hit.page_start}-{hit.page_end}" if hit.page_start else ""
             print(f"[{rank}] score={hit.score:.4f} type={hit.document_type} year={hit.academic_year or '-'}{page}")
             print(f"title={hit.title}\nsource={hit.source_url or '-'}")
-            if args.show_content: print(f"content={hit.content[:600].replace(chr(10), ' ')}")
+            if args.show_content: print(f"content={hit.content[:max(args.content_chars, 0)].replace(chr(10), ' ')}")
     finally:
         await embedder.close(); await close_qdrant(); await dispose_engine()
 

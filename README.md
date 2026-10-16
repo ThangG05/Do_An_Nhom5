@@ -20,6 +20,10 @@ python -m venv .venv
 cd backend 
 pip install -r requirements.txt  
 
+
+
+nếu fe báo lỗi hãy chạy : taskkill /PID 1628 /F sau đó lại npm run dev lại
+
 super-admin@hvnh.edu.vn
 admin-hoc-tap@hvnh.edu.vn
 admin-su-kien@hvnh.edu.vn

@@ -13,6 +13,18 @@ def test_answer_guidance_keeps_broad_answers_narrow() -> None:
     assert "first year" in answer_guidance("Tôi cần thực hiện như thế nào?")
     assert "counselling support space" in answer_guidance("HVNH hỗ trợ sức khỏe tâm lý thế nào?")
     assert "technology/information-systems" in answer_guidance("Sinh viên MIS có cơ hội việc làm nào?")
+    assert "several requirements" in answer_guidance("Điều kiện đăng ký thực tập là gì?")
+
+
+def test_scholarship_guidance_requires_explicit_criteria_by_type() -> None:
+    guidance = answer_guidance("Điều kiện xét học bổng là gì?")
+    assert "type is unspecified" in guidance
+    assert "baseline requirements" in guidance
+    assert "Ask which scholarship type" in guidance
+    assert "type is unspecified" in answer_guidance("Điều kiện xét học bổng Học viện Ngân hàng là gì?")
+    specific = answer_guidance("Điều kiện xét học bổng KKHT là gì?")
+    assert "eligibility/criteria section" in specific
+    assert "List all supported requirements" in specific
 from app.llm.security import PromptSecurityError
 
 

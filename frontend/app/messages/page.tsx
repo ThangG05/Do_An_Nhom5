@@ -37,10 +37,12 @@ export default function MessagesPage() {
         {/* Column 2: Chat Workspace (Center) */}
         {!messengerState.loading && !messengerState.error && messengerState.activeConversation && (
           <ChatWorkspace
+            key={messengerState.activeConversation.id}
             activeConversation={messengerState.activeConversation}
             messages={messengerState.activeMessages}
             currentUserId={messengerState.currentUserId}
             onSendMessage={messengerState.sendMessage}
+            onRecallMessage={messengerState.recallMessage}
             onToggleDetailsPanel={messengerState.toggleDetailsPanel}
             showDetailsPanel={messengerState.showDetailsPanel}
             onBackMobile={() => messengerState.setMobileView("list")}

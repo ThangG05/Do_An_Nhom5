@@ -1,6 +1,7 @@
 """Private, group-scoped document library for the canonical Study group only."""
 import hashlib
 import logging
+import tempfile
 import uuid
 import zipfile
 from collections import defaultdict
@@ -10,7 +11,10 @@ from urllib.parse import quote
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import HTTPException, UploadFile
 from PIL import Image, UnidentifiedImageError
+from docx import Document as WordDocument
+from openpyxl import load_workbook
 from sqlalchemy import bindparam, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.config import settings
@@ -70,27 +74,94 @@ def require_admin(db: Session, group_id: uuid.UUID, user: User) -> None:
         raise HTTPException(403, "Chỉ admin của nhóm Học tập được duyệt tài liệu.")
 
 
-def list_subjects(db: Session, query: str = "", *, include_inactive: bool = False) -> list[SubjectResponse]:
-    rows = db.execute(text("""
-        SELECT id,code,name,institution,source_note,is_active FROM subjects
-        WHERE (:all OR is_active) AND (:q='' OR code ILIKE :pattern OR name ILIKE :pattern)
-        ORDER BY name LIMIT 50
-    """), {"all": include_inactive, "q": query.strip(), "pattern": f"%{query.strip()}%"}).mappings()
+def list_subjects(db: Session, query: str = "", *, include_inactive: bool = False,
+                  category: str | None = None, major_id: uuid.UUID | None = None,
+                  limit: int = 50, offset: int = 0) -> list[SubjectResponse]:
+    query = query.strip()
+    tokens = [token for token in query.split() if token][:8]
+    token_match = " AND ".join(
+        f"(s.name ILIKE :token_{index} OR s.code ILIKE :token_{index})"
+        for index, _ in enumerate(tokens)
+    ) or "FALSE"
+    params = {"all": include_inactive, "q": query, "pattern": f"%{query}%",
+              "prefix": f"{query}%", "category": category, "major": major_id,
+              "limit": limit, "offset": offset}
+    params.update({f"token_{index}": f"%{token}%" for index, token in enumerate(tokens)})
+    rows = db.execute(text(f"""
+        SELECT s.*, ARRAY(SELECT ms.major_id FROM major_subjects ms WHERE ms.subject_id=s.id) major_ids
+        FROM subjects s
+        WHERE (:all OR s.is_active) AND (:q='' OR s.code ILIKE :pattern OR s.name ILIKE :pattern
+              OR ({token_match}))
+          AND (:category IS NULL OR s.category=:category)
+          AND (CAST(:major AS uuid) IS NULL OR EXISTS (
+              SELECT 1 FROM major_subjects ms WHERE ms.subject_id=s.id AND ms.major_id=:major))
+        ORDER BY CASE
+          WHEN :q='' THEN 9
+          WHEN lower(s.code)=lower(:q) THEN 0
+          WHEN s.code ILIKE :prefix THEN 1
+          WHEN s.name ILIKE :prefix THEN 2
+          WHEN s.code ILIKE :pattern THEN 3
+          WHEN s.name ILIKE :pattern THEN 4
+          ELSE 5 END, s.name,s.code,s.id
+        LIMIT :limit OFFSET :offset
+    """), params).mappings()
     return [SubjectResponse(**dict(row)) for row in rows]
 
 
-def upsert_subject(db: Session, code: str, name: str, source_note: str, is_active: bool) -> SubjectResponse:
-    code, name, source_note = code.strip().upper(), name.strip(), source_note.strip()
-    if not code or not name or not source_note:
-        raise HTTPException(400, "Mã, tên và nguồn xác minh môn học không được để trống.")
-    row = db.execute(text("""
-        INSERT INTO subjects(code,name,source_note,is_active) VALUES(:code,:name,:source,:active)
-        ON CONFLICT(code) DO UPDATE SET name=EXCLUDED.name,source_note=EXCLUDED.source_note,
-          is_active=EXCLUDED.is_active,updated_at=now()
-        RETURNING id,code,name,institution,source_note,is_active
-    """), {"code": code, "name": name, "source": source_note, "active": is_active}).mappings().one()
-    db.commit()
-    return SubjectResponse(**dict(row))
+def list_majors(db: Session) -> list[dict]:
+    return [dict(row) for row in db.execute(text("""
+        SELECT m.id,m.code,m.name,count(s.id) subject_count FROM majors m
+        LEFT JOIN major_subjects ms ON ms.major_id=m.id
+        LEFT JOIN subjects s ON s.id=ms.subject_id AND s.is_active
+        GROUP BY m.id ORDER BY m.name
+    """)).mappings()]
+
+
+def upsert_subject(db: Session, code: str | None, name: str, source_note: str, is_active: bool,
+                   *, subject_id: uuid.UUID | None = None, category: str = "SPECIALIZED",
+                   needs_review: bool = False, major_ids: list[uuid.UUID] | None = None) -> SubjectResponse:
+    code = code.strip().upper() if code and code.strip() else None
+    name, source_note = name.strip(), source_note.strip()
+    if len(name) < 2 or len(source_note) < 5:
+        raise HTTPException(400, "Cần tên môn và nguồn đối chiếu đầy đủ.")
+    if category == "GENERAL" and major_ids:
+        raise HTTPException(400, "Môn đại cương dùng chung, không gán ngành bắt buộc.")
+    if major_ids:
+        found = db.execute(text("SELECT id FROM majors WHERE id IN :ids").bindparams(
+            bindparam("ids", expanding=True)), {"ids": major_ids}).scalars().all()
+        if set(found) != set(major_ids):
+            raise HTTPException(400, "Ngành được chọn không có trong danh mục.")
+    params = {"code": code, "name": name, "source": source_note, "active": is_active,
+              "category": category, "review": needs_review or code is None, "id": subject_id or uuid.uuid4()}
+    try:
+        if subject_id:
+            row = db.execute(text("""UPDATE subjects SET code=:code,name=:name,source_note=:source,
+                is_active=:active,category=:category,needs_review=:review,updated_at=now()
+                WHERE id=:id RETURNING *"""), params).mappings().first()
+            if not row:
+                raise HTTPException(404, "Không tìm thấy môn học.")
+        else:
+            row = db.execute(text("""INSERT INTO subjects(id,code,name,source_note,is_active,category,needs_review)
+                VALUES(:id,:code,:name,:source,:active,:category,:review) RETURNING *"""), params).mappings().one()
+        sid = row["id"]
+        if code:
+            conflict = db.execute(text("SELECT count(DISTINCT name)>1 FROM subjects WHERE code=:code"),
+                                  {"code": code}).scalar()
+            if conflict:
+                db.execute(text("UPDATE subjects SET needs_review=true WHERE code=:code"), {"code": code})
+                row = {**row, "needs_review": True}
+        if major_ids is not None or category == "GENERAL":
+            db.execute(text("DELETE FROM major_subjects WHERE subject_id=:id"), {"id": sid})
+            if major_ids:
+                db.execute(text("INSERT INTO major_subjects(major_id,subject_id) VALUES(:major,:subject)"),
+                           [{"major": mid, "subject": sid} for mid in set(major_ids)])
+        ids = db.execute(text("SELECT major_id FROM major_subjects WHERE subject_id=:id"), {"id": sid}).scalars().all()
+        result = SubjectResponse(**dict(row), major_ids=ids)
+        db.commit()
+        return result
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "Môn học cùng mã, tên và phân loại đã tồn tại. Hãy chọn Chỉnh sửa bản ghi đó.")
 
 
 def _validate_file(file: UploadFile) -> dict:
@@ -174,17 +245,30 @@ _DETAIL_SQL = """
 
 def list_documents(db: Session, group_id: uuid.UUID, user: User, *, mine: bool = False,
                    pending: bool = False, query: str = "", subject_id: uuid.UUID | None = None,
-                   limit: int = 30, offset: int = 0) -> list[StudyDocumentResponse]:
+                   limit: int = 30, offset: int = 0, category: str | None = None,
+                   major_id: uuid.UUID | None = None) -> list[StudyDocumentResponse]:
     (require_admin if pending else require_member)(db, group_id, user)
     condition = "d.status='PENDING'" if pending else "d.uploaded_by=:uid" if mine else "d.status='APPROVED'"
     rows = db.execute(text(_DETAIL_SQL + f"""
         WHERE d.group_id=:gid AND d.deleted_at IS NULL AND {condition}
           AND (:subject_id IS NULL OR d.subject_id=:subject_id)
+          AND (:category IS NULL OR s.category=:category)
+          AND (CAST(:major AS uuid) IS NULL OR EXISTS
+               (SELECT 1 FROM major_subjects ms WHERE ms.subject_id=s.id AND ms.major_id=:major))
           AND (:q='' OR d.title ILIKE :pattern OR s.name ILIKE :pattern OR s.code ILIKE :pattern)
         ORDER BY d.created_at DESC LIMIT :limit OFFSET :offset
     """), {"gid": group_id, "uid": user.id, "subject_id": subject_id, "q": query.strip(),
-             "pattern": f"%{query.strip()}%", "limit": limit, "offset": offset}).mappings().all()
+             "pattern": f"%{query.strip()}%", "limit": limit, "offset": offset,
+             "category": category, "major": major_id}).mappings().all()
     return _serialize(db, rows)
+
+
+def count_pending_documents(db: Session, group_id: uuid.UUID, admin: User) -> int:
+    require_admin(db, group_id, admin)
+    return int(db.execute(text("""
+        SELECT count(*) FROM study_documents
+        WHERE group_id=:gid AND status='PENDING' AND deleted_at IS NULL
+    """), {"gid": group_id}).scalar_one())
 
 
 def get_document(db: Session, group_id: uuid.UUID, document_id: uuid.UUID, user: User,
@@ -205,7 +289,7 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
     subject = db.execute(text("SELECT 1 FROM subjects WHERE id=:id AND is_active"),
                          {"id": subject_id}).first()
     if not subject:
-        raise HTTPException(400, "Môn học chưa có trong danh mục đã xác minh.")
+        raise HTTPException(400, "Môn học không có trong danh mục đang sử dụng.")
     validated = [_validate_file(file) for file in files]
     if len({item["sha256"] for item in validated}) != len(validated):
         raise HTTPException(400, "Một lượt chia sẻ không thể đính kèm hai file có nội dung trùng nhau.")
@@ -238,13 +322,23 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
             """), {"did": document_id, **{key: item[key] for key in
                     ("id", "key", "name", "mime", "extension", "size", "sha256")}})
         db.commit()
-    except Exception:
+    except Exception as exc:
         db.rollback()
         for key in uploaded:
             try:
                 client.delete_object(Bucket=bucket, Key=key)
             except (BotoCoreError, ClientError):
                 logger.warning("study_upload_orphan_cleanup_failed")
+        if isinstance(exc, (BotoCoreError, ClientError)):
+            error_code = (
+                exc.response.get("Error", {}).get("Code", "unknown")
+                if isinstance(exc, ClientError) else type(exc).__name__
+            )
+            logger.warning("study_document_r2_upload_failed", extra={"r2_error_code": error_code})
+            raise HTTPException(
+                status_code=502,
+                detail="Không thể tải tài liệu lên kho R2. Hãy kiểm tra quyền đọc/ghi của API token với bucket tài liệu.",
+            ) from exc
         raise
     return get_document(db, group_id, document_id, user)
 
@@ -272,6 +366,123 @@ def file_download(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
         "Bucket": _private_bucket(), "Key": row["r2_object_key"],
         "ResponseContentDisposition": f"{disposition}; filename*=UTF-8''{filename}",
     }, ExpiresIn=min(settings.R2_PRESIGNED_URL_EXPIRE, 300))
+
+
+def _get_document_files_for_user(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
+                                 user: User) -> list:
+    require_member(db, group_id, user)
+    row = db.execute(text("""
+        SELECT id,status,uploaded_by FROM study_documents
+        WHERE id=:did AND group_id=:gid AND deleted_at IS NULL
+    """), {"did": document_id, "gid": group_id}).mappings().first()
+    if not row or (row["status"] != "APPROVED" and row["uploaded_by"] != user.id):
+        raise HTTPException(404, "Không tìm thấy tài liệu.")
+    files = db.execute(text("""
+        SELECT id,r2_object_key,original_name,mime_type,extension,size_bytes
+        FROM study_document_files WHERE document_id=:did AND deleted_at IS NULL
+        ORDER BY created_at,id
+    """), {"did": document_id}).mappings().all()
+    if not files:
+        raise HTTPException(404, "Bộ tài liệu hiện không có file để tải.")
+    return files
+
+
+def download_document_bundle(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
+                             user: User) -> tuple[tempfile.SpooledTemporaryFile, str]:
+    files = _get_document_files_for_user(db, group_id, document_id, user)
+    archive_file = tempfile.SpooledTemporaryFile(max_size=8 * 1024 * 1024, mode="w+b")
+    client = get_r2_client()
+    try:
+        with zipfile.ZipFile(archive_file, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for index, file in enumerate(files, start=1):
+                filename = Path(file["original_name"].replace("\\", "/")).name or f"file-{index}"
+                archive_name = f"{index:02d} - {filename}"
+                with archive.open(archive_name, "w") as target:
+                    client.download_fileobj(_private_bucket(), file["r2_object_key"], target)
+        archive_file.seek(0)
+        return archive_file, f"bo-tai-lieu-{document_id}.zip"
+    except (BotoCoreError, ClientError) as exc:
+        archive_file.close()
+        logger.warning("study_document_bundle_download_failed")
+        raise HTTPException(502, "Không thể tải trọn bộ tài liệu từ kho R2.") from exc
+    except Exception:
+        archive_file.close()
+        raise
+
+
+def preview_office_file(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
+                        file_id: uuid.UUID, user: User) -> dict:
+    files = _get_document_files_for_user(db, group_id, document_id, user)
+    file = next((item for item in files if item["id"] == file_id), None)
+    if not file:
+        raise HTTPException(404, "Không tìm thấy file.")
+    extension = file["extension"].lower()
+    if extension not in {"docx", "xlsx"}:
+        raise HTTPException(415, "Xem trước hiện hỗ trợ Word .docx và Excel .xlsx; file .doc/.xls cần tải về.")
+    content = tempfile.SpooledTemporaryFile(max_size=8 * 1024 * 1024, mode="w+b")
+    try:
+        get_r2_client().download_fileobj(_private_bucket(), file["r2_object_key"], content)
+    except (BotoCoreError, ClientError) as exc:
+        content.close()
+        logger.warning("study_document_office_preview_download_failed")
+        raise HTTPException(502, "Không thể đọc file xem trước từ kho R2.") from exc
+    content.seek(0)
+    try:
+        if extension == "docx":
+            document = WordDocument(content)
+            paragraphs = [paragraph.text[:10_000] for paragraph in document.paragraphs if paragraph.text.strip()]
+            tables = [[[cell.text[:5_000] for cell in row.cells[:30]] for row in table.rows[:200]]
+                      for table in document.tables[:50]]
+            return {"kind": "word", "name": file["original_name"],
+                    "paragraphs": paragraphs[:500], "tables": tables[:50]}
+
+        workbook = load_workbook(content, read_only=True, data_only=True)
+        try:
+            sheets = []
+            for sheet in workbook.worksheets[:20]:
+                rows = []
+                for row in sheet.iter_rows(max_row=201, max_col=30, values_only=True):
+                    values = [value.isoformat() if hasattr(value, "isoformat") else
+                              str(value) if value is not None else None for value in row]
+                    if any(value is not None for value in values):
+                        rows.append(values)
+                sheets.append({"name": sheet.title, "rows": rows[:200],
+                               "truncated": sheet.max_row > 200 or sheet.max_column > 30})
+        finally:
+            workbook.close()
+        return {"kind": "excel", "name": file["original_name"], "sheets": sheets}
+    except Exception as exc:
+        raise HTTPException(422, "File Office không đọc được hoặc không đúng định dạng.") from exc
+    finally:
+        content.close()
+
+
+def delete_own_document(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
+                        user: User) -> None:
+    require_member(db, group_id, user)
+    document = db.execute(text("""
+        SELECT id FROM study_documents
+        WHERE id=:did AND group_id=:gid AND uploaded_by=:uid AND deleted_at IS NULL
+    """), {"did": document_id, "gid": group_id, "uid": user.id}).first()
+    if not document:
+        raise HTTPException(404, "Không tìm thấy tài liệu của bạn.")
+    files = db.execute(text("""
+        SELECT id,r2_object_key FROM study_document_files
+        WHERE document_id=:did AND deleted_at IS NULL
+    """), {"did": document_id}).mappings().all()
+    client = get_r2_client()
+    bucket = _private_bucket()
+    try:
+        for file in files:
+            client.delete_object(Bucket=bucket, Key=file["r2_object_key"])
+    except (BotoCoreError, ClientError) as exc:
+        logger.warning("study_document_owner_delete_r2_failed")
+        raise HTTPException(502, "Chưa thể xóa tài liệu khỏi kho R2. Vui lòng thử lại sau.") from exc
+    db.execute(text("UPDATE study_document_files SET deleted_at=now() WHERE document_id=:did AND deleted_at IS NULL"),
+               {"did": document_id})
+    db.execute(text("UPDATE study_documents SET deleted_at=now() WHERE id=:did AND deleted_at IS NULL"),
+               {"did": document_id})
+    db.commit()
 
 
 def moderate_document(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,

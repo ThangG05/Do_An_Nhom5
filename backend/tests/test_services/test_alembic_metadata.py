@@ -15,10 +15,12 @@ def test_combined_metadata_contains_software_and_rag_tables() -> None:
         "ai_conversations",
         "ai_messages",
         "subjects",
+        "majors",
+        "major_subjects",
         "study_documents",
         "study_document_files",
         "rag_token_usage",
     }
 
     assert expected.issubset(target_metadata.tables)
-    assert len(target_metadata.tables) == 44
+    assert len(target_metadata.tables) == 46

@@ -1,0 +1,4616 @@
+{
+  "source": "Học phần.docx — danh_muc_hoc_phan_HVNH_va_thiet_ke_database.md (người dùng cung cấp; chưa xác minh độc lập)",
+  "majors": [
+    {
+      "name": "Kinh tế quốc tế",
+      "code": "ECON03"
+    },
+    {
+      "name": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT06"
+    },
+    {
+      "name": "Luật học",
+      "code": "LAW04"
+    },
+    {
+      "name": "Kế toán",
+      "code": "ACT02"
+    },
+    {
+      "name": "Kiểm toán",
+      "code": "ACT04"
+    },
+    {
+      "name": "Ngân hàng",
+      "code": "BANK02"
+    },
+    {
+      "name": "Ngân hàng số",
+      "code": "BANK03"
+    },
+    {
+      "name": "Quản trị kinh doanh",
+      "code": "BUS02"
+    },
+    {
+      "name": "Quản trị du lịch",
+      "code": "BUS03"
+    },
+    {
+      "name": "Kinh tế đầu tư",
+      "code": null
+    },
+    {
+      "name": "Tài chính",
+      "code": "ECON01"
+    },
+    {
+      "name": "Ngôn ngữ anh",
+      "code": "FL01"
+    },
+    {
+      "name": "Logistic chuỗi cung ứng",
+      "code": "IB02"
+    },
+    {
+      "name": "Công nghệ thông tin",
+      "code": "IT01"
+    },
+    {
+      "name": "Luật kinh tế",
+      "code": "LAW01"
+    },
+    {
+      "name": "Marketing",
+      "code": "BUS07"
+    },
+    {
+      "name": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS01"
+    },
+    {
+      "name": "Hệ thống thông tin quản lý",
+      "code": "MIS01"
+    }
+  ],
+  "subjects": [
+    {
+      "code": "PLT07A",
+      "name": "Triết học Mác Lênin",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "PLT08A",
+      "name": "Kinh tế chính trị Mác - Lênin",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "PLT09A",
+      "name": "Chủ nghĩa xã hội khoa học",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "PLT10A",
+      "name": "Lịch sử Đảng Cộng sản Việt Nam",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "PLT06A",
+      "name": "Tư tưởng Hồ Chí Minh",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "LAW01A",
+      "name": "Pháp luật đại cương (trừ ngành Luật)",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "IS52A",
+      "name": "Năng lực số ứng dụng",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "MAT15A",
+      "name": "Toán kinh tế (các ngành khối Kinh tế, Tài chính, Kinh doanh)",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "MAT14A",
+      "name": "Xác suất và thống kê",
+      "category": "GENERAL",
+      "needs_review": true
+    },
+    {
+      "code": "MGT36A",
+      "name": "Đổi mới sáng tạo và khởi nghiệp",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "BUS20A",
+      "name": "Giao tiếp trong kinh doanh",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "ENG01A",
+      "name": "Tiếng Anh I",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "ENG02A",
+      "name": "Tiếng Anh II",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "ENG03A",
+      "name": "Tiếng Anh III",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "ENG04A",
+      "name": "Tiếng Anh IV",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "JAP401J",
+      "name": "Tiếng Nhật I",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "JAP402J",
+      "name": "Tiếng Nhật II",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "JAP403J",
+      "name": "Tiếng Nhật III",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "JAP404J",
+      "name": "Tiếng Nhật IV",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "JAP405J",
+      "name": "Tiếng Nhật V",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "JAP406J",
+      "name": "Tiếng Nhật VI",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT07A",
+      "name": "Giáo dục quốc phòng và an ninh",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT02A",
+      "name": "Giáo dục thể chất Đại cương",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT03A",
+      "name": "Giáo dục thể chất tự chọn",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT04A",
+      "name": "Giáo dục thể chất tự chọn",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT05A",
+      "name": "Giáo dục thể chất tự chọn",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT06A",
+      "name": "Giáo dục thể chất tự chọn",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT08A",
+      "name": "Giáo dục thể chất tự chọn",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "SPT09A",
+      "name": "Giáo dục thể chất tự chọn",
+      "category": "GENERAL",
+      "needs_review": false
+    },
+    {
+      "code": "ECO53A",
+      "name": "Kinh tế vĩ mô quốc tế và địa kinh tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO55A",
+      "name": "Toàn cầu hóa",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO56A",
+      "name": "Chính sách kinh tế đối ngoại và phát triển bền vững",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO57A",
+      "name": "Phân tích kinh tế và tài chính dự án đầu tư quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO58A",
+      "name": "Quản lý dự án trong môi trường số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN76A",
+      "name": "Thanh toán quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS01A",
+      "name": "Giao dịch thương mại quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO59A",
+      "name": "Đấu thầu quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO60A",
+      "name": "Quản lý rủi ro dự án đầu tư quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS21A",
+      "name": "Chứng từ và thực hành xuất nhập khẩu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS14A",
+      "name": "Logistics và Vận tải quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "BUS22A",
+      "name": "Đàm phán trong kinh doanh quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS11A",
+      "name": "Chính sách và nghiệp vụ hải quan",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO61A",
+      "name": "Phân tích yêu cầu và giá trị dự án",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT03A",
+      "name": "Marketing quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT13J",
+      "name": "Kế toán tài chính II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT14J",
+      "name": "Kế toán tài chính III",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT19J",
+      "name": "Kiểm toán tài chính I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT29J",
+      "name": "Tổ chức công tác kế toán trong môi trường công nghệ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT07J",
+      "name": "Kế toán quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT27J",
+      "name": "Các vấn đề kế toán đương đại",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT48J",
+      "name": "Kế toán quản trị II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MIS01J",
+      "name": "Hệ thống thông tin kế toán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT72J",
+      "name": "Kế toán trong môi trường số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT21J",
+      "name": "Kiểm toán hoạt động",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT20J",
+      "name": "Kiểm toán tài chính II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT76J",
+      "name": "Đạo đức nghề nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "JAP501J",
+      "name": "Tiếng Nhật chuyên ngành trong Kinh doanh và Kế toán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "JAP502J",
+      "name": "Kế toán Nhật Bản - Nhập môn",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "JAP503J",
+      "name": "Kế toán Nhật Bản - Sơ cấp (CPA I)",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "JAP504J",
+      "name": "Kế toán Nhật Bản - Trung cấp (CPA II)",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW24A",
+      "name": "Luật Hành chính",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW18A",
+      "name": "Luật Dân sự II",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW65A",
+      "name": "Luật Tố tụng dân sự",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW47A",
+      "name": "Luật Hình sự II",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW41A",
+      "name": "Luật Tố tụng hình sự",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW25A",
+      "name": "Công pháp quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW28A",
+      "name": "Tư pháp quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW29A",
+      "name": "Luật Đất đai",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW66A",
+      "name": "Luật Lao động",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW39A",
+      "name": "Luật Sở hữu trí tuệ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW06A",
+      "name": "Luật Thương mại quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW67A",
+      "name": "Luật Thương mại",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW68A",
+      "name": "Pháp luật tài chính - ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW69A",
+      "name": "Luật Hôn nhân và gia đình",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW74A",
+      "name": "Kỹ năng tư vấn pháp luật trong lĩnh vực dân sự",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW75A",
+      "name": "Kỹ năng tư vấn pháp luật trong lĩnh vực hình sự",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW76A",
+      "name": "Kỹ năng tư vấn pháp luật trong lĩnh vực hành chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW70A",
+      "name": "Tội phạm học",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW72A",
+      "name": "Luật Tố tụng hành chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW73A",
+      "name": "Pháp luật ASEAN",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW37A",
+      "name": "Xây dựng văn bản pháp luật",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW77A",
+      "name": "Luật Thi hành án hình sự",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW78A",
+      "name": "Những vấn đề cơ bản về Luật hình sự quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW79A",
+      "name": "Tư pháp đối với người chưa thành niên",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW80A",
+      "name": "Luật Thi hành án dân sự",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW81A",
+      "name": "Pháp luật về biện pháp bảo đảm thực hiện nghĩa vụ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW82A",
+      "name": "Pháp luật an sinh xã hội",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW83A",
+      "name": "Luật Công chứng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW84A",
+      "name": "Luật Khiếu nại, tố cáo",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW85A",
+      "name": "Pháp luật về quyền con người",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW71A",
+      "name": "Pháp luật phòng, chống tham nhũng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW02A",
+      "name": "Luật kinh tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN82A",
+      "name": "Tài chính tiền tệ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT02A",
+      "name": "Kế toán tài chính I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp 1",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "SCM03A",
+      "name": "Phương pháp nghiên cứu khoa học trong kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT30A",
+      "name": "Nguyên lý thống kê",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT02A",
+      "name": "Quản trị doanh nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT08A",
+      "name": "Kiểm toán căn bản",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT15A",
+      "name": "Kế toán thuế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MIS02A",
+      "name": "Hệ thống thông tin quản lý",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT47A",
+      "name": "Kế toán quản trị I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN25A",
+      "name": "Tài chính doanh nghiệp II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN104A",
+      "name": "Nguyên lý thẩm định giá tài sản",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT12A",
+      "name": "Thống kê doanh nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN55A",
+      "name": "Phân tích tài chính doanh nghiệp I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT13A",
+      "name": "Kế toán tài chính II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT19A",
+      "name": "Kiểm toán tài chính I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT29A",
+      "name": "Tổ chức công tác kế toán trong môi trường công nghệ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT05A",
+      "name": "Kế toán công",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT14A",
+      "name": "Kế toán tài chính III",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MIS01A",
+      "name": "Hệ thống thông tin kế toán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT72A",
+      "name": "Kế toán trong môi trường số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT21A",
+      "name": "Kiểm toán hoạt động",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT20A",
+      "name": "Kiểm toán tài chính II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT76A",
+      "name": "Đạo đức nghề nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT75A",
+      "name": "Kiểm toán tài chính III",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT22A",
+      "name": "Kiểm soát quản lý",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT73A",
+      "name": "Kiểm toán nội bộ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT74A",
+      "name": "Kiểm toán trong môi trường công nghệ thông tin",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT07A",
+      "name": "Kế toán quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp I",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "FIN20A",
+      "name": "Quản trị ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN19A",
+      "name": "Tín dụng ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN101A",
+      "name": "Ngân hàng số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN123A",
+      "name": "Chuẩn mực báo cáo tài chính quốc tế trong tổ chức tài chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN124A",
+      "name": "Môi trường, xã hội và quản trị trong tài chính - ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT35A",
+      "name": "Đạo đức nghề nghiệp và phát triển bền vững",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN96A",
+      "name": "Đề án ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN109A",
+      "name": "Thẩm định và Tài trợ dự án",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN35A",
+      "name": "Quản trị rủi ro tín dụng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT28A",
+      "name": "Kiểm soát - kiểm toán nội bộ ngân hàng thương mại",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "FIN103A",
+      "name": "Dịch vụ ngân hàng tư nhân",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "FIN110A",
+      "name": "Thanh toán quốc tế và Tài trợ thương mại quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN68A",
+      "name": "Kỹ năng giao dịch trong ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MAT16A",
+      "name": "Phân tích định lượng trong kinh tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN86A",
+      "name": "Tài chính - tiền tệ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN03A",
+      "name": "Tài chính quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN13A",
+      "name": "Thị trường chứng khoán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN93A",
+      "name": "Công cụ phái sinh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT22A",
+      "name": "Marketing dịch vụ tài chính - ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN112A",
+      "name": "Phân tích dữ liệu trong tài chính - ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN07A",
+      "name": "Bảo hiểm",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT25A",
+      "name": "Hệ thống thanh toán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ACT70A",
+      "name": "Kế toán ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS24A",
+      "name": "Kho dữ liệu và kinh doanh thông minh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN103A",
+      "name": "Dịch vụ Ngân hàng tư nhân",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "ACT28A",
+      "name": "Kiểm soát - Kiểm toán nội bộ NHTM",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "IS58A",
+      "name": "Phân tích nghiệp vụ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS60A",
+      "name": "Quản lý dự án công nghệ thông tin",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "FIN120A",
+      "name": "Đề án Ngân hàng số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT01A",
+      "name": "Quản trị học",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT44A",
+      "name": "Quản trị chuỗi cung ứng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT18A",
+      "name": "Quản trị truyền thông",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT04A",
+      "name": "Quản trị chiến lược",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "MKT05A",
+      "name": "Quản trị Marketing",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT06A",
+      "name": "Quản trị sản xuất và tác nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT05A",
+      "name": "Quản trị chất lượng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT64A",
+      "name": "Lãnh đạo",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT43A",
+      "name": "Khởi sự kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT61A",
+      "name": "Quản trị rủi ro trong kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT14A",
+      "name": "Kế hoạch kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT08A",
+      "name": "Hành vi tiêu dùng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT09A",
+      "name": "Nghiên cứu Marketing",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT20A",
+      "name": "Marketing dịch vụ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT19A",
+      "name": "Quản trị bán hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM02A",
+      "name": "Tài nguyên du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM03A",
+      "name": "Kinh tế du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM04A",
+      "name": "Tổng quan du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN27A",
+      "name": "Quản trị tài chính doanh nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "MGT04A",
+      "name": "Quản trị chiến lực",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "MGT03A",
+      "name": "Quản trị nhân lực",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT45A",
+      "name": "Quản trị thương hiệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT37A",
+      "name": "Văn hóa doanh nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT12A",
+      "name": "Hành vi tổ chức",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM05A",
+      "name": "Chuyên đề các loại hình du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT47A",
+      "name": "Quản trị tác nghiệp du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT48A",
+      "name": "Khởi sự kinh doanh trong du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT11A",
+      "name": "Marketing du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM06A",
+      "name": "Quản trị kinh doanh lữ hành",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM07A",
+      "name": "Quản trị điểm đến du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM08A",
+      "name": "Hướng dẫn du lịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM09A",
+      "name": "Du lịch bền vững",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM11A",
+      "name": "Quản trị khách sạn",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM12A",
+      "name": "Quản trị lễ tân khách sạn",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM13A",
+      "name": "Quản trị nhà hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "TRM15A",
+      "name": "Quản trị sự kiện",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO05A",
+      "name": "Kinh tế công cộng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO15A",
+      "name": "Phân tích dữ liệu và dự báo kinh tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT21A",
+      "name": "Marketing",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN27A",
+      "name": "Phân tích kinh tế trong đầu tư",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "ECO10A",
+      "name": "Kinh tế học quản lý",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO34A",
+      "name": "Quản lý dự án 2",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO25A",
+      "name": "Đấu thầu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO26A",
+      "name": "Lập dự án",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO20A",
+      "name": "Quản lý rủi ro dự án",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO27A",
+      "name": "Kế hoạch hóa phát triển",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO28A",
+      "name": "Đánh giá tác động của chương trình, dự án",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO31A",
+      "name": "Kinh tế đầu tư I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO03A",
+      "name": "Kinh tế quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO04A",
+      "name": "Kinh tế phát triển",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO33A",
+      "name": "Quản lý dự án 1",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO32A",
+      "name": "Kinh tế đầu tư 2",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO13A",
+      "name": "Kinh tế số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN06A",
+      "name": "Thuế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN30A",
+      "name": "Tài chính công",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN102A",
+      "name": "Ngân hàng Trung ương và Chính sách tiền tệ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS42A",
+      "name": "Trí tuệ nhân tạo trong kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN84A",
+      "name": "Đầu tư tài chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN75A",
+      "name": "Quản trị rủi ro tài chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN108A",
+      "name": "Tài trợ khởi nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN122A",
+      "name": "Công nghệ tài chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT34A",
+      "name": "Đạo đức nghề nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "FIN99A",
+      "name": "Chiến lược tài chính doanh nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN41A",
+      "name": "Phân tích tài chính doanh nghiệp II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN100A",
+      "name": "Ngân hàng đầu tư",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN106A",
+      "name": "Quản trị gia sản và danh mục đầu tư",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN107A",
+      "name": "Tài chính hành vi",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN111A",
+      "name": "Hoạch định thuế trong kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN95A",
+      "name": "Thuế quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN79A",
+      "name": "Quản lý thuế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG60A",
+      "name": "Ngữ âm",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG48A",
+      "name": "Nghe Nói I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG56A",
+      "name": "Đọc viết I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG61A",
+      "name": "Ngữ pháp ứng dụng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG12A",
+      "name": "Nghe nói II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG57A",
+      "name": "Đọc viết II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG08A",
+      "name": "Ngữ nghĩa từ vựng học",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG13A",
+      "name": "Nghe nói III",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG58A",
+      "name": "Đọc viết III",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG55A",
+      "name": "Biên dịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG17A",
+      "name": "Kỹ năng Đọc có phân tích",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG71A",
+      "name": "Phương pháp nghiên cứu khoa học",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG14A",
+      "name": "Nghe nói IV",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG59A",
+      "name": "Đọc viết IV",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG63A",
+      "name": "Phiên dịch",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN45A",
+      "name": "Thị trường chứng khoán",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "FIN45A",
+      "name": "Ngân hàng thương mại",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "FIN42A",
+      "name": "Tài chính doanh nghiệp I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN47A",
+      "name": "Thanh toán quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT20A",
+      "name": "Quản trị học",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG72A",
+      "name": "Tiếng Anh chuyên ngành I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG73A",
+      "name": "Tiếng Anh chuyên ngành II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG33A",
+      "name": "Giao tiếp liên văn hóa",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG46A",
+      "name": "Thư tín thương mại",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG37A",
+      "name": "Kỹ năng tranh biện",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG74A",
+      "name": "Tiếng Anh Tài chính - Ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT25A",
+      "name": "Marketing dịch vụ tài chính - ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG69A",
+      "name": "Đàm phán trong kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT19A",
+      "name": "Hành vi tổ chức",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN114A",
+      "name": "Ngân hàng số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN116A",
+      "name": "Đầu tư tài chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "FIN53A",
+      "name": "Đầu tư quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW06A",
+      "name": "Luật thương mại quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "BUS29A",
+      "name": "Quản lý mua hàng toàn cầu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS30A",
+      "name": "Tài trợ chuỗi cung ứng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS14A",
+      "name": "Logistic và vận tải quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "BUS31A",
+      "name": "Quản lý kho hàng và phân phối",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS23A",
+      "name": "Quản lý rủi ro và bảo hiểm trong kinh doanh quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT33A",
+      "name": "Quản trị dự án và đầu tư quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS32A",
+      "name": "E-Logistic",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS33A",
+      "name": "Kinh doanh Logistic",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MAT12A",
+      "name": "Đại số tuyến tính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MAT13A",
+      "name": "Giải tích",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS57A",
+      "name": "Nhập môn ngành Công nghệ thông tin",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS22A",
+      "name": "Cơ sở lập trình",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MAT14A",
+      "name": "Xác suất thống kê",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "MAT05A",
+      "name": "Toán rời rạc",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS21A",
+      "name": "Cơ sở dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS53A",
+      "name": "Kiến trúc máy tính và hệ điều hành",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "IS07A",
+      "name": "Cấu trúc dữ liệu và giải thuật",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS53A",
+      "name": "Thiết kế Cơ sở dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "IS27A",
+      "name": "Lập trình hướng đối tượng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS06A",
+      "name": "Mạng và truyền thông",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS19A",
+      "name": "Thiết kế Web",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MIS07A",
+      "name": "Hệ quản trị Cơ sở dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "MIS08A",
+      "name": "Phân tích thiết kế hệ thống",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS23A",
+      "name": "Khai phá và phân tích dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS25A",
+      "name": "Lập trình .NET",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS16A",
+      "name": "An toàn và bảo mật thông tin",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS29A",
+      "name": "Lập trình nâng cao với C++",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS54A",
+      "name": "Trí tuệ nhân tạo",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "GRA88A",
+      "name": "Thực tập chuyên ngành",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS60A",
+      "name": "Quản lý dự án Công nghệ thông tin",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "IT02A",
+      "name": "Kiểm thử và đảm bảo chất lượng phần mềm",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS26A",
+      "name": "Lập trình di động",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IT03A",
+      "name": "Kiến trúc phần mềm",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS51A",
+      "name": "Lập trình Web với Php và MySQL",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS50A",
+      "name": "Lập trình Web với ASP.net và SQL server",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS55A",
+      "name": "Công nghệ dịch vụ tài chính",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS56A",
+      "name": "Công nghệ ngân hàng số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW48A",
+      "name": "Nhập môn luật học",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW15A",
+      "name": "Lý luận nhà nước và pháp luật",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW54A",
+      "name": "Luật học so sánh",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW17A",
+      "name": "Luật hiến pháp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW24A",
+      "name": "Luật hành chính",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW18A",
+      "name": "Luật dân sự I",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW23A",
+      "name": "Luật dân sự II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW65A",
+      "name": "Luật tố tụng dân sự",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW41A",
+      "name": "Luật hình sự I",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW47A",
+      "name": "Luật hình sự II",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW25A",
+      "name": "Luật tố tụng hình sự",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW27A",
+      "name": "Luật thương mại I",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW46A",
+      "name": "Luật thương mại II",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW29A",
+      "name": "Luật đất đai",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW09A",
+      "name": "Luật lao động",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW53A",
+      "name": "Luật sở hữu trí tuệ",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW03A",
+      "name": "Luật ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW54A",
+      "name": "Luật tài chính công",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "LAW10A",
+      "name": "Luật chứng khoán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW30A",
+      "name": "Luật đầu tư",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW49A",
+      "name": "Kỹ năng thực hành nghề luật",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW36A",
+      "name": "Luật kinh doanh bảo hiểm",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW34A",
+      "name": "Luật kinh doanh bất động sản",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW52A",
+      "name": "Pháp luật kế toán",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW50A",
+      "name": "Pháp luật quản trị công ty",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW35A",
+      "name": "Luật cạnh tranh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "LAW51A",
+      "name": "Pháp luật thương mại điện tử",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT23A",
+      "name": "Marketing số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": null,
+      "name": "Thương mại điện tử",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "BUS25A",
+      "name": "Kinh doanh quốc tế",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MGT60A",
+      "name": "Kỹ năng quản trị",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ECO12A",
+      "name": "Quản trị dự án cơ bản",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MKT27A",
+      "name": "Marketing Xã hội",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": null,
+      "name": "Phát triển sản phẩm/ dịch vụ",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "MKT31A",
+      "name": "Sáng tạo nội dung số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": null,
+      "name": "Quản trị mối quan hệ khách hàng điện tử",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "DS01",
+      "name": "Nhập môn khoa học dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS48A",
+      "name": "Lập trình Python",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MAT17A",
+      "name": "Toán cho khoa học dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "GRA92A",
+      "name": "Thực tế nghề nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS37A",
+      "name": "Thương mại điện tử căn bản",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS02A",
+      "name": "Thống kê ứng dụng hiện đại",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS04A",
+      "name": "Kinh doanh số",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS05A",
+      "name": "Phân tích và khai phá dữ liệu với Python",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS06A",
+      "name": "Công nghệ dữ liệu lớn",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS07A",
+      "name": "Khoa học dữ liệu nâng cao",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS08A",
+      "name": "Trực quan hóa dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS09A",
+      "name": "Các vấn đề đương đại trong Khoa học dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS10A",
+      "name": "Ứng dụng khoa học dữ liệu trong Tài chính - Ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "DS11A",
+      "name": "Ra quyết định trong kinh doanh theo định hướng dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS20A",
+      "name": "Nhập môn hệ thống thông tin",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS53A",
+      "name": "Thiết kế cơ sở dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "MIS07A",
+      "name": "Hệ quản trị cơ sở dữ liệu",
+      "category": "SPECIALIZED",
+      "needs_review": true
+    },
+    {
+      "code": "IS35A",
+      "name": "Thương mại điện tử",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "GRA50A",
+      "name": "Thực tập chuyên ngành",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "IS34A",
+      "name": "Hệ thống hoạch định tài nguyên doanh nghiệp",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "MIS06A",
+      "name": "Các hệ thống thông tin trong ngân hàng",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "BUS20A",
+      "name": "Giao tiếp trong kinh doanh",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    },
+    {
+      "code": "ENG04A",
+      "name": "Tiếng Anh IV",
+      "category": "SPECIALIZED",
+      "needs_review": false
+    }
+  ],
+  "links": [
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO53A",
+      "name": "Kinh tế vĩ mô quốc tế và địa kinh tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO55A",
+      "name": "Toàn cầu hóa"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO56A",
+      "name": "Chính sách kinh tế đối ngoại và phát triển bền vững"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO57A",
+      "name": "Phân tích kinh tế và tài chính dự án đầu tư quốc tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO58A",
+      "name": "Quản lý dự án trong môi trường số"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "FIN76A",
+      "name": "Thanh toán quốc tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "BUS01A",
+      "name": "Giao dịch thương mại quốc tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO59A",
+      "name": "Đấu thầu quốc tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO60A",
+      "name": "Quản lý rủi ro dự án đầu tư quốc tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "BUS21A",
+      "name": "Chứng từ và thực hành xuất nhập khẩu"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "BUS14A",
+      "name": "Logistics và Vận tải quốc tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "BUS22A",
+      "name": "Đàm phán trong kinh doanh quốc tế"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "BUS11A",
+      "name": "Chính sách và nghiệp vụ hải quan"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "ECO61A",
+      "name": "Phân tích yêu cầu và giá trị dự án"
+    },
+    {
+      "major": "Kinh tế quốc tế",
+      "code": "MKT03A",
+      "name": "Marketing quốc tế"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT13J",
+      "name": "Kế toán tài chính II"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT14J",
+      "name": "Kế toán tài chính III"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT19J",
+      "name": "Kiểm toán tài chính I"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT29J",
+      "name": "Tổ chức công tác kế toán trong môi trường công nghệ"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT07J",
+      "name": "Kế toán quốc tế"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT27J",
+      "name": "Các vấn đề kế toán đương đại"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT48J",
+      "name": "Kế toán quản trị II"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "MIS01J",
+      "name": "Hệ thống thông tin kế toán"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT72J",
+      "name": "Kế toán trong môi trường số"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT21J",
+      "name": "Kiểm toán hoạt động"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT20J",
+      "name": "Kiểm toán tài chính II"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "ACT76J",
+      "name": "Đạo đức nghề nghiệp"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "JAP501J",
+      "name": "Tiếng Nhật chuyên ngành trong Kinh doanh và Kế toán"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "JAP502J",
+      "name": "Kế toán Nhật Bản - Nhập môn"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "JAP503J",
+      "name": "Kế toán Nhật Bản - Sơ cấp (CPA I)"
+    },
+    {
+      "major": "Kế toán (định hướng Nhật Bản)",
+      "code": "JAP504J",
+      "name": "Kế toán Nhật Bản - Trung cấp (CPA II)"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW24A",
+      "name": "Luật Hành chính"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW18A",
+      "name": "Luật Dân sự II"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW65A",
+      "name": "Luật Tố tụng dân sự"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW47A",
+      "name": "Luật Hình sự II"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW41A",
+      "name": "Luật Tố tụng hình sự"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW25A",
+      "name": "Công pháp quốc tế"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW28A",
+      "name": "Tư pháp quốc tế"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW29A",
+      "name": "Luật Đất đai"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW66A",
+      "name": "Luật Lao động"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW39A",
+      "name": "Luật Sở hữu trí tuệ"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW06A",
+      "name": "Luật Thương mại quốc tế"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW67A",
+      "name": "Luật Thương mại"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW68A",
+      "name": "Pháp luật tài chính - ngân hàng"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW69A",
+      "name": "Luật Hôn nhân và gia đình"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW74A",
+      "name": "Kỹ năng tư vấn pháp luật trong lĩnh vực dân sự"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW75A",
+      "name": "Kỹ năng tư vấn pháp luật trong lĩnh vực hình sự"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW76A",
+      "name": "Kỹ năng tư vấn pháp luật trong lĩnh vực hành chính"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW70A",
+      "name": "Tội phạm học"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW72A",
+      "name": "Luật Tố tụng hành chính"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW73A",
+      "name": "Pháp luật ASEAN"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW37A",
+      "name": "Xây dựng văn bản pháp luật"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW77A",
+      "name": "Luật Thi hành án hình sự"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW78A",
+      "name": "Những vấn đề cơ bản về Luật hình sự quốc tế"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW79A",
+      "name": "Tư pháp đối với người chưa thành niên"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW80A",
+      "name": "Luật Thi hành án dân sự"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW81A",
+      "name": "Pháp luật về biện pháp bảo đảm thực hiện nghĩa vụ"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW82A",
+      "name": "Pháp luật an sinh xã hội"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW83A",
+      "name": "Luật Công chứng"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW84A",
+      "name": "Luật Khiếu nại, tố cáo"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW85A",
+      "name": "Pháp luật về quyền con người"
+    },
+    {
+      "major": "Luật học",
+      "code": "LAW71A",
+      "name": "Pháp luật phòng, chống tham nhũng"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Kế toán",
+      "code": "LAW02A",
+      "name": "Luật kinh tế"
+    },
+    {
+      "major": "Kế toán",
+      "code": "FIN82A",
+      "name": "Tài chính tiền tệ"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT02A",
+      "name": "Kế toán tài chính I"
+    },
+    {
+      "major": "Kế toán",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp 1"
+    },
+    {
+      "major": "Kế toán",
+      "code": "SCM03A",
+      "name": "Phương pháp nghiên cứu khoa học trong kinh doanh"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT30A",
+      "name": "Nguyên lý thống kê"
+    },
+    {
+      "major": "Kế toán",
+      "code": "MGT02A",
+      "name": "Quản trị doanh nghiệp"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT08A",
+      "name": "Kiểm toán căn bản"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT15A",
+      "name": "Kế toán thuế"
+    },
+    {
+      "major": "Kế toán",
+      "code": "MIS02A",
+      "name": "Hệ thống thông tin quản lý"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT47A",
+      "name": "Kế toán quản trị I"
+    },
+    {
+      "major": "Kế toán",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Kế toán",
+      "code": "FIN25A",
+      "name": "Tài chính doanh nghiệp II"
+    },
+    {
+      "major": "Kế toán",
+      "code": "BUS01A",
+      "name": "Giao dịch thương mại quốc tế"
+    },
+    {
+      "major": "Kế toán",
+      "code": "FIN104A",
+      "name": "Nguyên lý thẩm định giá tài sản"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT12A",
+      "name": "Thống kê doanh nghiệp"
+    },
+    {
+      "major": "Kế toán",
+      "code": "FIN55A",
+      "name": "Phân tích tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT13A",
+      "name": "Kế toán tài chính II"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT19A",
+      "name": "Kiểm toán tài chính I"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT29A",
+      "name": "Tổ chức công tác kế toán trong môi trường công nghệ"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT05A",
+      "name": "Kế toán công"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT14A",
+      "name": "Kế toán tài chính III"
+    },
+    {
+      "major": "Kế toán",
+      "code": "MIS01A",
+      "name": "Hệ thống thông tin kế toán"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT72A",
+      "name": "Kế toán trong môi trường số"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT21A",
+      "name": "Kiểm toán hoạt động"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT20A",
+      "name": "Kiểm toán tài chính II"
+    },
+    {
+      "major": "Kế toán",
+      "code": "ACT76A",
+      "name": "Đạo đức nghề nghiệp"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT13A",
+      "name": "Kế toán tài chính II"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT19A",
+      "name": "Kiểm toán tài chính I"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT72A",
+      "name": "Kế toán trong môi trường số"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT20A",
+      "name": "Kiểm toán tài chính II"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT76A",
+      "name": "Đạo đức nghề nghiệp"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT75A",
+      "name": "Kiểm toán tài chính III"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT21A",
+      "name": "Kiểm toán hoạt động"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT22A",
+      "name": "Kiểm soát quản lý"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT73A",
+      "name": "Kiểm toán nội bộ"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT74A",
+      "name": "Kiểm toán trong môi trường công nghệ thông tin"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT05A",
+      "name": "Kế toán công"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT07A",
+      "name": "Kế toán quốc tế"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "MIS01A",
+      "name": "Hệ thống thông tin kế toán"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT14A",
+      "name": "Kế toán tài chính III"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "BUS20A",
+      "name": "Giao tiếp trong kinh doanh"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "LAW02A",
+      "name": "Luật kinh tế"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "FIN82A",
+      "name": "Tài chính tiền tệ"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT02A",
+      "name": "Kế toán tài chính I"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "SCM03A",
+      "name": "Phương pháp nghiên cứu khoa học trong kinh doanh"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT30A",
+      "name": "Nguyên lý thống kê"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "MGT02A",
+      "name": "Quản trị doanh nghiệp"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT08A",
+      "name": "Kiểm toán căn bản"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT15A",
+      "name": "Kế toán thuế"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ENG04A",
+      "name": "Tiếng Anh IV"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "MIS02A",
+      "name": "Hệ thống thông tin quản lý"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT47A",
+      "name": "Kế toán quản trị I"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "FIN25A",
+      "name": "Tài chính doanh nghiệp II"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "BUS01A",
+      "name": "Giao dịch thương mại quốc tế"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "FIN104A",
+      "name": "Nguyên lý thẩm định giá tài sản"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "ACT12A",
+      "name": "Thống kê doanh nghiệp"
+    },
+    {
+      "major": "Kiểm toán",
+      "code": "FIN55A",
+      "name": "Phân tích tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN20A",
+      "name": "Quản trị ngân hàng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN19A",
+      "name": "Tín dụng ngân hàng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN101A",
+      "name": "Ngân hàng số"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN123A",
+      "name": "Chuẩn mực báo cáo tài chính quốc tế trong tổ chức tài chính"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN124A",
+      "name": "Môi trường, xã hội và quản trị trong tài chính - ngân hàng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "MGT35A",
+      "name": "Đạo đức nghề nghiệp và phát triển bền vững"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN96A",
+      "name": "Đề án ngân hàng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN109A",
+      "name": "Thẩm định và Tài trợ dự án"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN35A",
+      "name": "Quản trị rủi ro tín dụng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "ACT28A",
+      "name": "Kiểm soát - kiểm toán nội bộ ngân hàng thương mại"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN103A",
+      "name": "Dịch vụ ngân hàng tư nhân"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN110A",
+      "name": "Thanh toán quốc tế và Tài trợ thương mại quốc tế"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN68A",
+      "name": "Kỹ năng giao dịch trong ngân hàng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "LAW02A",
+      "name": "Luật kinh tế"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "MAT16A",
+      "name": "Phân tích định lượng trong kinh tế"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN86A",
+      "name": "Tài chính - tiền tệ"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN03A",
+      "name": "Tài chính quốc tế"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "ACT02A",
+      "name": "Kế toán tài chính I"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN55A",
+      "name": "Phân tích tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN13A",
+      "name": "Thị trường chứng khoán"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN93A",
+      "name": "Công cụ phái sinh"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "MIS02A",
+      "name": "Hệ thống thông tin quản lý"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "MKT22A",
+      "name": "Marketing dịch vụ tài chính - ngân hàng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN112A",
+      "name": "Phân tích dữ liệu trong tài chính - ngân hàng"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "MGT02A",
+      "name": "Quản trị doanh nghiệp"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "FIN07A",
+      "name": "Bảo hiểm"
+    },
+    {
+      "major": "Ngân hàng",
+      "code": "ACT25A",
+      "name": "Hệ thống thanh toán"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN20A",
+      "name": "Quản trị ngân hàng"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN19A",
+      "name": "Tín dụng ngân hàng"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "ACT70A",
+      "name": "Kế toán ngân hàng"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "IS24A",
+      "name": "Kho dữ liệu và kinh doanh thông minh"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "ACT25A",
+      "name": "Hệ thống thanh toán"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN68A",
+      "name": "Kỹ năng giao dịch trong ngân hàng"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN103A",
+      "name": "Dịch vụ Ngân hàng tư nhân"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN110A",
+      "name": "Thanh toán quốc tế và Tài trợ thương mại quốc tế"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "ACT28A",
+      "name": "Kiểm soát - Kiểm toán nội bộ NHTM"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN35A",
+      "name": "Quản trị rủi ro tín dụng"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN109A",
+      "name": "Thẩm định và Tài trợ dự án"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "IS58A",
+      "name": "Phân tích nghiệp vụ"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "IS60A",
+      "name": "Quản lý dự án công nghệ thông tin"
+    },
+    {
+      "major": "Ngân hàng số",
+      "code": "FIN120A",
+      "name": "Đề án Ngân hàng số"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT01A",
+      "name": "Quản trị học"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT44A",
+      "name": "Quản trị chuỗi cung ứng"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MKT18A",
+      "name": "Quản trị truyền thông"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT04A",
+      "name": "Quản trị chiến lược"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MKT05A",
+      "name": "Quản trị Marketing"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT06A",
+      "name": "Quản trị sản xuất và tác nghiệp"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT05A",
+      "name": "Quản trị chất lượng"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT64A",
+      "name": "Lãnh đạo"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT43A",
+      "name": "Khởi sự kinh doanh"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT61A",
+      "name": "Quản trị rủi ro trong kinh doanh"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MGT14A",
+      "name": "Kế hoạch kinh doanh"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MKT08A",
+      "name": "Hành vi tiêu dùng"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MKT03A",
+      "name": "Marketing quốc tế"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MKT09A",
+      "name": "Nghiên cứu Marketing"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MKT20A",
+      "name": "Marketing dịch vụ"
+    },
+    {
+      "major": "Quản trị kinh doanh",
+      "code": "MKT19A",
+      "name": "Quản trị bán hàng"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "FIN86A",
+      "name": "Tài chính - tiền tệ"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT01A",
+      "name": "Quản trị học"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM02A",
+      "name": "Tài nguyên du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM03A",
+      "name": "Kinh tế du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM04A",
+      "name": "Tổng quan du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "FIN27A",
+      "name": "Quản trị tài chính doanh nghiệp"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT04A",
+      "name": "Quản trị chiến lực"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT03A",
+      "name": "Quản trị nhân lực"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MKT08A",
+      "name": "Hành vi tiêu dùng"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT45A",
+      "name": "Quản trị thương hiệu"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT37A",
+      "name": "Văn hóa doanh nghiệp"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT12A",
+      "name": "Hành vi tổ chức"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM05A",
+      "name": "Chuyên đề các loại hình du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT47A",
+      "name": "Quản trị tác nghiệp du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MGT48A",
+      "name": "Khởi sự kinh doanh trong du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "MKT11A",
+      "name": "Marketing du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM06A",
+      "name": "Quản trị kinh doanh lữ hành"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM07A",
+      "name": "Quản trị điểm đến du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM08A",
+      "name": "Hướng dẫn du lịch"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM09A",
+      "name": "Du lịch bền vững"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM11A",
+      "name": "Quản trị khách sạn"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM12A",
+      "name": "Quản trị lễ tân khách sạn"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM13A",
+      "name": "Quản trị nhà hàng"
+    },
+    {
+      "major": "Quản trị du lịch",
+      "code": "TRM15A",
+      "name": "Quản trị sự kiện"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO05A",
+      "name": "Kinh tế công cộng"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO15A",
+      "name": "Phân tích dữ liệu và dự báo kinh tế"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "MKT21A",
+      "name": "Marketing"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "FIN27A",
+      "name": "Phân tích kinh tế trong đầu tư"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO10A",
+      "name": "Kinh tế học quản lý"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "MGT02A",
+      "name": "Quản trị doanh nghiệp"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "FIN03A",
+      "name": "Tài chính quốc tế"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO34A",
+      "name": "Quản lý dự án 2"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO25A",
+      "name": "Đấu thầu"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO26A",
+      "name": "Lập dự án"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO20A",
+      "name": "Quản lý rủi ro dự án"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO27A",
+      "name": "Kế hoạch hóa phát triển"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO28A",
+      "name": "Đánh giá tác động của chương trình, dự án"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO31A",
+      "name": "Kinh tế đầu tư I"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO03A",
+      "name": "Kinh tế quốc tế"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO04A",
+      "name": "Kinh tế phát triển"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO33A",
+      "name": "Quản lý dự án 1"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO32A",
+      "name": "Kinh tế đầu tư 2"
+    },
+    {
+      "major": "Kinh tế đầu tư",
+      "code": "ECO13A",
+      "name": "Kinh tế số"
+    },
+    {
+      "major": "Tài chính",
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô"
+    },
+    {
+      "major": "Tài chính",
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô"
+    },
+    {
+      "major": "Tài chính",
+      "code": "MAT16A",
+      "name": "Phân tích định lượng trong kinh tế"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN86A",
+      "name": "Tài chính - tiền tệ"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN03A",
+      "name": "Tài chính quốc tế"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Tài chính",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Tài chính",
+      "code": "ACT02A",
+      "name": "Kế toán tài chính I"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN55A",
+      "name": "Phân tích tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN13A",
+      "name": "Thị trường chứng khoán"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN93A",
+      "name": "Công cụ phái sinh"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN104A",
+      "name": "Nguyên lý thẩm định giá tài sản"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN06A",
+      "name": "Thuế"
+    },
+    {
+      "major": "Tài chính",
+      "code": "MGT02A",
+      "name": "Quản trị doanh nghiệp"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN30A",
+      "name": "Tài chính công"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN07A",
+      "name": "Bảo hiểm"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN102A",
+      "name": "Ngân hàng Trung ương và Chính sách tiền tệ"
+    },
+    {
+      "major": "Tài chính",
+      "code": "IS42A",
+      "name": "Trí tuệ nhân tạo trong kinh doanh"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN84A",
+      "name": "Đầu tư tài chính"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN25A",
+      "name": "Tài chính doanh nghiệp II"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN75A",
+      "name": "Quản trị rủi ro tài chính"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN108A",
+      "name": "Tài trợ khởi nghiệp"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN122A",
+      "name": "Công nghệ tài chính"
+    },
+    {
+      "major": "Tài chính",
+      "code": "MGT34A",
+      "name": "Đạo đức nghề nghiệp"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN99A",
+      "name": "Chiến lược tài chính doanh nghiệp"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN41A",
+      "name": "Phân tích tài chính doanh nghiệp II"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN100A",
+      "name": "Ngân hàng đầu tư"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN106A",
+      "name": "Quản trị gia sản và danh mục đầu tư"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN107A",
+      "name": "Tài chính hành vi"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN111A",
+      "name": "Hoạch định thuế trong kinh doanh"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN95A",
+      "name": "Thuế quốc tế"
+    },
+    {
+      "major": "Tài chính",
+      "code": "FIN79A",
+      "name": "Quản lý thuế"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG60A",
+      "name": "Ngữ âm"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG48A",
+      "name": "Nghe Nói I"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG56A",
+      "name": "Đọc viết I"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG61A",
+      "name": "Ngữ pháp ứng dụng"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG12A",
+      "name": "Nghe nói II"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG57A",
+      "name": "Đọc viết II"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG08A",
+      "name": "Ngữ nghĩa từ vựng học"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG13A",
+      "name": "Nghe nói III"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG58A",
+      "name": "Đọc viết III"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG55A",
+      "name": "Biên dịch"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG17A",
+      "name": "Kỹ năng Đọc có phân tích"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG71A",
+      "name": "Phương pháp nghiên cứu khoa học"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG14A",
+      "name": "Nghe nói IV"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG59A",
+      "name": "Đọc viết IV"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG63A",
+      "name": "Phiên dịch"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "FIN86A",
+      "name": "Tài chính - tiền tệ"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "FIN45A",
+      "name": "Thị trường chứng khoán"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "FIN45A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "FIN42A",
+      "name": "Tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "FIN47A",
+      "name": "Thanh toán quốc tế"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "MGT20A",
+      "name": "Quản trị học"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG72A",
+      "name": "Tiếng Anh chuyên ngành I"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG73A",
+      "name": "Tiếng Anh chuyên ngành II"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG33A",
+      "name": "Giao tiếp liên văn hóa"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG46A",
+      "name": "Thư tín thương mại"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG37A",
+      "name": "Kỹ năng tranh biện"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG74A",
+      "name": "Tiếng Anh Tài chính - Ngân hàng"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "MKT25A",
+      "name": "Marketing dịch vụ tài chính - ngân hàng"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "ENG69A",
+      "name": "Đàm phán trong kinh doanh"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "MGT19A",
+      "name": "Hành vi tổ chức"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "FIN114A",
+      "name": "Ngân hàng số"
+    },
+    {
+      "major": "Ngôn ngữ anh",
+      "code": "FIN116A",
+      "name": "Đầu tư tài chính"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS22A",
+      "name": "Đàm phán trong kinh doanh quốc tế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "FIN53A",
+      "name": "Đầu tư quốc tế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "FIN06A",
+      "name": "Thuế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "LAW06A",
+      "name": "Luật thương mại quốc tế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "MGT02A",
+      "name": "Quản trị doanh nghiệp"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS29A",
+      "name": "Quản lý mua hàng toàn cầu"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS30A",
+      "name": "Tài trợ chuỗi cung ứng"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "FIN76A",
+      "name": "Thanh toán quốc tế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS11A",
+      "name": "Chính sách và nghiệp vụ hải quan"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS14A",
+      "name": "Logistic và vận tải quốc tế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS31A",
+      "name": "Quản lý kho hàng và phân phối"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS21A",
+      "name": "Chứng từ và thực hành xuất nhập khẩu"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS23A",
+      "name": "Quản lý rủi ro và bảo hiểm trong kinh doanh quốc tế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "MGT33A",
+      "name": "Quản trị dự án và đầu tư quốc tế"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS32A",
+      "name": "E-Logistic"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "BUS33A",
+      "name": "Kinh doanh Logistic"
+    },
+    {
+      "major": "Logistic chuỗi cung ứng",
+      "code": "MKT18A",
+      "name": "Quản trị truyền thông"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "MAT12A",
+      "name": "Đại số tuyến tính"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "MAT13A",
+      "name": "Giải tích"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS57A",
+      "name": "Nhập môn ngành Công nghệ thông tin"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS22A",
+      "name": "Cơ sở lập trình"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "MAT14A",
+      "name": "Xác suất thống kê"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "MAT05A",
+      "name": "Toán rời rạc"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS21A",
+      "name": "Cơ sở dữ liệu"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS53A",
+      "name": "Kiến trúc máy tính và hệ điều hành"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS07A",
+      "name": "Cấu trúc dữ liệu và giải thuật"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS53A",
+      "name": "Thiết kế Cơ sở dữ liệu"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS27A",
+      "name": "Lập trình hướng đối tượng"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS06A",
+      "name": "Mạng và truyền thông"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS19A",
+      "name": "Thiết kế Web"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "MIS07A",
+      "name": "Hệ quản trị Cơ sở dữ liệu"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "MIS08A",
+      "name": "Phân tích thiết kế hệ thống"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS23A",
+      "name": "Khai phá và phân tích dữ liệu"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS25A",
+      "name": "Lập trình .NET"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS16A",
+      "name": "An toàn và bảo mật thông tin"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS29A",
+      "name": "Lập trình nâng cao với C++"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS54A",
+      "name": "Trí tuệ nhân tạo"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "GRA88A",
+      "name": "Thực tập chuyên ngành"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS60A",
+      "name": "Quản lý dự án Công nghệ thông tin"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IT02A",
+      "name": "Kiểm thử và đảm bảo chất lượng phần mềm"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS26A",
+      "name": "Lập trình di động"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IT03A",
+      "name": "Kiến trúc phần mềm"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS24A",
+      "name": "Kho dữ liệu và kinh doanh thông minh"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS51A",
+      "name": "Lập trình Web với Php và MySQL"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS50A",
+      "name": "Lập trình Web với ASP.net và SQL server"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS55A",
+      "name": "Công nghệ dịch vụ tài chính"
+    },
+    {
+      "major": "Công nghệ thông tin",
+      "code": "IS56A",
+      "name": "Công nghệ ngân hàng số"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW48A",
+      "name": "Nhập môn luật học"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW15A",
+      "name": "Lý luận nhà nước và pháp luật"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW54A",
+      "name": "Luật học so sánh"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW17A",
+      "name": "Luật hiến pháp"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW24A",
+      "name": "Luật hành chính"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW18A",
+      "name": "Luật dân sự I"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW23A",
+      "name": "Luật dân sự II"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW65A",
+      "name": "Luật tố tụng dân sự"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW41A",
+      "name": "Luật hình sự I"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW47A",
+      "name": "Luật hình sự II"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW25A",
+      "name": "Luật tố tụng hình sự"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW25A",
+      "name": "Công pháp quốc tế"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW28A",
+      "name": "Tư pháp quốc tế"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "MGT01A",
+      "name": "Quản trị học"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "FIN86A",
+      "name": "Tài chính - tiền tệ"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp 1"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "MGT03A",
+      "name": "Quản trị nhân lực"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW27A",
+      "name": "Luật thương mại I"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW46A",
+      "name": "Luật thương mại II"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW06A",
+      "name": "Luật thương mại quốc tế"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW29A",
+      "name": "Luật đất đai"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW09A",
+      "name": "Luật lao động"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW53A",
+      "name": "Luật sở hữu trí tuệ"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW03A",
+      "name": "Luật ngân hàng"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW54A",
+      "name": "Luật tài chính công"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW10A",
+      "name": "Luật chứng khoán"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW30A",
+      "name": "Luật đầu tư"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW49A",
+      "name": "Kỹ năng thực hành nghề luật"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW36A",
+      "name": "Luật kinh doanh bảo hiểm"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW34A",
+      "name": "Luật kinh doanh bất động sản"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW52A",
+      "name": "Pháp luật kế toán"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW50A",
+      "name": "Pháp luật quản trị công ty"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW35A",
+      "name": "Luật cạnh tranh"
+    },
+    {
+      "major": "Luật kinh tế",
+      "code": "LAW51A",
+      "name": "Pháp luật thương mại điện tử"
+    },
+    {
+      "major": "Marketing",
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô"
+    },
+    {
+      "major": "Marketing",
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô"
+    },
+    {
+      "major": "Marketing",
+      "code": "LAW02A",
+      "name": "Luật kinh tế"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT21A",
+      "name": "Marketing"
+    },
+    {
+      "major": "Marketing",
+      "code": "MGT01A",
+      "name": "Quản trị học"
+    },
+    {
+      "major": "Marketing",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT23A",
+      "name": "Marketing số"
+    },
+    {
+      "major": "Marketing",
+      "code": "IS42A",
+      "name": "Trí tuệ nhân tạo trong kinh doanh"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT05A",
+      "name": "Quản trị Marketing"
+    },
+    {
+      "major": "Marketing",
+      "code": null,
+      "name": "Thương mại điện tử"
+    },
+    {
+      "major": "Marketing",
+      "code": "BUS25A",
+      "name": "Kinh doanh quốc tế"
+    },
+    {
+      "major": "Marketing",
+      "code": "MGT60A",
+      "name": "Kỹ năng quản trị"
+    },
+    {
+      "major": "Marketing",
+      "code": "FIN27A",
+      "name": "Quản trị tài chính doanh nghiệp"
+    },
+    {
+      "major": "Marketing",
+      "code": "ECO12A",
+      "name": "Quản trị dự án cơ bản"
+    },
+    {
+      "major": "Marketing",
+      "code": "FIN13A",
+      "name": "Thị trường chứng khoán"
+    },
+    {
+      "major": "Marketing",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Marketing",
+      "code": "MGT12A",
+      "name": "Hành vi tổ chức"
+    },
+    {
+      "major": "Marketing",
+      "code": "MGT03A",
+      "name": "Quản trị nhân lực"
+    },
+    {
+      "major": "Marketing",
+      "code": "MGT45A",
+      "name": "Quản trị thương hiệu"
+    },
+    {
+      "major": "Marketing",
+      "code": "MGT37A",
+      "name": "Văn hóa doanh nghiệp"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT27A",
+      "name": "Marketing Xã hội"
+    },
+    {
+      "major": "Marketing",
+      "code": null,
+      "name": "Phát triển sản phẩm/ dịch vụ"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT18A",
+      "name": "Quản trị truyền thông"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT08A",
+      "name": "Hành vi tiêu dùng"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT09A",
+      "name": "Nghiên cứu Marketing"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT19A",
+      "name": "Quản trị bán hàng"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT20A",
+      "name": "Marketing dịch vụ"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT03A",
+      "name": "Marketing quốc tế"
+    },
+    {
+      "major": "Marketing",
+      "code": "TRM15A",
+      "name": "Quản trị sự kiện"
+    },
+    {
+      "major": "Marketing",
+      "code": "MKT31A",
+      "name": "Sáng tạo nội dung số"
+    },
+    {
+      "major": "Marketing",
+      "code": null,
+      "name": "Quản trị mối quan hệ khách hàng điện tử"
+    },
+    {
+      "major": "Marketing",
+      "code": "MGT44A",
+      "name": "Quản trị chuỗi cung ứng"
+    },
+    {
+      "major": "Marketing",
+      "code": "BUS29A",
+      "name": "Quản lý mua hàng toàn cầu"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS01",
+      "name": "Nhập môn khoa học dữ liệu"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "ECO01A",
+      "name": "Kinh tế vi mô"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "ECO02A",
+      "name": "Kinh tế vĩ mô"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "FIN86A",
+      "name": "Tài chính - tiền tệ"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "IS21A",
+      "name": "Cơ sở dữ liệu"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "BUS25A",
+      "name": "Kinh doanh quốc tế"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "IS48A",
+      "name": "Lập trình Python"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "IS27A",
+      "name": "Lập trình hướng đối tượng"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "MAT17A",
+      "name": "Toán cho khoa học dữ liệu"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "IS07A",
+      "name": "Cấu trúc dữ liệu và giải thuật"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "GRA92A",
+      "name": "Thực tế nghề nghiệp"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "FIN30A",
+      "name": "Tài chính công"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "FIN03A",
+      "name": "Tài chính quốc tế"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "MKT21A",
+      "name": "Marketing"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "MKT23A",
+      "name": "Marketing số"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "BUS37A",
+      "name": "Thương mại điện tử căn bản"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS02A",
+      "name": "Thống kê ứng dụng hiện đại"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS04A",
+      "name": "Kinh doanh số"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS05A",
+      "name": "Phân tích và khai phá dữ liệu với Python"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS06A",
+      "name": "Công nghệ dữ liệu lớn"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "IS54A",
+      "name": "Trí tuệ nhân tạo"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS07A",
+      "name": "Khoa học dữ liệu nâng cao"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS08A",
+      "name": "Trực quan hóa dữ liệu"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS09A",
+      "name": "Các vấn đề đương đại trong Khoa học dữ liệu"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS10A",
+      "name": "Ứng dụng khoa học dữ liệu trong Tài chính - Ngân hàng"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "FIN55A",
+      "name": "Phân tích tài chính doanh nghiệp I"
+    },
+    {
+      "major": "Khoa học dữ liệu trong kinh tế và kinh doanh",
+      "code": "DS11A",
+      "name": "Ra quyết định trong kinh doanh theo định hướng dữ liệu"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS20A",
+      "name": "Nhập môn hệ thống thông tin"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS22A",
+      "name": "Cơ sở lập trình"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS21A",
+      "name": "Cơ sở dữ liệu"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "ACT01A",
+      "name": "Nguyên lý kế toán"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS07A",
+      "name": "Cấu trúc dữ liệu và giải thuật"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS53A",
+      "name": "Thiết kế cơ sở dữ liệu"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MAT05A",
+      "name": "Toán rời rạc"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MIS07A",
+      "name": "Hệ quản trị cơ sở dữ liệu"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS35A",
+      "name": "Thương mại điện tử"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS19A",
+      "name": "Thiết kế Web"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MIS02A",
+      "name": "Hệ thống thông tin quản lý"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS06A",
+      "name": "Mạng và truyền thông"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS25A",
+      "name": "Lập trình .NET"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS23A",
+      "name": "Khai phá và phân tích dữ liệu"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MGT01A",
+      "name": "Quản trị học"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MKT21A",
+      "name": "Marketing"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MGT12A",
+      "name": "Hành vi tổ chức"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "FIN02A",
+      "name": "Tài chính doanh nghiệp"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "FIN17A",
+      "name": "Ngân hàng thương mại"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MIS08A",
+      "name": "Phân tích thiết kế hệ thống"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS60A",
+      "name": "Quản lý dự án công nghệ thông tin"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS54A",
+      "name": "Trí tuệ nhân tạo"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "GRA50A",
+      "name": "Thực tập chuyên ngành"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS51A",
+      "name": "Lập trình Web với Php và MySQL"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS58A",
+      "name": "Phân tích nghiệp vụ"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS24A",
+      "name": "Kho dữ liệu và kinh doanh thông minh"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS34A",
+      "name": "Hệ thống hoạch định tài nguyên doanh nghiệp"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS55A",
+      "name": "Công nghệ dịch vụ tài chính"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "MIS06A",
+      "name": "Các hệ thống thông tin trong ngân hàng"
+    },
+    {
+      "major": "Hệ thống thông tin quản lý",
+      "code": "IS56A",
+      "name": "Công nghệ ngân hàng số"
+    }
+  ]
+}

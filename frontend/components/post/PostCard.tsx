@@ -88,6 +88,17 @@ export default function PostCard({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewer, setViewer] = useState<AuthUser | null>(null);
+  const removeCommentThread = (id: string) => {
+    const removed = new Set([id]);
+    let previousSize = 0;
+    while (previousSize !== removed.size) {
+      previousSize = removed.size;
+      for (const item of comments) if (item.parentId && removed.has(item.parentId)) removed.add(item.id);
+    }
+    setComments(current => current.filter(item => !removed.has(item.id)));
+    setCommentsCount(current => Math.max(0, current - removed.size));
+    if (replyTo && removed.has(replyTo.id)) setReplyTo(null);
+  };
   const authenticatedUser = useAuthUser();
   const mentionMatches = mentionQuery === null ? [] : mentionFriends.filter((friend) => {
     const query = mentionQuery.trim().toLocaleLowerCase();
@@ -446,7 +457,7 @@ export default function PostCard({
                       <div className="comment-meta-row">
                         <RelativeTime className="comment-timestamp" value={c.createdAt}/>
                         <button type="button" className="comment-reply-button" onClick={()=>{const label=`@${c.author.name}`;setReplyTo(c);setCommentInput(`${label} `);setSelectedMentions([{userId:c.author.id,name:c.author.name,start:0,end:label.length}]);setMentionQuery(null);}}>Trả lời</button>
-                        {moderatorGroupId&&c.author.id!==getAuthUser()?.id&&<button type="button" className="comment-reply-button" onClick={()=>{void dialog.confirm({title:'Xóa bình luận khỏi nhóm?',message:'Bình luận sẽ không còn hiển thị với thành viên.',confirmLabel:'Xóa bình luận',tone:'danger'}).then(ok=>{if(ok)return removeGroupComment(moderatorGroupId,c.id).then(()=>{setComments(current=>current.filter(item=>item.id!==c.id));setCommentsCount(current=>Math.max(0,current-1));dialog.notify({title:'Đã xóa bình luận',tone:'success'});});}).catch(e=>setActionError(e instanceof Error?e.message:'Không thể xóa bình luận.'));}}>Xóa khỏi nhóm</button>}
+                        {moderatorGroupId&&c.author.id!==getAuthUser()?.id&&<button type="button" className="comment-reply-button" onClick={()=>{void dialog.confirm({title:'Xóa bình luận khỏi nhóm?',message:'Bình luận và các phản hồi sẽ không còn hiển thị với thành viên.',confirmLabel:'Xóa bình luận',tone:'danger'}).then(ok=>{if(ok)return removeGroupComment(moderatorGroupId,c.id).then(()=>{removeCommentThread(c.id);dialog.notify({title:'Đã xóa bình luận',tone:'success'});});}).catch(e=>setActionError(e instanceof Error?e.message:'Không thể xóa bình luận.'));}}>Xóa khỏi nhóm</button>}
                         <div className="comment-manage-actions">{c.author.id===getAuthUser()?.id?<><button onClick={()=>setCommentAction({comment:c,mode:'edit'})}>Sửa</button><button onClick={()=>setCommentAction({comment:c,mode:'delete'})}>Xóa</button></>:<button onClick={()=>setCommentAction({comment:c,mode:'report'})}>Báo cáo</button>}</div>
                       </div>
                     </div>
@@ -462,7 +473,7 @@ export default function PostCard({
       </div>
       {lightboxIndex!==null&&imageMedia[lightboxIndex]&&<div className="post-media-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh bài viết" onClick={()=>setLightboxIndex(null)}><button type="button" className="lightbox-close" onClick={()=>setLightboxIndex(null)} aria-label="Đóng">×</button>{imageMedia.length>1&&<button type="button" className="lightbox-prev" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex-1+imageMedia.length)%imageMedia.length);}} aria-label="Ảnh trước">‹</button>}<img src={safeImageSrc(imageMedia[lightboxIndex].url)} alt="Nội dung bài viết" onClick={event=>event.stopPropagation()}/>{imageMedia.length>1&&<button type="button" className="lightbox-next" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex+1)%imageMedia.length);}} aria-label="Ảnh tiếp theo">›</button>}<span className="lightbox-counter">{lightboxIndex+1} / {imageMedia.length}</span></div>}
       <PostActionModal mode={actionMode} post={post} content={content} privacy={privacy} onClose={()=>setActionMode(null)} onUpdated={updated=>{setPost(updated);setContent(updated.content);setPrivacy(updated.privacy);if(updated.status === "PENDING")setIsDeleted(true);}} onDeleted={()=>setIsDeleted(true)} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
-      <CommentActionModal comment={commentAction?.comment||null} mode={commentAction?.mode||null} onClose={()=>setCommentAction(null)} onUpdated={updated=>setComments(current=>current.map(item=>item.id===updated.id?updated:item))} onDeleted={()=>{if(commentAction){setComments(current=>current.filter(item=>item.id!==commentAction.comment.id));setCommentsCount(current=>Math.max(0,current-1));}}} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
+      <CommentActionModal comment={commentAction?.comment||null} mode={commentAction?.mode||null} onClose={()=>setCommentAction(null)} onUpdated={updated=>setComments(current=>current.map(item=>item.id===updated.id?updated:item))} onDeleted={()=>{if(commentAction)removeCommentThread(commentAction.comment.id);}} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
     </article>
   );
 }

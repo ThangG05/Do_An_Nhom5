@@ -67,6 +67,9 @@ class HeuristicReranker:
         ))
         tuition_query = "hoc phi" in _fold(normalized_query)
         scholarship_query = "hoc bong" in _fold(normalized_query)
+        scholarship_criteria_query = scholarship_query and any(
+            phrase in _fold(normalized_query) for phrase in ("dieu kien", "tieu chuan", "tieu chi")
+        )
         procedural = any(term in normalized_query for term in (
             "như thế nào", "cách", "hướng dẫn", "đăng nhập", "truy cập", "thủ tục",
         ))
@@ -94,7 +97,12 @@ class HeuristicReranker:
             folded_title = _fold(hit.title)
             tuition_title = 1.0 if tuition_query and "hoc phi" in folded_title else 0.0
             scholarship_title = 1.0 if scholarship_query and "hoc bong" in folded_title else 0.0
-            scholarship_content = 1.0 if scholarship_query and "hoc bong" in _fold(hit.content) else 0.0
+            folded_content = _fold(hit.content)
+            scholarship_content = 1.0 if scholarship_query and "hoc bong" in folded_content else 0.0
+            scholarship_criteria = 1.0 if scholarship_criteria_query and re.search(
+                r"(?:dieu kien|tieu chuan|tieu chi)[^\n.]{0,90}(?:xet cap )?hoc bong",
+                folded_content,
+            ) else 0.0
             unrelated_fee_title = 1.0 if tuition_query and "dich vu" in folded_title \
                 and "hoc phi" not in folded_title else 0.0
             relevance = (fusion_scores.get(hit.chunk_id, 0.0) * 20.0
@@ -103,6 +111,7 @@ class HeuristicReranker:
                          + 0.45 * distinctive_title + 0.45 * numeric_evidence
                          + 0.35 * procedural_evidence + 0.55 * tuition_title
                          + 0.85 * scholarship_title + 0.20 * scholarship_content
+                         + 1.20 * scholarship_criteria
                          - 0.40 * unrelated_fee_title)
             freshness = _timestamp(hit.published_at) if context.latest else 0.0
             # An explicit latest/current request is temporal first: an older notice

@@ -95,3 +95,14 @@ def test_reranker_promotes_scholarship_notice_over_generic_student_content() -> 
         {"generic": 0.03, "scholarship": 0.015},
     )
     assert ranked[0].chunk_id == "scholarship"
+
+
+def test_scholarship_criteria_outrank_funding_from_same_document() -> None:
+    funding = Hit("funding", "Quy chế xét cấp học bổng", "Nguồn học bổng trích từ học phí.")
+    criteria = Hit("criteria", "Quy chế xét cấp học bổng",
+                   "3. Điều kiện, tiêu chuẩn xét cấp học bổng: sinh viên đạt học tập và rèn luyện loại khá.")
+    ranked = HeuristicReranker().rerank(
+        [funding, criteria], RerankContext("Điều kiện xét học bổng là gì?"),
+        {"funding": 0.035, "criteria": 0.015},
+    )
+    assert ranked[0].chunk_id == "criteria"

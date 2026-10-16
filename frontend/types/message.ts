@@ -21,6 +21,8 @@ export interface Message {
   status: MessageStatus;
   type: MessageType;
   attachments?: MessageAttachment[];
+  replyTo?: { id: string; senderName: string; content: string; isRecalled: boolean } | null;
+  isRecalled?: boolean;
 }
 
 export interface SharedMedia {

@@ -127,6 +127,12 @@ def test_low_quality_spaced_pdf_text_heuristic() -> None:
     assert not pdf_text_requires_ocr("Mức học phí là 680.000 đồng trên một tín chỉ. " * 10)
 
 
+def test_broken_vietnamese_pdf_font_map_requires_ocr() -> None:
+    corrupt = "HOC VIEN NGÄN HÄNG ban hänh quy che xet, cäp hoc bong. " * 20
+    assert pdf_text_requires_ocr(corrupt)
+    assert not pdf_text_requires_ocr("Học viện Ngân hàng ban hành quy chế xét, cấp học bổng. " * 20)
+
+
 def test_itde_profile_extractor_prefers_profile_container() -> None:
     body = (b"<html><head><title>Lecturer</title></head><body><div class='menu'>Noisy menu "
             b"content repeated many times</div><div class='stu-db'><h1>Lecturer Name</h1>"

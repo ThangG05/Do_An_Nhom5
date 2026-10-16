@@ -2,6 +2,7 @@
 
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useSearchParams} from "next/navigation";
+import Link from "next/link";
 import PostCard from "@/components/post/PostCard";
 import PendingGroupPostCard from "@/components/admin/PendingGroupPostCard";
 import ReportQueue from "@/components/admin/ReportQueue";
@@ -16,6 +17,7 @@ import {useDialog} from "@/components/ui/DialogProvider";
 import RelativeTime from "@/components/ui/RelativeTime";
 import StudyLibrary from "@/components/group/StudyLibrary";
 import {safeImageSrc} from "@/lib/media";
+import {pendingStudyDocumentCount} from "@/lib/study-library";
 
 type Tab = "overview" | "pending" | "posts" | "members" | "reports" | "documents";
 const dedicatedSlugs = new Set(["pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"]);
@@ -37,6 +39,7 @@ export default function GroupAdminPage() {
   const [posts, setPosts] = useState<GroupPost[]>([]);
   const [joins, setJoins] = useState<GroupJoinRequest[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
+  const [pendingDocuments, setPendingDocuments] = useState(0);
   const [tab, setTab] = useState<Tab>("overview");
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
@@ -97,6 +100,25 @@ export default function GroupAdminPage() {
   }, [groupId]);
   useEffect(() => { void load().catch(cause => setError(cause instanceof Error ? cause.message : "Không tải được dữ liệu nhóm.")); }, [load]);
 
+  useEffect(() => {
+    if (!groupId || active?.slug !== "hoc-tap") { setPendingDocuments(0); return; }
+    let alive = true;
+    let loadingCount = false;
+    const refreshCount = async () => {
+      if (!alive || loadingCount || document.visibilityState === "hidden") return;
+      loadingCount = true;
+      try {
+        const result = await pendingStudyDocumentCount(groupId);
+        if (alive) setPendingDocuments(result.count);
+      } catch { /* Keep the last known badge if polling briefly fails. */ }
+      finally { loadingCount = false; }
+    };
+    void refreshCount();
+    const timer = window.setInterval(() => void refreshCount(), 30_000);
+    document.addEventListener("visibilitychange", refreshCount);
+    return () => { alive = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", refreshCount); };
+  }, [groupId, active?.slug]);
+
   const act = async (work: () => Promise<unknown>) => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -115,7 +137,7 @@ export default function GroupAdminPage() {
     if (reason) await act(() => moderateGroupPost(groupId, post.id, "REJECT", reason));
   };
   const kickMember = async (member: GroupMember) => {
-    if (await dialog.confirm({title: "Mời thành viên khỏi nhóm?", message: `${member.name} sẽ mất quyền truy cập nội dung dành cho thành viên.`, confirmLabel: "Mời khỏi nhóm", tone: "danger"})) await act(() => kickGroupMember(groupId, member.id));
+    if (await dialog.confirm({title: "Xóa thành viên khỏi nhóm?", message: `${member.name} sẽ mất quyền truy cập nội dung dành cho thành viên.`, confirmLabel: "Xóa khỏi nhóm", tone: "danger"})) await act(() => kickGroupMember(groupId, member.id));
   };
   const stats = useMemo(() => [
     {label: "Chờ duyệt", value: pending.length},
@@ -137,7 +159,7 @@ export default function GroupAdminPage() {
       ["overview", "Tổng quan"], ["pending", `Kiểm duyệt${pending.length ? ` (${pending.length})` : ""}`],
       ["posts", "Bài đã duyệt"], ["members", `Thành viên${members.length ? ` (${members.length})` : ""}`], ["reports", "Báo cáo"],
       ...(active?.slug === "hoc-tap" ? [["documents", "Kho tài liệu"]] : []),
-    ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}</button>)}</nav>
+    ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{label}</span>{id === "documents" && pendingDocuments > 0 && <span className="group-admin-pending-badge" aria-label={`${pendingDocuments} tài liệu chờ duyệt`}>{pendingDocuments}</span>}</button>)}</nav>
 
     {tab === "overview" && <section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid">
       <button type="button" onClick={() => setTab("pending")}><b>{pending.length}</b><span>Bài đang chờ quyết định</span></button>
@@ -154,11 +176,11 @@ export default function GroupAdminPage() {
 
     {tab === "members" && <section className="group-admin-panel"><div className="panel-title-row"><h2>Thành viên và yêu cầu gia nhập</h2><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm theo tên hoặc mã sinh viên" /></div>
       {joins.map(request => <article className="moderation-row join" key={request.id}><div><strong>{request.name}</strong><p>@{request.username}</p></div><div><button type="button" disabled={busy} onClick={() => { void act(() => decideGroupJoin(groupId, request.id, "APPROVE")); }}>Chấp nhận</button><button type="button" disabled={busy} className="danger" onClick={() => { void act(() => decideGroupJoin(groupId, request.id, "REJECT")); }}>Từ chối</button></div></article>)}
-      <div className="member-table">{members.map(member => <article key={member.id}><div className="member-identity"><img src={safeImageSrc(member.avatar_url)} alt="" /><span><strong>{member.name}</strong><small>@{member.username} · {member.student_code || "Chưa có MSSV"}</small></span></div><b>{member.role}</b>{member.role === "MEMBER" && <button type="button" disabled={busy} className="danger" onClick={() => { void kickMember(member); }}>Mời khỏi nhóm</button>}</article>)}</div>
+      <div className="member-table">{members.map(member => <article key={member.id}><Link href={`/profile/${member.id}`} className="member-identity" aria-label={`Xem trang cá nhân của ${member.name}`}><img src={safeImageSrc(member.avatar_url)} alt="" /><span><strong>{member.name}</strong><small>{member.student_code ? `Mã sinh viên: ${member.student_code}` : member.username}</small></span></Link><b>{member.role}</b>{member.role === "MEMBER" && <button type="button" disabled={busy} className="danger" onClick={() => { void kickMember(member); }}>Xóa khỏi nhóm</button>}</article>)}</div>
       {!members.length && <p className="admin-empty-state">Không tìm thấy thành viên.</p>}
     </section>}
 
     {tab === "reports" && groupId && <ReportQueue groupId={groupId} />}
-    {tab === "documents" && active?.slug === "hoc-tap" && <StudyLibrary groupId={groupId} isAdmin canRead />}
+    {tab === "documents" && active?.slug === "hoc-tap" && <StudyLibrary groupId={groupId} isAdmin canRead pendingCount={pendingDocuments} />}
   </main>;
 }

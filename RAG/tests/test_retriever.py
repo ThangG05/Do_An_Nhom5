@@ -69,6 +69,7 @@ def test_rrf_rewards_chunks_found_by_both_retrievers() -> None:
 def test_structured_question_allows_three_chunks_from_one_document() -> None:
     assert _per_document_limit("Mức thu học phí là bao nhiêu?", 2) == 3
     assert _per_document_limit("Giảng viên Triệu Thu Hương là ai?", 2) == 2
+    assert _per_document_limit("Điều kiện xét học bổng là gì?", 2) == 4
 
 
 @pytest.mark.asyncio

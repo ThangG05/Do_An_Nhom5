@@ -44,9 +44,11 @@ def test_study_library_requires_membership_and_admin_review(
     r2 = FakeR2()
     monkeypatch.setattr(library, "get_r2_client", lambda: r2)
     monkeypatch.setattr(library.settings, "R2_STUDY_BUCKET_NAME", "test-private-study")
+    major_id = db_session.execute(text("SELECT id FROM majors WHERE code='IT01'")).scalar_one()
     subject = client.put("/api/v1/admin/subjects", headers=auth_headers(superadmin), json={
         "code": f"IT{uuid.uuid4().hex[:10]}", "name": "Môn kiểm thử tích hợp",
         "source_note": "Nguồn thử nghiệm tích hợp", "is_active": True,
+        "major_ids": [str(major_id)],
     })
     assert subject.status_code == 200, subject.text
 
@@ -70,6 +72,9 @@ def test_study_library_requires_membership_and_admin_review(
                             json={"decision": "APPROVE"})
     assert approved.status_code == 200, approved.text
     assert len(client.get(path, headers=auth_headers(member)).json()) == 1
+    assert len(client.get(path, params={"major_id": str(major_id)}, headers=auth_headers(member)).json()) == 1
+    assert client.get(path, params={"category": "GENERAL"}, headers=auth_headers(member)).json() == []
+    assert client.get(path, params={"major_id": str(uuid.uuid4())}, headers=auth_headers(member)).json() == []
     download = client.get(file_path, headers=auth_headers(member))
     assert download.status_code == 200
     assert download.json()["url"] == "https://r2.test/signed-download"

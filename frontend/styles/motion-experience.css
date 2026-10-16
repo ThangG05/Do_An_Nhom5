@@ -1,0 +1,63 @@
+/* Decorative depth lives on discovery surfaces, outside reading and typing areas. */
+:is(.home-welcome, .live-groups-hero) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+:is(.home-welcome, .live-groups-hero)::before,
+:is(.home-welcome, .live-groups-hero)::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: clamp(180px, 24vw, 360px);
+  aspect-ratio: 1;
+  right: -5%;
+  top: -90%;
+  border-radius: 50%;
+  border: 1px solid #ffffff25;
+  background: radial-gradient(circle at 30% 30%, #b5e5ff26, #ffffff05 60%, transparent 72%);
+  box-shadow: inset 0 0 35px #ffffff0c;
+}
+:is(.home-welcome, .live-groups-hero)::after {
+  right: 12%;
+  top: 35%;
+  width: clamp(120px, 16vw, 240px);
+  border-color: #f9c64a30;
+}
+.live-group-tabs > button,
+.home-side-card:not(.home-quick-links) {
+  transition: transform 220ms ease-out, box-shadow 220ms ease-out, border-color 220ms ease-out;
+}
+:is(.home-shortcut-list a, .home-quick-links a, .assistant-welcome button, .btn) {
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out, background-color 180ms ease-out;
+}
+:is(.live-group-tabs > button, .home-shortcut-list a, .home-quick-links a, .assistant-welcome button, .btn):focus-visible {
+  outline: 3px solid #5dabe2;
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(.home-welcome, .live-groups-hero)::before { animation: hub-orbit 14s ease-in-out 2 alternate; }
+  :is(.home-welcome, .live-groups-hero)::after { animation: hub-orbit 17s ease-in-out 2 alternate-reverse; }
+  :is(.home-shortcut-list a, .home-quick-links a, .assistant-welcome button, .btn:not(:disabled)):active { transform: scale(.98); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-depth-active="true"] {
+    transform: perspective(1000px) rotateX(var(--depth-x, 0deg)) rotateY(var(--depth-y, 0deg)) translateY(-3px);
+    box-shadow: 0 14px 30px #0a2b4b18, 0 3px 8px #0a2b4b0a;
+  }
+  .home-shortcut-list a:hover { transform: translateX(3px); }
+  .home-quick-links a:hover > span { transform: translateX(3px); }
+  .home-quick-links a > span { transition: transform 180ms ease-out; }
+  :is(.assistant-welcome button, .btn:not(:disabled)):hover { transform: translateY(-2px); }
+}
+[data-theme="dark"] [data-depth-active="true"] { box-shadow: 0 14px 30px #0005, 0 0 0 1px #79bded35; }
+@keyframes hub-orbit {
+  from { transform: translate3d(0, 0, 0) rotate(-10deg); }
+  to { transform: translate3d(-18px, 18px, 0) rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.home-welcome, .live-groups-hero)::before,
+  :is(.home-welcome, .live-groups-hero)::after { animation: none; }
+  :is(.live-group-tabs > button, .home-side-card, .home-shortcut-list a, .home-quick-links a, .assistant-welcome button, .btn) { transition: none; }
+}

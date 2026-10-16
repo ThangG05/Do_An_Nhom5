@@ -18,5 +18,5 @@ def queue(user:CurrentUser,db:Db,report_status:Annotated[str|None,Query(alias="s
 @router.get("/admin/{report_id}", response_model=ReportDetailResponse)
 def detail(report_id:uuid.UUID,user:CurrentUser,db:Db):return report_service.get_detail(db,user,report_id)
 
-@router.patch("/admin/{report_id}",status_code=204)
-def resolve(report_id:uuid.UUID,payload:ReportResolveRequest,user:CurrentUser,db:Db):report_service.resolve(db,user,report_id,payload);return Response(status_code=204)
+@router.patch("/admin/{report_id}")
+def resolve(report_id:uuid.UUID,payload:ReportResolveRequest,user:CurrentUser,db:Db):return {"message":report_service.resolve(db,user,report_id,payload)}

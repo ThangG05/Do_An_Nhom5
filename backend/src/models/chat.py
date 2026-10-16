@@ -14,6 +14,12 @@ class SendMessageRequest(BaseModel):
         return self
 class AttachmentResponse(BaseModel): id:str; type:str; url:str; name:str; size:str|None=None
 class SharedAttachmentsResponse(BaseModel): media:list[AttachmentResponse]=Field(default_factory=list); files:list[AttachmentResponse]=Field(default_factory=list)
-class MessageResponse(BaseModel): id:str; conversationId:str; senderId:str; senderName:str; senderAvatar:str; content:str; timestamp:str; status:str; type:str; attachments:list[AttachmentResponse]=Field(default_factory=list)
+class ReplyMessageResponse(BaseModel):
+    id:str; senderName:str; content:str; isRecalled:bool=False
+class MessageResponse(BaseModel):
+    id:str; conversationId:str; senderId:str; senderName:str; senderAvatar:str; content:str; timestamp:str; status:str; type:str
+    attachments:list[AttachmentResponse]=Field(default_factory=list)
+    replyTo:ReplyMessageResponse|None=None
+    isRecalled:bool=False
 class ConversationResponse(BaseModel): id:str; participantId:str; participantName:str; participantAvatar:str; isOnline:bool=False; lastActive:str="Ngoại tuyến"; lastMessageSnippet:str=""; lastMessageTime:str=""; unreadCount:int=0; bio:str=""; role:str="Sinh viên"; theme:str="blue"; nickname:str|None=None; isMuted:bool=False; sharedMedia:list[AttachmentResponse]=Field(default_factory=list); sharedFiles:list[AttachmentResponse]=Field(default_factory=list)
 class UnreadMessagesResponse(BaseModel): unread_count:int

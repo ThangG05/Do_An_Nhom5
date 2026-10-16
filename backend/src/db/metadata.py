@@ -96,7 +96,9 @@ def build_target_metadata() -> MetaData:
     sa.Table(
         "subjects", metadata,
         sa.Column("id", uuid, primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("code", sa.String(40), nullable=False, unique=True),
+        sa.Column("code", sa.String(40), nullable=True),
+        sa.Column("category", sa.String(16), nullable=False, server_default="SPECIALIZED"),
+        sa.Column("needs_review", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("institution", sa.String(150), nullable=False, server_default="Học viện Ngân hàng"),
         sa.Column("source_note", sa.String(500), nullable=False),
@@ -105,6 +107,22 @@ def build_target_metadata() -> MetaData:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.CheckConstraint("length(trim(code)) > 0 AND length(trim(name)) > 0", name="ck_subject_identity"),
         sa.Index("idx_subjects_lookup", "is_active", "name"),
+        sa.Index("idx_subjects_code", "code"),
+        sa.CheckConstraint("category IN ('GENERAL','SPECIALIZED')", name="ck_subject_category"),
+    )
+    subjects = metadata.tables["subjects"]
+    sa.Index("uq_subject_identity", sa.func.coalesce(subjects.c.code, ""), subjects.c.name,
+             subjects.c.category, unique=True)
+    sa.Table("majors", metadata,
+        sa.Column("id", uuid, primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("code", sa.String(40), nullable=True, unique=True),
+        sa.Column("name", sa.String(255), nullable=False, unique=True),
+        sa.Column("source_note", sa.String(500), nullable=False),
+    )
+    sa.Table("major_subjects", metadata,
+        sa.Column("major_id", uuid, sa.ForeignKey("majors.id", ondelete="CASCADE"), primary_key=True),
+        sa.Column("subject_id", uuid, sa.ForeignKey("subjects.id", ondelete="RESTRICT"), primary_key=True),
+        sa.Index("idx_major_subjects_subject", "subject_id"),
     )
     sa.Table(
         "study_documents", metadata,

@@ -4,6 +4,8 @@ from dataclasses import asdict
 import json
 import sys
 from uuid import UUID
+from app.core.config import get_settings
+from app.core.logging import configure_logging
 from app.db.session import AsyncSessionLocal, dispose_engine
 from app.rag.embeddings import get_embedding_provider
 from app.rag.retriever import RetrievalService
@@ -31,4 +33,7 @@ async def main() -> None:
 
 if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"): sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"): sys.stderr.reconfigure(encoding="utf-8")
+    settings = get_settings()
+    configure_logging(settings.log_level, settings.log_json)
     asyncio.run(main())

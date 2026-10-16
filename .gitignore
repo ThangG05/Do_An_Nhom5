@@ -49,6 +49,9 @@ Thumbs.db
 
 # Data (never commit large data)
 data/
+!backend/alembic/data/
+backend/alembic/data/*
+!backend/alembic/data/hvnh_catalog_20261016.json
 *.db
 *.sqlite3
 

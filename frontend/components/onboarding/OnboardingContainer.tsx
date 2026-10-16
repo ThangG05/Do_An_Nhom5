@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CommunityUniverse from "./CommunityUniverse";
 
 const features = [
   { icon: "✦", number: "01", title: "Cập nhật mỗi ngày", description: "Theo dõi những thông tin và hoạt động đáng chú ý trong cộng đồng HVNH." },
@@ -25,22 +26,7 @@ export default function OnboardingContainer() {
           <div className="public-landing-note"><span className="public-note-icons" aria-hidden="true"><i>H</i><i>V</i><i>N</i></span><span>Dành riêng cho email <strong>@hvnh.edu.vn</strong></span></div>
         </div>
 
-        <div className="public-product-stage" aria-label="Hình minh họa giao diện HVNH Hub">
-          <div className="public-product-halo" aria-hidden="true" />
-          <div className="public-product-orbit public-product-orbit-one" aria-hidden="true" />
-          <div className="public-product-orbit public-product-orbit-two" aria-hidden="true" />
-          <span className="public-product-spark public-product-spark-one" aria-hidden="true">✦</span>
-          <span className="public-product-spark public-product-spark-two" aria-hidden="true">✧</span>
-          <div className="public-product-window" aria-hidden="true">
-            <div className="public-product-bar"><span><img src="/assets/logo.png" alt="" /><b>HVNH Hub</b></span><span className="public-product-bar-nav">Trang chủ　 Hội nhóm　 Trợ lý AI</span><span className="public-product-avatar">S</span></div>
-            <div className="public-product-body">
-              <div className="public-product-sidebar"><b>Khám phá</b><span>⌂ <i>Trang chủ</i></span><span>◈ <i>Hội nhóm</i></span><span>✳ <i>Trợ lý AI</i></span><div className="public-product-side-card"><small>GÓC SINH VIÊN</small><strong>Một nơi để chia sẻ mọi điều.</strong></div></div>
-              <div className="public-product-feed"><div className="public-product-greeting"><small>CỘNG ĐỒNG HVNH</small><strong>Chào bạn đến với Hub ✦</strong><span>Có gì mới ở Học viện hôm nay?</span></div><div className="public-product-post"><div className="public-product-post-author"><span>HV</span><b>Cộng đồng sinh viên<small>Bài viết trong Học tập</small></b></div><div className="public-product-post-lines"><i/><i/><i/></div><div className="public-product-post-image"><span>📚</span><b>Chia sẻ kiến thức.<br />Lan tỏa cảm hứng.</b></div><div className="public-product-post-actions">♡ Thích <span>▢ Bình luận</span> ↗ Chia sẻ</div></div></div>
-            </div>
-          </div>
-          <div className="public-floating-card public-floating-group" aria-hidden="true"><span>◈</span><b>Hội nhóm</b><small>Tìm đúng cộng đồng của bạn</small></div>
-          <div className="public-floating-card public-floating-ai" aria-hidden="true"><span>✳</span><b>Trợ lý HVNH</b><small>Tra cứu có nguồn tham khảo</small></div>
-        </div>
+        <CommunityUniverse />
       </section>
 
       <section id="tinh-nang" className="public-landing-features" aria-labelledby="public-features-title"><div className="public-section-heading"><span>KHÁM PHÁ HVNH HUB</span><h2 id="public-features-title">Mọi trải nghiệm sinh viên, <em>gói trong một nơi.</em></h2></div><div className="public-feature-grid">{features.map(feature => <article key={feature.number}><div className="public-feature-top"><span>{feature.icon}</span><small>{feature.number}</small></div><h3>{feature.title}</h3><p>{feature.description}</p></article>)}</div></section>

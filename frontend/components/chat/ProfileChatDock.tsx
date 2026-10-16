@@ -40,10 +40,12 @@ export default function ProfileChatDock({ userId, name, avatar, onClose }: Props
     if (!conversationId) return;
     const receive = (event: Event) => {
       const data = (event as CustomEvent<Record<string, unknown>>).detail;
-      if (data?.event !== "message.created") return;
+      if (data?.event !== "message.created" && data?.event !== "message.recalled") return;
       const incoming = data.message as Message | undefined;
       if (incoming?.conversationId !== conversationId) return;
-      setMessages(previous => previous.some(item => item.id === incoming.id) ? previous : [...previous, incoming]);
+      setMessages(previous => data.event === "message.recalled"
+        ? previous.map(item => item.id === incoming.id ? incoming : item)
+        : previous.some(item => item.id === incoming.id) ? previous : [...previous, incoming]);
     };
     window.addEventListener("hvnh-realtime", receive);
     return () => window.removeEventListener("hvnh-realtime", receive);

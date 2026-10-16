@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from "react";
 import {useSearchParams} from "next/navigation";
 import {Conversation,Message,RealtimeCallEvent} from "@/types/message";
-import {createDirectConversation,fetchConversations,fetchMessages,sendChatMessage,updateConversationSettings} from "@/lib/api";
+import {createDirectConversation,fetchConversations,fetchMessages,recallChatMessage,sendChatMessage,updateConversationSettings} from "@/lib/api";
 import {getAuthUser} from "@/lib/auth";
 import {useRealtime} from "@/components/realtime/RealtimeProvider";
 
@@ -12,13 +12,13 @@ export function useMessenger(){
  const loadConversations=useCallback(async()=>{const rows=await fetchConversations();setConversations(rows);setActiveId(id=>id||rows[0]?.id||"");return rows;},[]);
  useEffect(()=>{setCurrentUserId(getAuthUser()?.id||"");setLoading(true);setError("");void (async()=>{const target=params.get('userId'),requested=params.get('conversationId');if(target){const conv=await createDirectConversation(target);await loadConversations();setActiveId(conv.id);}else{const rows=await loadConversations();if(requested&&rows.some(row=>row.id===requested))setActiveId(requested);}const pending=window.sessionStorage.getItem('hvnh-pending-call');if(pending){window.sessionStorage.removeItem('hvnh-pending-call');sequenceRef.current+=1;setRealtimeEvent({...JSON.parse(pending),sequence:sequenceRef.current} as RealtimeCallEvent);}})().catch(e=>setError(e instanceof Error?e.message:'Không thể tải tin nhắn.')).finally(()=>setLoading(false));},[loadConversations,params]);
  useEffect(()=>{if(!activeId)return;setError("");void fetchMessages(activeId).then(rows=>{setMessagesMap(p=>({...p,[activeId]:rows}));setConversations(p=>p.map(c=>c.id===activeId?{...c,unreadCount:0}:c));window.dispatchEvent(new Event('messages-changed'));}).catch(e=>setError(e instanceof Error?e.message:'Không thể tải nội dung cuộc trò chuyện.'));},[activeId]);
- useEffect(()=>{const onRealtime=(event:Event)=>{const data=(event as CustomEvent<Record<string,unknown>>).detail;if(data.event==='message.created'){const msg=data.message as Message;setMessagesMap(p=>({...p,[msg.conversationId]:[...(p[msg.conversationId]||[]).filter(x=>x.id!==msg.id),msg]}));void loadConversations();window.dispatchEvent(new Event('messages-changed'));}else if(data.event==='messages.seen'){setMessagesMap(p=>({...p,[String(data.conversation_id)]:(p[String(data.conversation_id)]||[]).map(m=>m.senderId===currentUserId?{...m,status:'seen'}:m)}));}else if(data.event==='presence.changed'){setConversations(p=>p.map(c=>c.participantId===data.user_id?{...c,isOnline:!!data.online,lastActive:data.online?'Đang hoạt động':'Ngoại tuyến'}:c));}else if(data.event==='conversation.updated'){void loadConversations();}else if(String(data.event).startsWith('call.')){sequenceRef.current+=1;setRealtimeEvent({...data,sequence:sequenceRef.current} as RealtimeCallEvent);if(data.event==='call.offer')setActiveId(String(data.conversation_id));}};window.addEventListener('hvnh-realtime',onRealtime);return()=>window.removeEventListener('hvnh-realtime',onRealtime);},[loadConversations,currentUserId]);
+ useEffect(()=>{const onRealtime=(event:Event)=>{const data=(event as CustomEvent<Record<string,unknown>>).detail;if(data.event==='message.created'){const msg=data.message as Message;setMessagesMap(p=>({...p,[msg.conversationId]:[...(p[msg.conversationId]||[]).filter(x=>x.id!==msg.id),msg]}));void loadConversations();window.dispatchEvent(new Event('messages-changed'));}else if(data.event==='message.recalled'){const msg=data.message as Message;setMessagesMap(p=>({...p,[msg.conversationId]:(p[msg.conversationId]||[]).map(item=>item.id===msg.id?msg:item.replyTo?.id===msg.id?{...item,replyTo:{...item.replyTo,content:'Tin nhắn đã được thu hồi',isRecalled:true}}:item)}));void loadConversations();window.dispatchEvent(new Event('messages-changed'));}else if(data.event==='messages.seen'){setMessagesMap(p=>({...p,[String(data.conversation_id)]:(p[String(data.conversation_id)]||[]).map(m=>m.senderId===currentUserId?{...m,status:'seen'}:m)}));}else if(data.event==='presence.changed'){setConversations(p=>p.map(c=>c.participantId===data.user_id?{...c,isOnline:!!data.online,lastActive:data.online?'Đang hoạt động':'Ngoại tuyến'}:c));}else if(data.event==='conversation.updated'){void loadConversations();}else if(String(data.event).startsWith('call.')){sequenceRef.current+=1;setRealtimeEvent({...data,sequence:sequenceRef.current} as RealtimeCallEvent);if(data.event==='call.offer')setActiveId(String(data.conversation_id));}};window.addEventListener('hvnh-realtime',onRealtime);return()=>window.removeEventListener('hvnh-realtime',onRealtime);},[loadConversations,currentUserId]);
  const activeConversation=useMemo(()=>conversations.find(c=>c.id===activeId),[conversations,activeId]);const activeMessages=messagesMap[activeId]||[];const filtered=useMemo(()=>{const q=searchQuery.toLowerCase().trim();return q?conversations.filter(c=>c.participantName.toLowerCase().includes(q)||c.lastMessageSnippet.toLowerCase().includes(q)):conversations;},[conversations,searchQuery]);
  const selectConversation=useCallback((id:string)=>{setActiveId(id);setMobileView('chat');},[]);
- const sendMessage=useCallback(async(content:string,file?:File)=>{
+ const sendMessage=useCallback(async(content:string,file?:File,replyToId?:string)=>{
   if(!activeId)return;
   const conversationId=activeId;
-  const created=await sendChatMessage(conversationId,content.trim(),file);
+  const created=await sendChatMessage(conversationId,content.trim(),file,replyToId);
   setMessagesMap(current=>({...current,[conversationId]:[...(current[conversationId]||[]).filter(message=>message.id!==created.id),created]}));
   // Keep the composer responsive: update the row locally and refresh the
   // complete conversation list without blocking the send interaction.
@@ -33,6 +33,12 @@ export function useMessenger(){
   window.dispatchEvent(new Event('messages-changed'));
   void loadConversations().catch(()=>undefined);
  },[activeId,loadConversations]);
+ const recallMessage=useCallback(async(messageId:string)=>{
+  if(!activeId)return;
+  const recalled=await recallChatMessage(activeId,messageId);
+  setMessagesMap(current=>({...current,[activeId]:(current[activeId]||[]).map(item=>item.id===recalled.id?recalled:item.replyTo?.id===recalled.id?{...item,replyTo:{...item.replyTo,content:'Tin nhắn đã được thu hồi',isRecalled:true}}:item)}));
+  void loadConversations().catch(()=>undefined);
+ },[activeId,loadConversations]);
  const startConversation=useCallback(async(userId:string)=>{const conversation=await createDirectConversation(userId);await loadConversations();setActiveId(conversation.id);setMobileView('chat');return conversation;},[loadConversations]);
  const updateSettings=useCallback(async(payload:{theme?:Conversation['theme'];nickname?:string;is_muted?:boolean})=>{
   if(!activeId)return;
@@ -44,5 +50,5 @@ export function useMessenger(){
   catch(error){await loadConversations().catch(()=>undefined);throw error;}
  },[activeId,loadConversations]);
  const removeActiveConversation=useCallback(()=>{setConversations(rows=>rows.filter(row=>row.id!==activeId));setActiveId('');setMobileView('list');},[activeId]);
- return{conversations:filtered,activeConversation,activeMessages,selectConversation,startConversation,searchQuery,setSearchQuery,showDetailsPanel,toggleDetailsPanel:()=>setShowDetailsPanel(v=>!v),sendMessage,updateSettings,sendRealtime,realtimeEvent,removeActiveConversation,currentUserId,mobileView,setMobileView,loading,error,retry:loadConversations};
+ return{conversations:filtered,activeConversation,activeMessages,selectConversation,startConversation,searchQuery,setSearchQuery,showDetailsPanel,toggleDetailsPanel:()=>setShowDetailsPanel(v=>!v),sendMessage,recallMessage,updateSettings,sendRealtime,realtimeEvent,removeActiveConversation,currentUserId,mobileView,setMobileView,loading,error,retry:loadConversations};
 }

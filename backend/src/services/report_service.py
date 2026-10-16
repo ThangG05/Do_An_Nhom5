@@ -37,12 +37,12 @@ def list_queue(db:Session,user:User,status:str|None=None)->list[ReportResponse]:
     if user.system_role==SystemRole.SUPER_ADMIN:
         # Group reports belong to the assigned group admin. Keep only groups
         # without an active admin here so that no report is orphaned.
-        scope=" AND (COALESCE(p.group_id,cp.group_id) IS NULL OR NOT EXISTS (SELECT 1 FROM group_members gm JOIN users gu ON gu.id=gm.user_id WHERE gm.group_id=COALESCE(p.group_id,cp.group_id) AND gm.role='ADMIN' AND gu.status='ACTIVE' AND gu.deleted_at IS NULL))"
+        scope=" AND (r.target_type='USER' OR COALESCE(p.group_id,cp.group_id) IS NULL OR NOT EXISTS (SELECT 1 FROM group_members gm JOIN users gu ON gu.id=gm.user_id WHERE gm.group_id=COALESCE(p.group_id,cp.group_id) AND gm.role='ADMIN' AND gu.status='ACTIVE' AND gu.deleted_at IS NULL))"
     else:
         ids=_group_ids(db,user)
         if not ids: raise HTTPException(403,"Bạn không có quyền xử lý báo cáo.")
         scope=" AND COALESCE(p.group_id,cp.group_id)=ANY(:groups)";params["groups"]=ids
-    status_sql=" AND r.status::text=:status" if status else ""
+    status_sql=" AND r.status IN ('PENDING','REVIEWING')" if status=="OPEN" else " AND r.status::text=:status" if status else ""
     rows=db.execute(text("SELECT r.*,COALESCE(rp.full_name,ru.username,'Người dùng đã xóa') reporter_name,COALESCE(p.group_id,cp.group_id) group_id,g.name group_name,CASE WHEN r.target_type='POST' THEN left(p.content,240) WHEN r.target_type='COMMENT' THEN left(c.content,240) ELSE COALESCE(tp.full_name,tu.username,'Tài khoản đã xóa') END target_summary FROM reports r LEFT JOIN users ru ON ru.id=r.reporter_id LEFT JOIN profiles rp ON rp.user_id=ru.id LEFT JOIN posts p ON r.target_type='POST' AND p.id=r.target_id LEFT JOIN comments c ON r.target_type='COMMENT' AND c.id=r.target_id LEFT JOIN posts cp ON cp.id=c.post_id LEFT JOIN users tu ON r.target_type='USER' AND tu.id=r.target_id LEFT JOIN profiles tp ON tp.user_id=tu.id LEFT JOIN groups g ON g.id=COALESCE(p.group_id,cp.group_id) WHERE 1=1"+status_sql+scope+" ORDER BY r.created_at DESC"),params).mappings()
     out=[]
     for r in rows:
@@ -100,16 +100,41 @@ def get_detail(db: Session, user: User, report_id: uuid.UUID) -> ReportDetailRes
         comment=post_service._comment_response(db, comment) if comment and comment.deleted_at is None else None,
     )
 
-def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveRequest)->None:
+def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveRequest)->str:
     report=db.execute(text("SELECT * FROM reports WHERE id=:id AND status IN ('PENDING','REVIEWING') FOR UPDATE"),{"id":report_id}).mappings().first()
     if not report: raise HTTPException(404,"Không tìm thấy báo cáo đang chờ xử lý.")
+    if payload.decision=="REJECT" and payload.action!="NONE":
+        raise HTTPException(400,"Không thể áp dụng biện pháp khi bác bỏ báo cáo.")
     target=_target(db,str(report["target_type"]),report["target_id"])
+    group_id=db.scalar(text("""
+        SELECT COALESCE(p.group_id, cp.group_id) FROM reports r
+        LEFT JOIN posts p ON r.target_type='POST' AND p.id=r.target_id
+        LEFT JOIN comments c ON r.target_type='COMMENT' AND c.id=r.target_id
+        LEFT JOIN posts cp ON cp.id=c.post_id
+        WHERE r.id=:id
+    """),{"id":report_id})
     if user.system_role!=SystemRole.SUPER_ADMIN:
-        if not target or not target["group_id"] or target["group_id"] not in _group_ids(db,user): raise HTTPException(403,"Báo cáo không thuộc nhóm bạn quản lý.")
+        if not group_id or group_id not in _group_ids(db,user): raise HTTPException(403,"Báo cáo không thuộc nhóm bạn quản lý.")
         if payload.action in {"LOCK_USER","DISABLE_USER"}: raise HTTPException(403,"Group Admin không được xử lý tài khoản toàn hệ thống.")
+    elif group_id and db.execute(text("""
+        SELECT 1 FROM group_members gm JOIN users gu ON gu.id=gm.user_id
+        WHERE gm.group_id=:group_id AND gm.role='ADMIN'
+          AND gu.status='ACTIVE' AND gu.deleted_at IS NULL LIMIT 1
+    """),{"group_id":group_id}).first():
+        raise HTTPException(403,"Báo cáo này do quản trị nhóm xử lý.")
+    notice=("Bài viết đã được gỡ trước khi xử lý báo cáo." if str(report["target_type"])=="POST" else
+            "Bình luận đã được gỡ trước khi xử lý báo cáo." if str(report["target_type"])=="COMMENT" else "") if payload.decision=="RESOLVE" and not target else ""
+    if notice and str(report["target_type"])=="COMMENT" and db.execute(text("""
+        SELECT 1 FROM audit_logs
+        WHERE target_type='COMMENT' AND target_id=:target AND action='COMMENT_SELF_DELETED'
+        LIMIT 1
+    """), {"target": report["target_id"]}).first():
+        notice="Bình luận đã được người đăng gỡ trước khi xử lý báo cáo."
     if payload.action=="HIDE_CONTENT":
-        if str(report["target_type"])=="POST": db.execute(text("UPDATE posts SET status='DELETED',deleted_at=now() WHERE id=:id"),{"id":report["target_id"]})
-        elif str(report["target_type"])=="COMMENT": db.execute(text("UPDATE comments SET deleted_at=now() WHERE id=:id"),{"id":report["target_id"]})
+        if str(report["target_type"])=="POST":
+            if target: db.execute(text("UPDATE posts SET status='DELETED',deleted_at=now() WHERE id=:id AND deleted_at IS NULL"),{"id":report["target_id"]})
+        elif str(report["target_type"])=="COMMENT":
+            if target: post_service.soft_delete_comment_thread(db,report["target_id"])
         else: raise HTTPException(400,"Không thể ẩn một tài khoản bằng hành động này.")
     if payload.action in {"LOCK_USER","DISABLE_USER"}:
         if str(report["target_type"])!="USER": raise HTTPException(400,"Hành động tài khoản chỉ áp dụng cho báo cáo USER.")
@@ -118,7 +143,9 @@ def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveReques
         target_user.status=AccountStatus.LOCKED if payload.action=="LOCK_USER" else AccountStatus.DISABLED
         db.execute(text("UPDATE refresh_tokens SET revoked_at=now() WHERE user_id=:uid AND revoked_at IS NULL"),{"uid":target_user.id})
     final="RESOLVED" if payload.decision=="RESOLVE" else "REJECTED"
-    db.execute(text("UPDATE reports SET status=:status,handled_by=:admin,resolution_note=:note,handled_at=now() WHERE id=:id"),{"status":final,"admin":user.id,"note":payload.note.strip(),"id":report_id})
+    resolution_note=f"{notice} {payload.note.strip()}".strip()
+    db.execute(text("UPDATE reports SET status=:status,handled_by=:admin,resolution_note=:note,handled_at=now() WHERE id=:id"),{"status":final,"admin":user.id,"note":resolution_note,"id":report_id})
     db.execute(text("INSERT INTO audit_logs(actor_id,action,target_type,target_id,metadata) VALUES(:actor,'REPORT_HANDLED','REPORT',:id,CAST(:meta AS jsonb))"),{"actor":user.id,"id":report_id,"meta":json.dumps({"decision":payload.decision,"action":payload.action},ensure_ascii=False)})
-    if report["reporter_id"]: db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Kết quả báo cáo',:content,:actor,'REPORT',:id)"),{"uid":report["reporter_id"],"content":payload.note.strip(),"actor":user.id,"id":report_id})
+    if report["reporter_id"]: db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Kết quả báo cáo',:content,:actor,'REPORT',:id)"),{"uid":report["reporter_id"],"content":resolution_note,"actor":user.id,"id":report_id})
     db.commit()
+    return notice or "Đã xử lý báo cáo."

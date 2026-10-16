@@ -276,10 +276,13 @@ export async function fetchMessages(conversationId: string): Promise<import('@/t
 export async function searchConversationMessages(conversationId:string,query:string):Promise<import('@/types/message').Message[]>{return api(`/chat/conversations/${conversationId}/messages/search?q=${encodeURIComponent(query)}`);}
 export async function fetchConversationShared(conversationId:string):Promise<{media:import('@/types/message').MessageAttachment[];files:import('@/types/message').MessageAttachment[]}>{return api(`/chat/conversations/${conversationId}/shared`);}
 export async function updateConversationSettings(conversationId:string,payload:{theme?:import('@/types/message').Conversation['theme'];nickname?:string;is_muted?:boolean}):Promise<void>{await api(`/chat/conversations/${conversationId}/settings`,{method:'PATCH',body:JSON.stringify(payload)});}
-export async function sendChatMessage(conversationId:string,content:string,file?:File):Promise<import('@/types/message').Message>{
+export async function sendChatMessage(conversationId:string,content:string,file?:File,replyToId?:string):Promise<import('@/types/message').Message>{
   const media_ids:string[]=[];
   if(file){const form=new FormData();form.append('file',file);const response=await authenticatedFetch(`${API_BASE_URL}/media/upload/message`,{method:'POST',body:form});if(!response.ok){const e=await response.json().catch(()=>null) as {detail?:string}|null;throw new Error(e?.detail||'Không thể tải media tin nhắn.');}media_ids.push(((await response.json()) as {media_id:string}).media_id);}
-  return api(`/chat/conversations/${conversationId}/messages`,{method:'POST',body:JSON.stringify({content,media_ids})});
+  return api(`/chat/conversations/${conversationId}/messages`,{method:'POST',body:JSON.stringify({content,media_ids,reply_to_id:replyToId||null})});
+}
+export async function recallChatMessage(conversationId:string,messageId:string):Promise<import('@/types/message').Message>{
+  return api(`/chat/conversations/${conversationId}/messages/${messageId}`,{method:'DELETE'});
 }
 export async function fetchUnreadMessageCount():Promise<number>{const result=await api<{unread_count:number}>('/chat/unread-count');return result.unread_count;}
 export async function createWebSocketTicket():Promise<string>{const result=await api<{ticket:string;expires_in:number}>('/chat/ws-ticket',{method:'POST'});return result.ticket;}
@@ -368,7 +371,7 @@ export async function fetchAdminAuditLogs():Promise<import('@/types/admin').Admi
 export async function createReport(target_type:'USER'|'POST'|'COMMENT',target_id:string,reason:string,evidence_media_id?:string):Promise<void>{await api('/reports',{method:'POST',body:JSON.stringify({target_type,target_id,reason,evidence_media_id})});}
 export async function fetchReportQueue(status=''):Promise<import('@/types/report').ApiReport[]>{return api(`/reports/admin?status=${encodeURIComponent(status)}`);}
 export async function fetchReportDetail(reportId:string):Promise<import('@/types/report').ReportDetail>{return api(`/reports/admin/${encodeURIComponent(reportId)}`);}
-export async function resolveReport(id:string,decision:'RESOLVE'|'REJECT',action:'NONE'|'HIDE_CONTENT'|'LOCK_USER'|'DISABLE_USER',note:string):Promise<void>{await api(`/reports/admin/${id}`,{method:'PATCH',body:JSON.stringify({decision,action,note})});}
+export async function resolveReport(id:string,decision:'RESOLVE'|'REJECT',action:'NONE'|'HIDE_CONTENT'|'LOCK_USER'|'DISABLE_USER',note:string):Promise<string>{const result=await api<{message:string}>(`/reports/admin/${id}`,{method:'PATCH',body:JSON.stringify({decision,action,note})});return result.message;}
 export async function requestPasswordReset(email:string):Promise<void>{await api('/auth/password/forgot',{method:'POST',body:JSON.stringify({email})});}
 export async function resetPassword(email:string,code:string,newPassword:string):Promise<void>{await api('/auth/password/reset',{method:'POST',body:JSON.stringify({email,code,new_password:newPassword})});}
 export async function changePassword(currentPassword:string,newPassword:string):Promise<void>{await api('/auth/password/change',{method:'POST',body:JSON.stringify({current_password:currentPassword,new_password:newPassword})});}

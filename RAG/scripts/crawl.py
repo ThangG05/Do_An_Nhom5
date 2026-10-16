@@ -2,16 +2,18 @@ import argparse
 import asyncio
 from datetime import UTC, datetime
 from types import SimpleNamespace
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 from uuid import UUID
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
 from app.knowledge.crawler.queue import CrawlQueue
 from app.knowledge.crawler.security import canonicalize_url, is_in_scope, url_hash
 from app.knowledge.crawler.metadata import infer_metadata
-from app.knowledge.crawler.extractors import extract_document
+from app.knowledge.crawler.extractors import ExtractedDocument, OCRRequired, extract_document
 from app.knowledge.crawler.fetcher import SafeFetcher
 from app.knowledge.crawler.versioning import save_web_version
+from app.knowledge.ocr import get_ocr_provider
+from app.knowledge.quality import assess_extraction
 from app.knowledge.policy import assess_content, assess_url
 from app.models.crawler import AICrawlItem, AICrawlRun, AISource, AISourceURL
 from app.models.enums import AIDocumentStatus, AIDocumentType
@@ -94,7 +96,18 @@ async def ingest_url(args) -> None:
         fetcher = SafeFetcher(list(source.allowed_domains), list(source.allowed_path_prefixes))
         try:
             fetched = await fetcher.fetch(url)
-            extracted = extract_document(fetched.body, fetched.content_type, fetched.url)
+            try:
+                extracted = extract_document(fetched.body, fetched.content_type, fetched.url)
+            except OCRRequired:
+                result = await get_ocr_provider().extract_pdf(fetched.body)
+                filename = unquote(urlsplit(fetched.url).path.rsplit("/", 1)[-1])
+                extracted = ExtractedDocument(
+                    title=filename, content=result.content, page_count=result.page_count,
+                    metadata={"page_ranges": result.page_ranges, "ocr_engine": result.engine, "ocr": True},
+                )
+                quality = assess_extraction(extracted)
+                if not quality.accepted:
+                    raise ValueError(f"OCR extraction quality is insufficient: {quality.code}")
             content_decision = assess_content(extracted.title, extracted.content, source.metadata_)
             if not content_decision.allowed:
                 raise ValueError(content_decision.code or "content rejected by policy")
