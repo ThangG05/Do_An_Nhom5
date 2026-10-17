@@ -5,7 +5,7 @@ import re
 from app.llm.contracts import ContextBlock, LLMAnswer
 
 _MARKER = re.compile(r"\[([0-9]+(?:\s*,\s*[0-9]+)*)\]")
-_CLAIM_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
+_CLAIM_BOUNDARY = re.compile(r"(?<!\bTP\.)(?<!\bTS\.)(?<!\bThS\.)(?<!\bPGS\.)(?<=[.!?])\s+", re.IGNORECASE)
 _ANCHOR = re.compile(
     r"(?i:https?://\S+)|(?i:[\w.+-]+@[\w.-]+\.[a-z]{2,})|"
     r"(?<!\w)\d+(?:[.,/\-–]\d+)*(?i:%|đ|vnđ|triệu|tỷ)?(?!\w)|"
@@ -56,14 +56,11 @@ def verify_claim_citations(answer: LLMAnswer, contexts: list[ContextBlock],
     by_id = {block.id: block for block in contexts}
     issues: list[CitationIssue] = []
     for paragraph in answer.answer.splitlines():
-        paragraph_ids = [item for group in _MARKER.findall(paragraph)
-                         for item in re.findall(r"[0-9]+", group)]
         for raw_claim in _CLAIM_BOUNDARY.split(paragraph):
             claim = raw_claim.strip()
             if not _is_substantive(claim):
                 continue
             ids = [item for group in _MARKER.findall(claim) for item in re.findall(r"[0-9]+", group)]
-            ids = ids or paragraph_ids
             if not ids:
                 issues.append(CitationIssue("UNCITED_CLAIM", claim[:300]))
                 continue

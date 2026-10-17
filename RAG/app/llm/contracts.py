@@ -43,6 +43,10 @@ class LLMAnswer(BaseModel):
         return self
 
 
+class CasualAnswer(BaseModel):
+    answer: str = Field(min_length=1, max_length=600)
+
+
 class ConversationTurn(BaseModel):
     role: str = Field(pattern="^(USER|ASSISTANT)$")
     content: str = Field(min_length=1, max_length=12000)
@@ -59,6 +63,7 @@ class ConversationSummary(BaseModel):
 
 class LLMProvider(Protocol):
     async def answer(self, question: str, context: list[ContextBlock]) -> LLMAnswer: ...
+    async def answer_casual(self, question: str) -> CasualAnswer: ...
     async def rewrite_question(self, question: str, history: list[ConversationTurn], summary: str | None) -> QuestionRewrite: ...
     async def summarize_conversation(self, previous_summary: str | None, history: list[ConversationTurn]) -> ConversationSummary: ...
     async def close(self) -> None: ...

@@ -1,9 +1,11 @@
 """Grounded RAG orchestration with durable conversations and citation snapshots."""
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 import logging
 import re
 from time import perf_counter
+import unicodedata
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -11,16 +13,55 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.llm.contracts import ContextBlock, LLMAnswer, LLMProvider, LLMServiceError
+from app.llm.security import InputKind, PromptGuard, PromptSecurityError
 from app.models.enums import AIMessageRole
 from app.models.rag import AIConversation, AIMessage, AIMessageCitation
 from app.memory.conversation import ConversationMemoryService, PreparedQuestion
 from app.rag.retriever import AccessScope, RetrievalHit, RetrievalService, analyze_query
 from app.rag.citation_verifier import verify_claim_citations
+from app.rag.casual import is_casual_conversation
 from app.rag.usage import UsageCollector, activate, reset
+from app.services.rate_limit import enforce_casual_daily_limit
 
 
 _CAPITALIZED_WORD = r"[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠƯẠ-Ỹ][\wÀ-ỹ]*"
 logger = logging.getLogger(__name__)
+
+_SOCIAL_REPLIES = {
+    "chào": "Chào bạn! Mình là Trợ lý HVNH Hub. Bạn có thể hỏi mình về thông tin học tập và hoạt động của Học viện Ngân hàng.",
+    "giới thiệu": "Mình là Trợ lý HVNH Hub. Mình có thể giúp bạn tìm thông tin về học tập và hoạt động của Học viện từ các nguồn đã được lập chỉ mục.",
+    "cảm ơn": "Không có gì! Khi cần tìm thông tin về Học viện, bạn cứ hỏi mình nhé.",
+    "tạm biệt": "Tạm biệt bạn! Hẹn gặp lại trên HVNH Hub nhé.",
+    "xác nhận": "Mình hiểu rồi. Bạn cứ chia sẻ tiếp, hoặc hỏi mình điều bạn đang cần nhé.",
+}
+_SOCIAL_PHRASES = {
+    "chào": {"chào", "chào bạn", "chào bạn nhé", "xin chào", "xin chào bạn",
+             "chào trợ lý", "xin chào trợ lý", "chào bot", "hello", "hi", "alo"},
+    "giới thiệu": {"bạn là ai", "bạn có thể làm gì", "bạn giúp được gì", "trợ lý là ai"},
+    "cảm ơn": {"cảm ơn", "cảm ơn bạn", "cảm ơn bạn nhiều", "cảm ơn nhiều",
+                "cám ơn", "cám ơn bạn", "cám ơn nhiều", "cam on", "cam on ban", "thank you", "thanks"},
+    "tạm biệt": {"tạm biệt", "tạm biệt bạn", "tạm biệt nhé", "hẹn gặp lại", "bye", "goodbye"},
+    "xác nhận": {"ok", "oke", "được rồi", "ừ", "ừ đúng rồi", "đúng rồi", "hay quá", "haha"},
+}
+
+
+def social_reply(question: str) -> str | None:
+    """Handle only complete, harmless social utterances; mixed questions use normal RAG."""
+    normalized = unicodedata.normalize("NFKC", question).casefold()
+    normalized = " ".join(re.findall(r"[^\W_]+", normalized, flags=re.UNICODE))
+    for kind, phrases in _SOCIAL_PHRASES.items():
+        if normalized in phrases:
+            return _SOCIAL_REPLIES[kind]
+    return None
+
+
+@dataclass(frozen=True, slots=True)
+class SocialAnswer:
+    answer: str
+    refused: bool = False
+    refusal_reason: str | None = None
+    cited_context_ids: tuple[str, ...] = ()
+    kind: str = "social"
 
 
 def unsupported_named_entities(question: str, hits: list[RetrievalHit]) -> tuple[str, ...]:
@@ -76,11 +117,50 @@ class RAGService:
                               access: AccessScope | None, user_id: UUID | None,
                               collector: UsageCollector) -> RAGResult:
         started = perf_counter()
+        safe_question = PromptGuard(self.settings.llm_max_input_chars,
+                                    self.settings.llm_max_context_chars).inspect(question, InputKind.USER).value
+        greeting = social_reply(safe_question)
+        if greeting is not None:
+            intent = analyze_query(safe_question)
+            prepared = PreparedQuestion(safe_question, safe_question, False)
+            result = await self._persist(prepared, intent, [], SocialAnswer(greeting),
+                                         round((perf_counter() - started) * 1000), conversation_id, user_id)
+            collector.saved = True
+            logger.info("rag_social_reply_completed")
+            return result
+        if is_casual_conversation(safe_question):
+            # Validate ownership before spending any LLM tokens on a conversation.
+            if conversation_id is not None:
+                existing = await self.session.scalar(select(AIConversation.id).where(
+                    AIConversation.id == conversation_id,
+                    AIConversation.deleted_at.is_(None),
+                    AIConversation.user_id == user_id,
+                ))
+                if existing is None:
+                    raise ValueError("conversation not found")
+            await enforce_casual_daily_limit(f"user:{user_id}" if user_id else "internal")
+            casual = await self.llm.answer_casual(safe_question)
+            # A casual response must never smuggle in uncited institutional facts.
+            if re.search(r"https?://|\[[0-9]+\]|\b(?:hvnh|học viện ngân hàng)\b",
+                         casual.answer, re.IGNORECASE):
+                logger.warning("rag_casual_output_rejected")
+                casual_text = "Mình có thể trò chuyện nhẹ với bạn. Nếu bạn cần thông tin cụ thể về Học viện, hãy hỏi riêng để mình tra nguồn nhé."
+            else:
+                casual_text = casual.answer
+            intent = analyze_query(safe_question)
+            prepared = PreparedQuestion(safe_question, safe_question, False)
+            collector.attach(self.session)
+            result = await self._persist(prepared, intent, [], SocialAnswer(casual_text, kind="casual"),
+                                         round((perf_counter() - started) * 1000), conversation_id, user_id)
+            collector.saved = True
+            logger.info("rag_casual_reply_completed")
+            return result
         prepared = await ConversationMemoryService(self.session, self.llm).prepare(question, conversation_id, user_id)
         prepared_at = perf_counter()
         intent = analyze_query(prepared.standalone_question)
         hits = await self.retriever.search(intent.normalized_query, access=access)
         retrieved_at = perf_counter()
+        hits = self._safe_evidence(hits)
         if self._relative_date_without_fresh_evidence(intent.normalized_query, hits):
             hits = []
         unsupported_entities = unsupported_named_entities(intent.normalized_query, hits)
@@ -107,6 +187,24 @@ class RAGService:
             "evidence_count": len(hits), "refused": answer.refused,
         })
         return result
+
+    def _safe_evidence(self, hits: list[RetrievalHit]) -> list[RetrievalHit]:
+        """Remove unsafe retrieved material before it can influence entity checks or the LLM."""
+        guard = PromptGuard(self.settings.llm_max_input_chars, self.settings.llm_max_context_chars)
+        safe: list[RetrievalHit] = []
+        for hit in hits:
+            try:
+                guard.inspect(hit.content, InputKind.CONTEXT)
+                guard.inspect(hit.title, InputKind.CONTEXT)
+                guard.inspect(self._source_label(hit), InputKind.CONTEXT)
+            except PromptSecurityError:
+                continue
+            safe.append(hit)
+        if len(safe) != len(hits):
+            logger.warning("rag_evidence_rejected", extra={
+                "candidate_count": len(hits), "rejected_count": len(hits) - len(safe),
+            })
+        return safe
 
     async def _answer_with_contract_retry(self, question: str,
                                           blocks: list[ContextBlock]) -> LLMAnswer:
@@ -172,7 +270,7 @@ class RAGService:
                 raise LLMServiceError("invalid_response", issues[0].code.casefold())
 
     @staticmethod
-    def _renumber_citation_markers(text: str, context_ids: list[str]) -> str:
+    def _renumber_citation_markers(text: str, context_ids: Sequence[str]) -> str:
         mapping = {context_id: str(order) for order, context_id in enumerate(context_ids, 1)}
 
         def replace(match: re.Match[str]) -> str:
@@ -181,7 +279,8 @@ class RAGService:
 
         return re.sub(r"\[([0-9]+(?:\s*,\s*[0-9]+)*)\]", replace, text)
 
-    async def _persist(self, prepared: PreparedQuestion, intent, hits: list[RetrievalHit], answer: LLMAnswer,
+    async def _persist(self, prepared: PreparedQuestion, intent, hits: list[RetrievalHit],
+                       answer: LLMAnswer | SocialAnswer,
                        latency_ms: int, conversation_id: UUID | None, user_id: UUID | None) -> RAGResult:
         if conversation_id:
             conversation = await self.session.scalar(select(AIConversation).where(
@@ -208,7 +307,8 @@ class RAGService:
         assistant = AIMessage(conversation_id=conversation.id, sequence_number=latest + 2,
             role=AIMessageRole.ASSISTANT, content=display_answer, retrieval_filters=filters,
             model_name=self.settings.llm_model if hits else None, latency_ms=latency_ms,
-            metadata_={"refused": answer.refused, "refusal_reason": answer.refusal_reason})
+            metadata_={"refused": answer.refused, "refusal_reason": answer.refusal_reason,
+                       "response_kind": answer.kind if isinstance(answer, SocialAnswer) else "grounded"})
         self.session.add(assistant); await self.session.flush()
         citations = []
         for order, context_id in enumerate(answer.cited_context_ids, 1):

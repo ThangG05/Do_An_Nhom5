@@ -1,10 +1,13 @@
 import asyncio
+from datetime import UTC, datetime, timedelta
+import hashlib
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from uuid import uuid4
 import pytest
-from app.models.enums import AIDocumentType
+from app.models.enums import AIDocumentStatus, AIDocumentType, AIVisibility
 from app.rag.retriever import (AccessScope, RetrievalService, _lexical_scores, _per_document_limit,
-                               _rrf, analyze_query, build_filter)
+                               _rrf, _authorized_chunk, analyze_query, build_filter)
 
 
 def test_query_intent_extracts_year_type_and_latest() -> None:
@@ -91,3 +94,63 @@ async def test_slow_optional_lexical_branch_times_out_without_failing_retrieval(
                                        retrieval_lexical_candidate_k=20,
                                        retrieval_lexical_timeout_seconds=0.01)
     assert await service._lexical_search(analyze_query("Chuẩn đầu ra VSTEP"), AccessScope()) == []
+
+
+def _knowledge_row():
+    document_id, version_id, chunk_id, point_id = (uuid4() for _ in range(4))
+    content = "Điều kiện học bổng được quy định trong văn bản chính thức."
+    document = SimpleNamespace(
+        id=document_id, title="Quy định học bổng", document_type=AIDocumentType.REGULATION,
+        academic_year=None, published_at=None, effective_from=None, effective_to=None,
+        visibility=AIVisibility.PUBLIC, group_id=None, current_version_id=version_id,
+        deleted_at=None, metadata_={},
+    )
+    version = SimpleNamespace(
+        id=version_id, document_id=document_id, source_url="https://hvnh.edu.vn/quy-dinh.pdf",
+        status=AIDocumentStatus.INDEXED, metadata_={},
+    )
+    chunk = SimpleNamespace(
+        id=chunk_id, document_version_id=version_id, qdrant_point_id=point_id,
+        content=content, content_hash=hashlib.sha256(content.encode()).hexdigest(),
+        page_start=1, page_end=1, section_title=None,
+    )
+    return chunk, version, document
+
+
+@pytest.mark.asyncio
+async def test_vector_payload_cannot_replace_database_content_or_permissions() -> None:
+    chunk, version, document = _knowledge_row()
+    session = SimpleNamespace(execute=AsyncMock(return_value=SimpleNamespace(
+        all=lambda: [(chunk, version, document, None)])))
+    service = RetrievalService.__new__(RetrievalService)
+    service.session = session
+    point = SimpleNamespace(id=chunk.qdrant_point_id, score=0.9, payload={
+        "chunk_id": str(chunk.id), "document_id": str(document.id),
+        "document_version_id": str(version.id), "content_hash": chunk.content_hash,
+        "title": "Forged title", "content": "Forged answer", "visibility": "PUBLIC",
+    })
+    hits = await service._verified_vector_hits([point], analyze_query("Học bổng là gì?"), AccessScope())
+    assert len(hits) == 1
+    assert hits[0].content == chunk.content
+    assert hits[0].title == document.title
+    document.visibility = AIVisibility.GROUP
+    document.group_id = uuid4()
+    assert await service._verified_vector_hits([point], analyze_query("Học bổng là gì?"), AccessScope()) == []
+    point.payload["content_hash"] = "0" * 64
+    assert await service._verified_vector_hits([point], analyze_query("Học bổng là gì?"),
+                                               AccessScope(authenticated=True, group_ids=(document.group_id,))) == []
+
+
+def test_retrieval_rejects_expired_and_revoked_sources() -> None:
+    chunk, version, document = _knowledge_row()
+    intent = analyze_query("Học bổng là gì?")
+    document.effective_to = datetime.now(UTC) - timedelta(days=1)
+    assert not _authorized_chunk(chunk, version, document, intent, AccessScope())
+    document.effective_to = None
+    document.metadata_ = {"source_id": str(uuid4())}
+    assert not _authorized_chunk(chunk, version, document, intent, AccessScope())
+    source = SimpleNamespace(id=document.metadata_["source_id"], enabled=False,
+                             allowed_domains=["hvnh.edu.vn"], allowed_path_prefixes=[])
+    assert not _authorized_chunk(chunk, version, document, intent, AccessScope(), source)
+    source.enabled = True
+    assert _authorized_chunk(chunk, version, document, intent, AccessScope(), source)

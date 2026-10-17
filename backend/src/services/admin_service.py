@@ -6,14 +6,45 @@ from zoneinfo import ZoneInfo
 from fastapi import HTTPException
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
-from sqlalchemy import bindparam, text
+from sqlalchemy import bindparam, select, text
 from sqlalchemy.orm import Session
 
 from src.db.models.user import AccountStatus, SystemRole, User
+from src.db.models.media import MediaFile, MediaStatus
 from src.models.admin import (AdminDashboardResponse, AdminUserPage, AdminUserResponse,
-                              AuditLogResponse, DisciplineRequest, RAGUserUsageResponse)
+                              AuditLogResponse, DisciplineRequest, GroupAdminInfoResponse,
+                              RAGUserUsageResponse)
+from src.services.storage_service import create_download_url
 
 DEDICATED_ADMIN_SLUGS = {"pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"}
+
+
+def group_admins(db: Session, group_id: uuid.UUID) -> list[GroupAdminInfoResponse]:
+    exists = db.execute(text("SELECT 1 FROM groups WHERE id=:gid AND status='ACTIVE'"),
+                        {"gid": group_id}).first()
+    if not exists:
+        raise HTTPException(404, "Không tìm thấy nhóm.")
+    rows = db.execute(text("""
+        SELECT u.id, u.email, u.username, u.status::text AS status,
+               COALESCE(p.full_name, u.username) AS full_name,
+               p.student_code, p.faculty, p.avatar_media_id
+        FROM group_members gm
+        JOIN users u ON u.id=gm.user_id
+        LEFT JOIN profiles p ON p.user_id=u.id
+        WHERE gm.group_id=:gid AND gm.role='ADMIN' AND u.deleted_at IS NULL
+        ORDER BY lower(COALESCE(p.full_name, u.username)), u.id
+    """), {"gid": group_id}).mappings().all()
+    avatar_ids = {row["avatar_media_id"] for row in rows if row["avatar_media_id"]}
+    avatars = {media.id: media for media in db.scalars(select(MediaFile).where(
+        MediaFile.id.in_(avatar_ids), MediaFile.status == MediaStatus.READY,
+        MediaFile.deleted_at.is_(None),
+    )).all()} if avatar_ids else {}
+    return [GroupAdminInfoResponse(
+        id=row["id"], full_name=row["full_name"], email=row["email"],
+        student_code=row["student_code"], faculty=row["faculty"], status=row["status"],
+        avatar_url=create_download_url(avatars[row["avatar_media_id"]])
+        if row["avatar_media_id"] in avatars else None,
+    ) for row in rows]
 
 
 def _count(db: Session, sql: str, params: dict | None = None) -> int:
@@ -179,7 +210,8 @@ def users(db: Session, q: str, account_status: str | None, limit: int, offset: i
 
 
 def user_rag_usage(db: Session, user_id: uuid.UUID, period: str = "30d",
-                   start_date: date | None = None, end_date: date | None = None) -> RAGUserUsageResponse:
+                   start_date: date | None = None, end_date: date | None = None,
+                   offset: int = 0) -> RAGUserUsageResponse:
     if not db.execute(text("SELECT 1 FROM users WHERE id=:uid AND deleted_at IS NULL"), {"uid": user_id}).first():
         raise HTTPException(404, "Không tìm thấy tài khoản.")
     start, end = _usage_bounds(period, start_date, end_date)
@@ -197,8 +229,8 @@ def user_rag_usage(db: Session, user_id: uuid.UUID, period: str = "30d",
         SELECT id,created_at,provider,model,input_tokens,output_tokens,total_tokens,status,usage_source
         FROM rag_token_usage WHERE user_id=:uid
           AND (:start IS NULL OR created_at >= :start) AND (:end IS NULL OR created_at < :end)
-        ORDER BY created_at DESC,id DESC LIMIT 100
-    """), params).mappings().all()
+        ORDER BY created_at DESC,id DESC LIMIT 10 OFFSET :offset
+    """), {**params, "offset": offset}).mappings().all()
     return RAGUserUsageResponse(user_id=user_id,input_tokens=totals.get("input_tokens"),
         output_tokens=totals.get("output_tokens"),total_tokens=totals.get("total_tokens"),
         usage_calls=totals.get("usage_calls",0),usage_missing=totals.get("usage_missing",0),

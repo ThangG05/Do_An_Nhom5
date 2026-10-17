@@ -4,6 +4,8 @@ import re
 import unicodedata
 from urllib.parse import unquote
 
+from app.llm.security import injection_signal_spans
+
 
 @dataclass(frozen=True, slots=True)
 class PolicyDecision:
@@ -34,6 +36,8 @@ def assess_url(url: str, source_metadata: dict | None = None) -> PolicyDecision:
 
 def assess_content(title: str, content: str, source_metadata: dict | None = None) -> PolicyDecision:
     combined = f"{title}\n{content}"
+    if injection_signal_spans(combined):
+        return PolicyDecision(False, "PROMPT_INJECTION", "instruction_like_document_content")
     normalized = _normalized(combined)
     configured = [
         _normalized(str(pattern)) for pattern in (source_metadata or {}).get("exclude_content_patterns", [])

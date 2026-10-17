@@ -1,4 +1,5 @@
 export interface AdminGroupStat { id:string;name:string;slug:string;members:number;approved_posts:number;pending_posts:number }
+export interface GroupAdminInfo { id:string;full_name:string;email:string;student_code:string|null;faculty:string|null;avatar_url:string|null;status:string }
 export interface AdminActivityPoint { date:string;new_users:number;posts:number;messages:number }
 export interface AdminDashboard { total_users:number;active_users:number;locked_users:number;disabled_users:number;pending_posts:number;approved_posts:number;rejected_posts:number;total_likes:number;total_comments:number;total_messages:number;groups:AdminGroupStat[];activity:AdminActivityPoint[] }
 export interface AdminGroupRef { id:string;name:string;slug:string }

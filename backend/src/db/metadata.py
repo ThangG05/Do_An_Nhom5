@@ -162,6 +162,25 @@ def build_target_metadata() -> MetaData:
         sa.CheckConstraint("size_bytes > 0 AND size_bytes <= 52428800", name="ck_study_file_size"),
         sa.Index("idx_study_files_document", "document_id"),
     )
+    sa.Table(
+        "study_document_reports", metadata,
+        sa.Column("id", uuid, primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column("group_id", uuid, sa.ForeignKey("groups.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("document_id", uuid, sa.ForeignKey("study_documents.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("reporter_id", uuid, sa.ForeignKey("users.id", ondelete="SET NULL")),
+        sa.Column("reporter_name", sa.String(255), nullable=False),
+        sa.Column("reason", sa.String(3000), nullable=False),
+        sa.Column("status", sa.String(16), nullable=False, server_default="OPEN"),
+        sa.Column("resolution_note", sa.String(3000)),
+        sa.Column("handled_by", uuid, sa.ForeignKey("users.id", ondelete="SET NULL")),
+        sa.Column("handled_at", sa.DateTime(timezone=True)),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.CheckConstraint("status IN ('OPEN','RESOLVED','DISMISSED')", name="ck_study_document_report_status"),
+        sa.Index("idx_study_doc_reports_group_status", "group_id", "status", "created_at"),
+        sa.Index("idx_study_doc_reports_document", "document_id", "created_at"),
+        sa.Index("uq_study_doc_report_open_user", "document_id", "reporter_id", unique=True,
+                 postgresql_where=sa.text("status = 'OPEN'")),
+    )
     return metadata
 
 

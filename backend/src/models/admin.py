@@ -46,6 +46,16 @@ class AdminUserPage(BaseModel):
     offset: int
 
 
+class GroupAdminInfoResponse(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    email: str
+    student_code: str | None = None
+    faculty: str | None = None
+    avatar_url: str | None = None
+    status: str
+
+
 class RAGUsageCallResponse(BaseModel):
     id: uuid.UUID
     created_at: str

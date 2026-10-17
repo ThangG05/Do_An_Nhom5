@@ -21,6 +21,8 @@ from src.config import settings
 from src.db.models.user import SystemRole, User
 from src.models.study_document import (StudyDocumentFileResponse, StudyDocumentResponse,
                                        SubjectResponse)
+from src.models.study_document_report import (StudyDocumentReportResponse,
+                                               StudyDocumentReportDecision)
 from src.services.storage_service import get_r2_client
 
 logger = logging.getLogger(__name__)
@@ -269,6 +271,120 @@ def count_pending_documents(db: Session, group_id: uuid.UUID, admin: User) -> in
         SELECT count(*) FROM study_documents
         WHERE group_id=:gid AND status='PENDING' AND deleted_at IS NULL
     """), {"gid": group_id}).scalar_one())
+
+
+def count_open_document_reports(db: Session, group_id: uuid.UUID, admin: User) -> int:
+    require_admin(db, group_id, admin)
+    return int(db.execute(text("""
+        SELECT count(*) FROM study_document_reports
+        WHERE group_id=:gid AND status='OPEN'
+    """), {"gid": group_id}).scalar_one())
+
+
+def create_document_report(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
+                           user: User, reason: str) -> dict:
+    require_member(db, group_id, user)
+    reason = reason.strip()
+    if len(reason) < 5:
+        raise HTTPException(400, "Vui lòng ghi rõ nguyên nhân tố cáo (ít nhất 5 ký tự).")
+    document = db.execute(text("""
+        SELECT d.uploaded_by, COALESCE(p.full_name,u.username) reporter_name
+        FROM study_documents d JOIN users u ON u.id=:uid
+        LEFT JOIN profiles p ON p.user_id=u.id
+        WHERE d.id=:did AND d.group_id=:gid AND d.status='APPROVED' AND d.deleted_at IS NULL
+    """), {"did": document_id, "gid": group_id, "uid": user.id}).mappings().first()
+    if not document:
+        raise HTTPException(404, "Không tìm thấy tài liệu đã được duyệt.")
+    if document["uploaded_by"] == user.id:
+        raise HTTPException(400, "Bạn không thể tố cáo tài liệu do chính mình chia sẻ.")
+    report_id = uuid.uuid4()
+    try:
+        db.execute(text("""
+            INSERT INTO study_document_reports(id,group_id,document_id,reporter_id,reporter_name,reason)
+            VALUES(:id,:gid,:did,:uid,:name,:reason)
+        """), {"id": report_id, "gid": group_id, "did": document_id, "uid": user.id,
+                 "name": document["reporter_name"], "reason": reason})
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Bạn đã gửi tố cáo tài liệu này và admin đang xem xét.") from exc
+    return {"id": report_id, "status": "OPEN"}
+
+
+def list_open_document_reports(db: Session, group_id: uuid.UUID, admin: User,
+                               limit: int = 50, offset: int = 0) -> list[StudyDocumentReportResponse]:
+    require_admin(db, group_id, admin)
+    rows = db.execute(text("""
+        SELECT r.id,r.group_id,r.document_id,d.title,s.code subject_code,s.name subject_name,
+               COALESCE(owner_profile.full_name,owner.username,'Tài khoản đã xóa') uploader_name,
+               r.reporter_name,r.reason,r.status,r.resolution_note,
+               COALESCE(handler_profile.full_name,handler.username) handled_by_name,r.created_at,
+               (d.deleted_at IS NOT NULL) document_deleted
+        FROM study_document_reports r
+        JOIN study_documents d ON d.id=r.document_id
+        JOIN subjects s ON s.id=d.subject_id
+        LEFT JOIN users owner ON owner.id=d.uploaded_by
+        LEFT JOIN profiles owner_profile ON owner_profile.user_id=owner.id
+        LEFT JOIN users handler ON handler.id=r.handled_by
+        LEFT JOIN profiles handler_profile ON handler_profile.user_id=handler.id
+        WHERE r.group_id=:gid AND r.status='OPEN'
+        ORDER BY r.created_at ASC,r.id LIMIT :limit OFFSET :offset
+    """), {"gid": group_id, "limit": limit, "offset": offset}).mappings().all()
+    return [StudyDocumentReportResponse(**dict(row)) for row in rows]
+
+
+def decide_document_report(db: Session, group_id: uuid.UUID, report_id: uuid.UUID,
+                           admin: User, payload: StudyDocumentReportDecision) -> dict:
+    require_admin(db, group_id, admin)
+    note = payload.note.strip()
+    if len(note) < 3:
+        raise HTTPException(400, "Vui lòng ghi lý do xử lý (ít nhất 3 ký tự).")
+    report = db.execute(text("""
+        SELECT r.document_id,d.deleted_at,d.uploaded_by,d.title,r.reporter_id FROM study_document_reports r
+        JOIN study_documents d ON d.id=r.document_id
+        WHERE r.id=:rid AND r.group_id=:gid AND r.status='OPEN'
+        FOR UPDATE OF r,d
+    """), {"rid": report_id, "gid": group_id}).mappings().first()
+    if not report:
+        raise HTTPException(404, "Tố cáo không còn trong hàng chờ xử lý.")
+    document_id = report["document_id"]
+    if payload.decision == "REMOVE_DOCUMENT" and report["deleted_at"] is None:
+        files = db.execute(text("""
+            SELECT id,r2_object_key FROM study_document_files
+            WHERE document_id=:did AND deleted_at IS NULL
+        """), {"did": document_id}).mappings().all()
+        client, bucket = get_r2_client(), _private_bucket()
+        try:
+            for file in files:
+                client.delete_object(Bucket=bucket, Key=file["r2_object_key"])
+        except (BotoCoreError, ClientError) as exc:
+            db.rollback()
+            logger.warning("study_document_report_r2_remove_failed")
+            raise HTTPException(502, "Chưa thể gỡ file khỏi kho lưu trữ. Tố cáo vẫn được giữ để admin thử lại.") from exc
+        db.execute(text("UPDATE study_document_files SET deleted_at=now() WHERE document_id=:did AND deleted_at IS NULL"),
+                   {"did": document_id})
+        db.execute(text("UPDATE study_documents SET deleted_at=now() WHERE id=:did AND deleted_at IS NULL"),
+                   {"did": document_id})
+    status = "RESOLVED" if payload.decision == "REMOVE_DOCUMENT" else "DISMISSED"
+    db.execute(text("""
+        UPDATE study_document_reports SET status=:status,resolution_note=:note,handled_by=:admin,handled_at=now()
+        WHERE id=:rid
+    """), {"status": status, "note": note, "admin": admin.id, "rid": report_id})
+    if payload.decision == "REMOVE_DOCUMENT":
+        db.execute(text("""
+            INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id)
+            VALUES(:uid,'SYSTEM','Tài liệu bị gỡ khỏi kho Học tập',:content,:actor,'GROUP',:gid)
+        """), {"uid": report["uploaded_by"], "content": f"Admin đã gỡ tài liệu '{report['title']}' khỏi kho Học tập. Lý do: {note}",
+                 "actor": admin.id, "gid": group_id})
+    if report["reporter_id"]:
+        outcome = "đã được admin xử lý" if payload.decision == "REMOVE_DOCUMENT" else "đã được admin xem xét và bác bỏ"
+        db.execute(text("""
+            INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id)
+            VALUES(:uid,'SYSTEM','Cập nhật tố cáo tài liệu',:content,:actor,'GROUP',:gid)
+        """), {"uid": report["reporter_id"], "content": f"Tố cáo của bạn {outcome}. Lý do xử lý: {note}",
+                 "actor": admin.id, "gid": group_id})
+    db.commit()
+    return {"id": report_id, "status": status, "document_id": document_id}
 
 
 def get_document(db: Session, group_id: uuid.UUID, document_id: uuid.UUID, user: User,

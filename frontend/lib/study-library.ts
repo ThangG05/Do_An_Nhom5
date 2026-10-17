@@ -24,6 +24,13 @@ export interface StudyDocument {
   files: StudyFile[];
 }
 
+export interface StudyDocumentReport {
+  id: string; group_id: string; document_id: string; title: string; subject_code: string | null;
+  subject_name: string; uploader_name: string; reporter_name: string; reason: string;
+  status: "OPEN" | "RESOLVED" | "DISMISSED"; resolution_note: string | null;
+  handled_by_name: string | null; created_at: string; document_deleted: boolean;
+}
+
 export const searchSubjects = (q = "", scope: CatalogScope = {}, offset = 0, limit = 8) => api<Subject[]>(`/subjects?q=${encodeURIComponent(q)}${scopeParams(scope)}&limit=${limit}&offset=${offset}`);
 export const adminSubjects = (q = "", offset = 0) => api<Subject[]>(`/admin/subjects?q=${encodeURIComponent(q)}&offset=${offset}`);
 export const saveSubject = (body: Pick<Subject, "code" | "name" | "source_note" | "is_active"> & Partial<Pick<Subject, "id" | "category" | "needs_review" | "major_ids">>) =>
@@ -37,6 +44,20 @@ export const pendingStudyDocuments = (groupId: string, offset = 0, limit = 6) =>
   api<StudyDocument[]>(`/groups/${groupId}/library/admin/pending?limit=${limit}&offset=${offset}`);
 export const pendingStudyDocumentCount = (groupId: string) =>
   api<{ count: number }>(`/groups/${groupId}/library/admin/pending-count`);
+export const openStudyDocumentReportCount = (groupId: string) =>
+  api<{ count: number }>(`/groups/${groupId}/library/admin/reports/count`);
+export const openStudyDocumentReports = (groupId: string, offset = 0, limit = 50) =>
+  api<StudyDocumentReport[]>(`/groups/${groupId}/library/admin/reports?limit=${limit}&offset=${offset}`);
+export const reportStudyDocument = (groupId: string, documentId: string, reason: string) =>
+  api<{ id: string; status: "OPEN" }>(`/groups/${groupId}/library/${documentId}/reports`, {
+    method: "POST", body: JSON.stringify({ reason }),
+  });
+export const decideStudyDocumentReport = (groupId: string, reportId: string,
+  decision: "REMOVE_DOCUMENT" | "DISMISS", note: string) =>
+  api<{ id: string; status: "RESOLVED" | "DISMISSED"; document_id: string }>(
+    `/groups/${groupId}/library/admin/reports/${reportId}`,
+    { method: "PATCH", body: JSON.stringify({ decision, note }) },
+  );
 
 export async function shareStudyDocument(groupId: string, subjectId: string, title: string,
                                          description: string, files: File[]): Promise<StudyDocument> {

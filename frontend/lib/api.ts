@@ -349,6 +349,7 @@ export async function removeApprovedGroupPost(groupId:string,postId:string,reaso
 export async function removeGroupComment(groupId:string,commentId:string):Promise<void>{await api(`/groups/${groupId}/admin/comments/${commentId}`,{method:'DELETE'});}
 
 export async function fetchAdminDashboard():Promise<import('@/types/admin').AdminDashboard>{return api('/admin/dashboard');}
+export async function fetchGroupAdmins(groupId:string):Promise<import('@/types/admin').GroupAdminInfo[]>{return api(`/admin/groups/${encodeURIComponent(groupId)}/admins`);}
 export async function exportAdminDashboard():Promise<void>{
   const response=await authenticatedFetch(`${API_BASE_URL}/admin/dashboard/export`);
   if(!response.ok)throw new Error('Không thể xuất báo cáo Excel.');
@@ -363,7 +364,7 @@ export function ragPeriodQuery(period:import('@/types/admin').RagPeriod,startDat
   return params.toString();
 }
 export async function fetchAdminUsers(q='',status='',period:import('@/types/admin').RagPeriod='30d',startDate='',endDate=''):Promise<import('@/types/admin').AdminUserPage>{return api(`/admin/users?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&limit=100&${ragPeriodQuery(period,startDate,endDate)}`);}
-export async function fetchAdminUserRagUsage(userId:string,period:import('@/types/admin').RagPeriod='30d',startDate='',endDate=''):Promise<import('@/types/admin').RagUserUsage>{return api(`/admin/users/${userId}/rag-usage?${ragPeriodQuery(period,startDate,endDate)}`);}
+export async function fetchAdminUserRagUsage(userId:string,period:import('@/types/admin').RagPeriod='30d',startDate='',endDate='',offset=0):Promise<import('@/types/admin').RagUserUsage>{return api(`/admin/users/${userId}/rag-usage?${ragPeriodQuery(period,startDate,endDate)}&offset=${offset}`);}
 export async function setAdminUserStatus(userId:string,status:'ACTIVE'|'LOCKED'|'DISABLED',reason:string):Promise<void>{await api(`/admin/users/${userId}/status`,{method:'PATCH',body:JSON.stringify({status,reason})});}
 export async function setUserGroupAdmin(userId:string,groupId:string,grant:boolean):Promise<void>{await api(`/admin/users/${userId}/group-admin`,{method:'PUT',body:JSON.stringify({group_id:groupId,grant})});}
 export async function disciplineAdminUser(userId:string,action:'WARN'|'SUSPEND'|'BAN'|'UNLOCK',reason:string,durationDays?:number):Promise<void>{await api(`/admin/users/${userId}/discipline`,{method:'POST',body:JSON.stringify({action,reason,duration_days:durationDays})});}

@@ -11,7 +11,8 @@ from app.llm.contracts import LLMConfigurationError, LLMServiceError
 from app.llm.security import PromptSecurityError
 from app.models.audit import AuditLog
 from app.models.auth import User
-from app.models.community import GroupMember
+from app.models.community import Group, GroupMember
+from app.models.enums import GroupStatus
 from app.rag.embeddings import EmbeddingError, get_embedding_provider
 from app.rag.retriever import AccessScope, RetrievalService
 from app.rag.service import RAGService
@@ -34,14 +35,16 @@ async def chat(request_body: InternalRAGRequest, request: Request,
             enforce_rag_rate_limit(f"user:{user.id}"),
             enforce_rag_rate_limit(f"ip:{client_ip}"),
         )
-    except RateLimitExceeded:
+    except RateLimitExceeded as exc:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                            detail="Too many requests", headers={"Retry-After": "60"}) from None
+                            detail="Too many requests",
+                            headers={"Retry-After": str(exc.retry_after)}) from None
     except RedisError:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                             detail="Rate limiter unavailable") from None
-    group_ids = tuple((await session.scalars(select(GroupMember.group_id).where(
-        GroupMember.user_id == user.id))).all())
+    group_ids = tuple((await session.scalars(select(GroupMember.group_id)
+        .join(Group, Group.id == GroupMember.group_id)
+        .where(GroupMember.user_id == user.id, Group.status == GroupStatus.ACTIVE))).all())
     slot_token = None
     try:
         slot_token = await acquire_rag_slot()
@@ -50,7 +53,19 @@ async def chat(request_body: InternalRAGRequest, request: Request,
             request_body.question, request_body.conversation_id,
             access=AccessScope(authenticated=True, group_ids=group_ids), user_id=user.id)
     except PromptSecurityError as exc:
+        try:
+            session.add(AuditLog(actor_id=user.id, action="RAG_SECURITY_REJECTED",
+                target_type="AI_MESSAGE", target_id=None,
+                ip_address=client_ip if client_ip != "unknown" else None,
+                metadata_={"code": exc.code}))
+            await session.commit()
+        except Exception:
+            await session.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=exc.code) from None
+    except RateLimitExceeded as exc:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail="Too many requests",
+                            headers={"Retry-After": str(exc.retry_after)}) from None
     except ValueError as exc:
         code = status.HTTP_404_NOT_FOUND if "conversation" in str(exc) else status.HTTP_400_BAD_REQUEST
         raise HTTPException(status_code=code, detail=str(exc)) from None

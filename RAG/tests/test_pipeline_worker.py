@@ -1,13 +1,28 @@
 import asyncio
 import subprocess
+from datetime import UTC, datetime, timedelta
 
-from app.knowledge.pipeline_worker import RAG_ROOT, _run_module, _safe_stage_diagnostic, next_pipeline_failure
+from app.knowledge.pipeline_worker import (
+    RAG_ROOT, _run_module, _safe_stage_diagnostic, _should_recover_pipeline,
+    next_pipeline_failure,
+)
 
 
 def test_pipeline_failure_retries_then_becomes_terminal() -> None:
     assert next_pipeline_failure(0, 3) == (1, "RETRYING")
     assert next_pipeline_failure(2, 3) == (3, "RETRYING")
     assert next_pipeline_failure(3, 3) == (4, "FAILED")
+
+
+def test_pipeline_recovery_does_not_reset_terminal_failure_or_recent_work() -> None:
+    now = datetime.now(UTC)
+    assert not _should_recover_pipeline({"status": "FAILED", "attempts": 4}, now)
+    assert not _should_recover_pipeline({"status": "QUEUED", "recovered_at": now.isoformat()}, now)
+    assert not _should_recover_pipeline({"status": "SUCCEEDED", "finished_at": now.isoformat()}, now)
+    assert _should_recover_pipeline({
+        "status": "SUCCEEDED", "finished_at": (now - timedelta(days=2)).isoformat()
+    }, now)
+    assert _should_recover_pipeline({"status": "PROCESSING"}, now)
 
 
 def test_stage_diagnostic_keeps_aggregate_and_drops_urls() -> None:

@@ -1,6 +1,6 @@
 """Orchestrate post-crawl OCR and indexing outside the crawler process."""
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import logging
 from pathlib import Path
 import re
@@ -30,6 +30,32 @@ class PipelineStageError(RuntimeError):
 def next_pipeline_failure(attempts: int, max_retries: int) -> tuple[int, str]:
     next_attempt = attempts + 1
     return next_attempt, "RETRYING" if next_attempt <= max_retries else "FAILED"
+
+
+def _should_recover_pipeline(pipeline: dict, now: datetime) -> bool:
+    """Do not restart completed/exhausted jobs or requeue on every API restart."""
+    settings = get_settings()
+    if pipeline.get("status") == "FAILED":
+        return False
+    if int(pipeline.get("attempts", 0)) > settings.pipeline_max_retries:
+        return False
+    # A successful stage may still leave a backlog (process_source is batched).
+    # Revisit it at most daily, rather than on every backend restart.
+    cooldown_minutes = (max(1440, settings.pipeline_recovery_cooldown_minutes)
+                        if pipeline.get("status") == "SUCCEEDED"
+                        else settings.pipeline_recovery_cooldown_minutes)
+    for timestamp in (pipeline.get("recovered_at"), pipeline.get("finished_at")):
+        if not timestamp:
+            continue
+        try:
+            recorded = datetime.fromisoformat(timestamp)
+            if recorded.tzinfo is not None and recorded > now - timedelta(
+                minutes=cooldown_minutes
+            ):
+                return False
+        except (TypeError, ValueError):
+            pass
+    return True
 
 
 async def _run_module(*arguments: str) -> int:
@@ -131,9 +157,10 @@ async def recover_incomplete_sources(queue: PipelineQueue) -> int:
                 continue
             metadata = dict(run.metadata_ or {})
             pipeline = dict(metadata.get("pipeline") or {})
+            if not _should_recover_pipeline(pipeline, datetime.now(UTC)):
+                continue
             pipeline.update({
                 "status": "QUEUED",
-                "attempts": 0,
                 "recovered_at": datetime.now(UTC).isoformat(),
             })
             metadata["pipeline"] = pipeline
@@ -171,7 +198,11 @@ async def run_pipeline_worker() -> None:
         async with AsyncSessionLocal() as session:
             run = await session.get(AICrawlRun, message.run_id)
             source_id = run.source_id if run else None
+            pipeline_status = (run.metadata_ or {}).get("pipeline", {}).get("status") if run else None
         if source_id is None:
+            await queue.acknowledge(message.message_id)
+            continue
+        if pipeline_status == "FAILED":
             await queue.acknowledge(message.message_id)
             continue
         token = await queue.acquire_source_lock(source_id)

@@ -5,6 +5,7 @@ import csv
 import re
 from typing import Any
 from urllib.parse import parse_qsl, unquote, urljoin, urlsplit
+from zipfile import BadZipFile, ZipFile
 
 from bs4 import BeautifulSoup
 from docx import Document
@@ -121,8 +122,12 @@ def _discover_html_links(soup: BeautifulSoup, body: bytes, base_url: str) -> tup
 
 def _html(body: bytes, url: str) -> ExtractedDocument:
     soup = BeautifulSoup(body, "html.parser")
-    for node in soup.select("script,style,noscript,svg,form,nav,header,footer,aside"):
+    for node in soup.select("script,style,noscript,svg,form,nav,header,footer,aside,template,[hidden],[aria-hidden='true']"):
         node.decompose()
+    for node in soup.select("[style]"):
+        if re.search(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)",
+                     node.get("style", ""), re.IGNORECASE):
+            node.decompose()
     title_node = soup.select_one("meta[property='og:title']")
     title = (title_node.get("content") if title_node else None) or (soup.h1.get_text(" ", strip=True) if soup.h1 else None) or (soup.title.get_text(" ", strip=True) if soup.title else url)
     path = urlsplit(url).path.casefold()
@@ -147,6 +152,8 @@ def _html(body: bytes, url: str) -> ExtractedDocument:
 
 def _pdf(body: bytes, url: str) -> ExtractedDocument:
     reader = PdfReader(BytesIO(body))
+    if len(reader.pages) > 1000:
+        raise UnsupportedDocument("PDF has too many pages")
     pages = [_clean(page.extract_text() or "") for page in reader.pages]
     offset, ranges = 0, []
     for page_number, page in enumerate(pages, 1):
@@ -163,26 +170,40 @@ def _pdf(body: bytes, url: str) -> ExtractedDocument:
 
 
 def _docx(body: bytes, url: str) -> ExtractedDocument:
+    _check_office_archive(body)
     doc = Document(BytesIO(body))
-    blocks = [paragraph.text for paragraph in doc.paragraphs]
-    blocks.extend(" | ".join(cell.text for cell in row.cells) for table in doc.tables for row in table.rows)
-    title = next((p.text for p in doc.paragraphs if p.style and p.style.name.startswith("Title") and p.text.strip()), url.rsplit("/", 1)[-1])
-    sections = tuple(ExtractedSection(_clean(p.text), _clean(p.text)) for p in doc.paragraphs
-                     if p.text.strip() and p.style and p.style.name.startswith("Heading"))
+    blocks = [_visible_paragraph_text(paragraph) for paragraph in doc.paragraphs]
+    blocks.extend(" | ".join(" ".join(_visible_paragraph_text(paragraph)
+                                     for paragraph in cell.paragraphs)
+                             for cell in row.cells)
+                  for table in doc.tables for row in table.rows)
+    title = next((_visible_paragraph_text(p) for p in doc.paragraphs
+                  if p.style and p.style.name.startswith("Title") and _visible_paragraph_text(p)),
+                 url.rsplit("/", 1)[-1])
+    sections = tuple(ExtractedSection(_clean(text), _clean(text)) for p in doc.paragraphs
+                     if (text := _visible_paragraph_text(p)) and p.style and p.style.name.startswith("Heading"))
     tables = []
     for number, table in enumerate(doc.tables, 1):
-        rows = tuple(tuple(_clean(cell.text) for cell in row.cells) for row in table.rows)
+        rows = tuple(tuple(_clean(" ".join(_visible_paragraph_text(p) for p in cell.paragraphs))
+                           for cell in row.cells) for row in table.rows)
         if rows:
             tables.append(ExtractedTable(f"Table {number}", rows[0], rows[1:]))
     return ExtractedDocument(_clean(title), _clean("\n".join(blocks)), sections=sections,
                              tables=tuple(tables))
 
 
+def _visible_paragraph_text(paragraph) -> str:
+    return "".join(run.text for run in paragraph.runs if run.font.hidden is not True)
+
+
 def _xlsx(body: bytes, url: str) -> ExtractedDocument:
+    _check_office_archive(body)
     workbook = load_workbook(BytesIO(body), read_only=True, data_only=True)
     lines: list[str] = []
     tables: list[ExtractedTable] = []
     for sheet in workbook.worksheets[:20]:
+        if sheet.sheet_state != "visible":
+            continue
         lines.append(f"Sheet: {sheet.title}")
         sheet_rows: list[tuple[str, ...]] = []
         for row_number, row in enumerate(sheet.iter_rows(values_only=True)):
@@ -196,6 +217,20 @@ def _xlsx(body: bytes, url: str) -> ExtractedDocument:
             tables.append(ExtractedTable(sheet.title, sheet_rows[0], tuple(sheet_rows[1:])))
     workbook.close()
     return ExtractedDocument(url.rsplit("/", 1)[-1], _clean("\n".join(lines)), tables=tuple(tables))
+
+
+def _check_office_archive(body: bytes) -> None:
+    """Reject oversized decompression and embedded Office active content."""
+    try:
+        with ZipFile(BytesIO(body)) as archive:
+            entries = archive.infolist()
+            if len(entries) > 2000 or sum(item.file_size for item in entries) > 100 * 1024 * 1024:
+                raise UnsupportedDocument("Office archive exceeds extraction limits")
+            if any(item.filename.casefold().endswith(("vbaproject.bin", ".exe", ".js"))
+                   for item in entries):
+                raise UnsupportedDocument("Office archive contains active content")
+    except BadZipFile as exc:
+        raise UnsupportedDocument("invalid Office archive") from exc
 
 
 def _csv(body: bytes, url: str) -> ExtractedDocument:
@@ -228,6 +263,8 @@ def _sniff_content_type(body: bytes, declared: str) -> str:
 
 
 def extract_document(body: bytes, content_type: str, url: str, *, allow_short: bool = False) -> ExtractedDocument:
+    if len(body) > 25 * 1024 * 1024:
+        raise UnsupportedDocument("document exceeds extraction byte limit")
     lower_path = url.lower().split("?", 1)[0]
     content_type = _sniff_content_type(body, content_type)
     if content_type in {"text/html", "application/xhtml+xml"} or lower_path.endswith(("/", ".html", ".htm")):
@@ -246,4 +283,6 @@ def extract_document(body: bytes, content_type: str, url: str, *, allow_short: b
         raise UnsupportedDocument(f"unsupported content type: {content_type or 'unknown'}")
     if len(result.content) < 40 and not allow_short:
         raise UnsupportedDocument("document has too little extractable text")
+    if len(result.content) > 2_000_000:
+        raise UnsupportedDocument("extracted text exceeds limit")
     return result

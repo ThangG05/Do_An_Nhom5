@@ -88,6 +88,21 @@ async def test_gemini_provider_uses_validated_structured_output() -> None:
     assert call["config"].response_mime_type == "application/json"
 
 
+@pytest.mark.asyncio
+async def test_gemini_casual_answer_uses_bounded_structured_output() -> None:
+    provider = GeminiProvider.__new__(GeminiProvider)
+    provider.settings = SimpleNamespace(rag_casual_max_output_tokens=160)
+    provider.guard = PromptGuard(max_user_chars=500, max_context_chars=2000)
+    provider._generate_content = AsyncMock(return_value=SimpleNamespace(
+        parsed={"answer": "Mình ở đây nghe bạn chia sẻ nhé."}, text=None))
+
+    result = await provider.answer_casual("Mình buồn quá")
+
+    assert "nghe bạn" in result.answer
+    assert provider._generate_content.await_args.args[0] == "Mình buồn quá"
+    assert provider._generate_content.await_args.args[1].max_output_tokens == 160
+
+
 def test_vietnamese_prompt_injection_is_rejected() -> None:
     guard = PromptGuard(max_user_chars=500, max_context_chars=2000)
     with pytest.raises(PromptSecurityError):

@@ -10,6 +10,9 @@ from src.api.dependencies import CurrentGroupAdmin, CurrentSuperAdmin, CurrentUs
 from src.db.session import get_db
 from src.models.study_document import (StudyDocumentDecision, StudyDocumentDownload,
                                        StudyDocumentResponse, SubjectResponse, SubjectUpsertRequest, MajorResponse)
+from src.models.study_document_report import (StudyDocumentReportCreate,
+                                              StudyDocumentReportDecision,
+                                              StudyDocumentReportResponse)
 from src.services import study_document_service as library
 
 router = APIRouter(tags=["Study document library"])
@@ -72,6 +75,31 @@ def pending_documents(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db,
 @router.get("/groups/{group_id}/library/admin/pending-count")
 def pending_document_count(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db):
     return {"count": library.count_pending_documents(db, group_id, admin)}
+
+
+@router.post("/groups/{group_id}/library/{document_id}/reports", status_code=201)
+def report_document(group_id: uuid.UUID, document_id: uuid.UUID, payload: StudyDocumentReportCreate,
+                    user: CurrentUser, db: Db):
+    return library.create_document_report(db, group_id, document_id, user, payload.reason)
+
+
+@router.get("/groups/{group_id}/library/admin/reports", response_model=list[StudyDocumentReportResponse])
+def document_reports(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db,
+                     limit: Annotated[int, Query(ge=1, le=100)] = 50,
+                     offset: Annotated[int, Query(ge=0)] = 0):
+    return library.list_open_document_reports(db, group_id, admin, limit, offset)
+
+
+@router.get("/groups/{group_id}/library/admin/reports/count")
+def document_report_count(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db):
+    return {"count": library.count_open_document_reports(db, group_id, admin)}
+
+
+@router.patch("/groups/{group_id}/library/admin/reports/{report_id}")
+def decide_document_report(group_id: uuid.UUID, report_id: uuid.UUID,
+                           payload: StudyDocumentReportDecision,
+                           admin: CurrentGroupAdmin, db: Db):
+    return library.decide_document_report(db, group_id, report_id, admin, payload)
 
 
 @router.post("/groups/{group_id}/library", response_model=StudyDocumentResponse, status_code=201)

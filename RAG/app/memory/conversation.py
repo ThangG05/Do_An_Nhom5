@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.llm.contracts import ConversationTurn, LLMProvider, LLMServiceError
+from app.llm.security import InputKind, PromptGuard
 from app.models.enums import AIMessageRole
 from app.models.rag import AIConversation, AIMessage
 
@@ -25,6 +26,8 @@ class ConversationMemoryService:
 
     async def prepare(self, question: str, conversation_id: UUID | None,
                       user_id: UUID | None = None) -> PreparedQuestion:
+        question = PromptGuard(self.settings.llm_max_input_chars,
+                               self.settings.llm_max_context_chars).inspect(question, InputKind.USER).value
         if conversation_id is None:
             return PreparedQuestion(question, question, False)
         conversation = await self.session.scalar(select(AIConversation).where(

@@ -2,15 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  decideStudyDocument, deleteStudyDocument, downloadStudyBundle, listStudyDocuments,
-  myStudyDocuments, pendingStudyDocuments, previewStudyOfficeFile,
-  shareStudyDocument, signedStudyFile,
-  type StudyDocument, type StudyFile, type CatalogScope, type OfficePreview,
+  decideStudyDocument, decideStudyDocumentReport, deleteStudyDocument, downloadStudyBundle, listStudyDocuments,
+  myStudyDocuments, openStudyDocumentReports, pendingStudyDocuments, previewStudyOfficeFile,
+  reportStudyDocument, shareStudyDocument, signedStudyFile,
+  type StudyDocument, type StudyDocumentReport, type StudyFile, type CatalogScope, type OfficePreview,
 } from "@/lib/study-library";
 import styles from "./StudyLibrary.module.css";
 import SubjectPicker from "./SubjectPicker";
+import { useAuthUser } from "@/components/auth/AuthProvider";
 
-type Tab = "browse" | "mine" | "pending";
+type Tab = "browse" | "mine" | "pending" | "reports";
 const LIMIT = 50 * 1024 * 1024;
 const PAGE_SIZE = 5;
 const ALLOWED = new Set(["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "jpg", "jpeg", "png", "webp"]);
@@ -20,11 +21,13 @@ const formatDate = (value: string) => new Intl.DateTimeFormat("vi-VN", {
   dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh",
 }).format(new Date(value));
 
-export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount = 0 }: {
-  groupId: string; isAdmin: boolean; canRead: boolean; pendingCount?: number;
+export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount = 0, reportCount = 0 }: {
+  groupId: string; isAdmin: boolean; canRead: boolean; pendingCount?: number; reportCount?: number;
 }) {
+  const currentUser = useAuthUser();
   const [tab, setTab] = useState<Tab>("browse");
   const [documents, setDocuments] = useState<StudyDocument[]>([]);
+  const [reports, setReports] = useState<StudyDocumentReport[]>([]);
   const [uploadSubjectId, setUploadSubjectId] = useState("");
   const [scope, setScope] = useState<CatalogScope>({});
   const [query, setQuery] = useState("");
@@ -41,7 +44,12 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [officePreview, setOfficePreview] = useState<OfficePreview | null>(null);
+  const [reportingDocument, setReportingDocument] = useState<StudyDocument | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [resolvingReport, setResolvingReport] = useState<StudyDocumentReport | null>(null);
+  const [resolution, setResolution] = useState<{ decision: "REMOVE_DOCUMENT" | "DISMISS"; note: string } | null>(null);
   const totalBytes = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files]);
 
   useEffect(() => {
@@ -49,6 +57,13 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
     let active = true;
     const timer = window.setTimeout(() => {
       setLoading(true);
+      if (tab === "reports") {
+        void openStudyDocumentReports(groupId, offset, PAGE_SIZE + 1).then(rows => {
+          if (active) { setReports(rows.slice(0, PAGE_SIZE)); setHasMore(rows.length > PAGE_SIZE); setError(""); }
+        }, err => { if (active) setError(err instanceof Error ? err.message : "Không tải được tố cáo tài liệu."); })
+          .finally(() => { if (active) setLoading(false); });
+        return;
+      }
       const request = tab === "mine" ? myStudyDocuments(groupId, offset, PAGE_SIZE + 1)
         : tab === "pending" ? pendingStudyDocuments(groupId, offset, PAGE_SIZE + 1)
         : listStudyDocuments(groupId, query, subjectId, offset, scope, PAGE_SIZE + 1);
@@ -60,15 +75,17 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   }, [canRead, groupId, query, subjectId, tab, offset, refresh, scope]);
 
   useEffect(() => {
-    if (!isAdmin || tab !== "pending") return;
+    if (!isAdmin || !["pending", "reports"].includes(tab)) return;
     const timer = window.setInterval(() => setRefresh(value => value + 1), 30_000);
     return () => window.clearInterval(timer);
   }, [isAdmin, tab]);
 
+  useEffect(() => { setReports([]); }, [groupId, refresh]);
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!uploadSubjectId || !title.trim() || !files.length || totalBytes > LIMIT || files.length > 10) return;
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setNotice("");
     try {
       await shareStudyDocument(groupId, uploadSubjectId, title.trim(), description.trim(), files);
       setShowForm(false); setUploadSubjectId(""); setTitle(""); setDescription(""); setFiles([]); setTab("mine"); setOffset(0); setRefresh(value => value + 1);
@@ -78,7 +95,7 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
 
   const decide = async (doc: StudyDocument, decision: "APPROVE" | "REJECT") => {
     if (decision === "REJECT" && reason.trim().length < 3) return;
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setNotice("");
     try {
       await decideStudyDocument(groupId, doc.id, decision, decision === "REJECT" ? reason.trim() : undefined);
       setRejecting(""); setReason(""); setOffset(0); setRefresh(value => value + 1);
@@ -124,11 +141,34 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
     finally { setBusy(false); }
   };
 
+  const submitReport = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!reportingDocument || reportReason.trim().length < 5) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      await reportStudyDocument(groupId, reportingDocument.id, reportReason.trim());
+      setReportingDocument(null); setReportReason("");
+      setNotice("Tố cáo đã được gửi đến admin nhóm Học tập.");
+    } catch (err) { setError(err instanceof Error ? err.message : "Không gửi được tố cáo."); }
+    finally { setBusy(false); }
+  };
+
+  const submitReportDecision = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!resolvingReport || !resolution || resolution.note.trim().length < 3) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      await decideStudyDocumentReport(groupId, resolvingReport.id, resolution.decision, resolution.note.trim());
+      setResolvingReport(null); setResolution(null); setOffset(0); setRefresh(value => value + 1);
+    } catch (err) { setError(err instanceof Error ? err.message : "Không xử lý được tố cáo."); }
+    finally { setBusy(false); }
+  };
+
   if (!canRead) return <section className={styles.gate}><span>🔒</span><h2>Kho tài liệu dành cho thành viên</h2><p>Hãy tham gia nhóm Học tập để tìm kiếm và chia sẻ tài liệu đã được duyệt.</p></section>;
 
   return <section className={styles.library} aria-label="Kho tài liệu Học tập">
     <header className={styles.header}><div><span>KHO TÀI LIỆU · HỌC TẬP</span><h2>Tài liệu học tập</h2><p>Chia sẻ kiến thức theo môn học. Mọi tài liệu đều được quản trị viên duyệt trước khi xuất hiện.</p></div><button type="button" className={styles.primary} onClick={() => { setShowForm(value => !value); setUploadSubjectId(""); }}>{showForm ? "Đóng biểu mẫu" : "+ Chia sẻ tài liệu"}</button></header>
-    {error && <div className={styles.error} role="alert">{error}</div>}
+    {error && <div className={styles.error} role="alert">{error}</div>}{notice && <div className={styles.notice} role="status">{notice}</div>}
     {showForm && <form className={styles.form} onSubmit={event => void submit(event)}>
       <div className={styles.formHeading}><h3>Chia sẻ tài liệu mới</h3><span>Admin nhóm sẽ xem xét trước khi hiển thị</span></div>
       <div className={styles.formGrid}>
@@ -141,17 +181,19 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
       {files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || "")) && <p className={styles.error}>Có file không thuộc định dạng được hỗ trợ.</p>}
       <div className={styles.formFoot}><small>Tối đa 10 file, tổng 50 MB. File gốc được lưu riêng tư trên R2.</small><button className={styles.primary} disabled={busy || !uploadSubjectId || !title.trim() || !files.length || files.length > 10 || totalBytes > LIMIT || files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || ""))}>{busy ? "Đang gửi…" : "Gửi chờ duyệt"}</button></div>
     </form>}
-    <nav className={styles.tabs} aria-label="Danh mục kho tài liệu"><button className={tab === "browse" ? styles.active : ""} onClick={() => { setTab("browse"); setOffset(0); }}>Tài liệu đã duyệt</button><button className={tab === "mine" ? styles.active : ""} onClick={() => { setTab("mine"); setOffset(0); }}>Tài liệu của tôi</button>{isAdmin && <button className={tab === "pending" ? styles.active : ""} onClick={() => { setTab("pending"); setOffset(0); }}>Chờ duyệt{pendingCount > 0 && <span className={styles.pendingBadge}>{pendingCount}</span>}</button>}</nav>
+    <nav className={styles.tabs} aria-label="Danh mục kho tài liệu"><button className={tab === "browse" ? styles.active : ""} onClick={() => { setTab("browse"); setOffset(0); }}>Tài liệu đã duyệt</button><button className={tab === "mine" ? styles.active : ""} onClick={() => { setTab("mine"); setOffset(0); }}>Tài liệu của tôi</button>{isAdmin && <><button className={tab === "pending" ? styles.active : ""} onClick={() => { setTab("pending"); setOffset(0); }}>Chờ duyệt{pendingCount > 0 && <span className={styles.pendingBadge}>{pendingCount}</span>}</button><button className={tab === "reports" ? styles.active : ""} onClick={() => { setTab("reports"); setOffset(0); }}>Tố cáo{reportCount > 0 && <span className={styles.pendingBadge}>{reportCount}</span>}</button></>}</nav>
     <div hidden={tab !== "browse"}><div className={styles.filters}><input value={query} onChange={event => { setQuery(event.target.value); setOffset(0); }} placeholder="Tìm tên tài liệu hoặc môn học…" aria-label="Tìm tài liệu"/></div><SubjectPicker value={subjectId} onChange={id => { setSubjectId(id); setOffset(0); }} onScopeChange={next => { setScope(next); setOffset(0); }} /></div>
-    {loading ? <div className={styles.empty}>Đang tải tài liệu…</div> : !documents.length ? <div className={styles.empty}><span>📚</span><h3>{tab === "pending" ? "Không có tài liệu chờ duyệt" : "Chưa có tài liệu phù hợp"}</h3><p>{tab === "browse" ? "Thử tìm môn học khác hoặc chia sẻ tài liệu đầu tiên." : "Danh sách sẽ cập nhật khi có tài liệu mới."}</p></div> : <div className={styles.list}>{documents.map(doc => <article key={doc.id} className={styles.card}>
+    {tab === "reports" ? loading ? <div className={styles.empty}>Đang tải tố cáo…</div> : !reports.length ? <div className={styles.empty}><span>✓</span><h3>Không có tố cáo cần xử lý</h3><p>Tố cáo tài liệu mới sẽ xuất hiện tại đây.</p></div> : <div className={styles.reportList}>{reports.map(report => <article key={report.id} className={styles.reportCard}><div className={styles.reportHeading}><div><span className={styles.subject}>{report.subject_code ? `${report.subject_code} · ` : ""}{report.subject_name}</span><h3>{report.title}</h3></div><time>{formatDate(report.created_at)}</time></div><p className={styles.reportMeta}><strong>{report.reporter_name}</strong> đã tố cáo · Người chia sẻ: <strong>{report.uploader_name}</strong></p><div className={styles.reportReason}><strong>Nguyên nhân tố cáo</strong><p>{report.reason}</p></div>{report.document_deleted && <p className={styles.reportWarning}>Tác giả đã xóa tài liệu khỏi kho trước khi tố cáo được xử lý.</p>}<div className={styles.reportActions}><button type="button" disabled={busy || report.document_deleted} className={styles.deleteButton} onClick={() => { setResolvingReport(report); setResolution({ decision: "REMOVE_DOCUMENT", note: "" }); }}>Gỡ tài liệu khỏi nhóm</button><button type="button" disabled={busy} onClick={() => { setResolvingReport(report); setResolution({ decision: "DISMISS", note: "" }); }}>Bác tố cáo</button></div></article>)}</div> : loading ? <div className={styles.empty}>Đang tải tài liệu…</div> : !documents.length ? <div className={styles.empty}><span>📚</span><h3>{tab === "pending" ? "Không có tài liệu chờ duyệt" : "Chưa có tài liệu phù hợp"}</h3><p>{tab === "browse" ? "Thử tìm môn học khác hoặc chia sẻ tài liệu đầu tiên." : "Danh sách sẽ cập nhật khi có tài liệu mới."}</p></div> : <div className={styles.list}>{documents.map(doc => <article key={doc.id} className={styles.card}>
       <div className={styles.cardTop}><span className={styles.subject}>{doc.subject_code ? `${doc.subject_code} · ` : ""}{doc.subject_name}</span>{tab !== "browse" && <span className={`${styles.status} ${styles[doc.status.toLowerCase()]}`}>{doc.status === "PENDING" ? "Chờ duyệt" : doc.status === "APPROVED" ? "Đã duyệt" : "Từ chối"}</span>}</div>
       <h3>{doc.title}</h3>{doc.description && <p>{doc.description}</p>}<div className={styles.meta}>Chia sẻ bởi <strong>{doc.uploader_name}</strong><span>·</span>{formatDate(doc.created_at)}<span>·</span>{formatSize(doc.total_bytes)}</div>
       {doc.rejection_reason && <p className={styles.rejection}>Lý do từ chối: {doc.rejection_reason}</p>}
       {!!doc.files.length && <div className={styles.files}>{doc.files.map(file => <div key={file.id} className={styles.file}><div><span aria-hidden="true">{["jpg", "jpeg", "png", "webp"].includes(file.extension) ? "▧" : "▤"}</span><div><strong title={file.original_name}>{file.original_name}</strong><small>{file.extension.toUpperCase()} · {formatSize(file.size_bytes)}</small></div></div><div className={styles.fileActions}>{(["pdf", "docx", "xlsx", "jpg", "jpeg", "png", "webp"].includes(file.extension.toLowerCase())) && <button type="button" onClick={() => void openFile(doc, file, true)}>Xem</button>}<button type="button" onClick={() => void openFile(doc, file, false)}>Tải</button></div></div>)}</div>}
-      <div className={styles.documentActions}><button type="button" disabled={busy} onClick={() => void downloadBundle(doc)}>Tải cả bộ (.zip)</button>{tab === "mine" && <button type="button" className={styles.deleteButton} disabled={busy} onClick={() => void removeDocument(doc)}>Xóa tài liệu</button>}</div>
+      <div className={styles.documentActions}><button type="button" disabled={busy} onClick={() => void downloadBundle(doc)}>Tải cả bộ (.zip)</button>{tab === "mine" && <button type="button" className={styles.deleteButton} disabled={busy} onClick={() => void removeDocument(doc)}>Xóa tài liệu</button>}{tab === "browse" && currentUser?.id !== doc.uploaded_by && <button type="button" disabled={busy} onClick={() => { setReportingDocument(doc); setReportReason(""); }}>Tố cáo</button>}</div>
       {tab === "pending" && isAdmin && <div className={styles.moderation}>{rejecting === doc.id ? <><input value={reason} onChange={event => setReason(event.target.value)} placeholder="Lý do từ chối (ít nhất 3 ký tự)" maxLength={2000} /><button disabled={busy || reason.trim().length < 3} onClick={() => void decide(doc, "REJECT")}>Xác nhận từ chối</button><button onClick={() => { setRejecting(""); setReason(""); }}>Hủy</button></> : <><button className={styles.primary} disabled={busy} onClick={() => void decide(doc, "APPROVE")}>Phê duyệt</button><button disabled={busy} onClick={() => setRejecting(doc.id)}>Từ chối</button></>}</div>}
     </article>)}</div>}
     {(offset > 0 || hasMore) && <nav className={styles.pagination} aria-label="Phân trang tài liệu"><button type="button" disabled={loading || offset === 0} onClick={() => setOffset(value => Math.max(0, value - PAGE_SIZE))}>‹ Trang trước</button><span>Trang {Math.floor(offset / PAGE_SIZE) + 1}</span><button type="button" disabled={loading || !hasMore} onClick={() => setOffset(value => value + PAGE_SIZE)}>Trang sau ›</button></nav>}
     {officePreview && <div className={styles.previewBackdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setOfficePreview(null); }}><section className={styles.previewModal} role="dialog" aria-modal="true" aria-label={`Xem trước ${officePreview.name}`}><header><div><strong>{officePreview.name}</strong><small>{officePreview.kind === "word" ? "Bản xem trước Word" : "Bản xem trước Excel"}</small></div><button type="button" onClick={() => setOfficePreview(null)} aria-label="Đóng bản xem trước">×</button></header><div className={styles.previewContent}>{officePreview.kind === "word" ? <>{officePreview.paragraphs.map((paragraph, index) => <p key={`p-${index}`}>{paragraph}</p>)}{officePreview.tables.map((table, tableIndex) => <div className={styles.previewTableWrap} key={`t-${tableIndex}`}><table><tbody>{table.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>)}</tbody></table></div>)}</> : officePreview.sheets.map(sheet => <section key={sheet.name}><h3>{sheet.name}</h3><div className={styles.previewTableWrap}><table><tbody>{sheet.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell ?? ""}</td>)}</tr>)}</tbody></table></div>{sheet.truncated && <small>Đang hiển thị tối đa 200 dòng và 30 cột của trang tính này.</small>}</section>)}</div></section></div>}
+    {reportingDocument && <div className={styles.previewBackdrop}><form className={`${styles.previewModal} ${styles.reasonModal}`} role="dialog" aria-modal="true" onSubmit={event => void submitReport(event)}><header><div><strong>Tố cáo tài liệu</strong><small>{reportingDocument.title}</small></div><button type="button" onClick={() => setReportingDocument(null)} aria-label="Đóng">×</button></header><div className={styles.reasonBody}><p>Hãy ghi rõ nội dung vi phạm để admin nhóm Học tập xem xét.</p><textarea autoFocus value={reportReason} onChange={event => setReportReason(event.target.value)} minLength={5} maxLength={3000} rows={5} placeholder="Mô tả nguyên nhân tố cáo…" required /><small>{reportReason.trim().length}/3000 ký tự</small></div><footer><button type="button" onClick={() => setReportingDocument(null)}>Hủy</button><button type="submit" className={styles.primary} disabled={busy || reportReason.trim().length < 5}>{busy ? "Đang gửi…" : "Gửi tố cáo"}</button></footer></form></div>}
+    {resolvingReport && resolution && <div className={styles.previewBackdrop}><form className={`${styles.previewModal} ${styles.reasonModal}`} role="dialog" aria-modal="true" onSubmit={event => void submitReportDecision(event)}><header><div><strong>{resolution.decision === "REMOVE_DOCUMENT" ? "Gỡ tài liệu khỏi nhóm" : "Bác tố cáo"}</strong><small>{resolvingReport.title}</small></div><button type="button" onClick={() => { setResolvingReport(null); setResolution(null); }} aria-label="Đóng">×</button></header><div className={styles.reasonBody}><p>{resolution.decision === "REMOVE_DOCUMENT" ? "Tài liệu và các file sẽ bị gỡ khỏi kho Học tập. Hãy ghi rõ lý do để người chia sẻ hiểu quyết định." : "Tố cáo sẽ được đóng mà không gỡ tài liệu. Hãy ghi lại căn cứ xử lý."}</p><textarea autoFocus value={resolution.note} onChange={event => setResolution(value => value ? { ...value, note: event.target.value } : value)} minLength={3} maxLength={3000} rows={5} placeholder="Lý do xử lý…" required /><small>{resolution.note.trim().length}/3000 ký tự</small></div><footer><button type="button" onClick={() => { setResolvingReport(null); setResolution(null); }}>Hủy</button><button type="submit" className={resolution.decision === "REMOVE_DOCUMENT" ? styles.deleteButton : styles.primary} disabled={busy || resolution.note.trim().length < 3}>{busy ? "Đang xử lý…" : resolution.decision === "REMOVE_DOCUMENT" ? "Xác nhận gỡ" : "Xác nhận bác tố cáo"}</button></footer></form></div>}
   </section>;
 }

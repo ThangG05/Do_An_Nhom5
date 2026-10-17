@@ -6,7 +6,9 @@ from app.services.redis import get_redis_client
 
 
 class RateLimitExceeded(RuntimeError):
-    pass
+    def __init__(self, message: str, retry_after: int = 60) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
 
 
 class ConcurrencyLimitExceeded(RuntimeError):
@@ -21,6 +23,17 @@ async def enforce_rag_rate_limit(identifier: str) -> None:
     count = int(await get_redis_client().eval(script, 1, key))
     if count > settings.rag_rate_limit_per_minute:
         raise RateLimitExceeded("rate limit exceeded")
+
+
+async def enforce_casual_daily_limit(identifier: str) -> None:
+    """Bound ungrounded conversational LLM calls per account (rolling 24 hours)."""
+    settings = get_settings()
+    digest = hashlib.sha256(identifier.encode()).hexdigest()
+    key = f"hvnh:rate:rag:casual:{digest}"
+    script = "local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],86400) end; return n"
+    count = int(await get_redis_client().eval(script, 1, key))
+    if count > settings.rag_casual_limit_per_day:
+        raise RateLimitExceeded("casual daily limit exceeded", retry_after=86400)
 
 
 async def acquire_rag_slot() -> str:

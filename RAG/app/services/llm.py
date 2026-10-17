@@ -9,6 +9,7 @@ from pydantic import BaseModel, ValidationError
 from app.core.config import get_settings
 from app.llm.contracts import (
     ContextBlock,
+    CasualAnswer,
     ConversationSummary,
     ConversationTurn,
     LLMAnswer,
@@ -17,7 +18,7 @@ from app.llm.contracts import (
     LLMServiceError,
     QuestionRewrite,
 )
-from app.llm.prompts import (REWRITE_SYSTEM_INSTRUCTION, SUMMARY_SYSTEM_INSTRUCTION,
+from app.llm.prompts import (CASUAL_SYSTEM_INSTRUCTION, REWRITE_SYSTEM_INSTRUCTION, SUMMARY_SYSTEM_INSTRUCTION,
                              SYSTEM_INSTRUCTION, answer_guidance)
 from app.llm.security import InputKind, PromptGuard, PromptSecurityError
 from app.rag.usage import capture_gemini_usage
@@ -122,6 +123,31 @@ class GeminiProvider(LLMProvider):
             raise LLMServiceError("invalid_response", type(exc).__name__) from exc
         except Exception as exc:
             raise LLMServiceError("provider_unavailable", type(exc).__name__) from exc
+
+    async def answer_casual(self, question: str) -> CasualAnswer:
+        safe_question = self.guard.inspect(question, InputKind.USER).value[:300]
+        config = types.GenerateContentConfig(
+            system_instruction=CASUAL_SYSTEM_INSTRUCTION,
+            temperature=0.5,
+            max_output_tokens=self.settings.rag_casual_max_output_tokens,
+            response_mime_type="application/json",
+            response_schema=CasualAnswer,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            safety_settings=[
+                types.SafetySetting(category=category, threshold="BLOCK_MEDIUM_AND_ABOVE")
+                for category in (
+                    "HARM_CATEGORY_HARASSMENT", "HARM_CATEGORY_HATE_SPEECH",
+                    "HARM_CATEGORY_SEXUALLY_EXPLICIT", "HARM_CATEGORY_DANGEROUS_CONTENT",
+                )
+            ],
+        )
+        try:
+            response = await self._generate_content(safe_question, config)
+            result = (CasualAnswer.model_validate(response.parsed) if response.parsed is not None
+                      else CasualAnswer.model_validate_json(response.text or ""))
+            return result.model_copy(update={"answer": self.guard.inspect_output(result.answer).value})
+        except (ValidationError, ValueError, TypeError, PromptSecurityError) as exc:
+            raise LLMServiceError("invalid_response", type(exc).__name__) from exc
 
     async def _structured_memory(self, payload: dict, schema: type[BaseModel],
                                  instruction: str) -> BaseModel:

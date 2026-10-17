@@ -51,6 +51,25 @@ async def test_deepseek_provider_uses_shared_structured_contract() -> None:
 
 
 @pytest.mark.asyncio
+async def test_deepseek_casual_answer_has_small_token_cap_and_no_context() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        assert body["max_tokens"] == 160
+        assert len(body["messages"]) == 2
+        assert "CONTEXT_BLOCKS" not in json.dumps(body)
+        return httpx.Response(200, json={"choices": [{"message": {
+            "content": json.dumps({"answer": "Nghe bạn hơi mệt. Nghỉ một chút nhé."})
+        }}]})
+
+    client = httpx.AsyncClient(base_url="https://api.deepseek.test",
+                               transport=httpx.MockTransport(handler))
+    provider = DeepSeekProvider(settings(), client)
+    result = await provider.answer_casual("Mình mệt quá")
+    assert "Nghỉ một chút" in result.answer
+    await client.aclose()
+
+
+@pytest.mark.asyncio
 async def test_deepseek_provider_rejects_invented_citation() -> None:
     async def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"choices": [{"message": {"content": json.dumps({

@@ -17,6 +17,19 @@ async def test_rate_limiter_rejects_above_limit(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
+async def test_casual_daily_budget_is_separate_and_hides_user_id(monkeypatch) -> None:
+    redis = type("SimpleRedis", (), {})()
+    redis.eval = AsyncMock(return_value=11)
+    monkeypatch.setattr(rate_limit, "get_settings", lambda: Settings(
+        _env_file=None, rag_casual_limit_per_day=10))
+    monkeypatch.setattr(rate_limit, "get_redis_client", lambda: redis)
+    with pytest.raises(rate_limit.RateLimitExceeded) as error:
+        await rate_limit.enforce_casual_daily_limit("user:private-id")
+    assert error.value.retry_after == 86400
+    assert "private-id" not in redis.eval.await_args.args[2]
+
+
+@pytest.mark.asyncio
 async def test_global_concurrency_fails_closed(monkeypatch) -> None:
     redis = type("SimpleRedis", (), {})(); redis.eval = AsyncMock(return_value=0)
     monkeypatch.setattr(rate_limit, "get_settings", lambda: Settings(_env_file=None))

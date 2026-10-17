@@ -1,22 +1,25 @@
 """Secure, temporal and access-aware hybrid retrieval without answer generation."""
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
+import hashlib
 import logging
 import re
 from time import perf_counter
 from uuid import UUID
 
 from qdrant_client import models
-from sqlalchemy import Float, and_, cast, func, literal_column, or_, select
+from sqlalchemy import Float, String, and_, cast, func, literal_column, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import get_settings
 from app.db.session import AsyncSessionLocal
 from app.knowledge.crawler.metadata import infer_academic_year, infer_document_type
+from app.knowledge.crawler.security import canonicalize_url, is_in_scope
 from app.llm.security import InputKind, PromptGuard
-from app.models.enums import AIDocumentType, AIVisibility
+from app.models.enums import AIDocumentStatus, AIDocumentType, AIVisibility
+from app.models.crawler import AISource
 from app.models.rag import AIDocument, AIDocumentChunk, AIDocumentVersion
 from app.rag.embeddings import EmbeddingProvider
 from app.rag.query_cache import QueryEmbeddingCache
@@ -162,6 +165,56 @@ def _published_timestamp(value: str | None) -> float:
         return 0
 
 
+def _authorized_chunk(chunk: AIDocumentChunk, version: AIDocumentVersion,
+                      document: AIDocument, intent: QueryIntent, access: AccessScope,
+                      source: AISource | None = None) -> bool:
+    """PostgreSQL is authoritative; vector payloads are only candidate pointers."""
+    if document.deleted_at is not None or (document.metadata_ or {}).get("retrieval_excluded") is True:
+        return False
+    if (version.metadata_ or {}).get("security_review") == "QUARANTINED":
+        return False
+    if version.source_url:
+        try:
+            canonicalize_url(version.source_url)
+        except ValueError:
+            return False
+    source_id = (document.metadata_ or {}).get("source_id")
+    if source_id:
+        if source is None or not source.enabled or str(source.id) != str(source_id) or not version.source_url:
+            return False
+        try:
+            if not is_in_scope(canonicalize_url(version.source_url), source.allowed_domains,
+                               source.allowed_path_prefixes):
+                return False
+        except ValueError:
+            return False
+    if version.document_id != document.id or chunk.document_version_id != version.id:
+        return False
+    if document.visibility == AIVisibility.PRIVATE:
+        return False
+    if document.visibility == AIVisibility.AUTHENTICATED and not access.authenticated:
+        return False
+    if document.visibility == AIVisibility.GROUP and document.group_id not in access.group_ids:
+        return False
+    if document.visibility not in {AIVisibility.PUBLIC, AIVisibility.AUTHENTICATED, AIVisibility.GROUP}:
+        return False
+    if intent.academic_year:
+        if ((version.metadata_ or {}).get("academic_year") or document.academic_year) != intent.academic_year:
+            return False
+    elif not intent.historical and document.current_version_id != version.id:
+        return False
+    if not intent.historical:
+        now = datetime.now(UTC)
+        if document.effective_from and document.effective_from > now:
+            return False
+        if document.effective_to and document.effective_to < now:
+            return False
+    if version.status not in ({AIDocumentStatus.INDEXED, AIDocumentStatus.ARCHIVED}
+                              if intent.historical else {AIDocumentStatus.INDEXED}):
+        return False
+    return hashlib.sha256(chunk.content.encode("utf-8")).hexdigest() == chunk.content_hash
+
+
 class RetrievalService:
     def __init__(self, embedder: EmbeddingProvider, session: AsyncSession | None = None,
                  reranker: HeuristicReranker | None = None) -> None:
@@ -192,7 +245,11 @@ class RetrievalService:
             visibility.append(and_(AIDocument.visibility == AIVisibility.GROUP,
                                    AIDocument.group_id.in_(access.group_ids)))
         predicates = [AIDocument.deleted_at.is_(None), or_(*visibility),
-                      search_vector.op("@@")(search_query)]
+                      search_vector.op("@@")(search_query),
+                      AIDocumentVersion.status.in_((AIDocumentStatus.INDEXED, AIDocumentStatus.ARCHIVED)
+                                                    if intent.historical else (AIDocumentStatus.INDEXED,)),
+                      func.coalesce(AIDocument.metadata_["retrieval_excluded"].astext, "false") != "true",
+                      func.coalesce(AIDocumentVersion.metadata_["security_review"].astext, "") != "QUARANTINED"]
         if intent.academic_year:
             predicates.append(func.coalesce(
                 AIDocumentVersion.metadata_["academic_year"].astext,
@@ -200,9 +257,10 @@ class RetrievalService:
             ) == intent.academic_year)
         elif not intent.historical:
             predicates.append(AIDocument.current_version_id == AIDocumentVersion.id)
-        statement = (select(AIDocumentChunk, AIDocumentVersion, AIDocument, rank)
+        statement = (select(AIDocumentChunk, AIDocumentVersion, AIDocument, AISource, rank)
                      .join(AIDocumentVersion, AIDocumentVersion.id == AIDocumentChunk.document_version_id)
                      .join(AIDocument, AIDocument.id == AIDocumentVersion.document_id)
+                     .outerjoin(AISource, cast(AISource.id, String) == AIDocument.metadata_["source_id"].astext)
                      .where(*predicates).order_by(rank.desc(), AIDocument.published_at.desc().nullslast())
                      .limit(self.settings.retrieval_lexical_candidate_k))
         try:
@@ -220,7 +278,55 @@ class RetrievalService:
                 (version.metadata_ or {}).get("published_at") or (
                     document.published_at.isoformat() if document.published_at else None),
                 chunk.page_start, chunk.page_end, chunk.section_title)
-                for chunk, version, document, lexical_rank in rows]
+                for chunk, version, document, source, lexical_rank in rows
+                if _authorized_chunk(chunk, version, document, intent, access, source)]
+
+    async def _verified_vector_hits(self, points: list, intent: QueryIntent,
+                                    access: AccessScope) -> list[RetrievalHit]:
+        candidates: dict[UUID, object] = {}
+        for point in points:
+            try:
+                chunk_id = UUID(str((point.payload or {}).get("chunk_id")))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            candidates[chunk_id] = point
+        if not candidates:
+            return []
+        statement = (select(AIDocumentChunk, AIDocumentVersion, AIDocument, AISource)
+                     .join(AIDocumentVersion, AIDocumentVersion.id == AIDocumentChunk.document_version_id)
+                     .join(AIDocument, AIDocument.id == AIDocumentVersion.document_id)
+                     .outerjoin(AISource, cast(AISource.id, String) == AIDocument.metadata_["source_id"].astext)
+                     .where(AIDocumentChunk.id.in_(candidates)))
+        if self.session is None:
+            async with AsyncSessionLocal() as session:
+                rows = (await session.execute(statement)).all()
+        else:
+            rows = (await self.session.execute(statement)).all()
+        verified = {}
+        for chunk, version, document, source in rows:
+            point = candidates[chunk.id]
+            payload = point.payload or {}
+            if (str(point.id) != str(chunk.qdrant_point_id)
+                    or payload.get("document_id") != str(document.id)
+                    or payload.get("document_version_id") != str(version.id)
+                    or payload.get("content_hash") != chunk.content_hash
+                    or not _authorized_chunk(chunk, version, document, intent, access, source)):
+                continue
+            metadata = version.metadata_ or {}
+            verified[chunk.id] = RetrievalHit(
+                str(chunk.qdrant_point_id), float(point.score), str(chunk.id),
+                str(document.id), str(version.id), document.title, chunk.content,
+                version.source_url, document.document_type.value,
+                metadata.get("academic_year") or document.academic_year,
+                metadata.get("published_at") or (
+                    document.published_at.isoformat() if document.published_at else None),
+                chunk.page_start, chunk.page_end, chunk.section_title,
+            )
+        if len(verified) != len(candidates):
+            logger.warning("rag_vector_candidates_rejected", extra={
+                "candidate_count": len(candidates), "rejected_count": len(candidates) - len(verified),
+            })
+        return [verified[chunk_id] for chunk_id in candidates if chunk_id in verified]
 
     async def search(self, query: str, access: AccessScope | None = None,
                      top_k: int | None = None, score_threshold: float | None = None) -> list[RetrievalHit]:
@@ -254,17 +360,7 @@ class RetrievalService:
             "retrieval_ms": round((perf_counter() - retrieval_started) * 1000),
             "vector_candidates": len(response.points), "lexical_candidates": len(lexical_hits),
         })
-        vector_hits: list[RetrievalHit] = []
-        for point in response.points:
-            payload = point.payload or {}
-            required = ("chunk_id", "document_id", "document_version_id", "title", "content", "document_type")
-            if any(not payload.get(key) for key in required):
-                continue
-            vector_hits.append(RetrievalHit(str(point.id), float(point.score), str(payload["chunk_id"]),
-                str(payload["document_id"]), str(payload["document_version_id"]), str(payload["title"]),
-                str(payload["content"]), payload.get("source_url"), str(payload["document_type"]),
-                payload.get("academic_year"), payload.get("published_at"), payload.get("page_start"),
-                payload.get("page_end"), payload.get("section_title")))
+        vector_hits = await self._verified_vector_hits(response.points, intent, scope)
 
         by_id = {hit.chunk_id: hit for hit in vector_hits}
         by_id.update({hit.chunk_id: hit for hit in lexical_hits})

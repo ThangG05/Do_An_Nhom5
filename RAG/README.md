@@ -213,10 +213,22 @@ docker compose --env-file ..\backend\.env --profile crawler up -d --build crawl-
 When RAG is embedded in the main HVNH Hub backend, `uvicorn src.main:app` starts the
 scheduler, crawl worker and pipeline worker in the same lifecycle by default. Set
 `RAG_CRAWLER_BACKGROUND_ENABLED=false` on API-only replicas if dedicated worker services
-are deployed. Overdue sources whose latest terminal run is `PARTIAL` are enqueued as a
+are deployed. `CRAWLER_MIN_INTERVAL_MINUTES=1440` limits each source to at most one
+automatic crawl per 24 hours (including recovery retries), even if an older database
+row has a shorter schedule or the backend restarts. The scheduler still polls every
+`CRAWLER_SCHEDULER_POLL_SECONDS` to pick up a source when it becomes due; polling
+does not itself crawl. Manual `crawl enqueue`/`run-now` bypass the automatic interval.
+Unfinished OCR/index work may resume independently of this crawl schedule; terminal
+pipeline failures are not reset on startup, successful batches with a backlog are
+revisited at most daily, and `PIPELINE_RECOVERY_COOLDOWN_MINUTES` prevents repeated
+immediate startup recovery. Heavy crawl/OCR workloads can still
+compete with API traffic when embedded; run dedicated worker services and disable
+embedded workers on API-only replicas if this remains a performance concern.
+Overdue sources whose latest terminal run is `PARTIAL` are enqueued as a
 `RECOVERY` run and resume the saved frontier instead of restarting at the seed URL.
 Terminal `PARTIAL` and `FAILED` runs are retried after
-`CRAWLER_RECOVERY_RETRY_MINUTES`, capped by `CRAWLER_RECOVERY_MAX_ATTEMPTS`;
+`CRAWLER_RECOVERY_RETRY_MINUTES` and the daily interval, capped by
+`CRAWLER_RECOVERY_MAX_ATTEMPTS`;
 the attempt number and parent run ID are persisted in run metadata for auditing.
 
 The crawler extracts HTML/PDF/DOCX/XLSX into immutable `PENDING` versions only. It does not
@@ -451,6 +463,15 @@ python -m scripts.ask_rag "Chuẩn đầu ra ngoại ngữ VSTEP như thế nào
 The hidden endpoint `POST /api/v1/internal/rag/ask` requires `X-Internal-API-Key`. A request
 accepts `question` and an optional `conversation_id`; do not expose the internal key in frontend
 code. If retrieval has no sufficiently relevant source, the service refuses without calling the LLM.
+
+Short everyday conversation is routed separately: common acknowledgements use fixed replies;
+explicit low-risk requests (for example, asking for a light joke or a study-focus tip) may use
+a small LLM call without document retrieval or conversation-history rewriting. This is not an
+uncited route for HVNH facts: institutional, financial, medical, legal, current-event and other
+factual questions still go through grounded RAG or refuse when evidence is absent. Prompt guards,
+authentication, per-user/IP rate limits and global concurrency limits remain in force. The
+casual LLM route additionally has a per-user rolling daily cap (`RAG_CASUAL_LIMIT_PER_DAY=10`),
+a 300-character input boundary and `RAG_CASUAL_MAX_OUTPUT_TOKENS=160`.
 
 ### Production HTTP boundary
 

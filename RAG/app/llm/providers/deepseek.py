@@ -7,9 +7,9 @@ import httpx
 from pydantic import ValidationError
 
 from app.core.config import Settings, get_settings
-from app.llm.contracts import (ContextBlock, ConversationSummary, ConversationTurn,
+from app.llm.contracts import (CasualAnswer, ContextBlock, ConversationSummary, ConversationTurn,
                                LLMAnswer, LLMServiceError, QuestionRewrite)
-from app.llm.prompts import (REWRITE_SYSTEM_INSTRUCTION, SUMMARY_SYSTEM_INSTRUCTION,
+from app.llm.prompts import (CASUAL_SYSTEM_INSTRUCTION, REWRITE_SYSTEM_INSTRUCTION, SUMMARY_SYSTEM_INSTRUCTION,
                              SYSTEM_INSTRUCTION, answer_guidance)
 from app.llm.security import InputKind, PromptGuard, PromptSecurityError
 from app.rag.usage import capture_deepseek_usage
@@ -85,6 +85,27 @@ class DeepSeekProvider:
             safe_answer = self.guard.inspect_output(answer.answer).value
             return answer.model_copy(update={"answer": safe_answer})
         except (KeyError, IndexError, TypeError, ValueError, ValidationError) as exc:
+            raise LLMServiceError("invalid_response", type(exc).__name__) from exc
+
+    async def answer_casual(self, question: str) -> CasualAnswer:
+        safe_question = self.guard.inspect(question, InputKind.USER).value[:300]
+        response = await self._post_with_retry({
+            "model": self.settings.llm_model,
+            "messages": [
+                {"role": "system", "content": CASUAL_SYSTEM_INSTRUCTION},
+                {"role": "user", "content": safe_question},
+            ],
+            "temperature": 0.5,
+            "max_tokens": self.settings.rag_casual_max_output_tokens,
+            "response_format": {"type": "json_object"},
+            "thinking": {"type": "disabled"},
+            "stream": False,
+        })
+        try:
+            content = response.json()["choices"][0]["message"]["content"]
+            result = CasualAnswer.model_validate_json(content)
+            return result.model_copy(update={"answer": self.guard.inspect_output(result.answer).value})
+        except (KeyError, IndexError, TypeError, ValueError, ValidationError, PromptSecurityError) as exc:
             raise LLMServiceError("invalid_response", type(exc).__name__) from exc
 
     async def _post_with_retry(self, body: dict) -> httpx.Response:

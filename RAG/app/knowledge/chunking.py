@@ -60,6 +60,7 @@ class DocumentChunkingService:
                             self.settings.chunk_overlap_chars)
         security_approved = (version.metadata_ or {}).get("security_review") == "APPROVED"
         if not security_approved:
+            self.guard.inspect(document.title, InputKind.CONTEXT)
             for chunk in chunks:
                 self.guard.inspect(chunk.content, InputKind.CONTEXT)
         if rebuild:

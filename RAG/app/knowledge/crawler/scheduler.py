@@ -8,6 +8,17 @@ from app.db.session import AsyncSessionLocal
 from app.knowledge.crawler.queue import CrawlQueue
 from app.models.crawler import AICrawlRun, AISource
 from app.services.redis import get_redis_client
+
+
+def _next_automatic_crawl_at(source: AISource, latest: AICrawlRun | None) -> datetime | None:
+    """Enforce the configured floor even for older sources with short DB schedules."""
+    if latest is None or latest.queued_at is None:
+        return source.next_crawl_at
+    interval = max(source.schedule_minutes, get_settings().crawler_min_interval_minutes)
+    last_allowed = latest.queued_at + timedelta(minutes=interval)
+    return max(source.next_crawl_at, last_allowed) if source.next_crawl_at else last_allowed
+
+
 async def _enqueue_due_sources() -> tuple[int, int]:
     """Enqueue overdue sources and explicitly resume their latest PARTIAL run.
 
@@ -31,6 +42,10 @@ async def _enqueue_due_sources() -> tuple[int, int]:
             latest_run = await session.scalar(select(AICrawlRun).where(
                 AICrawlRun.source_id == source.id,
             ).order_by(AICrawlRun.queued_at.desc()).limit(1))
+            next_due = _next_automatic_crawl_at(source, latest_run)
+            if next_due is not None and next_due > now:
+                source.next_crawl_at = next_due
+                continue
             if latest_run is not None and latest_run.status == "PARTIAL":
                 trigger = "RECOVERY"
                 metadata = {"resumed_partial_run_id": str(latest_run.id)}
@@ -41,7 +56,9 @@ async def _enqueue_due_sources() -> tuple[int, int]:
             run = AICrawlRun(source_id=source.id, status="PENDING", trigger_type=trigger,
                              metadata_=metadata)
             session.add(run)
-            source.next_crawl_at = now + timedelta(minutes=source.schedule_minutes)
+            source.next_crawl_at = now + timedelta(
+                minutes=max(source.schedule_minutes, get_settings().crawler_min_interval_minutes)
+            )
             await session.flush()
             run_ids.append(run.id)
         await session.commit()
@@ -126,6 +143,9 @@ async def recover_incomplete_runs() -> tuple[int, int]:
                 AICrawlRun.source_id == source.id,
             ).order_by(AICrawlRun.queued_at.desc()).limit(1))
             if latest is None or latest.status not in {"PARTIAL", "FAILED"}:
+                continue
+            next_due = _next_automatic_crawl_at(source, latest)
+            if next_due is not None and next_due > now:
                 continue
             if latest.finished_at is None or latest.finished_at > cutoff:
                 continue

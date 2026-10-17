@@ -31,16 +31,23 @@ def load_local_document(path: Path) -> LoadedDocument:
     suffix = path.suffix.lower()
     if suffix in {".txt", ".md"}:
         mime = "text/markdown" if suffix == ".md" else "text/plain"
-        return LoadedDocument(path.read_text(encoding="utf-8-sig"), mime)
+        content = path.read_text(encoding="utf-8-sig")
+        if len(content) > 2_000_000:
+            raise ValueError("extracted text exceeds limit")
+        return LoadedDocument(content, mime)
     if suffix != ".pdf":
         raise ValueError("only .pdf, .txt, and .md files are supported")
 
     reader = PdfReader(str(path))
+    if len(reader.pages) > 1000:
+        raise ValueError("PDF has too many pages")
     parts: list[str] = []
     ranges: list[tuple[int, int, int]] = []
     offset = 0
     for page_number, page in enumerate(reader.pages, start=1):
         page_text = normalize_text(page.extract_text() or "")
+        if offset + len(page_text) > 2_000_000:
+            raise ValueError("extracted text exceeds limit")
         if not page_text:
             continue
         if parts:

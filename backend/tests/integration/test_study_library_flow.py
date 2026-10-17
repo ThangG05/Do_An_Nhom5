@@ -32,6 +32,7 @@ def test_study_library_requires_membership_and_admin_review(
     class FakeR2:
         def __init__(self):
             self.uploads = []
+            self.deletes = []
         def upload_fileobj(self, stream, bucket, key, ExtraArgs):
             self.uploads.append((bucket, key, stream.read(), ExtraArgs))
         def generate_presigned_url(self, operation, Params, ExpiresIn):
@@ -39,7 +40,7 @@ def test_study_library_requires_membership_and_admin_review(
             assert ExpiresIn <= 300
             return "https://r2.test/signed-download"
         def delete_object(self, Bucket, Key):
-            pass
+            self.deletes.append((Bucket, Key))
 
     r2 = FakeR2()
     monkeypatch.setattr(library, "get_r2_client", lambda: r2)
@@ -78,3 +79,38 @@ def test_study_library_requires_membership_and_admin_review(
     download = client.get(file_path, headers=auth_headers(member))
     assert download.status_code == 200
     assert download.json()["url"] == "https://r2.test/signed-download"
+
+    report_path = f"{path}/{doc['id']}/reports"
+    reported = client.post(report_path, headers=auth_headers(member), json={
+        "reason": "Tài liệu có nội dung không phù hợp với môn học.",
+    })
+    assert reported.status_code == 201, reported.text
+    assert client.post(report_path, headers=auth_headers(owner), json={
+        "reason": "Tự tố cáo tài liệu của mình.",
+    }).status_code == 400
+    assert client.post(report_path, headers=auth_headers(member), json={
+        "reason": "Nội dung khác.",
+    }).status_code == 409
+    assert client.get(f"{path}/admin/reports/count", headers=auth_headers(reviewer)).json() == {"count": 1}
+    assert client.get(f"{path}/admin/reports", headers=auth_headers(reviewer)).json()[0]["reason"] == \
+        "Tài liệu có nội dung không phù hợp với môn học."
+    assert client.get(f"{path}/admin/reports", headers=auth_headers(member)).status_code == 403
+
+    dismissed = client.patch(f"{path}/admin/reports/{reported.json()['id']}",
+                             headers=auth_headers(reviewer), json={
+                                 "decision": "DISMISS", "note": "Tài liệu phù hợp nội dung môn học.",
+                             })
+    assert dismissed.status_code == 200, dismissed.text
+    assert client.get(f"{path}/admin/reports/count", headers=auth_headers(reviewer)).json() == {"count": 0}
+
+    second_report = client.post(report_path, headers=auth_headers(member), json={
+        "reason": "Tài liệu chứa nội dung vi phạm quy định kho học tập.",
+    })
+    assert second_report.status_code == 201, second_report.text
+    removed = client.patch(f"{path}/admin/reports/{second_report.json()['id']}",
+                           headers=auth_headers(reviewer), json={
+                               "decision": "REMOVE_DOCUMENT", "note": "Tài liệu vi phạm quy định chia sẻ.",
+                           })
+    assert removed.status_code == 200, removed.text
+    assert len(r2.deletes) == 1
+    assert client.get(path, headers=auth_headers(member)).json() == []

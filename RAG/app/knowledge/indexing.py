@@ -1,6 +1,7 @@
 """Transactional bridge from PostgreSQL chunks to the Qdrant vector index."""
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import hashlib
 from typing import Any
 from uuid import UUID
 
@@ -9,6 +10,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.knowledge.indexer.qdrant import QdrantDocumentIndex
+from app.llm.security import InputKind, PromptGuard
 from app.models.enums import AIDocumentStatus
 from app.models.rag import AIDocument, AIDocumentChunk, AIDocumentVersion
 from app.rag.embeddings import EmbeddingProvider
@@ -72,6 +74,14 @@ class DocumentIndexingService:
             return IndexingResult(version.id, len(chunks), True, version.status)
         if version.status != AIDocumentStatus.PROCESSING: raise ValueError("version is not ready for indexing")
         if not chunks: raise ValueError("version has no chunks")
+        if (version.metadata_ or {}).get("security_review") == "QUARANTINED":
+            raise ValueError("quarantined document cannot be indexed")
+        guard = PromptGuard(get_settings().llm_max_input_chars, get_settings().llm_max_context_chars)
+        guard.inspect(document.title, InputKind.CONTEXT)
+        for chunk in chunks:
+            if hashlib.sha256(chunk.content.encode("utf-8")).hexdigest() != chunk.content_hash:
+                raise ValueError("chunk content hash mismatch")
+            guard.inspect(chunk.content, InputKind.CONTEXT)
         vectors = await self.embedder.embed_documents([chunk.content for chunk in chunks], document.title)
         if len(vectors) != len(chunks): raise ValueError("embedding count does not match chunk count")
         point_ids = [chunk.qdrant_point_id for chunk in chunks]

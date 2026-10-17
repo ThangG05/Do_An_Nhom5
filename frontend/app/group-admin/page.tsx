@@ -17,7 +17,7 @@ import {useDialog} from "@/components/ui/DialogProvider";
 import RelativeTime from "@/components/ui/RelativeTime";
 import StudyLibrary from "@/components/group/StudyLibrary";
 import {safeImageSrc} from "@/lib/media";
-import {pendingStudyDocumentCount} from "@/lib/study-library";
+import {openStudyDocumentReportCount, pendingStudyDocumentCount} from "@/lib/study-library";
 
 type Tab = "overview" | "pending" | "posts" | "members" | "reports" | "documents";
 const dedicatedSlugs = new Set(["pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"]);
@@ -40,6 +40,7 @@ export default function GroupAdminPage() {
   const [joins, setJoins] = useState<GroupJoinRequest[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState(0);
+  const [documentReports, setDocumentReports] = useState(0);
   const [tab, setTab] = useState<Tab>("overview");
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
@@ -101,15 +102,17 @@ export default function GroupAdminPage() {
   useEffect(() => { void load().catch(cause => setError(cause instanceof Error ? cause.message : "Không tải được dữ liệu nhóm.")); }, [load]);
 
   useEffect(() => {
-    if (!groupId || active?.slug !== "hoc-tap") { setPendingDocuments(0); return; }
+    if (!groupId || active?.slug !== "hoc-tap") { setPendingDocuments(0); setDocumentReports(0); return; }
     let alive = true;
     let loadingCount = false;
     const refreshCount = async () => {
       if (!alive || loadingCount || document.visibilityState === "hidden") return;
       loadingCount = true;
       try {
-        const result = await pendingStudyDocumentCount(groupId);
-        if (alive) setPendingDocuments(result.count);
+        const [pendingResult, reportResult] = await Promise.all([
+          pendingStudyDocumentCount(groupId), openStudyDocumentReportCount(groupId),
+        ]);
+        if (alive) { setPendingDocuments(pendingResult.count); setDocumentReports(reportResult.count); }
       } catch { /* Keep the last known badge if polling briefly fails. */ }
       finally { loadingCount = false; }
     };
@@ -159,7 +162,7 @@ export default function GroupAdminPage() {
       ["overview", "Tổng quan"], ["pending", `Kiểm duyệt${pending.length ? ` (${pending.length})` : ""}`],
       ["posts", "Bài đã duyệt"], ["members", `Thành viên${members.length ? ` (${members.length})` : ""}`], ["reports", "Báo cáo"],
       ...(active?.slug === "hoc-tap" ? [["documents", "Kho tài liệu"]] : []),
-    ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{label}</span>{id === "documents" && pendingDocuments > 0 && <span className="group-admin-pending-badge" aria-label={`${pendingDocuments} tài liệu chờ duyệt`}>{pendingDocuments}</span>}</button>)}</nav>
+    ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{label}</span>{id === "documents" && pendingDocuments + documentReports > 0 && <span className="group-admin-pending-badge" aria-label={`${pendingDocuments} tài liệu chờ duyệt, ${documentReports} tố cáo`}>{pendingDocuments + documentReports}</span>}</button>)}</nav>
 
     {tab === "overview" && <section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid">
       <button type="button" onClick={() => setTab("pending")}><b>{pending.length}</b><span>Bài đang chờ quyết định</span></button>
@@ -181,6 +184,6 @@ export default function GroupAdminPage() {
     </section>}
 
     {tab === "reports" && groupId && <ReportQueue groupId={groupId} />}
-    {tab === "documents" && active?.slug === "hoc-tap" && <StudyLibrary groupId={groupId} isAdmin canRead pendingCount={pendingDocuments} />}
+    {tab === "documents" && active?.slug === "hoc-tap" && <StudyLibrary groupId={groupId} isAdmin canRead pendingCount={pendingDocuments} reportCount={documentReports} />}
   </main>;
 }
