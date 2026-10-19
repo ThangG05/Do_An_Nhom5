@@ -32,9 +32,9 @@ export interface StudyDocumentReport {
 }
 
 export const searchSubjects = (q = "", scope: CatalogScope = {}, offset = 0, limit = 8) => api<Subject[]>(`/subjects?q=${encodeURIComponent(q)}${scopeParams(scope)}&limit=${limit}&offset=${offset}`);
-export const adminSubjects = (q = "", offset = 0) => api<Subject[]>(`/admin/subjects?q=${encodeURIComponent(q)}&offset=${offset}`);
-export const saveSubject = (body: Pick<Subject, "code" | "name" | "source_note" | "is_active"> & Partial<Pick<Subject, "id" | "category" | "needs_review" | "major_ids">>) =>
-  api<Subject>("/admin/subjects", { method: "PUT", body: JSON.stringify(body) });
+export const adminSubjects = (groupId: string, q = "", offset = 0, limit = 11) => api<Subject[]>(`/groups/${groupId}/library/admin/subjects?q=${encodeURIComponent(q)}&limit=${limit}&offset=${offset}`);
+export const saveSubject = (groupId: string, body: Pick<Subject, "code" | "name" | "source_note" | "is_active"> & Partial<Pick<Subject, "id" | "category" | "needs_review" | "major_ids">>) =>
+  api<Subject>(`/groups/${groupId}/library/admin/subjects`, { method: "PUT", body: JSON.stringify(body) });
 
 export const listStudyDocuments = (groupId: string, q = "", subjectId = "", offset = 0, scope: CatalogScope = {}, limit = 6) =>
   api<StudyDocument[]>(`/groups/${groupId}/library?q=${encodeURIComponent(q)}${subjectId ? `&subject_id=${subjectId}` : ""}&limit=${limit}&offset=${offset}${scopeParams(scope)}`);

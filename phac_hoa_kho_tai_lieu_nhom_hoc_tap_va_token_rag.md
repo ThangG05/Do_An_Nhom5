@@ -27,20 +27,20 @@ Khi mở một hội nhóm **Học tập**, thành viên nhìn thấy các mục
 ```text
 NHÓM HỌC TẬP: [Tên nhóm]
 ┌──────────────────────────────────────────┐
-│ Bài viết   |   Kho tài liệu             │
+│ Bài viết   |   Kho tài liệu              │
 ├──────────────────────────────────────────┤
-│ Kho tài liệu                            │
-│ [🔎 Tìm môn học / tên tài liệu ...]      │
+│ Kho tài liệu                             │
+│ [🔎 Tìm môn học / tên tài liệu ...]      
 │ [Bộ lọc môn học ▼]                       │
 │                                          │
-│ Môn: Cơ sở dữ liệu                      │
-│  • Slide chương 1.pdf       [Xem][Tải] │
-│  • Bài tập tuần 2.docx      [Xem][Tải] │
+│ Môn: Cơ sở dữ liệu                       │
+│  • Slide chương 1.pdf       [Xem][Tải]   │
+│  • Bài tập tuần 2.docx      [Xem][Tải]   │
 │                                          │
-│ Môn: Kinh tế vi mô                      │
-│  • Đề cương ôn tập.pdf      [Xem][Tải] │
+│ Môn: Kinh tế vi mô                       │
+│  • Đề cương ôn tập.pdf      [Xem][Tải]   │
 │                                          │
-│             [+ Chia sẻ tài liệu]        │
+│             [+ Chia sẻ tài liệu]         │
 └──────────────────────────────────────────┘
 ```
 

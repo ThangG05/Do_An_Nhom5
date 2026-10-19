@@ -16,10 +16,11 @@ import type {ApiGroup, GroupJoinRequest, GroupMember, GroupPost} from "@/types/g
 import {useDialog} from "@/components/ui/DialogProvider";
 import RelativeTime from "@/components/ui/RelativeTime";
 import StudyLibrary from "@/components/group/StudyLibrary";
+import SubjectCatalog from "@/components/group/SubjectCatalog";
 import {safeImageSrc} from "@/lib/media";
 import {openStudyDocumentReportCount, pendingStudyDocumentCount} from "@/lib/study-library";
 
-type Tab = "overview" | "pending" | "posts" | "members" | "reports" | "documents";
+type Tab = "overview" | "pending" | "posts" | "members" | "reports" | "documents" | "subjects";
 const dedicatedSlugs = new Set(["pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"]);
 
 function dedicatedSlug(email?: string): string | null {
@@ -53,8 +54,8 @@ export default function GroupAdminPage() {
     const auth = getAuthUser();
     const all = await fetchGroups();
     // The API membership is live; local auth data can be stale after a role change.
-    const owned = auth?.system_role === "SUPER_ADMIN" ? all : all.filter(group => group.membership === "ADMIN");
-    const assigned = auth?.system_role === "SUPER_ADMIN" ? null : dedicatedSlug(auth?.email);
+    const owned = all.filter(group => group.membership === "ADMIN");
+    const assigned = dedicatedSlug(auth?.email);
     const scoped = assigned ? owned.filter(group => group.slug === assigned) : owned;
     setGroups(scoped);
     setError(assigned && !scoped.length ? "Tài khoản quản trị chưa được gán đúng nhóm. Vui lòng liên hệ Super Admin." : "");
@@ -121,7 +122,6 @@ export default function GroupAdminPage() {
     document.addEventListener("visibilitychange", refreshCount);
     return () => { alive = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", refreshCount); };
   }, [groupId, active?.slug]);
-
   const act = async (work: () => Promise<unknown>) => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -161,7 +161,7 @@ export default function GroupAdminPage() {
     <nav className="group-admin-nav" aria-label="Mục quản trị nhóm">{([
       ["overview", "Tổng quan"], ["pending", `Kiểm duyệt${pending.length ? ` (${pending.length})` : ""}`],
       ["posts", "Bài đã duyệt"], ["members", `Thành viên${members.length ? ` (${members.length})` : ""}`], ["reports", "Báo cáo"],
-      ...(active?.slug === "hoc-tap" ? [["documents", "Kho tài liệu"]] : []),
+      ...(active?.slug === "hoc-tap" ? [["documents", "Kho tài liệu"], ["subjects", "Môn học"]] : []),
     ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{label}</span>{id === "documents" && pendingDocuments + documentReports > 0 && <span className="group-admin-pending-badge" aria-label={`${pendingDocuments} tài liệu chờ duyệt, ${documentReports} tố cáo`}>{pendingDocuments + documentReports}</span>}</button>)}</nav>
 
     {tab === "overview" && <section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid">
@@ -185,5 +185,6 @@ export default function GroupAdminPage() {
 
     {tab === "reports" && groupId && <ReportQueue groupId={groupId} />}
     {tab === "documents" && active?.slug === "hoc-tap" && <StudyLibrary groupId={groupId} isAdmin canRead pendingCount={pendingDocuments} reportCount={documentReports} />}
+    {tab === "subjects" && active?.slug === "hoc-tap" && <SubjectCatalog groupId={groupId} />}
   </main>;
 }

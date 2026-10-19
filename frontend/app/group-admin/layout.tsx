@@ -45,7 +45,7 @@ export default function GroupAdminLayout({ children }: { children: React.ReactNo
 
   if (!ready) return <div className="admin-shell-loading">Đang kiểm tra quyền quản trị nhóm...</div>;
 
-  const allowed = !!user && (user.system_role === "SUPER_ADMIN" || user.admin_group_slugs.length > 0);
+  const allowed = !!user && user.system_role !== "SUPER_ADMIN" && user.admin_group_slugs.length > 0;
   if (!allowed) {
     return (
       <main className="admin-access-denied">

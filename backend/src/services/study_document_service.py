@@ -76,6 +76,17 @@ def require_admin(db: Session, group_id: uuid.UUID, user: User) -> None:
         raise HTTPException(403, "Chỉ admin của nhóm Học tập được duyệt tài liệu.")
 
 
+def require_subject_admin(db: Session, group_id: uuid.UUID, user: User) -> None:
+    """Only the assigned Học tập group admin may change the shared subject catalog."""
+    require_study_group(db, group_id)
+    if user.system_role == SystemRole.SUPER_ADMIN:
+        raise HTTPException(403, "Danh mục môn học thuộc quyền quản trị nhóm Học tập.")
+    role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
+                      {"gid": group_id, "uid": user.id}).scalar_one_or_none()
+    if str(role) != "ADMIN":
+        raise HTTPException(403, "Chỉ admin của nhóm Học tập được quản lý môn học.")
+
+
 def list_subjects(db: Session, query: str = "", *, include_inactive: bool = False,
                   category: str | None = None, major_id: uuid.UUID | None = None,
                   limit: int = 50, offset: int = 0) -> list[SubjectResponse]:

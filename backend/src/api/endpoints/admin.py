@@ -25,7 +25,7 @@ def group_admins(group_id:uuid.UUID,admin:CurrentSuperAdmin,db:Db):
     return admin_service.group_admins(db,group_id)
 
 @router.get("/users",response_model=AdminUserPage)
-def users(admin:CurrentSuperAdmin,db:Db,q:str="",account_status:Annotated[str|None,Query(alias="status")]=None,limit:Annotated[int,Query(ge=1,le=100)]=30,offset:Annotated[int,Query(ge=0)]=0,period:Literal["today","7d","30d","custom","all"]="30d",start_date:date|None=None,end_date:date|None=None):return admin_service.users(db,q,account_status,limit,offset,period,start_date,end_date)
+def users(admin:CurrentSuperAdmin,db:Db,q:str="",account_status:Annotated[str|None,Query(alias="status")]=None,role:Literal["ADMIN","USER"]|None=None,limit:Annotated[int,Query(ge=1,le=100)]=30,offset:Annotated[int,Query(ge=0)]=0,period:Literal["today","7d","30d","custom","all"]="30d",start_date:date|None=None,end_date:date|None=None):return admin_service.users(db,q,account_status,limit,offset,period,start_date,end_date,role)
 
 @router.get("/users/{user_id}/rag-usage",response_model=RAGUserUsageResponse)
 def rag_usage(user_id:uuid.UUID,admin:CurrentSuperAdmin,db:Db,period:Literal["today","7d","30d","custom","all"]="30d",start_date:date|None=None,end_date:date|None=None,offset:Annotated[int,Query(ge=0)]=0):return admin_service.user_rag_usage(db,user_id,period,start_date,end_date,offset)

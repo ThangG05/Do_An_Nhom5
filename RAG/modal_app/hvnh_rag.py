@@ -14,9 +14,9 @@ VECTOR_DIMENSIONS = 1024
 MAX_BATCH_SIZE = 64
 MAX_TEXT_CHARS = 8_192
 MAX_REQUEST_CHARS = 100_000
-# Keep one embedding worker warm to avoid GPU cold starts on the first question.
-# Set this to 0 when operational cost matters more than first-request latency.
-MIN_EMBEDDING_CONTAINERS = int(os.getenv("MODAL_EMBEDDING_MIN_CONTAINERS", "1"))
+# Scale the GPU to zero while idle; the first question after idle may cold-start.
+# A warm worker is opt-in because it incurs GPU cost even without requests.
+MIN_EMBEDDING_CONTAINERS = int(os.getenv("MODAL_EMBEDDING_MIN_CONTAINERS", "0"))
 if not 0 <= MIN_EMBEDDING_CONTAINERS <= 3:
     raise ValueError("MODAL_EMBEDDING_MIN_CONTAINERS must be between 0 and 3")
 

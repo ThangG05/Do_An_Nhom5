@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from src.api.dependencies import CurrentGroupAdmin, CurrentSuperAdmin, CurrentUser
+from src.api.dependencies import CurrentGroupAdmin, CurrentUser
 from src.db.session import get_db
 from src.models.study_document import (StudyDocumentDecision, StudyDocumentDownload,
                                        StudyDocumentResponse, SubjectResponse, SubjectUpsertRequest, MajorResponse)
@@ -32,17 +32,19 @@ def majors(user: CurrentUser, db: Db):
     return library.list_majors(db)
 
 
-@router.get("/admin/subjects", response_model=list[SubjectResponse])
-def admin_subjects(admin: CurrentSuperAdmin, db: Db, q: Annotated[str, Query(max_length=100)] = "",
+@router.get("/groups/{group_id}/library/admin/subjects", response_model=list[SubjectResponse])
+def admin_subjects(group_id: uuid.UUID, admin: CurrentUser, db: Db, q: Annotated[str, Query(max_length=100)] = "",
                    category: Literal["GENERAL", "SPECIALIZED"] | None = None,
                    major_id: uuid.UUID | None = None, limit: Annotated[int, Query(ge=1, le=100)] = 50,
                    offset: Annotated[int, Query(ge=0)] = 0):
+    library.require_subject_admin(db, group_id, admin)
     return library.list_subjects(db, q, include_inactive=True, category=category,
                                  major_id=major_id, limit=limit, offset=offset)
 
 
-@router.put("/admin/subjects", response_model=SubjectResponse)
-def put_subject(payload: SubjectUpsertRequest, admin: CurrentSuperAdmin, db: Db):
+@router.put("/groups/{group_id}/library/admin/subjects", response_model=SubjectResponse)
+def put_subject(group_id: uuid.UUID, payload: SubjectUpsertRequest, admin: CurrentUser, db: Db):
+    library.require_subject_admin(db, group_id, admin)
     return library.upsert_subject(db, payload.code, payload.name, payload.source_note, payload.is_active,
         subject_id=payload.id, category=payload.category, needs_review=payload.needs_review,
         major_ids=payload.major_ids)

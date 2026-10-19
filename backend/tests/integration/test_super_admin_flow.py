@@ -69,6 +69,20 @@ def test_super_admin_dashboard_account_role_and_audit_flow(client, db_session, m
     assigned = client.get(f"/api/v1/admin/users?q={target.username}", headers=admin_headers)
     assert assigned.status_code == 200
     assert any(group["id"] == str(active_group["id"]) for group in assigned.json()["items"][0]["admin_groups"])
+    admin_accounts = client.get(f"/api/v1/admin/users?q={target.username}&role=ADMIN", headers=admin_headers)
+    regular_accounts = client.get(f"/api/v1/admin/users?q={target.username}&role=USER", headers=admin_headers)
+    assert admin_accounts.json()["total"] == 1
+    assert admin_accounts.json()["items"][0]["id"] == str(target.id)
+    assert regular_accounts.json()["total"] == 0
+    assert client.get(f"/api/v1/admin/users?q={super_admin.username}&role=ADMIN", headers=admin_headers).json()["total"] == 1
+    assert client.get("/api/v1/admin/users?role=OTHER", headers=admin_headers).status_code == 422
+
+    paged_users = [make_user(name="Tài khoản phân trang kiểm thử") for _ in range(3)]
+    first_users = client.get("/api/v1/admin/users?role=USER&q=phân trang kiểm thử&limit=2", headers=admin_headers).json()
+    next_users = client.get("/api/v1/admin/users?role=USER&q=phân trang kiểm thử&limit=2&offset=2", headers=admin_headers).json()
+    assert first_users["total"] == next_users["total"] == len(paged_users)
+    assert len(first_users["items"]) == 2 and len(next_users["items"]) == 1
+    assert {item["id"] for item in first_users["items"]}.isdisjoint(item["id"] for item in next_users["items"])
 
     group_admin_url = f"/api/v1/admin/groups/{active_group['id']}/admins"
     assert client.get(group_admin_url, headers=auth_headers(regular)).status_code == 403

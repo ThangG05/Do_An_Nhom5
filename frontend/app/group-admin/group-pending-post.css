@@ -33,7 +33,8 @@
 .pending-group-post-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-top:1px solid #e7eef4;background:#fbfdff}
 .pending-group-post-footer>span{max-width:360px;color:#758b9d;font-size:12px;line-height:1.5}.pending-group-post-footer>div{display:flex;gap:8px;flex-shrink:0}
 .pending-group-post-footer button{min-width:102px;min-height:38px;padding:7px 14px;border:1px solid #cfdeea;border-radius:9px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:transform .15s,box-shadow .15s}
-.pending-group-post-footer button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 12px rgba(13,49,79,.11)}
+.pending-group-post-footer button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 12px rgb
+   a(13,49,79,.11)}
 .pending-group-post-footer button:disabled{opacity:.55;cursor:not-allowed}
 .pending-group-post-reject{background:#fff;color:#b73535}.pending-group-post-approve{border-color:#0c5282!important;background:#0c5282;color:#fff}
 @media(max-width:620px){.group-pending-panel{padding:16px!important}.group-pending-heading{align-items:flex-start;flex-direction:column;gap:10px}.pending-group-post-header{padding:14px 14px 11px}.pending-group-post-body{padding:0 14px 14px}.pending-group-post-footer{align-items:stretch;flex-direction:column;padding:12px 14px}.pending-group-post-footer>div{width:100%}.pending-group-post-footer button{flex:1}.pending-group-post-status{font-size:10px}.pending-group-post-media.multiple img,.pending-group-post-media.multiple video{height:150px}}

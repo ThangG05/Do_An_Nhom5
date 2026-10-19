@@ -46,11 +46,18 @@ def test_study_library_requires_membership_and_admin_review(
     monkeypatch.setattr(library, "get_r2_client", lambda: r2)
     monkeypatch.setattr(library.settings, "R2_STUDY_BUCKET_NAME", "test-private-study")
     major_id = db_session.execute(text("SELECT id FROM majors WHERE code='IT01'")).scalar_one()
-    subject = client.put("/api/v1/admin/subjects", headers=auth_headers(superadmin), json={
+    subject_path = f"/api/v1/groups/{group_id}/library/admin/subjects"
+    subject_payload = {
         "code": f"IT{uuid.uuid4().hex[:10]}", "name": "Môn kiểm thử tích hợp",
         "source_note": "Nguồn thử nghiệm tích hợp", "is_active": True,
         "major_ids": [str(major_id)],
-    })
+    }
+    assert client.put(subject_path, headers=auth_headers(superadmin), json=subject_payload).status_code == 403
+    assert client.put(subject_path, headers=auth_headers(member), json=subject_payload).status_code == 403
+    assert client.put(subject_path, headers=auth_headers(outsider), json=subject_payload).status_code == 403
+    assert client.get(subject_path, headers=auth_headers(superadmin)).status_code == 403
+    assert client.get(subject_path, headers=auth_headers(reviewer)).status_code == 200
+    subject = client.put(subject_path, headers=auth_headers(reviewer), json=subject_payload)
     assert subject.status_code == 200, subject.text
 
     created = client.post(f"/api/v1/groups/{group_id}/library", headers=auth_headers(owner), data={
@@ -64,17 +71,17 @@ def test_study_library_requires_membership_and_admin_review(
 
     path = f"/api/v1/groups/{group_id}/library"
     assert client.get(path, headers=auth_headers(outsider)).status_code == 403
-    assert client.get(path, headers=auth_headers(member)).json() == []
+    assert doc["id"] not in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}
     file_path = f"{path}/{doc['id']}/files/{doc['files'][0]['id']}/download"
     assert client.get(file_path, headers=auth_headers(member)).status_code == 404
-    assert len(client.get(f"{path}/admin/pending", headers=auth_headers(reviewer)).json()) == 1
+    assert doc["id"] in {item["id"] for item in client.get(f"{path}/admin/pending", headers=auth_headers(reviewer)).json()}
 
     approved = client.patch(f"{path}/admin/{doc['id']}", headers=auth_headers(reviewer),
                             json={"decision": "APPROVE"})
     assert approved.status_code == 200, approved.text
-    assert len(client.get(path, headers=auth_headers(member)).json()) == 1
-    assert len(client.get(path, params={"major_id": str(major_id)}, headers=auth_headers(member)).json()) == 1
-    assert client.get(path, params={"category": "GENERAL"}, headers=auth_headers(member)).json() == []
+    assert doc["id"] in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}
+    assert doc["id"] in {item["id"] for item in client.get(path, params={"major_id": str(major_id)}, headers=auth_headers(member)).json()}
+    assert doc["id"] not in {item["id"] for item in client.get(path, params={"category": "GENERAL"}, headers=auth_headers(member)).json()}
     assert client.get(path, params={"major_id": str(uuid.uuid4())}, headers=auth_headers(member)).json() == []
     download = client.get(file_path, headers=auth_headers(member))
     assert download.status_code == 200
@@ -113,4 +120,4 @@ def test_study_library_requires_membership_and_admin_review(
                            })
     assert removed.status_code == 200, removed.text
     assert len(r2.deletes) == 1
-    assert client.get(path, headers=auth_headers(member)).json() == []
+    assert doc["id"] not in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}

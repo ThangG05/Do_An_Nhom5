@@ -1,5 +1,5 @@
 from app.models.audit import AuditLog
-from app.models.auth import EmailVerificationCode, Profile, RefreshToken, Role, User, UserRole
+from app.models.auth import EmailVerificationCode, Profile, RefreshToken, User
 from app.models.chat import (Conversation, ConversationMember, Message, MessageAttachment,
                              MessageReceipt, Notification)
 from app.models.community import (Comment, Group, GroupMember, MediaFile, Post, PostLike,
@@ -11,7 +11,7 @@ from app.models.rag import (AIConversation, AIDocument, AIDocumentChunk, AIDocum
 from app.models.social import FriendRequest, Friendship, UserBlock
 
 __all__ = [
-    "User", "Profile", "Role", "UserRole", "EmailVerificationCode", "RefreshToken",
+    "User", "Profile", "EmailVerificationCode", "RefreshToken",
     "Group", "GroupMember", "Post", "MediaFile", "PostMedia", "Comment", "PostLike", "Report",
     "FriendRequest", "Friendship", "UserBlock", "Conversation", "ConversationMember", "Message",
     "MessageAttachment", "MessageReceipt", "Notification", "AIDocument", "AIDocumentVersion",

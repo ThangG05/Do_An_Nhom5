@@ -127,4 +127,13 @@ docs/CODEX_PLAN.md
 .agents/skills/
 .tmp/
 
+# Flutter source lives in this repository. Local Flutter/Gradle artifacts are
+# excluded by mobilehvnh/.gitignore and platform-specific ignore files.
+mobilehvnh/android/local.properties
+mobilehvnh/android/key.properties
+mobilehvnh/ios/Flutter/flutter_export_environment.sh
+!mobilehvnh/lib/features/**/data/
+!mobilehvnh/lib/features/**/data/**
+
+
 mobilehvnh/

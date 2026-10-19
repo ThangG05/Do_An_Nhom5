@@ -33,7 +33,7 @@ Không lưu binary lớn trong PostgreSQL và không coi payload Qdrant là bả
 
 - `users`: danh tính đăng nhập, trạng thái tài khoản, xác thực email.
 - `profiles`: thông tin sinh viên 1-1 với user.
-- `roles`, `user_roles`: vai trò toàn hệ thống, ví dụ `SUPER_ADMIN`, `USER`.
+- `users.system_role`: vai trò toàn hệ thống, ví dụ `SUPER_ADMIN`, `USER`.
 - Quyền `ADMIN` theo nhóm nằm ở `group_members.role`, không đưa vào role toàn hệ thống.
 - `email_verification_codes`: chỉ lưu hash của OTP.
 - `refresh_tokens`: chỉ lưu hash token, hỗ trợ rotation qua `replaced_by_id`.

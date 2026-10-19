@@ -185,11 +185,15 @@ def _usage_totals(db: Session, user_ids: list[uuid.UUID], start, end) -> dict[uu
 
 def users(db: Session, q: str, account_status: str | None, limit: int, offset: int,
           period: str = "30d", start_date: date | None = None,
-          end_date: date | None = None) -> AdminUserPage:
+          end_date: date | None = None, role: str | None = None) -> AdminUserPage:
     start, end = _usage_bounds(period, start_date, end_date)
     where=["u.deleted_at IS NULL"];params={"pattern":f"%{q.strip()}%","limit":limit,"offset":offset}
     if q.strip(): where.append("(u.email ILIKE :pattern OR u.username ILIKE :pattern OR p.full_name ILIKE :pattern OR p.student_code ILIKE :pattern OR p.faculty ILIKE :pattern)")
     if account_status: where.append("u.status::text=:status");params["status"]=account_status
+    is_group_admin = "EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id=u.id AND gm.role='ADMIN')"
+    is_admin = f"(u.system_role::text='SUPER_ADMIN' OR {is_group_admin})"
+    if role == "ADMIN": where.append(is_admin)
+    if role == "USER": where.append(f"NOT {is_admin}")
     clause=" AND ".join(where)
     total=_count(db,f"SELECT count(*) FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE {clause}",params)
     rows=db.execute(text(f"SELECT u.id,u.email,u.username,u.status,u.system_role,u.created_at,u.last_login_at,u.suspended_until,u.warning_count,COALESCE(p.full_name,u.username) full_name,p.student_code,p.faculty FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE {clause} ORDER BY u.created_at DESC LIMIT :limit OFFSET :offset"),params).mappings().all()

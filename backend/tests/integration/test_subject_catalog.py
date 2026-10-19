@@ -5,8 +5,12 @@ from src.db.models.user import SystemRole
 
 
 def test_catalog_filters_identity_and_permissions(client, db_session, make_user, auth_headers):
-    admin, member = make_user(role=SystemRole.SUPER_ADMIN), make_user()
+    superadmin, admin, member = make_user(role=SystemRole.SUPER_ADMIN), make_user(), make_user()
     admin_auth, member_auth = auth_headers(admin), auth_headers(member)
+    group_id = db_session.execute(text("SELECT id FROM groups WHERE slug='hoc-tap' AND status='ACTIVE'")).scalar_one()
+    db_session.execute(text("INSERT INTO group_members(group_id,user_id,role) VALUES(:gid,:uid,'ADMIN') ON CONFLICT(group_id,user_id) DO UPDATE SET role='ADMIN'"), {"gid": group_id, "uid": admin.id})
+    db_session.commit()
+    subject_path = f"/api/v1/groups/{group_id}/library/admin/subjects"
     majors = client.get("/api/v1/majors", headers=member_auth)
     assert majors.status_code == 200
     it = next(m for m in majors.json() if m["code"] == "IT01")
@@ -20,16 +24,17 @@ def test_catalog_filters_identity_and_permissions(client, db_session, make_user,
     assert len(pages[0]) == len(pages[1]) == 50
     assert not ({s["id"] for s in pages[0]} & {s["id"] for s in pages[1]})
     payload = {"code": "TEST" + uuid.uuid4().hex[:8], "name": "Môn kiểm thử A", "source_note": "Nguồn kiểm thử"}
-    assert client.put("/api/v1/admin/subjects", headers=member_auth, json=payload).status_code == 403
-    a = client.put("/api/v1/admin/subjects", headers=admin_auth, json=payload).json()
-    b_response = client.put("/api/v1/admin/subjects", headers=admin_auth, json={**payload, "name": "Môn kiểm thử B", "major_ids": [it["id"]]})
+    assert client.put(subject_path, headers=member_auth, json=payload).status_code == 403
+    assert client.put(subject_path, headers=auth_headers(superadmin), json=payload).status_code == 403
+    a = client.put(subject_path, headers=admin_auth, json=payload).json()
+    b_response = client.put(subject_path, headers=admin_auth, json={**payload, "name": "Môn kiểm thử B", "major_ids": [it["id"]]})
     assert b_response.status_code == 200, b_response.text
     b = b_response.json()
     assert a["id"] != b["id"]
-    changed = client.put("/api/v1/admin/subjects", headers=admin_auth, json={**b, "is_active": False})
+    changed = client.put(subject_path, headers=admin_auth, json={**b, "is_active": False})
     assert changed.status_code == 200
     assert db_session.execute(text("SELECT is_active FROM subjects WHERE id=:id"), {"id": a["id"]}).scalar() is True
-    missing = client.put("/api/v1/admin/subjects", headers=admin_auth, json={**payload, "code": None, "name": "Chưa có mã " + uuid.uuid4().hex})
+    missing = client.put(subject_path, headers=admin_auth, json={**payload, "code": None, "name": "Chưa có mã " + uuid.uuid4().hex})
     assert missing.status_code == 200 and missing.json()["code"] is None
 
 

@@ -4,7 +4,7 @@ from app.models import AIConversation, AIDocument, AIMessage, Conversation, Mess
 
 def test_expected_tables_are_registered() -> None:
     assert set(Base.metadata.tables) == {
-        "users", "profiles", "roles", "user_roles", "email_verification_codes",
+        "users", "profiles", "email_verification_codes",
         "refresh_tokens", "groups", "group_members", "posts", "media_files",
         "post_media", "comments", "post_likes", "reports", "friend_requests",
         "friendships", "user_blocks", "conversations", "conversation_members",

@@ -38,20 +38,6 @@ class Profile(Base):
     )
 
 
-class Role(UUIDPrimaryKeyMixin, Base):
-    __tablename__ = "roles"
-    code: Mapped[str] = mapped_column(String(50))
-    description: Mapped[str | None] = mapped_column(Text)
-    __table_args__ = (UniqueConstraint("code", name="roles_code_key"),)
-
-
-class UserRole(Base):
-    __tablename__ = "user_roles"
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    role_id: Mapped[UUID] = mapped_column(ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
-    assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
-
-
 class EmailVerificationCode(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "email_verification_codes"
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))

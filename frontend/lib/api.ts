@@ -363,7 +363,7 @@ export function ragPeriodQuery(period:import('@/types/admin').RagPeriod,startDat
   if(period==='custom'){params.set('start_date',startDate);params.set('end_date',endDate);}
   return params.toString();
 }
-export async function fetchAdminUsers(q='',status='',period:import('@/types/admin').RagPeriod='30d',startDate='',endDate=''):Promise<import('@/types/admin').AdminUserPage>{return api(`/admin/users?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&limit=100&${ragPeriodQuery(period,startDate,endDate)}`);}
+export async function fetchAdminUsers(q='',status='',period:import('@/types/admin').RagPeriod='30d',startDate='',endDate='',role:'ADMIN'|'USER'='USER',offset=0,limit=10):Promise<import('@/types/admin').AdminUserPage>{return api(`/admin/users?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&role=${role}&limit=${limit}&offset=${offset}&${ragPeriodQuery(period,startDate,endDate)}`);}
 export async function fetchAdminUserRagUsage(userId:string,period:import('@/types/admin').RagPeriod='30d',startDate='',endDate='',offset=0):Promise<import('@/types/admin').RagUserUsage>{return api(`/admin/users/${userId}/rag-usage?${ragPeriodQuery(period,startDate,endDate)}&offset=${offset}`);}
 export async function setAdminUserStatus(userId:string,status:'ACTIVE'|'LOCKED'|'DISABLED',reason:string):Promise<void>{await api(`/admin/users/${userId}/status`,{method:'PATCH',body:JSON.stringify({status,reason})});}
 export async function setUserGroupAdmin(userId:string,groupId:string,grant:boolean):Promise<void>{await api(`/admin/users/${userId}/group-admin`,{method:'PUT',body:JSON.stringify({group_id:groupId,grant})});}

@@ -18,9 +18,7 @@ setup môi trường
 python -m venv .venv
 .venv\Scripts\activate
 cd backend 
-pip install -r requirements.txt  
-
-
+pip install -r requirements.txt  m
 
 nếu fe báo lỗi hãy chạy : taskkill /PID 1628 /F sau đó lại npm run dev lại
 
