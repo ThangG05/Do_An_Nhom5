@@ -411,6 +411,9 @@ def get_document(db: Session, group_id: uuid.UUID, document_id: uuid.UUID, user:
 def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uuid.UUID,
                     title: str, description: str | None, files: list[UploadFile]) -> StudyDocumentResponse:
     require_member(db, group_id, user)
+    group_role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
+                            {"gid": group_id, "uid": user.id}).scalar_one_or_none()
+    auto_approved = str(group_role) == "ADMIN"
     if not title.strip() or not files or len(files) > MAX_FILES:
         raise HTTPException(400, "Cần tên tài liệu và từ 1 đến 10 file.")
     subject = db.execute(text("SELECT 1 FROM subjects WHERE id=:id AND is_active"),
@@ -436,11 +439,16 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
             client.upload_fileobj(item["stream"], bucket, item["key"],
                                   ExtraArgs={"ContentType": item["mime"]})
         db.execute(text("""
-            INSERT INTO study_documents(id,group_id,subject_id,uploaded_by,title,description,status,total_bytes,file_count)
-            VALUES(:id,:gid,:sid,:uid,:title,:description,'PENDING',:total,:count)
+            INSERT INTO study_documents(id,group_id,subject_id,uploaded_by,title,description,status,total_bytes,file_count,
+                                        reviewed_by,reviewed_at)
+            VALUES(:id,:gid,:sid,:uid,:title,:description,:status,:total,:count,:reviewer,
+                   CASE WHEN :auto_approved THEN now() ELSE NULL END)
         """), {"id": document_id, "gid": group_id, "sid": subject_id, "uid": user.id,
                "title": title.strip(), "description": description.strip() if description else None,
-               "total": total, "count": len(validated)})
+               "total": total, "count": len(validated),
+               "status": "APPROVED" if auto_approved else "PENDING",
+               "reviewer": user.id if auto_approved else None,
+               "auto_approved": auto_approved})
         for item in validated:
             db.execute(text("""
                 INSERT INTO study_document_files(id,document_id,r2_object_key,original_name,mime_type,

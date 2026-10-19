@@ -148,6 +148,17 @@ export default function GroupAdminPage() {
     {label: "Thành viên", value: active?.member_count ?? members.length},
     {label: "Bài đang hiển thị", value: posts.length},
   ], [pending.length, joins.length, active?.member_count, members.length, posts.length]);
+  const navigation: { id: Tab; label: string; count?: number; notification?: boolean }[] = [
+    {id: "overview", label: "Tổng quan"},
+    {id: "pending", label: "Kiểm duyệt", count: pending.length, notification: true},
+    {id: "posts", label: "Bài đã duyệt"},
+    {id: "members", label: "Thành viên", count: active?.member_count ?? members.length},
+    {id: "reports", label: "Báo cáo"},
+    ...(active?.slug === "hoc-tap" ? [
+      {id: "documents" as const, label: "Kho tài liệu", count: pendingDocuments + documentReports, notification: true},
+      {id: "subjects" as const, label: "Môn học"},
+    ] : []),
+  ];
 
   if (loadingGroups) return <main className="group-admin-page"><div className="group-admin-empty">Đang tải nhóm quản trị...</div></main>;
   if (!groups.length) return <main className="group-admin-page"><div className="group-admin-empty"><h1>Không có nhóm được phân công</h1><p>{error || "Super Admin cần gán bạn làm Admin của một nhóm."}</p></div></main>;
@@ -158,11 +169,7 @@ export default function GroupAdminPage() {
     </header>
     {error && <div className="group-admin-error" role="alert">{error}</div>}
     <section className="group-admin-stats">{stats.map(stat => <article key={stat.label}><b>{stat.value}</b><span>{stat.label}</span></article>)}</section>
-    <nav className="group-admin-nav" aria-label="Mục quản trị nhóm">{([
-      ["overview", "Tổng quan"], ["pending", `Kiểm duyệt${pending.length ? ` (${pending.length})` : ""}`],
-      ["posts", "Bài đã duyệt"], ["members", `Thành viên${members.length ? ` (${members.length})` : ""}`], ["reports", "Báo cáo"],
-      ...(active?.slug === "hoc-tap" ? [["documents", "Kho tài liệu"], ["subjects", "Môn học"]] : []),
-    ] as [Tab, string][]).map(([id, label]) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{label}</span>{id === "documents" && pendingDocuments + documentReports > 0 && <span className="group-admin-pending-badge" aria-label={`${pendingDocuments} tài liệu chờ duyệt, ${documentReports} tố cáo`}>{pendingDocuments + documentReports}</span>}</button>)}</nav>
+    <nav className="group-admin-nav" aria-label="Mục quản trị nhóm">{navigation.map(({id, label, count, notification}) => <button type="button" key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><span>{label}</span>{count !== undefined && (count > 0 || !notification) && <span className={`group-admin-pending-badge${notification ? "" : " group-admin-pending-badge-neutral"}`} aria-label={id === "documents" ? `${pendingDocuments} tài liệu chờ duyệt, ${documentReports} tố cáo` : `${count} ${label.toLowerCase()}`}>{count}</span>}</button>)}</nav>
 
     {tab === "overview" && <section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid">
       <button type="button" onClick={() => setTab("pending")}><b>{pending.length}</b><span>Bài đang chờ quyết định</span></button>

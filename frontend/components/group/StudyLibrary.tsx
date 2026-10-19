@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   decideStudyDocument, decideStudyDocumentReport, deleteStudyDocument, downloadStudyBundle, listStudyDocuments,
   myStudyDocuments, openStudyDocumentReports, pendingStudyDocuments, previewStudyOfficeFile,
@@ -25,6 +25,7 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   groupId: string; isAdmin: boolean; canRead: boolean; pendingCount?: number; reportCount?: number;
 }) {
   const currentUser = useAuthUser();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<Tab>("browse");
   const [documents, setDocuments] = useState<StudyDocument[]>([]);
   const [reports, setReports] = useState<StudyDocumentReport[]>([]);
@@ -51,6 +52,32 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   const [resolvingReport, setResolvingReport] = useState<StudyDocumentReport | null>(null);
   const [resolution, setResolution] = useState<{ decision: "REMOVE_DOCUMENT" | "DISMISS"; note: string } | null>(null);
   const totalBytes = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files]);
+
+  const resetUploadForm = () => {
+    setUploadSubjectId("");
+    setTitle("");
+    setDescription("");
+    setFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const toggleUploadForm = () => {
+    if (busy) return;
+    resetUploadForm();
+    setError("");
+    setShowForm(value => !value);
+  };
+
+  const addFiles = (selected: FileList | null) => {
+    // FileList is live: clearing the input below can empty it before React runs the state updater.
+    const pickedFiles = Array.from(selected ?? []);
+    if (!pickedFiles.length) return;
+    setFiles(current => [...current, ...pickedFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(current => current.filter((_, fileIndex) => fileIndex !== index));
+  };
 
   useEffect(() => {
     if (!canRead) return;
@@ -87,8 +114,9 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
     if (!uploadSubjectId || !title.trim() || !files.length || totalBytes > LIMIT || files.length > 10) return;
     setBusy(true); setError(""); setNotice("");
     try {
-      await shareStudyDocument(groupId, uploadSubjectId, title.trim(), description.trim(), files);
-      setShowForm(false); setUploadSubjectId(""); setTitle(""); setDescription(""); setFiles([]); setTab("mine"); setOffset(0); setRefresh(value => value + 1);
+      const created = await shareStudyDocument(groupId, uploadSubjectId, title.trim(), description.trim(), files);
+      setShowForm(false); resetUploadForm(); setTab("mine"); setOffset(0); setRefresh(value => value + 1);
+      setNotice(created.status === "APPROVED" ? "Tài liệu đã được chia sẻ và hiển thị ngay trong kho." : "Tài liệu đã được gửi, đang chờ admin nhóm duyệt.");
     } catch (err) { setError(err instanceof Error ? err.message : "Không gửi được tài liệu."); }
     finally { setBusy(false); }
   };
@@ -167,19 +195,23 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   if (!canRead) return <section className={styles.gate}><span>🔒</span><h2>Kho tài liệu dành cho thành viên</h2><p>Hãy tham gia nhóm Học tập để tìm kiếm và chia sẻ tài liệu đã được duyệt.</p></section>;
 
   return <section className={styles.library} aria-label="Kho tài liệu Học tập">
-    <header className={styles.header}><div><span>KHO TÀI LIỆU · HỌC TẬP</span><h2>Tài liệu học tập</h2><p>Chia sẻ kiến thức theo môn học. Mọi tài liệu đều được quản trị viên duyệt trước khi xuất hiện.</p></div><button type="button" className={styles.primary} onClick={() => { setShowForm(value => !value); setUploadSubjectId(""); }}>{showForm ? "Đóng biểu mẫu" : "+ Chia sẻ tài liệu"}</button></header>
+    <header className={styles.header}><div><span>KHO TÀI LIỆU · HỌC TẬP</span><h2>Tài liệu học tập</h2><p>Chia sẻ kiến thức theo môn học. Tài liệu của thành viên được duyệt trước khi hiển thị; tài liệu của admin nhóm hiển thị ngay.</p></div><button type="button" className={styles.primary} disabled={busy} onClick={toggleUploadForm}>{showForm ? "Đóng biểu mẫu" : "+ Chia sẻ tài liệu"}</button></header>
     {error && <div className={styles.error} role="alert">{error}</div>}{notice && <div className={styles.notice} role="status">{notice}</div>}
     {showForm && <form className={styles.form} onSubmit={event => void submit(event)}>
-      <div className={styles.formHeading}><h3>Chia sẻ tài liệu mới</h3><span>Admin nhóm sẽ xem xét trước khi hiển thị</span></div>
+      <div className={styles.formHeading}><h3>Chia sẻ tài liệu mới</h3><span>{isAdmin ? "Tài liệu của admin sẽ hiển thị ngay" : "Admin nhóm sẽ xem xét trước khi hiển thị"}</span></div>
       <div className={styles.formGrid}>
         <SubjectPicker value={uploadSubjectId} onChange={setUploadSubjectId} required />
         <label>Tên tài liệu <b>*</b><input value={title} onChange={event => setTitle(event.target.value)} placeholder="Ví dụ: Slide chương 1" maxLength={255} required /></label>
       </div>
       <label>Mô tả ngắn <span>(tùy chọn)</span><textarea value={description} onChange={event => setDescription(event.target.value)} rows={3} maxLength={2000} placeholder="Tóm tắt nội dung giúp bạn học dễ tìm thấy…" /></label>
-      <label className={styles.filePick}>+ Chọn file PDF, Office hoặc ảnh<input type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp" onChange={event => setFiles(Array.from(event.target.files || []))} /></label>
-      <div className={styles.fileSummary}><span>{files.length ? files.map(file => file.name).join(" · ") : "Chưa có file"}</span><strong className={totalBytes > LIMIT ? styles.over : ""}>{formatSize(totalBytes)} / 50 MB</strong></div>
+      <input ref={fileInputRef} className={styles.fileInput} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp" aria-label="Chọn tài liệu để chia sẻ" onChange={event => { addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} />
+      <button type="button" className={styles.filePick} disabled={busy} onClick={() => fileInputRef.current?.click()}>+ Chọn file PDF, Office hoặc ảnh</button>
+      <div className={styles.fileSummary}><span>{files.length ? `${files.length} tệp đã chọn` : "Chưa có file"}</span><strong className={totalBytes > LIMIT ? styles.over : ""}>{formatSize(totalBytes)} / 50 MB</strong></div>
+      {files.length > 0 && <ul className={styles.selectedFiles} aria-label="Tệp đã chọn để chia sẻ">{files.map((file, index) => <li key={`${file.name}-${file.lastModified}-${index}`}><span className={styles.selectedFileIcon} aria-hidden="true">▤</span><span className={styles.selectedFileInfo}><strong title={file.name}>{file.name}</strong><small>{formatSize(file.size)}</small></span><button type="button" disabled={busy} onClick={() => removeFile(index)} aria-label={`Gỡ tệp ${file.name}`} title="Gỡ tệp khỏi danh sách">Gỡ</button></li>)}</ul>}
+      {totalBytes > LIMIT && <p className={styles.fileLimitWarning} role="alert">Tổng dung lượng vượt 50 MB. Hãy gỡ bớt tệp trước khi gửi.</p>}
+      {files.length > 10 && <p className={styles.fileLimitWarning} role="alert">Chỉ được chia sẻ tối đa 10 tệp. Hãy gỡ bớt tệp trước khi gửi.</p>}
       {files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || "")) && <p className={styles.error}>Có file không thuộc định dạng được hỗ trợ.</p>}
-      <div className={styles.formFoot}><small>Tối đa 10 file, tổng 50 MB. File gốc được lưu riêng tư trên R2.</small><button className={styles.primary} disabled={busy || !uploadSubjectId || !title.trim() || !files.length || files.length > 10 || totalBytes > LIMIT || files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || ""))}>{busy ? "Đang gửi…" : "Gửi chờ duyệt"}</button></div>
+      <div className={styles.formFoot}><small>Tối đa 10 file, tổng 50 MB. File gốc được lưu riêng tư trên R2.</small><button className={styles.primary} disabled={busy || !uploadSubjectId || !title.trim() || !files.length || files.length > 10 || totalBytes > LIMIT || files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || ""))}>{busy ? "Đang gửi…" : isAdmin ? "Chia sẻ ngay" : "Gửi chờ duyệt"}</button></div>
     </form>}
     <nav className={styles.tabs} aria-label="Danh mục kho tài liệu"><button className={tab === "browse" ? styles.active : ""} onClick={() => { setTab("browse"); setOffset(0); }}>Tài liệu đã duyệt</button><button className={tab === "mine" ? styles.active : ""} onClick={() => { setTab("mine"); setOffset(0); }}>Tài liệu của tôi</button>{isAdmin && <><button className={tab === "pending" ? styles.active : ""} onClick={() => { setTab("pending"); setOffset(0); }}>Chờ duyệt{pendingCount > 0 && <span className={styles.pendingBadge}>{pendingCount}</span>}</button><button className={tab === "reports" ? styles.active : ""} onClick={() => { setTab("reports"); setOffset(0); }}>Tố cáo{reportCount > 0 && <span className={styles.pendingBadge}>{reportCount}</span>}</button></>}</nav>
     <div hidden={tab !== "browse"}><div className={styles.filters}><input value={query} onChange={event => { setQuery(event.target.value); setOffset(0); }} placeholder="Tìm tên tài liệu hoặc môn học…" aria-label="Tìm tài liệu"/></div><SubjectPicker value={subjectId} onChange={id => { setSubjectId(id); setOffset(0); }} onScopeChange={next => { setScope(next); setOffset(0); }} /></div>

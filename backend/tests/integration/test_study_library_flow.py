@@ -76,6 +76,17 @@ def test_study_library_requires_membership_and_admin_review(
     assert client.get(file_path, headers=auth_headers(member)).status_code == 404
     assert doc["id"] in {item["id"] for item in client.get(f"{path}/admin/pending", headers=auth_headers(reviewer)).json()}
 
+    admin_created = client.post(path, headers=auth_headers(reviewer), data={
+        "subject_id": subject.json()["id"], "title": "Đề cương do admin chia sẻ",
+    }, files=[("files", ("outline.pdf", b"%PDF-1.7\nadmin example", "application/pdf"))])
+    assert admin_created.status_code == 201, admin_created.text
+    admin_doc = admin_created.json()
+    assert admin_doc["status"] == "APPROVED"
+    assert admin_doc["reviewed_at"] is not None
+    assert admin_doc["id"] in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}
+    assert admin_doc["id"] not in {item["id"] for item in client.get(f"{path}/admin/pending", headers=auth_headers(reviewer)).json()}
+    assert client.get(f"{path}/admin/pending-count", headers=auth_headers(reviewer)).json() == {"count": 1}
+
     approved = client.patch(f"{path}/admin/{doc['id']}", headers=auth_headers(reviewer),
                             json={"decision": "APPROVE"})
     assert approved.status_code == 200, approved.text
