@@ -105,7 +105,7 @@ def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPost
             raise HTTPException(422, str(exc)) from exc
     searchable_text = "\n".join([payload.content, *[str((listing or {}).get(key, "")) for key in ("productName", "eventName", "subjectName")]])
     enforce_content(db, searchable_text, allow_review=True)
-    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=category, listing_data=listing, location_data=payload.location.model_dump() if payload.location else None, post_type=PostType.STANDARD, visibility=PostVisibility.PUBLIC, status=PostStatus.PENDING)
+    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=category, listing_data=listing, location_data=payload.location.model_dump() if payload.location and category != "study" else None, post_type=PostType.STANDARD, visibility=PostVisibility.PUBLIC, status=PostStatus.PENDING)
     db.add(post); db.flush()
     for index, media_id in enumerate(payload.media_ids):
         db.add(PostMedia(post_id=post.id, media_id=media_id, sort_order=index))

@@ -34,6 +34,7 @@ export default function ProfileFriendsTab({
   const [statusOverrides, setStatusOverrides] = useState<Record<string, FriendshipStatus>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
+  const effectiveFilter = isOwnProfile ? filter : 'all';
   const cities = [...new Set(friends.map(friend => normalizeLocation(friend.currentCity)).filter(Boolean))].sort();
   const hometowns = [...new Set(friends.map(friend => normalizeLocation(friend.hometown)).filter(Boolean))].sort();
   const recentCutoff = Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000;
@@ -44,7 +45,7 @@ export default function ProfileFriendsTab({
       if (query && !friend.name.toLocaleLowerCase().includes(query) && !friend.username.toLocaleLowerCase().includes(query)) return false;
       if (city && normalizeLocation(friend.currentCity) !== city) return false;
       if (hometown && normalizeLocation(friend.hometown) !== hometown) return false;
-      if (filter === 'recent') {
+      if (effectiveFilter === 'recent') {
         const connectedAt = friend.connectedAt ? Date.parse(friend.connectedAt) : NaN;
         return Number.isFinite(connectedAt) && connectedAt >= recentCutoff;
       }
@@ -78,8 +79,8 @@ export default function ProfileFriendsTab({
           </div>
         </div>
         <div className="subnav-filter-tabs">
-          <button type="button" className={`subnav-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => onFilterChange('all')}>Tất cả bạn bè</button>
-          <button type="button" className={`subnav-tab ${filter === 'recent' ? 'active' : ''}`} onClick={() => onFilterChange('recent')} title={`Kết bạn trong ${RECENT_DAYS} ngày qua`}>Đã thêm gần đây · {RECENT_DAYS} ngày</button>
+          <button type="button" className={`subnav-tab ${effectiveFilter === 'all' ? 'active' : ''}`} onClick={() => onFilterChange('all')}>Tất cả bạn bè</button>
+          {isOwnProfile && <button type="button" className={`subnav-tab ${effectiveFilter === 'recent' ? 'active' : ''}`} onClick={() => onFilterChange('recent')} title={`Kết bạn trong ${RECENT_DAYS} ngày qua`}>Đã thêm gần đây · {RECENT_DAYS} ngày</button>}
         </div>
         <div className="friends-location-filters">
           <label>Thành phố hiện tại <select value={city} onChange={event => setCity(event.target.value)}><option value="">Tất cả</option>{cities.map(value => <option key={value} value={value}>{value}</option>)}</select></label>
@@ -115,7 +116,7 @@ export default function ProfileFriendsTab({
       ) : (
         <div className="empty-friends-card">
           <h3 className="empty-title">Không tìm thấy bạn bè phù hợp</h3>
-          <p className="empty-desc">{searchQuery ? `Không có kết quả nào khớp với "${searchQuery}".` : filter === 'recent' ? `Không có bạn bè mới trong ${RECENT_DAYS} ngày qua.` : 'Hãy thử bỏ bộ lọc hoặc tìm bằng tên khác.'}</p>
+          <p className="empty-desc">{searchQuery ? `Không có kết quả nào khớp với "${searchQuery}".` : effectiveFilter === 'recent' ? `Không có bạn bè mới trong ${RECENT_DAYS} ngày qua.` : 'Hãy thử bỏ bộ lọc hoặc tìm bằng tên khác.'}</p>
         </div>
       )}
     </div>

@@ -77,6 +77,13 @@ export default function PostCard({
   const commentInputRef = useRef<HTMLInputElement>(null);
   const mentionFriendsRequestStarted = useRef(false);
   const [commentImage,setCommentImage]=useState<File|null>(null);
+  const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!commentImage) { setCommentImagePreview(null); return; }
+    const url = URL.createObjectURL(commentImage);
+    setCommentImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [commentImage]);
   const [replyTo,setReplyTo]=useState<Comment|null>(null);
   const [content, setContent] = useState(post.content);
   const [privacy,setPrivacy]=useState(post.privacy);
@@ -316,7 +323,7 @@ export default function PostCard({
         <PostCategoryDetails post={post} />
         <p className="post-text-content">{content}</p>
 
-        {post.location && (
+        {post.category !== 'study' && post.location && (
           post.location.latitude != null && post.location.longitude != null ? (
             <a
               className="post-location-link"
@@ -424,7 +431,7 @@ export default function PostCard({
                     <span><strong>{friend.name}</strong><small>@{friend.username}</small></span>
                   </button>)}
                 </div>}
-                <label className="comment-image-button" title="Thêm ảnh" aria-label="Thêm ảnh">📷<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>setCommentImage(e.target.files?.[0]||null)}/></label>
+                <label className="comment-image-button" title="Thêm ảnh" aria-label="Thêm ảnh">📷<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>{setCommentImage(e.currentTarget.files?.[0]||null);e.currentTarget.value='';}}/></label>
               </div>
               <button
                 type="submit"
@@ -435,6 +442,7 @@ export default function PostCard({
               >
                 {isSubmittingComment ? '…' : '➤'}
               </button>
+              {commentImage && <div className="comment-image-preview">{commentImagePreview && <img src={commentImagePreview} alt="Ảnh chuẩn bị gửi cùng bình luận" />}<span>{commentImage.name}</span><button type="button" onClick={() => setCommentImage(null)} aria-label="Gỡ ảnh bình luận">×</button></div>}
             </form>
 
             {/* Comments List Stream */}

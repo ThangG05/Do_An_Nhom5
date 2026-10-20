@@ -334,3 +334,58 @@
   .account-theme-options { width: 100%; }
   .account-theme-options button { flex: 1; }
 }
+
+/* Keep legacy light cards on a dark surface before applying light typography. */
+:root[data-theme="dark"] .change-password-page,
+:root[data-theme="dark"] .info-about-workspace-page { background: #101821 !important; }
+:root[data-theme="dark"] .change-password-page form,
+:root[data-theme="dark"] .info-module-card,
+:root[data-theme="dark"] .tech-stack-grid,
+:root[data-theme="dark"] .tech-item-row,
+:root[data-theme="dark"] .blocked-card,
+:root[data-theme="dark"] .group-join-gate,
+:root[data-theme="dark"] .profile-chat-dock,
+:root[data-theme="dark"] .messenger-right-panel {
+  background: #1a2632 !important;
+  border-color: #344352 !important;
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .messenger-right-panel :is(.accordion-header, .customization-row-btn, .shared-file-item),
+:root[data-theme="dark"] .comment-image-preview {
+  background: #263746 !important;
+  border-color: #46596a !important;
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .messenger-right-panel :is(h3, strong, .shared-media-subhead, .accordion-header),
+:root[data-theme="dark"] .tech-stack-grid :is(h3, strong) { color: #edf4fa !important; }
+:root[data-theme="dark"] .messenger-right-panel :is(p, small, span),
+:root[data-theme="dark"] .tech-stack-grid p { color: #c3cfda !important; }
+:root[data-theme="dark"] .profile-chat-dock > header,
+:root[data-theme="dark"] .profile-chat-messages,
+:root[data-theme="dark"] .messenger-right-panel .accordion-body,
+:root[data-theme="dark"] .messages-scroll-area { background: #14212d !important; }
+:root[data-theme="dark"] .chat-workspace-header,
+:root[data-theme="dark"] .conversation-item-card.active,
+:root[data-theme="dark"] .conversation-item-card:hover {
+  background: #263746 !important;
+  border-color: #46596a !important;
+}
+:root[data-theme="dark"] .messenger-3col-workspace :is(.participant-name, .panel-header-top h3, .profile-summary-card h3) { color: #edf4fa !important; }
+:root[data-theme="dark"] .profile-chat-message:not(.mine) .profile-chat-text,
+:root[data-theme="dark"] .profile-chat-file,
+:root[data-theme="dark"] .profile-chat-message.mine .profile-chat-file {
+  background: #263746 !important;
+  border-color: #46596a !important;
+  color: #e5edf5 !important;
+}
+:root[data-theme="dark"] .profile-chat-file small { color: #b5c9da !important; }
+:root[data-theme="dark"] .blocked-card h1,
+:root[data-theme="dark"] .blocked-list strong,
+:root[data-theme="dark"] .info-module-card h3,
+:root[data-theme="dark"] .change-password-page h1 { color: #edf4fa !important; }
+:root[data-theme="dark"] .info-module-card p,
+:root[data-theme="dark"] .blocked-card p,
+:root[data-theme="dark"] .change-password-page p,
+:root[data-theme="dark"] .change-password-page label { color: #c3cfda !important; }
+:root[data-theme="dark"] .module-card-chip { background: #263d58 !important; color: #c9e7ff !important; }
+:root[data-theme="dark"] .group-join-gate strong { color: #a8d6f3 !important; }

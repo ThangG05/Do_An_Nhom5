@@ -95,20 +95,28 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
     setIsLocating(true);
     setMessage("");
     setMessageTone("info");
+    let attempts = 0;
     const resolvePosition = () => {
       if (requestId !== gpsRequestId.current) return;
+      attempts += 1;
       navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         if (requestId !== gpsRequestId.current) return;
         try {
           const result = await reverseGeocode(coords.latitude, coords.longitude);
-          onSelect(result ? toPostLocation(result) : {
-            name: "Vị trí hiện tại", address: "Vị trí do bạn chia sẻ", latitude: coords.latitude, longitude: coords.longitude,
-          });
+          if (requestId !== gpsRequestId.current) return;
+          if (!result) {
+            setMessage("Chưa xác định được địa chỉ đủ chính xác. Hãy tìm địa điểm theo tên.");
+            setMessageTone("info");
+            return;
+          }
+          onSelect(toPostLocation(result));
           onClose();
         } catch {
-          onSelect({ name: "Vị trí hiện tại", address: "Vị trí do bạn chia sẻ", latitude: coords.latitude, longitude: coords.longitude });
-          onClose();
+          if (requestId === gpsRequestId.current) {
+            setMessage("Chưa tra cứu được địa chỉ. Hãy tìm địa điểm theo tên.");
+            setMessageTone("info");
+          }
         } finally {
           setIsLocating(false);
         }
@@ -125,7 +133,8 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
         }
         // Keep waiting and retry silently. Windows location providers often
         // need several attempts after waking from sleep or starting Chrome.
-        window.setTimeout(resolvePosition, 1_500);
+        if (attempts < 3) window.setTimeout(resolvePosition, 1_500);
+        else { setMessage("Thiết bị chưa cung cấp vị trí. Hãy tìm địa điểm theo tên."); setIsLocating(false); }
       },
       // Ten seconds is often insufficient on desktop devices after a fresh
       // permission grant. Keep the UI in a loading state rather than showing

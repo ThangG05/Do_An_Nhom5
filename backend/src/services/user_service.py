@@ -1,3 +1,4 @@
+import unicodedata
 import uuid
 from fastapi import HTTPException
 from sqlalchemy import func, or_, select
@@ -8,6 +9,23 @@ from src.db.models.user import Profile, User
 from src.services.storage_service import create_download_url
 from src.models.user import JoinedGroupResponse, ProfileResponse, ProfileUpdateRequest, UserSearchResponse
 from src.core.profile_options import SCHOOL_NAME, derive_course_year
+
+_VIETNAMESE_ACCENTS = {
+    "a": "àáảãạăằắẳẵặâầấẩẫậ",
+    "e": "èéẻẽẹêềếểễệ",
+    "i": "ìíỉĩị",
+    "o": "òóỏõọôồốổỗộơờớởỡợ",
+    "u": "ùúủũụưừứửữự",
+    "y": "ỳýỷỹỵ",
+    "d": "đ",
+}
+_ACCENTED = "".join(chars for chars in _VIETNAMESE_ACCENTS.values())
+_UNACCENTED = "".join(base * len(chars) for base, chars in _VIETNAMESE_ACCENTS.items())
+
+
+def _fold_vietnamese(value: str) -> str:
+    normalized = unicodedata.normalize("NFD", value.casefold())
+    return "".join(char for char in normalized if unicodedata.category(char) != "Mn").replace("đ", "d")
 
 
 def _media_url(db: Session, media_id: uuid.UUID | None, fallback: str) -> str:
@@ -77,6 +95,7 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
     if len(term) < 2:
         return []
     pattern = f"%{term}%"
+    folded_pattern = f"%{_fold_vietnamese(term)}%"
     rows = db.execute(
         __import__('sqlalchemy').text("""
             SELECT u.id, u.username, p.full_name, p.student_code, p.faculty,
@@ -109,7 +128,8 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
                 WHERE (b.blocker_id = :viewer AND b.blocked_id = u.id)
                    OR (b.blocker_id = u.id AND b.blocked_id = :viewer)
               )
-              AND (p.full_name ILIKE :pattern OR p.student_code ILIKE :pattern OR u.username ILIKE :pattern)
+              AND (p.full_name ILIKE :pattern OR p.student_code ILIKE :pattern OR u.username ILIKE :pattern
+                   OR translate(lower(p.full_name), :accented, :unaccented) LIKE :folded_pattern)
             ORDER BY
               CASE WHEN lower(coalesce(p.student_code, '')) = lower(:term) THEN 0
                    WHEN lower(u.username) = lower(:term) THEN 1
@@ -117,7 +137,8 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
               p.full_name
             LIMIT :limit
         """),
-        {"viewer": viewer.id, "pattern": pattern, "term": term, "limit": limit},
+        {"viewer": viewer.id, "pattern": pattern, "term": term, "limit": limit,
+         "accented": _ACCENTED, "unaccented": _UNACCENTED, "folded_pattern": folded_pattern},
     ).mappings().all()
     avatar_ids = {row["avatar_media_id"] for row in rows if row["avatar_media_id"]}
     avatars = {media.id: media for media in db.scalars(select(MediaFile).where(

@@ -81,7 +81,18 @@ export default function ProfileChatDock({ userId, name, avatar, onClose }: Props
   return createPortal(<aside className={`profile-chat-dock ${minimized ? "minimized" : ""}`} aria-label={`Trò chuyện với ${name}`}>
     <header><img src={safeImageSrc(avatar)} alt="" /><strong>{name}</strong><div><button type="button" onClick={() => setMinimized(value => !value)} aria-label={minimized ? "Mở rộng trò chuyện" : "Thu nhỏ trò chuyện"}>{minimized ? "▢" : "−"}</button><button type="button" onClick={onClose} aria-label="Đóng trò chuyện">×</button></div></header>
     {!minimized && <><div className="profile-chat-messages" aria-live="polite">
-      {loading ? <p>Đang mở trò chuyện...</p> : messages.length ? messages.map(message => <div key={message.id} className={`profile-chat-message ${message.senderId === currentUserId ? "mine" : ""}`}><span>{message.content || message.attachments?.map(item => item.name).join(", ") || "Tệp đính kèm"}</span></div>) : !error && <p>Hãy gửi lời chào cho {name}.</p>}
+      {loading ? <p>Đang mở trò chuyện...</p> : messages.length ? messages.map(message => <div key={message.id} className={`profile-chat-message ${message.senderId === currentUserId ? "mine" : ""}`}><div className="profile-chat-content">
+        {message.isRecalled ? <span className="profile-chat-text">Tin nhắn đã được thu hồi</span> : <>
+          {message.content && <span className="profile-chat-text">{message.content}</span>}
+          {message.attachments?.map(item => {
+            const url = item.url?.trim();
+            if (item.type === "image" && url) return <a key={item.id} className="profile-chat-image" href={url} target="_blank" rel="noreferrer" aria-label={`Mở ảnh ${item.name}`}><img src={safeImageSrc(url)} alt={item.name || "Ảnh đính kèm"} loading="lazy" /></a>;
+            if (item.type === "video" && url) return <video key={item.id} className="profile-chat-image" src={url} controls preload="metadata" />;
+            if (item.type === "audio" && url) return <audio key={item.id} className="profile-chat-audio" src={url} controls />;
+            return url ? <a key={item.id} className="profile-chat-file" href={url} target="_blank" rel="noreferrer"><strong>📎 {item.name || "Tệp đính kèm"}</strong><small>Nhấn để mở tệp</small></a> : <span key={item.id} className="profile-chat-text">{item.name || "Tệp đính kèm"} · Không có liên kết tải</span>;
+          })}
+        </>}
+      </div></div>) : !error && <p>Hãy gửi lời chào cho {name}.</p>}
       <div ref={bottomRef} />
     </div><form className="profile-chat-composer" onSubmit={event => { event.preventDefault(); void send(); }}><input value={draft} onChange={event => setDraft(event.target.value)} placeholder="Viết tin nhắn..." aria-label="Viết tin nhắn" disabled={!conversationId || sending}/><button type="submit" disabled={!conversationId || !draft.trim() || sending} aria-label="Gửi tin nhắn">➤</button></form>{error && <p className="profile-chat-error" role="alert">{error}</p>}{conversationId && <Link className="profile-chat-open-all" href={`/messages?conversationId=${encodeURIComponent(conversationId)}`}>Mở toàn bộ cuộc trò chuyện</Link>}</>}
   </aside>, document.body);

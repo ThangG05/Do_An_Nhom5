@@ -1,3 +1,4 @@
+import math
 import unicodedata
 from typing import Annotated
 
@@ -32,7 +33,8 @@ def _suggestion(feature: dict) -> LocationSuggestion:
         raise ValueError("Missing Photon coordinates")
     name = str(properties.get("name") or properties.get("street") or "Vị trí đã chọn").strip()
     address_parts = [
-        properties.get("street"), properties.get("locality"), properties.get("district"),
+        " ".join(str(part).strip() for part in (properties.get("housenumber"), properties.get("street")) if part),
+        properties.get("locality"), properties.get("district"),
         properties.get("city"), properties.get("state"), properties.get("country"),
     ]
     display_name = ", ".join(dict.fromkeys(str(part).strip() for part in address_parts if part))
@@ -77,4 +79,14 @@ async def reverse_geocode(
     features = payload.get("features", [])
     if not features:
         return None
-    return _suggestion(features[0])
+    properties = features[0].get("properties") or {}
+    if not (properties.get("street") or properties.get("locality")):
+        return None
+    suggestion = _suggestion(features[0])
+    # Photon returns the nearest indexed point, which may be a different place.
+    # Never label distant coordinates as the user's current address.
+    lat_delta = (suggestion.latitude - latitude) * 111_000
+    lon_delta = (suggestion.longitude - longitude) * 111_000 * math.cos(math.radians(latitude))
+    if math.hypot(lat_delta, lon_delta) > 250 or suggestion.address == "Vị trí đã chọn":
+        return None
+    return suggestion.model_copy(update={"name": suggestion.address})

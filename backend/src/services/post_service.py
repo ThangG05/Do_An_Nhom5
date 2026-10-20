@@ -21,6 +21,8 @@ def _are_friends(db: Session, first: uuid.UUID, second: uuid.UUID) -> bool:
 
 
 def _can_view(db: Session, post: Post, viewer_id: uuid.UUID) -> bool:
+    if post.group_id is None and post.category in {"market", "roommate", "event", "study"}:
+        return False  # Legacy rows are attached to groups by migration 0029.
     viewer = db.get(User, viewer_id)
     if post.group_id and (not viewer or viewer.system_role != SystemRole.SUPER_ADMIN) and not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": post.group_id, "uid": viewer_id}).first():
         return False
@@ -251,7 +253,7 @@ def create_profile_post(db: Session, user: User, payload: CreateProfilePostReque
             raise HTTPException(404, "Không tìm thấy nhóm tương ứng với chuyên mục.")
         if not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": group_id, "uid": user.id}).first():
             raise HTTPException(403, "Bạn cần tham gia nhóm trước khi đăng bài trong chuyên mục này.")
-    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=payload.category, listing_data=_listing_data(payload, payload.category), location_data=payload.location.model_dump() if payload.location else None, post_type=PostType.STANDARD if group_id else PostType.PROFILE_POST, visibility=PostVisibility.PUBLIC if group_id else PostVisibility(payload.privacy.upper()), status=PostStatus.PENDING if group_id else PostStatus.APPROVED)
+    post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=payload.category, listing_data=_listing_data(payload, payload.category), location_data=payload.location.model_dump() if payload.location and payload.category != "study" else None, post_type=PostType.STANDARD if group_id else PostType.PROFILE_POST, visibility=PostVisibility.PUBLIC if group_id else PostVisibility(payload.privacy.upper()), status=PostStatus.PENDING if group_id else PostStatus.APPROVED)
     db.add(post)
     db.flush()
     for index, media_id in enumerate(payload.media_ids):
@@ -271,7 +273,7 @@ def list_profile_posts(db: Session, target: User, viewer: User) -> list[ProfileP
     # former group_id IS NULL filter made a user's approved group posts vanish
     # from their own profile timeline.
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
-    group_visibility = or_(Post.group_id.is_(None), Post.group_id.in_(member_group_ids))
+    group_visibility = or_(and_(Post.group_id.is_(None), Post.category.not_in(["market", "roommate", "event", "study"])), Post.group_id.in_(member_group_ids))
     posts = db.scalars(select(Post).where(Post.author_id == target.id, group_visibility, Post.status == PostStatus.APPROVED, Post.deleted_at.is_(None), Post.visibility.in_(allowed)).order_by(Post.created_at.desc())).all()
     return _serialize_feed_posts(db, posts, viewer.id)
 
@@ -319,7 +321,7 @@ def list_feed(db: Session, viewer: User, limit: int = 30, offset: int = 0, categ
     # Home includes profile posts and approved posts from groups the viewer belongs to.
     # Pending/rejected posts and posts from unrelated groups must never leak into the feed.
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
-    group_scope = or_(Post.group_id.is_(None), Post.group_id.in_(member_group_ids))
+    group_scope = or_(and_(Post.group_id.is_(None), Post.category.not_in(["market", "roommate", "event", "study"])), Post.group_id.in_(member_group_ids))
     filters=[group_scope,Post.author_id.not_in(blocked_ids),Post.status == PostStatus.APPROVED,Post.deleted_at.is_(None),visible]
     if category:
         filters.append(Post.category == category)
@@ -462,7 +464,9 @@ def update_post(db: Session, post_id: uuid.UUID, user: User, payload: UpdatePost
     listing_fields_supplied = any((payload.marketListing, payload.roomListing, payload.eventListing, payload.studyListing))
     if listing_fields_supplied or (payload.category and payload.category != previous_category):
         post.listing_data = merged_listing
-    if payload.location is not None:
+    if post.category == "study":
+        post.location_data = None
+    elif payload.location is not None:
         post.location_data = payload.location.model_dump()
     if payload.media_ids is not None:
         media=list(db.scalars(select(MediaFile).where(MediaFile.id.in_(payload.media_ids))).all()) if payload.media_ids else []
