@@ -8,6 +8,15 @@ export interface Subject {
   category: "GENERAL" | "SPECIALIZED"; needs_review: boolean; major_ids: string[];
 }
 export interface Major { id: string; code: string | null; name: string; subject_count: number; }
+export type DocumentType = "EXAM" | "EXERCISE" | "LECTURE" | "REVIEW" | "OTHER";
+export type AssessmentType = "MIDTERM" | "FINAL";
+export const documentTypeLabel: Record<DocumentType, string> = {
+  EXAM: "Đề thi / Kiểm tra", EXERCISE: "Bài tập / Thực hành",
+  LECTURE: "Giáo trình / Bài giảng", REVIEW: "Đề cương / Ôn tập", OTHER: "Tài liệu khác",
+};
+export const assessmentTypeLabel: Record<AssessmentType, string> = {
+  MIDTERM: "Giữa kỳ", FINAL: "Cuối kỳ",
+};
 export interface CatalogScope { category?: "GENERAL" | "SPECIALIZED" | ""; majorId?: string; }
 const scopeParams = (scope: CatalogScope) => `${scope.category ? `&category=${scope.category}` : ""}${scope.majorId ? `&major_id=${encodeURIComponent(scope.majorId)}` : ""}`;
 export const listMajors = () => api<Major[]>("/majors");
@@ -18,10 +27,25 @@ export interface StudyFile {
 
 export interface StudyDocument {
   id: string; group_id: string; subject_id: string; subject_code: string | null; subject_name: string;
+  major_id: string | null; document_type: DocumentType | null; assessment_type: AssessmentType | null;
   uploaded_by: string; uploader_name: string; title: string; description: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED"; total_bytes: number;
   reviewed_at: string | null; rejection_reason: string | null; created_at: string;
   files: StudyFile[];
+}
+export interface StudyAIFileAssessment {
+  file_id: string; file_name: string;
+  subject_relevance: "RELEVANT" | "IRRELEVANT" | "UNCERTAIN";
+  content_type: "ACADEMIC" | "SPAM" | "UNCERTAIN";
+  recommendation: "APPROVE" | "REJECT" | "REVIEW";
+  evidence_quote: string | null; evidence_location: string | null;
+  reason: string; error_code: string | null;
+  sampling_limited: boolean;
+}
+export interface StudyAIAssessment {
+  document_id: string; status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+  recommendation: "APPROVE" | "REJECT" | "REVIEW" | null;
+  file_results: StudyAIFileAssessment[] | null; reason: string | null; completed_at: string | null;
 }
 
 export interface StudyDocumentReport {
@@ -36,14 +60,17 @@ export const adminSubjects = (groupId: string, q = "", offset = 0, limit = 11) =
 export const saveSubject = (groupId: string, body: Pick<Subject, "code" | "name" | "source_note" | "is_active"> & Partial<Pick<Subject, "id" | "category" | "needs_review" | "major_ids">>) =>
   api<Subject>(`/groups/${groupId}/library/admin/subjects`, { method: "PUT", body: JSON.stringify(body) });
 
-export const listStudyDocuments = (groupId: string, q = "", subjectId = "", offset = 0, scope: CatalogScope = {}, limit = 6) =>
-  api<StudyDocument[]>(`/groups/${groupId}/library?q=${encodeURIComponent(q)}${subjectId ? `&subject_id=${subjectId}` : ""}&limit=${limit}&offset=${offset}${scopeParams(scope)}`);
+export const listStudyDocuments = (groupId: string, q = "", subjectId = "", offset = 0, scope: CatalogScope = {}, limit = 6,
+  documentType = "", assessmentType = "") =>
+  api<StudyDocument[]>(`/groups/${groupId}/library?q=${encodeURIComponent(q)}${subjectId ? `&subject_id=${subjectId}` : ""}&limit=${limit}&offset=${offset}${scopeParams(scope)}${documentType ? `&document_type=${documentType}` : ""}${assessmentType ? `&assessment_type=${assessmentType}` : ""}`);
 export const myStudyDocuments = (groupId: string, offset = 0, limit = 6) =>
   api<StudyDocument[]>(`/groups/${groupId}/library/mine?limit=${limit}&offset=${offset}`);
 export const pendingStudyDocuments = (groupId: string, offset = 0, limit = 6) =>
   api<StudyDocument[]>(`/groups/${groupId}/library/admin/pending?limit=${limit}&offset=${offset}`);
 export const pendingStudyDocumentCount = (groupId: string) =>
   api<{ count: number }>(`/groups/${groupId}/library/admin/pending-count`);
+export const pendingStudyAIAssessments = (groupId: string, ids: string[]) =>
+  api<StudyAIAssessment[]>(`/groups/${groupId}/library/admin/ai-assessments?${ids.map(id => `document_ids=${encodeURIComponent(id)}`).join("&")}`);
 export const openStudyDocumentReportCount = (groupId: string) =>
   api<{ count: number }>(`/groups/${groupId}/library/admin/reports/count`);
 export const openStudyDocumentReports = (groupId: string, offset = 0, limit = 50) =>
@@ -59,10 +86,14 @@ export const decideStudyDocumentReport = (groupId: string, reportId: string,
     { method: "PATCH", body: JSON.stringify({ decision, note }) },
   );
 
-export async function shareStudyDocument(groupId: string, subjectId: string, title: string,
-                                         description: string, files: File[]): Promise<StudyDocument> {
+export async function shareStudyDocument(groupId: string, majorId: string, subjectId: string,
+  documentType: DocumentType, assessmentType: AssessmentType | null, title: string,
+  description: string, files: File[]): Promise<StudyDocument> {
   const body = new FormData();
-  body.append("subject_id", subjectId); body.append("title", title); body.append("description", description);
+  body.append("major_id", majorId); body.append("subject_id", subjectId);
+  body.append("document_type", documentType);
+  if (assessmentType) body.append("assessment_type", assessmentType);
+  body.append("title", title); body.append("description", description);
   files.forEach(file => body.append("files", file));
   const response = await authenticatedFetch(`${BASE}/groups/${groupId}/library`, { method: "POST", body });
   if (!response.ok) {

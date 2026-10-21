@@ -43,13 +43,13 @@ def list_queue(db:Session,user:User,status:str|None=None)->list[ReportResponse]:
         if not ids: raise HTTPException(403,"Bạn không có quyền xử lý báo cáo.")
         scope=" AND COALESCE(p.group_id,cp.group_id)=ANY(:groups)";params["groups"]=ids
     status_sql=" AND r.status IN ('PENDING','REVIEWING')" if status=="OPEN" else " AND r.status::text=:status" if status else ""
-    rows=db.execute(text("SELECT r.*,COALESCE(rp.full_name,ru.username,'Người dùng đã xóa') reporter_name,COALESCE(p.group_id,cp.group_id) group_id,g.name group_name,CASE WHEN r.target_type='POST' THEN left(p.content,240) WHEN r.target_type='COMMENT' THEN left(c.content,240) ELSE COALESCE(tp.full_name,tu.username,'Tài khoản đã xóa') END target_summary FROM reports r LEFT JOIN users ru ON ru.id=r.reporter_id LEFT JOIN profiles rp ON rp.user_id=ru.id LEFT JOIN posts p ON r.target_type='POST' AND p.id=r.target_id LEFT JOIN comments c ON r.target_type='COMMENT' AND c.id=r.target_id LEFT JOIN posts cp ON cp.id=c.post_id LEFT JOIN users tu ON r.target_type='USER' AND tu.id=r.target_id LEFT JOIN profiles tp ON tp.user_id=tu.id LEFT JOIN groups g ON g.id=COALESCE(p.group_id,cp.group_id) WHERE 1=1"+status_sql+scope+" ORDER BY r.created_at DESC"),params).mappings()
+    rows=db.execute(text("SELECT r.*,COALESCE(rp.full_name,ru.username,'Người dùng đã xóa') reporter_name,COALESCE(p.group_id,cp.group_id) group_id,g.name group_name,CASE WHEN r.target_type='POST' THEN left(p.content,240) WHEN r.target_type='COMMENT' THEN left(c.content,240) ELSE COALESCE(tp.full_name,tu.username,'Tài khoản đã xóa') END target_summary,CASE WHEN r.target_type='POST' THEN p.id IS NULL OR p.deleted_at IS NOT NULL WHEN r.target_type='COMMENT' THEN c.id IS NULL OR c.deleted_at IS NOT NULL OR cp.id IS NULL OR cp.deleted_at IS NOT NULL ELSE false END target_removed FROM reports r LEFT JOIN users ru ON ru.id=r.reporter_id LEFT JOIN profiles rp ON rp.user_id=ru.id LEFT JOIN posts p ON r.target_type='POST' AND p.id=r.target_id LEFT JOIN comments c ON r.target_type='COMMENT' AND c.id=r.target_id LEFT JOIN posts cp ON cp.id=c.post_id LEFT JOIN users tu ON r.target_type='USER' AND tu.id=r.target_id LEFT JOIN profiles tp ON tp.user_id=tu.id LEFT JOIN groups g ON g.id=COALESCE(p.group_id,cp.group_id) WHERE 1=1"+status_sql+scope+" ORDER BY r.created_at DESC"),params).mappings()
     out=[]
     for r in rows:
         evidence=None
         if r["evidence_media_id"]:
             media=db.get(MediaFile,r["evidence_media_id"]);evidence=create_download_url(media) if media and media.status==MediaStatus.READY else None
-        out.append(ReportResponse(id=str(r["id"]),reporter_id=str(r["reporter_id"]) if r["reporter_id"] else None,reporter_name=r["reporter_name"],target_type=str(r["target_type"]),target_id=str(r["target_id"]),reason=r["reason"],status=str(r["status"]),group_id=str(r["group_id"]) if r["group_id"] else None,group_name=r["group_name"],target_summary=r["target_summary"] or "",evidence_url=evidence,resolution_note=r["resolution_note"],created_at=r["created_at"].isoformat(),handled_at=r["handled_at"].isoformat() if r["handled_at"] else None))
+        out.append(ReportResponse(id=str(r["id"]),reporter_id=str(r["reporter_id"]) if r["reporter_id"] else None,reporter_name=r["reporter_name"],target_type=str(r["target_type"]),target_id=str(r["target_id"]),reason=r["reason"],status=str(r["status"]),group_id=str(r["group_id"]) if r["group_id"] else None,group_name=r["group_name"],target_summary=r["target_summary"] or "",target_removed=bool(r.get("target_removed",False)),evidence_url=evidence,resolution_note=r["resolution_note"],created_at=r["created_at"].isoformat(),handled_at=r["handled_at"].isoformat() if r["handled_at"] else None))
     return out
 
 
@@ -106,6 +106,7 @@ def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveReques
     if payload.decision=="REJECT" and payload.action!="NONE":
         raise HTTPException(400,"Không thể áp dụng biện pháp khi bác bỏ báo cáo.")
     target=_target(db,str(report["target_type"]),report["target_id"])
+    removed_content=str(report["target_type"]) in {"POST","COMMENT"} and not target
     group_id=db.scalar(text("""
         SELECT COALESCE(p.group_id, cp.group_id) FROM reports r
         LEFT JOIN posts p ON r.target_type='POST' AND p.id=r.target_id
@@ -122,6 +123,10 @@ def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveReques
           AND gu.status='ACTIVE' AND gu.deleted_at IS NULL LIMIT 1
     """),{"group_id":group_id}).first():
         raise HTTPException(403,"Báo cáo này do quản trị nhóm xử lý.")
+    if removed_content and (payload.decision!="RESOLVE" or payload.action!="NONE"):
+        raise HTTPException(409,"Nội dung đã được gỡ. Hãy kết thúc báo cáo mà không bác bỏ hoặc xóa lần nữa.")
+    if not removed_content and len(payload.note.strip()) < 3:
+        raise HTTPException(400,"Vui lòng ghi rõ kết quả xử lý (ít nhất 3 ký tự).")
     notice=("Bài viết đã được gỡ trước khi xử lý báo cáo." if str(report["target_type"])=="POST" else
             "Bình luận đã được gỡ trước khi xử lý báo cáo." if str(report["target_type"])=="COMMENT" else "") if payload.decision=="RESOLVE" and not target else ""
     if notice and str(report["target_type"])=="COMMENT" and db.execute(text("""
@@ -143,7 +148,8 @@ def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveReques
         target_user.status=AccountStatus.LOCKED if payload.action=="LOCK_USER" else AccountStatus.DISABLED
         db.execute(text("UPDATE refresh_tokens SET revoked_at=now() WHERE user_id=:uid AND revoked_at IS NULL"),{"uid":target_user.id})
     final="RESOLVED" if payload.decision=="RESOLVE" else "REJECTED"
-    resolution_note=f"{notice} {payload.note.strip()}".strip()
+    resolution_note=("Nội dung đã được tác giả gỡ trước khi xử lý" if removed_content
+                     else payload.note.strip())
     db.execute(text("UPDATE reports SET status=:status,handled_by=:admin,resolution_note=:note,handled_at=now() WHERE id=:id"),{"status":final,"admin":user.id,"note":resolution_note,"id":report_id})
     db.execute(text("INSERT INTO audit_logs(actor_id,action,target_type,target_id,metadata) VALUES(:actor,'REPORT_HANDLED','REPORT',:id,CAST(:meta AS jsonb))"),{"actor":user.id,"id":report_id,"meta":json.dumps({"decision":payload.decision,"action":payload.action},ensure_ascii=False)})
     if report["reporter_id"]: db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Kết quả báo cáo',:content,:actor,'REPORT',:id)"),{"uid":report["reporter_id"],"content":resolution_note,"actor":user.id,"id":report_id})

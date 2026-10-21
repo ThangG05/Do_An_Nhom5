@@ -6,17 +6,76 @@ from zoneinfo import ZoneInfo
 from fastapi import HTTPException
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
-from sqlalchemy import bindparam, select, text
+from sqlalchemy import bindparam, func, or_, select, text
 from sqlalchemy.orm import Session
 
 from src.db.models.user import AccountStatus, SystemRole, User
 from src.db.models.media import MediaFile, MediaStatus
+from src.db.models.post import Post, PostStatus, PostVisibility
+from src.db.models.user import Profile
 from src.models.admin import (AdminDashboardResponse, AdminUserPage, AdminUserResponse,
-                              AuditLogResponse, DisciplineRequest, GroupAdminInfoResponse,
+                              AdminProfilePreview, AdminPublicPostPage, AuditLogResponse, DisciplineRequest, GroupAdminInfoResponse,
                               RAGUserUsageResponse)
 from src.services.storage_service import create_download_url
+from src.services import post_service
 
 DEDICATED_ADMIN_SLUGS = {"pass-do", "ghep-phong-tim-tro", "su-kien", "hoc-tap"}
+
+
+def profile_preview(db: Session, user_id: uuid.UUID) -> AdminProfilePreview:
+    user = db.get(User, user_id)
+    if not user or user.deleted_at is not None:
+        raise HTTPException(404, "Không tìm thấy tài khoản.")
+    profile = user.profile
+    media_ids = [media_id for media_id in (profile.avatar_media_id, profile.cover_media_id) if media_id] if profile else []
+    media = {item.id: item for item in db.scalars(select(MediaFile).where(
+        MediaFile.id.in_(media_ids), MediaFile.status == MediaStatus.READY,
+        MediaFile.deleted_at.is_(None),
+    ))} if media_ids else {}
+    return AdminProfilePreview(
+        id=str(user.id), name=profile.full_name if profile else user.username,
+        username=user.username,
+        avatar=create_download_url(media[profile.avatar_media_id]) if profile and profile.avatar_media_id in media else None,
+        cover=create_download_url(media[profile.cover_media_id]) if profile and profile.cover_media_id in media else None,
+        bio=profile.bio or "" if profile else "",
+        student_code=profile.student_code if profile else None,
+        faculty=profile.faculty if profile else None,
+        joined_at=user.created_at.isoformat(), status=user.status.value,
+    )
+
+
+def public_posts(db: Session, admin: User, limit: int, offset: int, query: str = "", status: str = "ALL", author_id: uuid.UUID | None = None) -> AdminPublicPostPage:
+    filters = [Post.group_id.is_(None), Post.visibility == PostVisibility.PUBLIC,
+               Post.deleted_at.is_(None), Post.status.in_((PostStatus.APPROVED, PostStatus.HIDDEN))]
+    if status != "ALL":
+        filters.append(Post.status == PostStatus(status))
+    if author_id:
+        filters.append(Post.author_id == author_id)
+    term = query.strip()
+    if term:
+        matched_authors = select(User.id).outerjoin(Profile, Profile.user_id == User.id).where(
+            or_(User.username.ilike(f"%{term}%"), Profile.full_name.ilike(f"%{term}%")))
+        filters.append(or_(Post.content.ilike(f"%{term}%"), Post.author_id.in_(matched_authors)))
+    total = db.scalar(select(func.count()).select_from(Post).where(*filters)) or 0
+    posts = list(db.scalars(select(Post).where(*filters).order_by(Post.created_at.desc(), Post.id.desc()).limit(limit).offset(offset)))
+    return AdminPublicPostPage(items=post_service._serialize_feed_posts(db, posts, admin.id), total=total, limit=limit, offset=offset)
+
+
+def moderate_public_post(db: Session, post_id: uuid.UUID, admin: User, action: str, reason: str) -> None:
+    post = db.scalar(select(Post).where(Post.id == post_id).with_for_update())
+    if not post or post.group_id is not None or post.visibility != PostVisibility.PUBLIC or post.deleted_at is not None:
+        raise HTTPException(404, "Không tìm thấy bài viết Feed công khai.")
+    expected = PostStatus.APPROVED if action == "HIDE" else PostStatus.HIDDEN
+    if post.status != expected:
+        raise HTTPException(409, "Trạng thái bài viết đã thay đổi. Hãy tải lại danh sách.")
+    post.status = PostStatus.HIDDEN if action == "HIDE" else PostStatus.APPROVED
+    post.reviewed_by = admin.id
+    post.reviewed_at = datetime.now(UTC)
+    post.rejection_reason = reason.strip() if action == "HIDE" else None
+    db.execute(text("INSERT INTO audit_logs(actor_id,action,target_type,target_id,metadata) VALUES(:actor,:action,'POST',:target,CAST(:metadata AS jsonb))"),
+               {"actor": admin.id, "action": f"PUBLIC_POST_{action}", "target": post.id,
+                "metadata": __import__('json').dumps({"reason": reason.strip()}, ensure_ascii=False)})
+    db.commit()
 
 
 def group_admins(db: Session, group_id: uuid.UUID) -> list[GroupAdminInfoResponse]:

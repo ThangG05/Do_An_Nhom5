@@ -51,6 +51,28 @@ test('friend cards use the viewer relationship, and recent means seven days', as
   await expect(friendCard).toBeVisible();
 });
 
+test('profile does not present a failed friends request as an empty list', async ({ page }) => {
+  await setup(page);
+  let attempts = 0;
+  let allowSuccess = false;
+  await page.route(`**/api/v1/users/${ownerId}/friends?**`, async route => {
+    attempts += 1;
+    if (!allowSuccess) {
+      await route.fulfill({ status: 503, json: { detail: 'Tạm thời không tải được bạn bè.' } });
+      return;
+    }
+    await route.fulfill({ status: 200, json: [
+      { id: friendId, name: 'Bạn chung', username: 'friend', avatar: '/assets/logo.png', mutualCount: 1, connectedAt: new Date().toISOString(), friendshipStatus: 'friends' },
+    ] });
+  });
+  await page.goto(`/profile/${ownerId}`);
+  await expect(page.getByRole('alert').filter({ hasText: 'Không tải được danh sách bạn bè.' })).toBeVisible();
+  allowSuccess = true;
+  await page.getByRole('button', { name: 'Thử lại' }).click();
+  await expect(page.getByText('Bạn chung')).toBeVisible();
+  expect(attempts).toBeGreaterThanOrEqual(2);
+});
+
 test('super admin can open reported comments and user accounts', async ({ page }, testInfo) => {
   await setup(page, 'SUPER_ADMIN');
   await page.route('**/api/v1/reports/admin?status=PENDING', route => route.fulfill({ json: [

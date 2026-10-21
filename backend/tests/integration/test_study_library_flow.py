@@ -1,4 +1,7 @@
+import io
 import uuid
+
+from docx import Document
 
 import pytest
 from sqlalchemy import text
@@ -28,6 +31,9 @@ def test_study_library_requires_membership_and_admin_review(
             ON CONFLICT(group_id,user_id) DO UPDATE SET role=EXCLUDED.role
         """), {"gid": group_id, "uid": user.id, "role": role})
     db_session.commit()
+    path = f"/api/v1/groups/{group_id}/library"
+    baseline_pending = client.get(f"{path}/admin/pending-count", headers=auth_headers(reviewer)).json()["count"]
+    baseline_reports = client.get(f"{path}/admin/reports/count", headers=auth_headers(reviewer)).json()["count"]
 
     class FakeR2:
         def __init__(self):
@@ -41,6 +47,9 @@ def test_study_library_requires_membership_and_admin_review(
             return "https://r2.test/signed-download"
         def delete_object(self, Bucket, Key):
             self.deletes.append((Bucket, Key))
+        def download_fileobj(self, bucket, key, target):
+            upload = next(item for item in self.uploads if item[0] == bucket and item[1] == key)
+            target.write(upload[2])
 
     r2 = FakeR2()
     monkeypatch.setattr(library, "get_r2_client", lambda: r2)
@@ -60,40 +69,87 @@ def test_study_library_requires_membership_and_admin_review(
     subject = client.put(subject_path, headers=auth_headers(reviewer), json=subject_payload)
     assert subject.status_code == 200, subject.text
 
+    upload_path = f"/api/v1/groups/{group_id}/library"
+    base_metadata = {
+        "major_id": str(major_id), "subject_id": subject.json()["id"],
+        "document_type": "LECTURE", "title": "Slide chương một",
+    }
+    test_file = [("files", ("slide.pdf", b"%PDF-1.7\nexample", "application/pdf"))]
+    assert client.post(upload_path, headers=auth_headers(owner),
+                       data={key: value for key, value in base_metadata.items() if key != "document_type"},
+                       files=test_file).status_code == 422
+    assert client.post(upload_path, headers=auth_headers(owner),
+                       data={**base_metadata, "assessment_type": "MIDTERM"},
+                       files=test_file).status_code == 400
+    assert client.post(upload_path, headers=auth_headers(owner),
+                       data={**base_metadata, "major_id": str(uuid.uuid4())},
+                       files=test_file).status_code == 400
+
+    word = Document()
+    word.add_paragraph("Bài giảng Cơ sở lập trình để admin xem trước khi duyệt.")
+    word_bytes = io.BytesIO()
+    word.save(word_bytes)
     created = client.post(f"/api/v1/groups/{group_id}/library", headers=auth_headers(owner), data={
-        "subject_id": subject.json()["id"], "title": "Slide chương một",
-    }, files=[("files", ("slide.pdf", b"%PDF-1.7\nexample", "application/pdf"))])
+        "major_id": str(major_id), "subject_id": subject.json()["id"],
+        "document_type": "LECTURE", "title": "Slide chương một",
+    }, files=[("files", ("slide.pdf", b"%PDF-1.7\nexample", "application/pdf")),
+              ("files", ("notes.docx", word_bytes.getvalue(),
+                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))])
     assert created.status_code == 201, created.text
     doc = created.json()
     assert doc["status"] == "PENDING"
+    assert doc["document_type"] == "LECTURE" and doc["assessment_type"] is None
+    assert doc["major_id"] == str(major_id)
     assert r2.uploads[0][0] == "test-private-study"
     assert r2.uploads[0][1].startswith(f"study-groups/{group_id}/documents/")
 
-    path = f"/api/v1/groups/{group_id}/library"
     assert client.get(path, headers=auth_headers(outsider)).status_code == 403
     assert doc["id"] not in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}
     file_path = f"{path}/{doc['id']}/files/{doc['files'][0]['id']}/download"
     assert client.get(file_path, headers=auth_headers(member)).status_code == 404
+    word_file = next(file for file in doc["files"] if file["extension"] == "docx")
+    word_preview = f"{path}/{doc['id']}/files/{word_file['id']}/preview-office"
+    assert client.get(word_preview, headers=auth_headers(member)).status_code == 404
+    admin_preview = client.get(word_preview, headers=auth_headers(reviewer))
+    assert admin_preview.status_code == 200, admin_preview.text
+    assert admin_preview.json()["kind"] == "word"
+    assert "Bài giảng Cơ sở lập trình" in admin_preview.json()["paragraphs"][0]
+    assert client.get(word_preview, headers=auth_headers(owner)).status_code == 200
+    admin_bundle = client.get(f"{path}/{doc['id']}/download-bundle", headers=auth_headers(reviewer))
+    assert admin_bundle.status_code == 200, admin_bundle.text
+    assert client.get(f"{path}/{doc['id']}/download-bundle", headers=auth_headers(member)).status_code == 404
     assert doc["id"] in {item["id"] for item in client.get(f"{path}/admin/pending", headers=auth_headers(reviewer)).json()}
+    ai_path = f"{path}/admin/ai-assessments?document_ids={doc['id']}"
+    assert client.get(ai_path, headers=auth_headers(member)).status_code == 403
+    ai_rows = client.get(ai_path, headers=auth_headers(reviewer)).json()
+    assert len(ai_rows) == 1 and ai_rows[0]["status"] == "QUEUED"
 
     admin_created = client.post(path, headers=auth_headers(reviewer), data={
-        "subject_id": subject.json()["id"], "title": "Đề cương do admin chia sẻ",
+        "major_id": str(major_id), "subject_id": subject.json()["id"],
+        "document_type": "REVIEW", "assessment_type": "FINAL",
+        "title": "Đề cương do admin chia sẻ",
     }, files=[("files", ("outline.pdf", b"%PDF-1.7\nadmin example", "application/pdf"))])
     assert admin_created.status_code == 201, admin_created.text
     admin_doc = admin_created.json()
     assert admin_doc["status"] == "APPROVED"
+    assert client.get(f"{path}/admin/ai-assessments?document_ids={admin_doc['id']}",
+                      headers=auth_headers(reviewer)).json() == []
+    assert admin_doc["assessment_type"] == "FINAL"
     assert admin_doc["reviewed_at"] is not None
     assert admin_doc["id"] in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}
     assert admin_doc["id"] not in {item["id"] for item in client.get(f"{path}/admin/pending", headers=auth_headers(reviewer)).json()}
-    assert client.get(f"{path}/admin/pending-count", headers=auth_headers(reviewer)).json() == {"count": 1}
+    assert client.get(f"{path}/admin/pending-count", headers=auth_headers(reviewer)).json() == {"count": baseline_pending + 1}
 
     approved = client.patch(f"{path}/admin/{doc['id']}", headers=auth_headers(reviewer),
                             json={"decision": "APPROVE"})
     assert approved.status_code == 200, approved.text
     assert doc["id"] in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}
     assert doc["id"] in {item["id"] for item in client.get(path, params={"major_id": str(major_id)}, headers=auth_headers(member)).json()}
+    assert doc["id"] in {item["id"] for item in client.get(path, params={"document_type": "LECTURE"}, headers=auth_headers(member)).json()}
+    assert doc["id"] not in {item["id"] for item in client.get(path, params={"assessment_type": "FINAL"}, headers=auth_headers(member)).json()}
     assert doc["id"] not in {item["id"] for item in client.get(path, params={"category": "GENERAL"}, headers=auth_headers(member)).json()}
-    assert client.get(path, params={"major_id": str(uuid.uuid4())}, headers=auth_headers(member)).json() == []
+    assert doc["id"] not in {item["id"] for item in client.get(
+        path, params={"major_id": str(uuid.uuid4())}, headers=auth_headers(member)).json()}
     download = client.get(file_path, headers=auth_headers(member))
     assert download.status_code == 200
     assert download.json()["url"] == "https://r2.test/signed-download"
@@ -109,7 +165,7 @@ def test_study_library_requires_membership_and_admin_review(
     assert client.post(report_path, headers=auth_headers(member), json={
         "reason": "Nội dung khác.",
     }).status_code == 409
-    assert client.get(f"{path}/admin/reports/count", headers=auth_headers(reviewer)).json() == {"count": 1}
+    assert client.get(f"{path}/admin/reports/count", headers=auth_headers(reviewer)).json() == {"count": baseline_reports + 1}
     assert client.get(f"{path}/admin/reports", headers=auth_headers(reviewer)).json()[0]["reason"] == \
         "Tài liệu có nội dung không phù hợp với môn học."
     assert client.get(f"{path}/admin/reports", headers=auth_headers(member)).status_code == 403
@@ -119,7 +175,7 @@ def test_study_library_requires_membership_and_admin_review(
                                  "decision": "DISMISS", "note": "Tài liệu phù hợp nội dung môn học.",
                              })
     assert dismissed.status_code == 200, dismissed.text
-    assert client.get(f"{path}/admin/reports/count", headers=auth_headers(reviewer)).json() == {"count": 0}
+    assert client.get(f"{path}/admin/reports/count", headers=auth_headers(reviewer)).json() == {"count": baseline_reports}
 
     second_report = client.post(report_path, headers=auth_headers(member), json={
         "reason": "Tài liệu chứa nội dung vi phạm quy định kho học tập.",
@@ -130,5 +186,5 @@ def test_study_library_requires_membership_and_admin_review(
                                "decision": "REMOVE_DOCUMENT", "note": "Tài liệu vi phạm quy định chia sẻ.",
                            })
     assert removed.status_code == 200, removed.text
-    assert len(r2.deletes) == 1
+    assert len(r2.deletes) == len(doc["files"])
     assert doc["id"] not in {item["id"] for item in client.get(path, headers=auth_headers(member)).json()}

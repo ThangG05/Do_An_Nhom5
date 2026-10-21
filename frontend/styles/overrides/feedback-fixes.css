@@ -1,4 +1,6 @@
 /* Feedback pass: compact navigation, contextual actions, group permissions. */
+.blocked-list .blocked-avatar{width:48px;height:48px;flex:0 0 48px;border-radius:50%;object-fit:cover;background:#e9f1f8}
+.blocked-list .blocked-avatar-fallback{display:grid;place-items:center;color:#16446a;font-size:15px;font-weight:800}
 .navbar-container{display:grid!important;grid-template-columns:minmax(310px,1fr) auto minmax(150px,1fr);gap:18px!important}
 .navbar-brand-col{min-width:0;gap:18px}
 .navbar-brand-col .global-search-pill{flex:0 1 230px;width:230px!important;min-width:130px;margin:0}

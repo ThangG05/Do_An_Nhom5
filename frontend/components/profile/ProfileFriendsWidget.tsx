@@ -8,12 +8,18 @@ import UserAvatar from '@/components/ui/UserAvatar';
 interface ProfileFriendsWidgetProps {
   friends: UserFriend[];
   friendsCount: number;
+  isLoading?: boolean;
+  error?: string;
+  onRetry?: () => void;
   onSeeAllFriends: (tab: ProfileTabType) => void;
 }
 
 export default function ProfileFriendsWidget({
   friends,
   friendsCount,
+  isLoading = false,
+  error = '',
+  onRetry,
   onSeeAllFriends,
 }: ProfileFriendsWidgetProps) {
   const topFriends = friends.slice(0, 9);
@@ -23,7 +29,7 @@ export default function ProfileFriendsWidget({
       <div className="widget-header-row">
         <div className="widget-title-group">
           <h2 className="widget-title">Bạn bè</h2>
-          <span className="widget-count-tag">{friendsCount} người bạn</span>
+          <span className="widget-count-tag">{isLoading ? 'Đang tải…' : `${friendsCount} người bạn`}</span>
         </div>
         <button
           type="button"
@@ -34,7 +40,14 @@ export default function ProfileFriendsWidget({
         </button>
       </div>
 
-      {topFriends.length > 0 ? (
+      {error ? (
+        <div className="widget-empty-text" role="alert">
+          <p>Không tải được danh sách bạn bè.</p>
+          {onRetry && <button type="button" className="btn btn-secondary btn-sm" onClick={onRetry}>Thử lại</button>}
+        </div>
+      ) : isLoading ? (
+        <p className="widget-empty-text" role="status">Đang tải danh sách bạn bè…</p>
+      ) : topFriends.length > 0 ? (
         <div className="friends-grid-3x3">
           {topFriends.map((friend) => (
             <Link

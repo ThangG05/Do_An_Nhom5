@@ -78,6 +78,8 @@ class Settings(BaseSettings):
     retrieval_max_chunks_per_document: int = Field(default=2, ge=1, le=10)
     retrieval_query_cache_entries: int = Field(default=256, ge=0, le=10000)
     retrieval_query_cache_ttl_seconds: int = Field(default=900, ge=0, le=86400)
+    retrieval_shared_embedding_cache_enabled: bool = True
+    retrieval_shared_embedding_cache_timeout_seconds: float = Field(default=0.25, gt=0, le=2)
     conversation_recent_messages: int = Field(default=8, ge=2, le=20)
     conversation_summary_trigger_messages: int = Field(default=12, ge=4, le=100)
     conversation_summary_max_chars: int = Field(default=4000, ge=500, le=20000)

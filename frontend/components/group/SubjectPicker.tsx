@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { listMajors, searchSubjects, type Major, type Subject, type CatalogScope } from "@/lib/study-library";
 import styles from "./SubjectPicker.module.css";
 
-export default function SubjectPicker({ value, onChange, onScopeChange, required = false }: {
-  value: string; onChange: (id: string) => void; onScopeChange?: (scope: CatalogScope) => void; required?: boolean;
+export default function SubjectPicker({ value, onChange, onScopeChange, onSubjectChange, required = false, requireMajor = false }: {
+  value: string; onChange: (id: string) => void; onScopeChange?: (scope: CatalogScope) => void;
+  onSubjectChange?: (subject: Subject | null) => void; required?: boolean; requireMajor?: boolean;
 }) {
   const [majors, setMajors] = useState<Major[]>([]);
   const [category, setCategory] = useState<CatalogScope["category"]>("");
@@ -43,6 +44,7 @@ export default function SubjectPicker({ value, onChange, onScopeChange, required
     setSubjects([]);
     setFocused(false);
     onChange("");
+    onSubjectChange?.(null);
     onScopeChange?.({ category: nextCategory, majorId: nextMajor });
   };
 
@@ -52,32 +54,33 @@ export default function SubjectPicker({ value, onChange, onScopeChange, required
   return <fieldset className={styles.picker}>
     <legend>{required ? "Chọn môn cho tài liệu *" : "Tìm theo ngành và môn học"}</legend>
     <div className={styles.row}>
-      <label>Phân loại<select aria-label="Phân loại" value={category} onChange={event => changeScope(event.target.value as CatalogScope["category"], "")}>
+      {!requireMajor && <label>Phân loại<select aria-label="Phân loại" value={category} onChange={event => changeScope(event.target.value as CatalogScope["category"], "")}>
         <option value="">Tất cả học phần</option><option value="GENERAL">Đại cương</option><option value="SPECIALIZED">Theo ngành</option>
-      </select></label>
-      {category !== "GENERAL" && <label>Ngành<select aria-label="Ngành" value={majorId} onChange={event => changeScope(event.target.value ? "SPECIALIZED" : category, event.target.value)}>
-        <option value="">Tất cả ngành</option>{majors.map(major => <option key={major.id} value={major.id}>{major.name}{major.code ? ` (${major.code})` : ""} · {major.subject_count} môn</option>)}
+      </select></label>}
+      {(requireMajor || category !== "GENERAL") && <label>Ngành {requireMajor && <b>*</b>}<select aria-label="Ngành" value={majorId} required={requireMajor} onChange={event => changeScope(requireMajor ? "" : event.target.value ? "SPECIALIZED" : category, event.target.value)}>
+        <option value="">{requireMajor ? "Chọn ngành học" : "Tất cả ngành"}</option>{majors.map(major => <option key={major.id} value={major.id}>{major.name}{major.code ? ` (${major.code})` : ""} · {major.subject_count} môn</option>)}
       </select></label>}
     </div>
 
     <div className={styles.searchArea}>
       <label htmlFor={`subject-search-${required ? "upload" : "filter"}`}>Tìm môn
         <input id={`subject-search-${required ? "upload" : "filter"}`} value={query}
-          onChange={event => { setQuery(event.target.value); onChange(""); setFocused(true); }}
+          disabled={requireMajor && !majorId}
+          onChange={event => { setQuery(event.target.value); onChange(""); onSubjectChange?.(null); setFocused(true); }}
           onFocus={() => setFocused(true)} onBlur={() => window.setTimeout(() => setFocused(false), 120)}
           onKeyDown={event => { if (event.key === "Escape") setFocused(false); }}
-          placeholder="Nhập tên hoặc mã học phần…" autoComplete="off" role="combobox"
+          placeholder={requireMajor && !majorId ? "Chọn ngành trước để tìm môn" : "Nhập tên hoặc mã học phần…"} autoComplete="off" role="combobox"
           aria-expanded={suggestionsOpen} aria-controls={`subject-options-${required ? "upload" : "filter"}`} aria-autocomplete="list" />
       </label>
       {value && selected && <div className={styles.selected}>
         <span><b>{selected.code || "Chưa có mã"}</b><span>{selected.name}</span></span>
-        <button type="button" onClick={() => { onChange(""); setFocused(true); }} aria-label="Bỏ chọn môn">×</button>
+        <button type="button" onClick={() => { onChange(""); onSubjectChange?.(null); setFocused(true); }} aria-label="Bỏ chọn môn">×</button>
       </div>}
       {suggestionsOpen && <div className={styles.suggestions} id={`subject-options-${required ? "upload" : "filter"}`} role="listbox" aria-label="Môn học phù hợp">
         {loading ? <div className={styles.suggestionHint}>Đang tìm môn phù hợp…</div>
           : subjects.length ? subjects.map(subject => <button type="button" role="option" aria-selected={subject.id === value}
             key={subject.id} onMouseDown={event => event.preventDefault()}
-            onClick={() => { onChange(subject.id); setFocused(false); }}>
+            onClick={() => { onChange(subject.id); onSubjectChange?.(subject); setFocused(false); }}>
             <span className={styles.suggestionCode}>{subject.code || "Môn chưa có mã"}</span>
             <span className={styles.suggestionName}>{subject.name}</span>
             <small>{subject.category === "GENERAL" ? "Đại cương" : "Chuyên ngành"}</small>

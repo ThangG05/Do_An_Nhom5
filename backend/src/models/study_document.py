@@ -46,6 +46,9 @@ class StudyDocumentResponse(BaseModel):
     id: uuid.UUID
     group_id: uuid.UUID
     subject_id: uuid.UUID
+    major_id: uuid.UUID | None = None
+    document_type: Literal["EXAM", "EXERCISE", "LECTURE", "REVIEW", "OTHER"] | None = None
+    assessment_type: Literal["MIDTERM", "FINAL"] | None = None
     subject_code: str | None
     subject_name: str
     uploaded_by: uuid.UUID

@@ -184,6 +184,7 @@ class RAGService:
             "retrieval_ms": round((retrieved_at - prepared_at) * 1000),
             "answer_ms": round((generated_at - retrieved_at) * 1000),
             "persistence_ms": round((perf_counter() - generated_at) * 1000),
+            "total_ms": round((perf_counter() - started) * 1000),
             "evidence_count": len(hits), "refused": answer.refused,
         })
         return result
@@ -217,6 +218,7 @@ class RAGService:
             except LLMServiceError as exc:
                 if exc.code != "invalid_response":
                     raise
+                logger.warning("rag_answer_contract_retry", extra={"attempt": attempt + 1})
                 if attempt == self.settings.rag_contract_max_attempts - 1:
                     return LLMAnswer(
                         answer="Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",

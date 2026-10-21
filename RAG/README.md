@@ -513,11 +513,31 @@ question after idle may have a cold start. Keeping a worker warm is an explicit
 opt-in (`MODAL_EMBEDDING_MIN_CONTAINERS=1` in the shell running `modal deploy`)
 and incurs GPU cost while idle. Redeploying Modal is required for changes to take effect.
 
-The API also caches up to 256 query vectors for 15 minutes **per process** and
-coalesces simultaneous identical embedding calls. It stores hashed query keys,
-not question text; retrieval still applies visibility filters for each request.
-`RETRIEVAL_QUERY_CACHE_ENTRIES=0` disables it. Optional PostgreSQL lexical search
+The API caches up to 256 query vectors for 15 minutes per process and
+coalesces simultaneous identical embedding calls. It also uses Redis for a
+cross-process query-vector cache by default. Both caches store hashed query keys,
+not question text, answers or permission-scoped search results; retrieval still
+checks visibility for each request. Redis cache errors fall back to embedding,
+with a 250 ms budget for each cache operation. Set
+`RETRIEVAL_SHARED_EMBEDDING_CACHE_ENABLED=false` to opt out, or
+`RETRIEVAL_QUERY_CACHE_ENTRIES=0` and `RETRIEVAL_QUERY_CACHE_TTL_SECONDS=0`
+to disable both caches. Optional PostgreSQL lexical search
 has a three-second timeout and falls back to vector results when it stalls.
 Structured logs `rag_retrieval_completed` and `rag_request_completed` report
-embedding, retrieval, answer-generation and persistence timings without logging
-questions or source text. Compare these stages before changing model or top-k.
+embedding, Qdrant, lexical, vector verification, retrieval, answer-generation and
+persistence timings without logging questions or source text. Compare these stages
+before changing model or top-k.
+
+To collect a bounded baseline using approved evaluation questions (calls live
+providers and consumes their credits), run from `RAG`:
+
+```powershell
+..\.venv\Scripts\python.exe -m scripts.benchmark_latency --runs 3
+```
+
+The JSON report separates the first pass from repeat passes and records full
+end-to-end wall time as well as answer-generation time. A first pass is not
+necessarily a Modal cold start unless the worker was idle beforehand. For an
+HTTP concurrency smoke test, use
+`python -m scripts.load_test_rag --requests 10 --concurrency 2` only against a
+controlled environment; it creates conversations.

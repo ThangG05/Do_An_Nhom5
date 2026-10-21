@@ -23,6 +23,7 @@ function localDatetime(value: string | null): string {
 export default function SystemConfig() {
   const dialog = useDialog();
   const [state, setState] = useState<MaintenanceState>({ enabled: false, message: "Hệ thống đang bảo trì.", expected_end_at: null });
+  const [savedMaintenance, setSavedMaintenance] = useState<MaintenanceState | null>(null);
   const [items, setItems] = useState<BlacklistKeyword[]>([]);
   const [keyword, setKeyword] = useState("");
   const [action, setAction] = useState<"BLOCK" | "REVIEW">("BLOCK");
@@ -37,6 +38,7 @@ export default function SystemConfig() {
     try {
       const [systemState, keywords] = await Promise.all([fetchSystemStatus(), fetchBlacklist()]);
       setState(systemState);
+      setSavedMaintenance(systemState);
       setItems(keywords);
       setError("");
     } catch (cause) {
@@ -50,6 +52,7 @@ export default function SystemConfig() {
 
   const saveMaintenance = async () => {
     if (savingMaintenance) return;
+    if (!state.enabled && !savedMaintenance?.enabled) return;
     if (state.enabled && !state.message.trim()) {
       setError("Vui lòng nhập thông báo bảo trì trước khi bật chế độ bảo trì.");
       return;
@@ -61,11 +64,46 @@ export default function SystemConfig() {
     setSavingMaintenance(true);
     setError("");
     try {
-      setState(await updateMaintenance({ ...state, expected_end_at: state.enabled ? state.expected_end_at : null, message: state.message.trim() }));
+      const updated = await updateMaintenance({ ...state, expected_end_at: state.enabled ? state.expected_end_at : null, message: state.message.trim() });
+      setState(updated);
+      setSavedMaintenance(updated);
       dialog.notify({ title: "Đã lưu cấu hình bảo trì", tone: "success" });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không lưu được cấu hình.");
       dialog.notify({ title: "Lưu cấu hình thất bại", message: cause instanceof Error ? cause.message : "Vui lòng thử lại.", tone: "danger" });
+    } finally {
+      setSavingMaintenance(false);
+    }
+  };
+
+  const toggleMaintenance = async (enabled: boolean) => {
+    if (savingMaintenance || enabled === state.enabled) return;
+    if (enabled && !state.message.trim()) {
+      setError("Vui lòng nhập thông báo bảo trì trước khi bật chế độ bảo trì.");
+      return;
+    }
+    if (enabled && state.expected_end_at && new Date(state.expected_end_at).getTime() <= Date.now()) {
+      setError("Thời gian tự động mở lại phải ở tương lai.");
+      return;
+    }
+    const confirmed = await dialog.confirm({
+      title: enabled ? "Bật chế độ bảo trì?" : "Tắt chế độ bảo trì?",
+      message: enabled
+        ? "Sinh viên sẽ thấy thông báo bảo trì và không thể tiếp tục sử dụng hệ thống cho đến khi mở lại."
+        : "Sinh viên sẽ có thể truy cập hệ thống trở lại ngay sau khi xác nhận.",
+      confirmLabel: enabled ? "Bật bảo trì" : "Tắt bảo trì",
+      tone: enabled ? "danger" : "default",
+    });
+    if (!confirmed) return;
+    setSavingMaintenance(true);
+    setError("");
+    try {
+      const updated = await updateMaintenance({ ...state, enabled, expected_end_at: enabled ? state.expected_end_at : null, message: state.message.trim() });
+      setState(updated);
+      setSavedMaintenance(updated);
+      dialog.notify({ title: enabled ? "Đã bật chế độ bảo trì" : "Đã tắt chế độ bảo trì", tone: "success" });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Không đổi được chế độ bảo trì.");
     } finally {
       setSavingMaintenance(false);
     }
@@ -135,9 +173,9 @@ export default function SystemConfig() {
       {loading ? <div className="admin-empty-state">Đang tải cấu hình hệ thống...</div> : (
         <>
           <div className="maintenance-box">
-            <div className="maintenance-heading"><div><strong>Bật chế độ bảo trì</strong><p>Khi bật, sinh viên sẽ thấy thông báo bảo trì cho đến lúc bạn tắt hoặc đến giờ mở lại.</p></div><label className="maintenance-switch"><input type="checkbox" checked={state.enabled} onChange={(event) => setState({ ...state, enabled: event.target.checked, expected_end_at: event.target.checked ? state.expected_end_at : null })} aria-label="Bật chế độ bảo trì" /><span aria-hidden="true" /></label></div>
+            <div className="maintenance-heading"><div><strong>Bật chế độ bảo trì</strong><p>Khi bật, sinh viên sẽ thấy thông báo bảo trì cho đến lúc bạn tắt hoặc đến giờ mở lại.</p></div><label className="maintenance-switch"><input type="checkbox" checked={state.enabled} disabled={savingMaintenance} onChange={(event) => void toggleMaintenance(event.target.checked)} aria-label="Bật chế độ bảo trì" /><span aria-hidden="true" /></label></div>
             <div className="maintenance-fields"><label>Thông báo bảo trì<textarea value={state.message} onChange={(event) => setState({ ...state, message: event.target.value })} placeholder="Nội dung hiển thị cho sinh viên" /></label><label>Tự động mở lại<input type="datetime-local" value={localDatetime(state.expected_end_at)} disabled={!state.enabled} onChange={(event) => setState({ ...state, expected_end_at: event.target.value ? new Date(event.target.value).toISOString() : null })} /><small>Để trống nếu bạn muốn tắt bảo trì thủ công.</small></label></div>
-            <button type="button" disabled={savingMaintenance} onClick={() => void saveMaintenance()}><span aria-hidden="true">✓</span>{savingMaintenance ? "Đang lưu..." : "Lưu cấu hình bảo trì"}</button>
+            {state.enabled && <button type="button" disabled={savingMaintenance || (savedMaintenance?.message === state.message && savedMaintenance?.expected_end_at === state.expected_end_at)} onClick={() => void saveMaintenance()}><span aria-hidden="true">✓</span>{savingMaintenance ? "Đang lưu..." : "Lưu nội dung bảo trì"}</button>}
           </div>
           <div className="blacklist-box">
             <h3>Danh sách từ khóa kiểm duyệt</h3><p>Tự động xử lý bài viết và bình luận chứa các từ khóa này.</p>

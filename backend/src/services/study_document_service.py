@@ -106,7 +106,7 @@ def list_subjects(db: Session, query: str = "", *, include_inactive: bool = Fals
         WHERE (:all OR s.is_active) AND (:q='' OR s.code ILIKE :pattern OR s.name ILIKE :pattern
               OR ({token_match}))
           AND (:category IS NULL OR s.category=:category)
-          AND (CAST(:major AS uuid) IS NULL OR EXISTS (
+          AND (CAST(:major AS uuid) IS NULL OR s.category='GENERAL' OR EXISTS (
               SELECT 1 FROM major_subjects ms WHERE ms.subject_id=s.id AND ms.major_id=:major))
         ORDER BY CASE
           WHEN :q='' THEN 9
@@ -248,7 +248,8 @@ def _serialize(db: Session, rows: list) -> list[StudyDocumentResponse]:
 
 
 _DETAIL_SQL = """
-    SELECT d.id,d.group_id,d.subject_id,s.code subject_code,s.name subject_name,
+    SELECT d.id,d.group_id,d.subject_id,d.major_id,d.document_type,d.assessment_type,
+           s.code subject_code,s.name subject_name,
            d.uploaded_by,COALESCE(p.full_name,u.username) uploader_name,d.title,d.description,
            d.status,d.total_bytes,d.reviewed_at,d.rejection_reason,d.created_at
     FROM study_documents d JOIN subjects s ON s.id=d.subject_id
@@ -259,20 +260,25 @@ _DETAIL_SQL = """
 def list_documents(db: Session, group_id: uuid.UUID, user: User, *, mine: bool = False,
                    pending: bool = False, query: str = "", subject_id: uuid.UUID | None = None,
                    limit: int = 30, offset: int = 0, category: str | None = None,
-                   major_id: uuid.UUID | None = None) -> list[StudyDocumentResponse]:
+                   major_id: uuid.UUID | None = None, document_type: str | None = None,
+                   assessment_type: str | None = None) -> list[StudyDocumentResponse]:
     (require_admin if pending else require_member)(db, group_id, user)
     condition = "d.status='PENDING'" if pending else "d.uploaded_by=:uid" if mine else "d.status='APPROVED'"
     rows = db.execute(text(_DETAIL_SQL + f"""
         WHERE d.group_id=:gid AND d.deleted_at IS NULL AND {condition}
           AND (:subject_id IS NULL OR d.subject_id=:subject_id)
           AND (:category IS NULL OR s.category=:category)
-          AND (CAST(:major AS uuid) IS NULL OR EXISTS
-               (SELECT 1 FROM major_subjects ms WHERE ms.subject_id=s.id AND ms.major_id=:major))
+          AND (CAST(:major AS uuid) IS NULL OR d.major_id=:major OR
+               (d.major_id IS NULL AND (s.category='GENERAL' OR EXISTS
+                (SELECT 1 FROM major_subjects ms WHERE ms.subject_id=s.id AND ms.major_id=:major))))
+          AND (:document_type IS NULL OR d.document_type=:document_type)
+          AND (:assessment_type IS NULL OR d.assessment_type=:assessment_type)
           AND (:q='' OR d.title ILIKE :pattern OR s.name ILIKE :pattern OR s.code ILIKE :pattern)
         ORDER BY d.created_at DESC LIMIT :limit OFFSET :offset
     """), {"gid": group_id, "uid": user.id, "subject_id": subject_id, "q": query.strip(),
              "pattern": f"%{query.strip()}%", "limit": limit, "offset": offset,
-             "category": category, "major": major_id}).mappings().all()
+             "category": category, "major": major_id, "document_type": document_type,
+             "assessment_type": assessment_type}).mappings().all()
     return _serialize(db, rows)
 
 
@@ -409,17 +415,31 @@ def get_document(db: Session, group_id: uuid.UUID, document_id: uuid.UUID, user:
 
 
 def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uuid.UUID,
-                    title: str, description: str | None, files: list[UploadFile]) -> StudyDocumentResponse:
+                    title: str, description: str | None, files: list[UploadFile], *,
+                    major_id: uuid.UUID, document_type: str,
+                    assessment_type: str | None = None) -> StudyDocumentResponse:
     require_member(db, group_id, user)
     group_role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
                             {"gid": group_id, "uid": user.id}).scalar_one_or_none()
     auto_approved = str(group_role) == "ADMIN"
-    if not title.strip() or not files or len(files) > MAX_FILES:
-        raise HTTPException(400, "Cần tên tài liệu và từ 1 đến 10 file.")
-    subject = db.execute(text("SELECT 1 FROM subjects WHERE id=:id AND is_active"),
-                         {"id": subject_id}).first()
+    if len(title.strip()) < 5 or len(title.strip()) > 120 or not files or len(files) > MAX_FILES:
+        raise HTTPException(400, "Tên tài liệu phải có 5–120 ký tự và từ 1 đến 10 file.")
+    if document_type not in {"EXAM", "EXERCISE", "LECTURE", "REVIEW", "OTHER"}:
+        raise HTTPException(400, "Loại tài liệu không hợp lệ.")
+    if assessment_type not in {None, "MIDTERM", "FINAL"} or (
+        assessment_type is not None and document_type not in {"EXAM", "EXERCISE", "REVIEW"}
+    ):
+        raise HTTPException(400, "Kỳ đánh giá không phù hợp với loại tài liệu.")
+    if not db.execute(text("SELECT 1 FROM majors WHERE id=:id"), {"id": major_id}).first():
+        raise HTTPException(400, "Ngành học không có trong danh mục.")
+    subject = db.execute(text("""
+        SELECT 1 FROM subjects s WHERE s.id=:sid AND s.is_active
+          AND (s.category='GENERAL' OR EXISTS (
+              SELECT 1 FROM major_subjects ms
+              WHERE ms.subject_id=s.id AND ms.major_id=:mid))
+    """), {"sid": subject_id, "mid": major_id}).first()
     if not subject:
-        raise HTTPException(400, "Môn học không có trong danh mục đang sử dụng.")
+        raise HTTPException(400, "Môn học không thuộc ngành đã chọn hoặc không còn sử dụng.")
     validated = [_validate_file(file) for file in files]
     if len({item["sha256"] for item in validated}) != len(validated):
         raise HTTPException(400, "Một lượt chia sẻ không thể đính kèm hai file có nội dung trùng nhau.")
@@ -439,11 +459,13 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
             client.upload_fileobj(item["stream"], bucket, item["key"],
                                   ExtraArgs={"ContentType": item["mime"]})
         db.execute(text("""
-            INSERT INTO study_documents(id,group_id,subject_id,uploaded_by,title,description,status,total_bytes,file_count,
+            INSERT INTO study_documents(id,group_id,subject_id,major_id,document_type,assessment_type,
+                                        uploaded_by,title,description,status,total_bytes,file_count,
                                         reviewed_by,reviewed_at)
-            VALUES(:id,:gid,:sid,:uid,:title,:description,:status,:total,:count,:reviewer,
+            VALUES(:id,:gid,:sid,:mid,:document_type,:assessment_type,:uid,:title,:description,:status,:total,:count,:reviewer,
                    CASE WHEN :auto_approved THEN now() ELSE NULL END)
-        """), {"id": document_id, "gid": group_id, "sid": subject_id, "uid": user.id,
+        """), {"id": document_id, "gid": group_id, "sid": subject_id, "mid": major_id,
+               "document_type": document_type, "assessment_type": assessment_type, "uid": user.id,
                "title": title.strip(), "description": description.strip() if description else None,
                "total": total, "count": len(validated),
                "status": "APPROVED" if auto_approved else "PENDING",
@@ -456,6 +478,11 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
                 VALUES(:id,:did,:key,:name,:mime,:extension,:size,:sha256)
             """), {"did": document_id, **{key: item[key] for key in
                     ("id", "key", "name", "mime", "extension", "size", "sha256")}})
+        if not auto_approved and settings.STUDY_MODERATION_ENABLED:
+            db.execute(text("""
+                INSERT INTO study_document_ai_assessments(document_id,status)
+                VALUES(:did,'QUEUED')
+            """), {"did": document_id})
         db.commit()
     except Exception as exc:
         db.rollback()
@@ -510,7 +537,10 @@ def _get_document_files_for_user(db: Session, group_id: uuid.UUID, document_id: 
         SELECT id,status,uploaded_by FROM study_documents
         WHERE id=:did AND group_id=:gid AND deleted_at IS NULL
     """), {"did": document_id, "gid": group_id}).mappings().first()
-    if not row or (row["status"] != "APPROVED" and row["uploaded_by"] != user.id):
+    role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
+                      {"gid": group_id, "uid": user.id}).scalar_one_or_none()
+    is_admin = str(role) == "ADMIN" or user.system_role == SystemRole.SUPER_ADMIN
+    if not row or (row["status"] != "APPROVED" and row["uploaded_by"] != user.id and not is_admin):
         raise HTTPException(404, "Không tìm thấy tài liệu.")
     files = db.execute(text("""
         SELECT id,r2_object_key,original_name,mime_type,extension,size_bytes

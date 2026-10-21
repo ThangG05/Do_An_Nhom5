@@ -14,6 +14,7 @@ from src.models.study_document_report import (StudyDocumentReportCreate,
                                               StudyDocumentReportDecision,
                                               StudyDocumentReportResponse)
 from src.services import study_document_service as library
+from src.services import study_document_ai
 
 router = APIRouter(tags=["Study document library"])
 Db = Annotated[Session, Depends(get_db)]
@@ -54,10 +55,13 @@ def put_subject(group_id: uuid.UUID, payload: SubjectUpsertRequest, admin: Curre
 def documents(group_id: uuid.UUID, user: CurrentUser, db: Db,
               q: Annotated[str, Query(max_length=100)] = "", subject_id: uuid.UUID | None = None,
               category: Literal["GENERAL", "SPECIALIZED"] | None = None, major_id: uuid.UUID | None = None,
+              document_type: Literal["EXAM", "EXERCISE", "LECTURE", "REVIEW", "OTHER"] | None = None,
+              assessment_type: Literal["MIDTERM", "FINAL"] | None = None,
               limit: Annotated[int, Query(ge=1, le=50)] = 30,
               offset: Annotated[int, Query(ge=0)] = 0):
     return library.list_documents(db, group_id, user, query=q, subject_id=subject_id,
-                                  limit=limit, offset=offset, category=category, major_id=major_id)
+                                  limit=limit, offset=offset, category=category, major_id=major_id,
+                                  document_type=document_type, assessment_type=assessment_type)
 
 
 @router.get("/groups/{group_id}/library/mine", response_model=list[StudyDocumentResponse])
@@ -77,6 +81,12 @@ def pending_documents(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db,
 @router.get("/groups/{group_id}/library/admin/pending-count")
 def pending_document_count(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db):
     return {"count": library.count_pending_documents(db, group_id, admin)}
+
+
+@router.get("/groups/{group_id}/library/admin/ai-assessments")
+def pending_ai_assessments(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db,
+                           document_ids: Annotated[list[uuid.UUID] | None, Query()] = None):
+    return study_document_ai.list_assessments(db, group_id, admin, document_ids or [])
 
 
 @router.post("/groups/{group_id}/library/{document_id}/reports", status_code=201)
@@ -106,10 +116,15 @@ def decide_document_report(group_id: uuid.UUID, report_id: uuid.UUID,
 
 @router.post("/groups/{group_id}/library", response_model=StudyDocumentResponse, status_code=201)
 def share_document(group_id: uuid.UUID, user: CurrentUser, db: Db,
-                   subject_id: Annotated[uuid.UUID, Form()], title: Annotated[str, Form(min_length=2, max_length=255)],
+                   major_id: Annotated[uuid.UUID, Form()], subject_id: Annotated[uuid.UUID, Form()],
+                   document_type: Annotated[Literal["EXAM", "EXERCISE", "LECTURE", "REVIEW", "OTHER"], Form()],
+                   title: Annotated[str, Form(min_length=5, max_length=120)],
                    files: Annotated[list[UploadFile], File()],
-                   description: Annotated[str | None, Form(max_length=2000)] = None):
-    return library.create_document(db, group_id, user, subject_id, title, description, files)
+                   assessment_type: Annotated[Literal["MIDTERM", "FINAL"] | None, Form()] = None,
+                   description: Annotated[str | None, Form(max_length=500)] = None):
+    return library.create_document(db, group_id, user, subject_id, title, description, files,
+                                   major_id=major_id, document_type=document_type,
+                                   assessment_type=assessment_type)
 
 
 @router.get("/groups/{group_id}/library/{document_id}/download-bundle")

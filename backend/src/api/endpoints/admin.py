@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from src.api.dependencies import CurrentSuperAdmin
 from src.db.session import get_db
-from src.models.admin import AdminDashboardResponse, AdminUserPage, AccountStatusRequest, GroupRoleRequest, DisciplineRequest, AuditLogResponse, GroupAdminInfoResponse, RAGUserUsageResponse
+from src.models.admin import AdminDashboardResponse, AdminUserPage, AdminProfilePreview, AdminPublicPostPage, AdminPublicPostAction, AccountStatusRequest, GroupRoleRequest, DisciplineRequest, AuditLogResponse, GroupAdminInfoResponse, RAGUserUsageResponse
 from src.services import admin_service
 
 router=APIRouter(prefix="/admin",tags=["Super Admin"]);Db=Annotated[Session,Depends(get_db)]
@@ -29,6 +29,18 @@ def users(admin:CurrentSuperAdmin,db:Db,q:str="",account_status:Annotated[str|No
 
 @router.get("/users/{user_id}/rag-usage",response_model=RAGUserUsageResponse)
 def rag_usage(user_id:uuid.UUID,admin:CurrentSuperAdmin,db:Db,period:Literal["today","7d","30d","custom","all"]="30d",start_date:date|None=None,end_date:date|None=None,offset:Annotated[int,Query(ge=0)]=0):return admin_service.user_rag_usage(db,user_id,period,start_date,end_date,offset)
+
+@router.get("/users/{user_id}/profile",response_model=AdminProfilePreview)
+def user_profile(user_id:uuid.UUID,admin:CurrentSuperAdmin,db:Db):return admin_service.profile_preview(db,user_id)
+
+@router.get("/public-posts",response_model=AdminPublicPostPage)
+def public_posts(admin:CurrentSuperAdmin,db:Db,q:str="",post_status:Annotated[Literal["ALL","APPROVED","HIDDEN"],Query(alias="status")]="ALL",limit:Annotated[int,Query(ge=1,le=50)]=10,offset:Annotated[int,Query(ge=0)]=0,author_id:uuid.UUID|None=None):
+    return admin_service.public_posts(db,admin,limit,offset,q,post_status,author_id)
+
+@router.patch("/public-posts/{post_id}",status_code=204)
+def moderate_public_post(post_id:uuid.UUID,payload:AdminPublicPostAction,admin:CurrentSuperAdmin,db:Db):
+    admin_service.moderate_public_post(db,post_id,admin,payload.action,payload.reason)
+    return Response(status_code=204)
 
 @router.patch("/users/{user_id}/status",status_code=204)
 def status(user_id:uuid.UUID,payload:AccountStatusRequest,admin:CurrentSuperAdmin,db:Db):admin_service.set_status(db,user_id,admin,payload.status,payload.reason);return Response(status_code=204)

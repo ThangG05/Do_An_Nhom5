@@ -1,12 +1,17 @@
-"""Small in-process cache for query vectors, with concurrent requests sharing one embed call.
+"""In-process and Redis caches for query vectors.
 
 Only a hash of each query and its vector are retained. Document embeddings are not cached.
 """
 import asyncio
 from collections import OrderedDict
 from hashlib import sha256
+import json
+import math
 from time import monotonic
 from typing import Awaitable, Callable
+
+from redis.asyncio import Redis
+from redis.exceptions import RedisError
 
 
 class QueryEmbeddingCache:
@@ -50,3 +55,42 @@ class QueryEmbeddingCache:
             task.add_done_callback(finish)
         # One HTTP request being cancelled must not cancel an embed shared by other requests.
         return list(await asyncio.shield(task))
+
+
+class SharedQueryEmbeddingCache:
+    """Cache only query vectors, never answers or permission-scoped search results."""
+
+    def __init__(self, client: Redis, dimensions: int, ttl_seconds: int,
+                 timeout_seconds: float) -> None:
+        self.client = client
+        self.dimensions = dimensions
+        self.ttl_seconds = ttl_seconds
+        self.timeout_seconds = timeout_seconds
+
+    async def get_or_embed(self, model: str, query: str,
+                           embed: Callable[[], Awaitable[list[float]]]) -> list[float]:
+        if self.ttl_seconds <= 0:
+            return await embed()
+        key = "hvnh:rag:query-vector:v1:" + sha256(
+            f"{model}\0{self.dimensions}\0{query}".encode("utf-8")
+        ).hexdigest()
+        try:
+            raw = await asyncio.wait_for(self.client.get(key), self.timeout_seconds)
+            if raw is not None:
+                vector = json.loads(raw)
+                if (isinstance(vector, list) and len(vector) == self.dimensions
+                        and all(isinstance(value, (int, float)) and math.isfinite(value)
+                                for value in vector)):
+                    return [float(value) for value in vector]
+        except (RedisError, TimeoutError, ValueError, TypeError):
+            # A cache outage must not prevent an otherwise healthy RAG answer.
+            pass
+        vector = await embed()
+        try:
+            await asyncio.wait_for(
+                self.client.set(key, json.dumps(vector, separators=(",", ":")), ex=self.ttl_seconds),
+                self.timeout_seconds,
+            )
+        except (RedisError, TimeoutError):
+            pass
+        return vector

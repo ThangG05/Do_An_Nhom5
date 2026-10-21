@@ -1,8 +1,9 @@
 import asyncio
 
 import pytest
+from redis.exceptions import ConnectionError as RedisConnectionError
 
-from app.rag.query_cache import QueryEmbeddingCache
+from app.rag.query_cache import QueryEmbeddingCache, SharedQueryEmbeddingCache
 
 
 @pytest.mark.asyncio
@@ -111,3 +112,62 @@ async def test_expired_vectors_are_recomputed(monkeypatch) -> None:
     assert await cache.get_or_embed("bge-m3", "VSTEP", embed) == [1.0]
     clock[0] = 111.0
     assert await cache.get_or_embed("bge-m3", "VSTEP", embed) == [2.0]
+
+
+class FakeRedis:
+    def __init__(self) -> None:
+        self.values: dict[str, str] = {}
+
+    async def get(self, key: str) -> str | None:
+        return self.values.get(key)
+
+    async def set(self, key: str, value: str, *, ex: int) -> None:
+        self.values[key] = value
+
+
+@pytest.mark.asyncio
+async def test_shared_cache_reuses_vector_across_instances_without_plaintext() -> None:
+    redis = FakeRedis()
+    calls = 0
+
+    async def embed() -> list[float]:
+        nonlocal calls
+        calls += 1
+        return [0.1, 0.2]
+
+    first = SharedQueryEmbeddingCache(redis, dimensions=2, ttl_seconds=60, timeout_seconds=.1)
+    second = SharedQueryEmbeddingCache(redis, dimensions=2, ttl_seconds=60, timeout_seconds=.1)
+    assert await first.get_or_embed("bge-m3", "Học phí là gì?", embed) == [0.1, 0.2]
+    assert await second.get_or_embed("bge-m3", "Học phí là gì?", embed) == [0.1, 0.2]
+    assert calls == 1
+    assert "Học phí" not in repr(redis.values)
+
+
+@pytest.mark.asyncio
+async def test_shared_cache_does_not_reuse_wrong_model_or_dimensions() -> None:
+    redis = FakeRedis()
+    calls = 0
+
+    async def embed() -> list[float]:
+        nonlocal calls
+        calls += 1
+        return [float(calls)]
+
+    one = SharedQueryEmbeddingCache(redis, dimensions=1, ttl_seconds=60, timeout_seconds=.1)
+    two = SharedQueryEmbeddingCache(redis, dimensions=2, ttl_seconds=60, timeout_seconds=.1)
+    assert await one.get_or_embed("model-a", "VSTEP", embed) == [1.0]
+    assert await one.get_or_embed("model-b", "VSTEP", embed) == [2.0]
+    assert await two.get_or_embed("model-a", "VSTEP", lambda: asyncio.sleep(0, result=[3.0, 4.0])) == [3.0, 4.0]
+
+
+@pytest.mark.asyncio
+async def test_shared_cache_falls_back_when_redis_fails() -> None:
+    class UnavailableRedis:
+        async def get(self, *_):
+            raise RedisConnectionError("down")
+
+        async def set(self, *_args, **_kwargs):
+            raise RedisConnectionError("down")
+
+    cache = SharedQueryEmbeddingCache(UnavailableRedis(), 1, 60, .1)
+    assert await cache.get_or_embed("bge-m3", "VSTEP", lambda: asyncio.sleep(0, result=[0.3])) == [0.3]

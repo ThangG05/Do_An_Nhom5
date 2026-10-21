@@ -5,6 +5,8 @@ export interface AdminDashboard { total_users:number;active_users:number;locked_
 export interface AdminGroupRef { id:string;name:string;slug:string }
 export interface AdminUser { id:string;email:string;username:string;full_name:string;student_code:string|null;faculty:string|null;status:'PENDING'|'ACTIVE'|'LOCKED'|'DISABLED';system_role:'USER'|'SUPER_ADMIN';admin_groups:AdminGroupRef[];created_at:string;last_login_at:string|null;suspended_until:string|null;warning_count:number;rag_input_tokens:number|null;rag_output_tokens:number|null;rag_total_tokens:number|null;rag_usage_calls:number;rag_usage_missing:number }
 export interface AdminUserPage { items:AdminUser[];total:number;limit:number;offset:number }
+export interface AdminProfilePreview { id:string;name:string;username:string;avatar:string|null;cover:string|null;bio:string;student_code:string|null;faculty:string|null;joined_at:string;status:string }
+export interface AdminPublicPostPage { items:import('@/types/post').Post[];total:number;limit:number;offset:number }
 export type RagPeriod = 'today'|'7d'|'30d'|'custom'|'all';
 export interface RagUsageDay { date:string;input_tokens:number|null;output_tokens:number|null;total_tokens:number|null;calls:number }
 export interface RagUsageCall { id:string;created_at:string;provider:string;model:string;input_tokens:number|null;output_tokens:number|null;total_tokens:number|null;status:string;usage_source:string }

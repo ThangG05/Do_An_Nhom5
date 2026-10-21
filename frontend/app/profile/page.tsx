@@ -20,6 +20,8 @@ export default function OwnProfilePage() {
     profile,
     posts,
     friends,
+    friendsLoading,
+    friendsError,
     photos,
     listings,
     groupPosts,
@@ -49,6 +51,7 @@ export default function OwnProfilePage() {
     unfriendById,
     handleCreatePost,
     refetchData,
+    refetchFriends,
   } = useProfile();
 
   const openEditModal = (section: ProfileEditSection = 'details') => {
@@ -116,7 +119,7 @@ export default function OwnProfilePage() {
                 onOpenEditModal={() => openEditModal()}
               />
 
-              <ProfileFriendsWidget friends={friends} friendsCount={profile.friendsCount} onSeeAllFriends={setActiveTab} />
+              <ProfileFriendsWidget friends={friends} friendsCount={profile.friendsCount} isLoading={friendsLoading} error={friendsError} onRetry={() => void refetchFriends()} onSeeAllFriends={setActiveTab} />
               {photos.length > 0 && <ProfilePhotosWidget photos={photos} onSeeAllPhotos={setActiveTab} />}
               {listings.length > 0 && <ProfileListingsWidget listings={listings} onSeeAllListings={setActiveTab} />}
             </aside>
@@ -145,7 +148,7 @@ export default function OwnProfilePage() {
         )}
 
         {activeTab === 'friends' && (
-          <ProfileFriendsTab friends={friends} isOwnProfile={isOwnProfile} searchQuery={friendsSearch} filter={friendsFilter} onSearchChange={setFriendsSearch} onFilterChange={setFriendsFilter} onUnfriend={unfriendById} />
+          <ProfileFriendsTab friends={friends} isLoading={friendsLoading} error={friendsError} onRetry={() => void refetchFriends()} isOwnProfile={isOwnProfile} searchQuery={friendsSearch} filter={friendsFilter} onSearchChange={setFriendsSearch} onFilterChange={setFriendsFilter} onUnfriend={unfriendById} />
         )}
 
         {activeTab === 'photos' && (

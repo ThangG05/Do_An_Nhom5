@@ -1,16 +1,20 @@
 import uuid
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 from src.api.dependencies import CurrentUser
 from src.db.session import get_db
 from src.db.models.user import User
+from src.db.models.user import Profile
+from src.db.models.media import MediaFile, MediaStatus
 from src.models.post import CreateProfilePostRequest, ProfilePostResponse
 from src.models.user import BlockResponse, FriendResponse, FriendshipActionRequest, FriendshipActionResponse, ProfileResponse, ProfileUpdateRequest, UpdateAvatarRequest, UpdateAvatarResponse, UpdateCoverRequest, UpdateCoverResponse, UserListingResponse, UserPhotoResponse, UserSearchResponse
 from src.services import block_service, friendship_service, post_service
 from src.services.realtime_service import manager
-from src.services.user_service import _media_url, avatar_url, search_users, serialize_profile, update_avatar, update_cover, update_profile
+from src.services.user_service import avatar_url, search_users, serialize_profile, update_avatar, update_cover, update_profile
+from src.services.storage_service import create_download_url
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -43,12 +47,20 @@ def change_my_cover(payload: UpdateCoverRequest, current_user: CurrentUser, db: 
 
 @router.get("/me/blocked",response_model=list[FriendResponse])
 def blocked_users(current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
-    ids=list(db.scalars(__import__('sqlalchemy').text("SELECT blocked_id FROM user_blocks WHERE blocker_id=:uid"),{"uid":current_user.id}))
-    result=[]
-    for uid in ids:
-        user=db.get(User,uid)
-        if user:result.append(FriendResponse(id=str(user.id),name=user.profile.full_name if user.profile else user.username,username=user.username,avatar=_media_url(db, user.profile.avatar_media_id if user.profile else None, "/assets/logo.png"),mutualCount=0,faculty=user.profile.faculty if user.profile else None,friendshipStatus="blocked"))
-    return result
+    ids=list(db.scalars(text("SELECT blocked_id FROM user_blocks WHERE blocker_id=:uid"),{"uid":current_user.id}))
+    if not ids:
+        return []
+    rows=db.execute(select(User,Profile).outerjoin(Profile,Profile.user_id==User.id).where(User.id.in_(ids),User.deleted_at.is_(None))).all()
+    avatar_ids={profile.avatar_media_id for _,profile in rows if profile and profile.avatar_media_id}
+    avatars={media.id:media for media in db.scalars(select(MediaFile).where(
+        MediaFile.id.in_(avatar_ids),MediaFile.status==MediaStatus.READY,MediaFile.deleted_at.is_(None)
+    ))} if avatar_ids else {}
+    return [FriendResponse(
+        id=str(user.id),name=profile.full_name if profile else user.username,
+        username=user.username,
+        avatar=create_download_url(avatars[profile.avatar_media_id]) if profile and profile.avatar_media_id in avatars else "",
+        mutualCount=0,faculty=profile.faculty if profile else None,friendshipStatus="blocked"
+    ) for user,profile in rows]
 
 
 @router.get("/search", response_model=list[UserSearchResponse])

@@ -125,6 +125,33 @@ def test_superadmin_open_queue_explicitly_includes_user_reports():
     assert "r.status IN ('PENDING','REVIEWING')" in session.statement
 
 
+def test_report_queue_marks_removed_content_for_actions():
+    now = datetime.now(UTC)
+    report_id, target_id, reporter_id = (uuid.uuid4() for _ in range(3))
+    row = {
+        "id": report_id, "reporter_id": reporter_id,
+        "reporter_name": "Người báo cáo", "target_type": "POST",
+        "target_id": target_id, "reason": "Nội dung sai", "status": "PENDING",
+        "group_id": None, "group_name": None, "target_summary": "Bài đã xóa",
+        "target_removed": True, "evidence_media_id": None,
+        "resolution_note": None, "created_at": now, "handled_at": None,
+    }
+
+    class Session:
+        statement = ""
+
+        def execute(self, statement, _params):
+            self.statement = str(statement)
+            return SimpleNamespace(mappings=lambda: [row])
+
+    session = Session()
+    result = report_service.list_queue(
+        session, SimpleNamespace(system_role=SystemRole.SUPER_ADMIN), "OPEN",
+    )
+    assert result[0].target_removed is True
+    assert "END target_removed" in session.statement
+
+
 def test_deleted_comment_report_closes_without_deleting_again(monkeypatch):
     report_id, target_id, admin_id = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
     report = {"id": report_id, "target_type": "COMMENT", "target_id": target_id,
@@ -148,11 +175,57 @@ def test_deleted_comment_report_closes_without_deleting_again(monkeypatch):
 
     session = Session()
     message = report_service.resolve(session, SimpleNamespace(id=admin_id, system_role=SystemRole.SUPER_ADMIN),
-                                     report_id, ReportResolveRequest(decision="RESOLVE", action="HIDE_CONTENT",
-                                                                     note="Đã kiểm tra"))
+                                     report_id, ReportResolveRequest(decision="RESOLVE", action="NONE"))
     assert "đã được gỡ" in message
     assert session.committed
     assert not any("UPDATE comments SET" in statement for statement in session.statements)
+
+
+def test_removed_content_cannot_be_rejected_and_closes_with_fixed_reason(monkeypatch):
+    from fastapi import HTTPException
+
+    report_id, target_id, admin_id, reporter_id = (uuid.uuid4() for _ in range(4))
+    report = {"id": report_id, "target_type": "POST", "target_id": target_id,
+              "reporter_id": reporter_id}
+    monkeypatch.setattr(report_service, "_target", lambda *_: None)
+
+    class Session:
+        def __init__(self):
+            self.commands = []
+            self.committed = False
+
+        def execute(self, statement, params):
+            sql = str(statement)
+            self.commands.append((sql, params))
+            return _Row(report if "SELECT * FROM reports" in sql else None)
+
+        def scalar(self, _statement, _params):
+            return None
+
+        def commit(self):
+            self.committed = True
+
+    session = Session()
+    actor = SimpleNamespace(id=admin_id, system_role=SystemRole.SUPER_ADMIN)
+    try:
+        report_service.resolve(session, actor, report_id,
+                               ReportResolveRequest(decision="REJECT", action="NONE"))
+        assert False, "Rejecting an already removed post must fail"
+    except HTTPException as exc:
+        assert exc.status_code == 409
+    assert not session.committed
+
+    message = report_service.resolve(session, actor, report_id,
+                                     ReportResolveRequest(decision="RESOLVE", action="NONE"))
+    assert "đã được gỡ" in message
+    assert session.committed
+    update = next(params for sql, params in session.commands if "UPDATE reports SET" in sql)
+    assert update["status"] == "RESOLVED"
+    assert update["note"] == "Nội dung đã được tác giả gỡ trước khi xử lý"
+    notification = next(params for sql, params in session.commands if "INSERT INTO notifications" in sql)
+    assert notification["uid"] == reporter_id
+    assert notification["content"] == update["note"]
+    assert not any("UPDATE posts SET" in sql for sql, _ in session.commands)
 
 
 def test_self_deleted_comment_report_has_specific_notice(monkeypatch):

@@ -3,8 +3,8 @@
 import {useCallback,useEffect,useState} from "react";
 import {fetchBlockedUsers,setUserBlocked} from "@/lib/api";
 import type {UserFriend} from "@/types/user";
-import {safeImageSrc} from "@/lib/media";
 import {useDialog} from "@/components/ui/DialogProvider";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 export default function BlockedUsersPage(){
   const dialog=useDialog();
@@ -15,6 +15,6 @@ export default function BlockedUsersPage(){
   return <main className="blocked-page"><section className="blocked-card">
     <header><div><span>QUYỀN RIÊNG TƯ</span><h1>Danh sách đã chặn</h1><p>Người bị chặn không thể xem hồ sơ, bài viết, kết bạn hoặc nhắn tin với bạn.</p></div></header>
     {error&&<div className="admin-error">{error}</div>}
-    {loading?<p className="blocked-empty">Đang tải danh sách...</p>:users.length===0?<div className="blocked-empty"><strong>Bạn chưa chặn ai</strong><p>Các tài khoản bạn chặn sẽ xuất hiện tại đây.</p></div>:<div className="blocked-list">{users.map(user=><article key={user.id}><img src={safeImageSrc(user.avatar)} alt=""/><div><strong>{user.name}</strong><p>@{user.username}{user.faculty?` · ${user.faculty}`:""}</p></div><button disabled={busy===user.id} onClick={()=>void unblock(user)}>{busy===user.id?'Đang xử lý...':'Bỏ chặn'}</button></article>)}</div>}
+    {loading?<p className="blocked-empty">Đang tải danh sách...</p>:users.length===0?<div className="blocked-empty"><strong>Bạn chưa chặn ai</strong><p>Các tài khoản bạn chặn sẽ xuất hiện tại đây.</p></div>:<div className="blocked-list">{users.map(user=><article key={user.id}><UserAvatar src={user.avatar === "/assets/logo.png" ? null : user.avatar} name={user.name} imageClassName="blocked-avatar" fallbackClassName="blocked-avatar blocked-avatar-fallback"/><div><strong>{user.name}</strong><p>@{user.username}{user.faculty?` · ${user.faculty}`:""}</p></div><button disabled={busy===user.id} onClick={()=>void unblock(user)}>{busy===user.id?'Đang xử lý...':'Bỏ chặn'}</button></article>)}</div>}
   </section></main>;
 }

@@ -1,6 +1,7 @@
 import uuid
 from typing import Literal
 from pydantic import BaseModel, Field
+from src.models.post import ProfilePostResponse
 
 
 class AdminDashboardResponse(BaseModel):
@@ -44,6 +45,31 @@ class AdminUserPage(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class AdminProfilePreview(BaseModel):
+    id: str
+    name: str
+    username: str
+    avatar: str | None = None
+    cover: str | None = None
+    bio: str = ""
+    student_code: str | None = None
+    faculty: str | None = None
+    joined_at: str
+    status: str
+
+
+class AdminPublicPostPage(BaseModel):
+    items: list[ProfilePostResponse]
+    total: int
+    limit: int
+    offset: int
+
+
+class AdminPublicPostAction(BaseModel):
+    action: Literal["HIDE", "RESTORE"]
+    reason: str = Field(min_length=3, max_length=1000)
 
 
 class GroupAdminInfoResponse(BaseModel):

@@ -10,6 +10,9 @@ import type { FriendshipStatus, UserFriend } from '@/types/user';
 
 interface ProfileFriendsTabProps {
   friends: UserFriend[];
+  isLoading?: boolean;
+  error?: string;
+  onRetry?: () => void;
   isOwnProfile: boolean;
   searchQuery: string;
   filter: string;
@@ -26,7 +29,7 @@ function normalizeLocation(value?: string | null) {
 }
 
 export default function ProfileFriendsTab({
-  friends, isOwnProfile, searchQuery, filter, onSearchChange, onFilterChange, onUnfriend,
+  friends, isLoading = false, error = '', onRetry, isOwnProfile, searchQuery, filter, onSearchChange, onFilterChange, onUnfriend,
 }: ProfileFriendsTabProps) {
   const viewer = useAuthUser();
   const [city, setCity] = useState('');
@@ -71,7 +74,7 @@ export default function ProfileFriendsTab({
         <div className="header-top-row">
           <div className="title-group">
             <h2 className="tab-main-title">Bạn bè</h2>
-            <span className="friends-count-pill">{friends.length} người bạn</span>
+            <span className="friends-count-pill">{isLoading ? 'Đang tải…' : `${friends.length} người bạn`}</span>
           </div>
           <div className="friends-search-box">
             <IconSearch size={16} color="#64748B" className="search-icon-svg" />
@@ -89,7 +92,15 @@ export default function ProfileFriendsTab({
       </div>
 
       {actionError && <p className="friends-action-error" role="alert">{actionError}</p>}
-      {filteredFriends.length ? (
+      {error ? (
+        <div className="empty-friends-card" role="alert">
+          <h3 className="empty-title">Không tải được danh sách bạn bè</h3>
+          <p className="empty-desc">Vui lòng thử lại để xem bạn bè của tài khoản này.</p>
+          {onRetry && <button type="button" className="btn btn-secondary" onClick={onRetry}>Thử lại</button>}
+        </div>
+      ) : isLoading ? (
+        <div className="empty-friends-card" role="status">Đang tải danh sách bạn bè…</div>
+      ) : filteredFriends.length ? (
         <div className="friends-matrix-grid">
           {filteredFriends.map(friend => {
             const status = friend.id === viewer?.id ? 'self' : statusOverrides[friend.id] || friend.friendshipStatus;

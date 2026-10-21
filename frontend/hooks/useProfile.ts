@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   UserProfile,
   UserFriend,
@@ -28,6 +28,8 @@ export interface UseProfileReturn {
   profile: UserProfile | null;
   posts: Post[];
   friends: UserFriend[];
+  friendsLoading: boolean;
+  friendsError: string;
   photos: UserPhoto[];
   listings: UserListing[];
   groupPosts: Post[];
@@ -58,12 +60,16 @@ export interface UseProfileReturn {
   unfriendById: (friendId: string) => Promise<void>;
   handleCreatePost: (payload: CreatePostPayload) => Promise<Post | null>;
   refetchData: () => Promise<void>;
+  refetchFriends: () => Promise<void>;
 }
 
 export function useProfile(targetUserId?: string): UseProfileReturn {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [friends, setFriends] = useState<UserFriend[]>([]);
+  const [friendsLoading, setFriendsLoading] = useState(true);
+  const [friendsError, setFriendsError] = useState('');
+  const friendsRequestId = useRef(0);
   const [photos, setPhotos] = useState<UserPhoto[]>([]);
   const [listings, setListings] = useState<UserListing[]>([]);
   const [groupPosts, setGroupPosts] = useState<Post[]>([]);
@@ -83,15 +89,35 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
   const resolvedUserId = targetUserId || 'me';
   const isOwnProfile = !targetUserId || targetUserId === 'me' || profile?.friendshipStatus === 'self';
 
+  const loadFriends = useCallback(async (userId: string) => {
+    const requestId = ++friendsRequestId.current;
+    setFriendsLoading(true);
+    setFriendsError('');
+    try {
+      const result = await fetchUserFriends(userId);
+      if (requestId === friendsRequestId.current) setFriends(result);
+    } catch (error) {
+      if (requestId === friendsRequestId.current) {
+        setFriendsError(error instanceof Error ? error.message : 'Không thể tải danh sách bạn bè.');
+      }
+    } finally {
+      if (requestId === friendsRequestId.current) setFriendsLoading(false);
+    }
+  }, []);
+
   const loadProfileData = useCallback(async () => {
+    friendsRequestId.current += 1;
+    setFriends([]);
+    setFriendsLoading(true);
+    setFriendsError('');
     setIsLoading(true);
     setIsError(false);
     setErrorMessage('');
     try {
       const profileData = await fetchUserProfile(resolvedUserId);
       setProfile(profileData);
+      void loadFriends(profileData.id);
       void Promise.allSettled([
-        fetchUserFriends(profileData.id).then(setFriends),
         fetchUserPhotos(profileData.id).then(setPhotos),
         fetchUserListings(profileData.id).then(setListings),
         fetchUserGroupPosts(profileData.id).then(setGroupPosts),
@@ -107,7 +133,7 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     // Show the default posts view once its data is ready. The other tabs and
     // sidebar panels should not keep the entire profile behind a skeleton.
     setIsLoading(false);
-  }, [resolvedUserId]);
+  }, [resolvedUserId, loadFriends]);
 
   useEffect(() => {
     loadProfileData();
@@ -153,6 +179,10 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     setProfile((previous) => previous ? { ...previous, friendsCount: Math.max(0, previous.friendsCount - 1) } : previous);
   };
 
+  const refetchFriends = async () => {
+    if (profile) await loadFriends(profile.id);
+  };
+
   const handleCreatePost = async (payload: CreatePostPayload): Promise<Post | null> => {
     const newPost = await createProfilePost(payload);
     if (newPost.status === 'APPROVED') setPosts((prev) => [newPost, ...prev]);
@@ -163,6 +193,8 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     profile,
     posts,
     friends,
+    friendsLoading,
+    friendsError,
     photos,
     listings,
     groupPosts,
@@ -192,5 +224,6 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     unfriendById,
     handleCreatePost,
     refetchData: loadProfileData,
+    refetchFriends,
   };
 }

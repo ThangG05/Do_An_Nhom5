@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 import uuid
@@ -12,15 +14,34 @@ from src.agents.rag_runtime import rag_lifespan
 from src.config import settings
 from src.services.realtime_service import manager
 from src.services.maintenance_cache import MaintenanceCache
+from src.services.study_document_ai import run_worker as run_study_moderation_worker
+
+logger = logging.getLogger(__name__)
+
+
+async def _supervise_study_moderation() -> None:
+    while True:
+        try:
+            await run_study_moderation_worker()
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Study moderation worker crashed; restarting")
+            await asyncio.sleep(5)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     await manager.start()
+    moderation_task = (asyncio.create_task(_supervise_study_moderation(), name="study-moderation")
+                       if settings.STUDY_MODERATION_ENABLED else None)
     try:
         async with rag_lifespan():
             yield
     finally:
+        if moderation_task is not None:
+            moderation_task.cancel()
+            await asyncio.gather(moderation_task, return_exceptions=True)
         await manager.stop()
 
 

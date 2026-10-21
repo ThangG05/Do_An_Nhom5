@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     QDRANT_URL: str = ""
     QDRANT_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
+    STUDY_MODERATION_API_KEY: str = ""
+    STUDY_MODERATION_MODEL: str = "gemini-3.5-flash-lite"
+    STUDY_MODERATION_ENABLED: bool = True
+    STUDY_MODERATION_TIMEOUT_SECONDS: float = 30.0
+    STUDY_MODERATION_MAX_RETRIES: int = 2
     GOOGLE_CLIENT_ID: str = ""
     JWT_SECRET_KEY: str = "change-this-secret-in-production"
     JWT_ALGORITHM: str = "HS256"

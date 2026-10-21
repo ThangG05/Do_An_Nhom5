@@ -22,9 +22,10 @@ from app.models.enums import AIDocumentStatus, AIDocumentType, AIVisibility
 from app.models.crawler import AISource
 from app.models.rag import AIDocument, AIDocumentChunk, AIDocumentVersion
 from app.rag.embeddings import EmbeddingProvider
-from app.rag.query_cache import QueryEmbeddingCache
+from app.rag.query_cache import QueryEmbeddingCache, SharedQueryEmbeddingCache
 from app.rag.reranker import HeuristicReranker, RerankContext
 from app.services.qdrant import get_qdrant_client, qdrant_retry
+from app.services.redis import get_redis_client
 
 logger = logging.getLogger(__name__)
 _query_cache: QueryEmbeddingCache | None = None
@@ -338,29 +339,44 @@ class RetrievalService:
 
         async def vector_search():
             embedding_started = perf_counter()
+            async def embed_with_shared_cache() -> list[float]:
+                if not self.settings.retrieval_shared_embedding_cache_enabled:
+                    return await self.embedder.embed_query(intent.normalized_query)
+                shared = SharedQueryEmbeddingCache(
+                    get_redis_client(), self.settings.embedding_dimensions,
+                    self.settings.retrieval_query_cache_ttl_seconds,
+                    self.settings.retrieval_shared_embedding_cache_timeout_seconds,
+                )
+                return await shared.get_or_embed(
+                    self.settings.embedding_model, intent.normalized_query,
+                    lambda: self.embedder.embed_query(intent.normalized_query),
+                )
             vector = await _get_query_cache().get_or_embed(
                 self.settings.embedding_model, intent.normalized_query,
-                lambda: self.embedder.embed_query(intent.normalized_query))
+                embed_with_shared_cache)
             embedding_ms = round((perf_counter() - embedding_started) * 1000)
+            qdrant_started = perf_counter()
             response = await qdrant_retry(lambda: self.client.query_points(
                 collection_name=self.settings.qdrant_collection, query=vector,
                 query_filter=build_filter(intent, scope), limit=self.settings.retrieval_candidate_k,
                 with_payload=True, with_vectors=False, score_threshold=query_threshold,
             ))
-            return response, embedding_ms
+            return response, embedding_ms, round((perf_counter() - qdrant_started) * 1000)
+
+        async def lexical_search():
+            started = perf_counter()
+            hits = await self._lexical_search(intent, scope)
+            return hits, round((perf_counter() - started) * 1000)
 
         # PostgreSQL full-text search does not depend on the remote embedding call.
         # Running both branches together removes their additive network latency.
         retrieval_started = perf_counter()
-        (response, embedding_ms), lexical_hits = await asyncio.gather(
-            vector_search(), self._lexical_search(intent, scope)
+        (response, embedding_ms, qdrant_ms), (lexical_hits, lexical_ms) = await asyncio.gather(
+            vector_search(), lexical_search()
         )
-        logger.info("rag_retrieval_completed", extra={
-            "embedding_ms": embedding_ms,
-            "retrieval_ms": round((perf_counter() - retrieval_started) * 1000),
-            "vector_candidates": len(response.points), "lexical_candidates": len(lexical_hits),
-        })
+        verification_started = perf_counter()
         vector_hits = await self._verified_vector_hits(response.points, intent, scope)
+        verification_ms = round((perf_counter() - verification_started) * 1000)
 
         by_id = {hit.chunk_id: hit for hit in vector_hits}
         by_id.update({hit.chunk_id: hit for hit in lexical_hits})
@@ -393,4 +409,10 @@ class RetrievalService:
             hits.append(hit)
             if len(hits) >= (top_k or self.settings.retrieval_top_k):
                 break
+        logger.info("rag_retrieval_completed", extra={
+            "embedding_ms": embedding_ms, "qdrant_ms": qdrant_ms,
+            "lexical_ms": lexical_ms, "verification_ms": verification_ms,
+            "retrieval_ms": round((perf_counter() - retrieval_started) * 1000),
+            "vector_candidates": len(response.points), "lexical_candidates": len(lexical_hits),
+        })
         return hits

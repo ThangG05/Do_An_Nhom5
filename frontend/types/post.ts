@@ -114,5 +114,6 @@ export interface Post {
   groupId?: string;
   groupName?: string | null;
   groupSlug?: string | null;
-  status?: 'APPROVED' | 'PENDING' | 'REJECTED' | 'DELETED';
+  status?: 'APPROVED' | 'PENDING' | 'REJECTED' | 'HIDDEN' | 'DELETED';
+  rejectionReason?: string | null;
 }

@@ -55,13 +55,19 @@ export default function ReportQueue({ groupId }: { groupId?: string }) {
   };
 
   const decide = async (item: ApiReport, decision: 'RESOLVE' | 'REJECT', action: 'NONE' | 'HIDE_CONTENT' | 'LOCK_USER' | 'DISABLE_USER') => {
-    const note = await dialog.prompt({
-      title: decision === 'REJECT' ? 'Bác bỏ báo cáo' : 'Xác nhận xử lý',
-      message: 'Ghi rõ kết quả và căn cứ để người báo cáo có thể theo dõi.',
-      placeholder: 'Ghi chú kết quả xử lý...', multiline: true, minLength: 3,
-      tone: action === 'DISABLE_USER' ? 'danger' : 'default',
-    });
-    if (!note) return;
+    const alreadyRemoved = item.target_type !== 'USER' && (item.target_removed ||
+      (selected?.id === item.id && !!detail && (item.target_type === 'POST' ? !detail.post : !detail.comment)));
+    let note = '';
+    if (!alreadyRemoved) {
+      const entered = await dialog.prompt({
+        title: decision === 'REJECT' ? 'Bác bỏ báo cáo' : 'Xác nhận xử lý',
+        message: 'Ghi rõ kết quả và căn cứ để người báo cáo có thể theo dõi.',
+        placeholder: 'Ghi chú kết quả xử lý...', multiline: true, minLength: 3,
+        tone: action === 'DISABLE_USER' ? 'danger' : 'default',
+      });
+      if (!entered) return;
+      note = entered;
+    }
     try {
       const message = await resolveReport(item.id, decision, action, note);
       setSelected(null);
@@ -74,16 +80,20 @@ export default function ReportQueue({ groupId }: { groupId?: string }) {
     }
   };
 
-  const actions = (item: ApiReport) => <div className="report-actions">
-    <button type="button" onClick={() => void decide(item, 'REJECT', 'NONE')}>Bác bỏ</button>
-    {item.target_type !== 'USER' && (selected?.id === item.id && detail && (item.target_type === 'POST' ? !detail.post : !detail.comment)
-      ? <button type="button" className="warning" onClick={() => void decide(item, 'RESOLVE', 'NONE')}>Kết thúc · nội dung đã gỡ</button>
-      : <button type="button" className="warning" onClick={() => void decide(item, 'RESOLVE', 'HIDE_CONTENT')}>Xác nhận & gỡ nội dung</button>)}
-    {superAdmin && item.target_type === 'USER' && <>
-      <button type="button" className="warning" onClick={() => void decide(item, 'RESOLVE', 'LOCK_USER')}>Xác nhận & khóa</button>
-      <button type="button" className="danger" onClick={() => void decide(item, 'RESOLVE', 'DISABLE_USER')}>Vô hiệu hóa</button>
-    </>}
-  </div>;
+  const actions = (item: ApiReport) => {
+    const alreadyRemoved = item.target_type !== 'USER' && (item.target_removed ||
+      (selected?.id === item.id && !!detail && (item.target_type === 'POST' ? !detail.post : !detail.comment)));
+    return <div className="report-actions">
+      {alreadyRemoved ? <button type="button" className="warning" onClick={() => void decide(item, 'RESOLVE', 'NONE')}>Kết thúc · nội dung đã gỡ</button> : <>
+        <button type="button" onClick={() => void decide(item, 'REJECT', 'NONE')}>Bác bỏ</button>
+        {item.target_type !== 'USER' && <button type="button" className="warning" onClick={() => void decide(item, 'RESOLVE', 'HIDE_CONTENT')}>Xác nhận & gỡ nội dung</button>}
+        {superAdmin && item.target_type === 'USER' && <>
+          <button type="button" className="warning" onClick={() => void decide(item, 'RESOLVE', 'LOCK_USER')}>Xác nhận & khóa</button>
+          <button type="button" className="danger" onClick={() => void decide(item, 'RESOLVE', 'DISABLE_USER')}>Vô hiệu hóa</button>
+        </>}
+      </>}
+    </div>;
+  };
 
   return <section className="report-queue">
     <header><div><span>REPORT MANAGEMENT</span><h2>Báo cáo vi phạm</h2></div><b>{items.length} đang chờ</b></header>
@@ -110,7 +120,7 @@ export default function ReportQueue({ groupId }: { groupId?: string }) {
           <p className="report-detail-reason"><b>Lý do báo cáo</b><span>{selected.reason}</span></p>
           {detailLoading && <p className="report-detail-status">Đang tải nội dung...</p>}
           {detailError && <p className="admin-error" role="alert">{detailError}</p>}
-          {detail && !detail.post && !detail.user && <p className="report-detail-status">{selected.target_type === 'USER' ? 'Tài khoản không còn khả dụng.' : `${selected.target_type === 'COMMENT' ? 'Bình luận' : 'Bài viết'} đã được gỡ trước khi xử lý báo cáo. Bạn có thể kết thúc báo cáo mà không xóa lần nữa.`}</p>}
+          {(selected.target_removed || (detail && !detail.post && !detail.user)) && <p className="report-detail-status">{selected.target_type === 'USER' ? 'Tài khoản không còn khả dụng.' : `${selected.target_type === 'COMMENT' ? 'Bình luận' : 'Bài viết'} đã được gỡ trước khi xử lý báo cáo. Bạn có thể kết thúc báo cáo mà không xóa lần nữa.`}</p>}
           {detail?.post && <div className="report-preview-post">
             <div className="report-preview-author"><UserAvatar src={detail.post.author.avatar} name={detail.post.author.name} /><div><strong>{detail.post.author.name}</strong><small><RelativeTime value={detail.post.createdAt} />{detail.post.groupName ? ` · ${detail.post.groupName}` : ' · Bài viết cộng đồng'}</small></div></div>
             <PostCategoryDetails post={detail.post} />
@@ -118,7 +128,7 @@ export default function ReportQueue({ groupId }: { groupId?: string }) {
             {!!detail.post.media?.length && <div className="report-preview-media">{detail.post.media.map(media => media.type === 'image' ? <img key={media.id} src={safeImageSrc(media.url)} alt={media.name || 'Ảnh trong bài viết bị báo cáo'} /> : media.type === 'video' ? <video key={media.id} src={media.url} controls preload="metadata" /> : <a key={media.id} href={media.url} target="_blank" rel="noreferrer">{media.name || 'Tệp đính kèm'}</a>)}</div>}
             {selected.target_type === 'COMMENT' && <div className="report-preview-comment"><b>Bình luận bị báo cáo</b>{detail.comment ? <div><UserAvatar src={detail.comment.author.avatar} name={detail.comment.author.name} /><section><strong>{detail.comment.author.name}</strong><small><RelativeTime value={detail.comment.createdAt} /></small><p>{detail.comment.content}</p>{detail.comment.imageUrl && <img src={safeImageSrc(detail.comment.imageUrl)} alt="Ảnh trong bình luận bị báo cáo" />}</section></div> : <p>Bình luận đã được gỡ trước khi xử lý báo cáo. Bạn có thể kết thúc báo cáo mà không xóa lần nữa.</p>}</div>}
           </div>}
-          {detail?.user && <div className="report-preview-user"><UserAvatar src={detail.user.avatar} name={detail.user.name} /><h3>{detail.user.name}</h3>{detail.user.student_code && <p>Mã sinh viên: {detail.user.student_code}</p>}<p>Tham gia: {new Date(detail.user.joined_at).toLocaleDateString('vi-VN')}</p><p>Trạng thái: {detail.user.status}</p><Link href={`/profile/${detail.user.id}`}>Xem trang cá nhân</Link></div>}
+          {detail?.user && <div className="report-preview-user"><UserAvatar src={detail.user.avatar} name={detail.user.name} /><h3>{detail.user.name}</h3>{detail.user.student_code && <p>Mã sinh viên: {detail.user.student_code}</p>}<p>Tham gia: {new Date(detail.user.joined_at).toLocaleDateString('vi-VN')}</p><p>Trạng thái: {detail.user.status}</p><Link href={`/admin/users/${detail.user.id}`} onClick={() => setSelected(null)}>Xem hồ sơ tài khoản</Link></div>}
         </div>
         <footer>{actions(selected)}</footer>
       </section>
