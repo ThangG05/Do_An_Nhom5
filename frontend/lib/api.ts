@@ -76,8 +76,8 @@ export async function uploadProfileCover(file: File): Promise<string> {
   return updated.cover_url;
 }
 
-export async function fetchUserPosts(userId: string, filter?: string): Promise<Post[]> {
-  return api<Post[]>(`/users/${userId}/posts?filter=${filter || 'all'}`);
+export async function fetchUserPosts(userId: string, filter?: string, limit?: number, offset = 0): Promise<Post[]> {
+  return api<Post[]>(`/users/${userId}/posts?filter=${encodeURIComponent(filter || 'all')}${limit ? `&limit=${limit}&offset=${offset}` : ''}`);
 }
 
 export async function fetchUserFriends(userId: string, query?: string): Promise<UserFriend[]> {
@@ -91,8 +91,8 @@ export async function fetchUserPhotos(userId: string): Promise<UserPhoto[]> {
 export async function fetchUserListings(userId: string, category = 'all'): Promise<UserListing[]> {
   return api<UserListing[]>(`/users/${userId}/listings?category=${encodeURIComponent(category)}`);
 }
-export async function fetchUserGroupPosts(userId: string): Promise<import('@/types/post').Post[]> {
-  return api<import('@/types/post').Post[]>(`/users/${userId}/group-posts`);
+export async function fetchUserGroupPosts(userId: string, limit?: number, offset = 0): Promise<import('@/types/post').Post[]> {
+  return api<import('@/types/post').Post[]>(`/users/${userId}/group-posts${limit ? `?limit=${limit}&offset=${offset}` : ''}`);
 }
 
 export async function updateFriendshipStatus(
@@ -106,8 +106,8 @@ export async function updateFriendshipStatus(
 }
 
 export type UserSearchResult = UserFriend & { studentCode?: string };
-export async function searchUsers(query: string): Promise<UserSearchResult[]> {
-  return api(`/users/search?q=${encodeURIComponent(query)}&limit=30`);
+export async function searchUsers(query: string, limit = 30): Promise<UserSearchResult[]> {
+  return api(`/users/search?q=${encodeURIComponent(query)}&limit=${limit}`);
 }
 
 function uploadRequest(file:File,mediaId:string,token:string,onProgress?:CreatePostPayload['onUploadProgress']):Promise<Response>{
@@ -190,6 +190,13 @@ export async function fetchFeed(limit = 30, offset = 0, category = ''): Promise<
 
 export async function fetchPost(postId: string): Promise<Post> {
   return api<Post>(`/posts/${encodeURIComponent(postId)}`);
+}
+
+export async function registerPostShare(postId: string, destinationType: 'POST' | 'MESSAGE', destinationId: string): Promise<{ sharesCount: number }> {
+  return api(`/posts/${encodeURIComponent(postId)}/shares`, {
+    method: 'POST',
+    body: JSON.stringify({ destination_type: destinationType, destination_id: destinationId }),
+  });
 }
 
 export async function setPostLike(postId: string, isLiked: boolean): Promise<{ isLiked: boolean; likesCount: number }> {
@@ -299,12 +306,12 @@ export async function leaveGroup(groupId: string): Promise<void> {
   await api(`/groups/${groupId}/leave`, { method: 'DELETE' });
 }
 
-export async function fetchGroupPosts(groupId: string, query = '', sort: 'latest'|'featured'|'pinned' = 'latest'): Promise<import('@/types/group-api').GroupPost[]> {
-  return api(`/groups/${groupId}/posts?q=${encodeURIComponent(query)}&sort=${sort}`);
+export async function fetchGroupPosts(groupId: string, query = '', sort: 'latest'|'featured'|'pinned' = 'latest', limit?: number, offset = 0): Promise<import('@/types/group-api').GroupPost[]> {
+  return api(`/groups/${groupId}/posts?q=${encodeURIComponent(query)}&sort=${sort}${limit ? `&limit=${limit}&offset=${offset}` : ''}`);
 }
 
-export async function fetchMyGroupPosts(groupId: string): Promise<import('@/types/group-api').GroupPost[]> {
-  return api(`/groups/${groupId}/posts/mine`);
+export async function fetchMyGroupPosts(groupId: string, limit?: number, offset = 0): Promise<import('@/types/group-api').GroupPost[]> {
+  return api(`/groups/${groupId}/posts/mine${limit ? `?limit=${limit}&offset=${offset}` : ''}`);
 }
 
 export async function createGroupPost(groupId: string, content: string, files: File[]): Promise<import('@/types/group-api').GroupPost> {
@@ -369,7 +376,6 @@ export async function fetchAdminProfile(userId:string):Promise<import('@/types/a
 export async function fetchAdminPublicPosts(q='',status:'ALL'|'APPROVED'|'HIDDEN'='ALL',offset=0,limit=10,authorId?:string):Promise<import('@/types/admin').AdminPublicPostPage>{const params=new URLSearchParams({q,status,offset:String(offset),limit:String(limit)});if(authorId)params.set('author_id',authorId);return api(`/admin/public-posts?${params}`);}
 export async function moderateAdminPublicPost(postId:string,action:'HIDE'|'RESTORE',reason:string):Promise<void>{await api(`/admin/public-posts/${encodeURIComponent(postId)}`,{method:'PATCH',body:JSON.stringify({action,reason})});}
 export async function setAdminUserStatus(userId:string,status:'ACTIVE'|'LOCKED'|'DISABLED',reason:string):Promise<void>{await api(`/admin/users/${userId}/status`,{method:'PATCH',body:JSON.stringify({status,reason})});}
-export async function setUserGroupAdmin(userId:string,groupId:string,grant:boolean):Promise<void>{await api(`/admin/users/${userId}/group-admin`,{method:'PUT',body:JSON.stringify({group_id:groupId,grant})});}
 export async function disciplineAdminUser(userId:string,action:'WARN'|'SUSPEND'|'BAN'|'UNLOCK',reason:string,durationDays?:number):Promise<void>{await api(`/admin/users/${userId}/discipline`,{method:'POST',body:JSON.stringify({action,reason,duration_days:durationDays})});}
 export async function fetchAdminAuditLogs():Promise<import('@/types/admin').AdminAuditLog[]>{return api('/admin/audit-logs?limit=100');}
 export async function createReport(target_type:'USER'|'POST'|'COMMENT',target_id:string,reason:string,evidence_media_id?:string):Promise<void>{await api('/reports',{method:'POST',body:JSON.stringify({target_type,target_id,reason,evidence_media_id})});}

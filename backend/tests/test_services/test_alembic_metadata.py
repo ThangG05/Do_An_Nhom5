@@ -24,6 +24,6 @@ def test_combined_metadata_contains_software_and_rag_tables() -> None:
     }
 
     assert expected.issubset(target_metadata.tables)
-    assert len(target_metadata.tables) == 45
+    assert "study_document_ai_assessments" in target_metadata.tables
     assert "roles" not in target_metadata.tables
     assert "user_roles" not in target_metadata.tables

@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from src.api.dependencies import CurrentSuperAdmin
 from src.db.session import get_db
-from src.models.admin import AdminDashboardResponse, AdminUserPage, AdminProfilePreview, AdminPublicPostPage, AdminPublicPostAction, AccountStatusRequest, GroupRoleRequest, DisciplineRequest, AuditLogResponse, GroupAdminInfoResponse, RAGUserUsageResponse
+from src.models.admin import AdminDashboardResponse, AdminUserPage, AdminProfilePreview, AdminPublicPostPage, AdminPublicPostAction, AccountStatusRequest, DisciplineRequest, AuditLogResponse, GroupAdminInfoResponse, RAGUserUsageResponse
 from src.services import admin_service
 
 router=APIRouter(prefix="/admin",tags=["Super Admin"]);Db=Annotated[Session,Depends(get_db)]
@@ -44,9 +44,6 @@ def moderate_public_post(post_id:uuid.UUID,payload:AdminPublicPostAction,admin:C
 
 @router.patch("/users/{user_id}/status",status_code=204)
 def status(user_id:uuid.UUID,payload:AccountStatusRequest,admin:CurrentSuperAdmin,db:Db):admin_service.set_status(db,user_id,admin,payload.status,payload.reason);return Response(status_code=204)
-
-@router.put("/users/{user_id}/group-admin",status_code=204)
-def group_role(user_id:uuid.UUID,payload:GroupRoleRequest,admin:CurrentSuperAdmin,db:Db):admin_service.set_group_admin(db,user_id,payload.group_id,admin,payload.grant);return Response(status_code=204)
 
 @router.post("/users/{user_id}/discipline",status_code=204)
 def discipline(user_id:uuid.UUID,payload:DisciplineRequest,admin:CurrentSuperAdmin,db:Db):admin_service.discipline(db,user_id,admin,payload);return Response(status_code=204)

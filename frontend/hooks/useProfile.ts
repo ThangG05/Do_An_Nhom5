@@ -10,6 +10,8 @@ import {
   FriendshipStatus,
 } from '@/types/user';
 import { Post, CreatePostPayload } from '@/types/post';
+import { usePostPage } from '@/hooks/usePostPage';
+import type { PostPaginationProps } from '@/components/ui/PostPagination';
 import {
   fetchUserProfile,
   fetchUserPosts,
@@ -27,12 +29,14 @@ import {
 export interface UseProfileReturn {
   profile: UserProfile | null;
   posts: Post[];
+  postPagination: PostPaginationProps;
   friends: UserFriend[];
   friendsLoading: boolean;
   friendsError: string;
   photos: UserPhoto[];
   listings: UserListing[];
   groupPosts: Post[];
+  groupPagination: PostPaginationProps;
   activeTab: ProfileTabType;
   isLoading: boolean;
   isError: boolean;
@@ -65,14 +69,13 @@ export interface UseProfileReturn {
 
 export function useProfile(targetUserId?: string): UseProfileReturn {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
   const [friends, setFriends] = useState<UserFriend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
   const [friendsError, setFriendsError] = useState('');
   const friendsRequestId = useRef(0);
   const [photos, setPhotos] = useState<UserPhoto[]>([]);
   const [listings, setListings] = useState<UserListing[]>([]);
-  const [groupPosts, setGroupPosts] = useState<Post[]>([]);
+  const profileRequestId = useRef(0);
 
   const [activeTab, setActiveTab] = useState<ProfileTabType>('posts');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -88,6 +91,12 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
 
   const resolvedUserId = targetUserId || 'me';
   const isOwnProfile = !targetUserId || targetUserId === 'me' || profile?.friendshipStatus === 'self';
+  const fetchPostsPage = useCallback((limit: number, offset: number) => profile?.id ? fetchUserPosts(profile.id, postFilter, limit, offset) : Promise.resolve([]), [profile?.id, postFilter]);
+  const postPagination = usePostPage(`${resolvedUserId}:${profile?.id}:${postFilter}`, fetchPostsPage, !!profile);
+  const posts = postPagination.items;
+  const fetchGroupPage = useCallback((limit: number, offset: number) => profile?.id ? fetchUserGroupPosts(profile.id, limit, offset) : Promise.resolve([]), [profile?.id]);
+  const groupPagination = usePostPage(`${resolvedUserId}:${profile?.id}`, fetchGroupPage, !!profile && activeTab === 'listings');
+  const groupPosts = groupPagination.items;
 
   const loadFriends = useCallback(async (userId: string) => {
     const requestId = ++friendsRequestId.current;
@@ -95,7 +104,10 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     setFriendsError('');
     try {
       const result = await fetchUserFriends(userId);
-      if (requestId === friendsRequestId.current) setFriends(result);
+      if (requestId === friendsRequestId.current) {
+        setFriends(result);
+        setProfile(previous => previous?.id === userId ? { ...previous, friendsCount: result.length } : previous);
+      }
     } catch (error) {
       if (requestId === friendsRequestId.current) {
         setFriendsError(error instanceof Error ? error.message : 'Không thể tải danh sách bạn bè.');
@@ -106,6 +118,8 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
   }, []);
 
   const loadProfileData = useCallback(async () => {
+    const requestId = ++profileRequestId.current;
+    setProfile(null);
     friendsRequestId.current += 1;
     setFriends([]);
     setFriendsLoading(true);
@@ -115,15 +129,16 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     setErrorMessage('');
     try {
       const profileData = await fetchUserProfile(resolvedUserId);
+      if (requestId !== profileRequestId.current) return;
       setProfile(profileData);
       void loadFriends(profileData.id);
       void Promise.allSettled([
-        fetchUserPhotos(profileData.id).then(setPhotos),
-        fetchUserListings(profileData.id).then(setListings),
-        fetchUserGroupPosts(profileData.id).then(setGroupPosts),
+        fetchUserPhotos(profileData.id).then(rows => { if (requestId === profileRequestId.current) setPhotos(rows); }),
+        fetchUserListings(profileData.id).then(rows => { if (requestId === profileRequestId.current) setListings(rows); }),
       ]);
-      setPosts(await fetchUserPosts(profileData.id));
+      postPagination.reload();
     } catch (err: unknown) {
+      if (requestId !== profileRequestId.current) return;
       setIsError(true);
       setErrorMessage(err instanceof Error ? err.message : 'Không thể tải thông tin hồ sơ.');
       setIsLoading(false);
@@ -133,10 +148,11 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
     // Show the default posts view once its data is ready. The other tabs and
     // sidebar panels should not keep the entire profile behind a skeleton.
     setIsLoading(false);
-  }, [resolvedUserId, loadFriends]);
+  }, [resolvedUserId, loadFriends, postPagination.reload]);
 
   useEffect(() => {
     loadProfileData();
+    return () => { profileRequestId.current++; friendsRequestId.current++; };
   }, [loadProfileData]);
 
   const updateBio = async (newBio: string) => {
@@ -185,19 +201,21 @@ export function useProfile(targetUserId?: string): UseProfileReturn {
 
   const handleCreatePost = async (payload: CreatePostPayload): Promise<Post | null> => {
     const newPost = await createProfilePost(payload);
-    if (newPost.status === 'APPROVED') setPosts((prev) => [newPost, ...prev]);
+    if (newPost.status === 'APPROVED') postPagination.reload();
     return newPost;
   };
 
   return {
     profile,
     posts,
+    postPagination,
     friends,
     friendsLoading,
     friendsError,
     photos,
     listings,
     groupPosts,
+    groupPagination,
     activeTab,
     isLoading,
     isError,

@@ -59,7 +59,7 @@ def require_study_group(db: Session, group_id: uuid.UUID) -> None:
 def require_member(db: Session, group_id: uuid.UUID, user: User) -> None:
     require_study_group(db, group_id)
     if user.system_role == SystemRole.SUPER_ADMIN:
-        return
+        raise HTTPException(403, "Kho tài liệu thuộc phạm vi thành viên nhóm Học tập.")
     role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
                       {"gid": group_id, "uid": user.id}).scalar_one_or_none()
     if str(role) not in {"MEMBER", "ADMIN"}:
@@ -69,7 +69,7 @@ def require_member(db: Session, group_id: uuid.UUID, user: User) -> None:
 def require_admin(db: Session, group_id: uuid.UUID, user: User) -> None:
     require_study_group(db, group_id)
     if user.system_role == SystemRole.SUPER_ADMIN:
-        return
+        raise HTTPException(403, "Chỉ Group Admin Học tập được quản trị kho tài liệu.")
     role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
                       {"gid": group_id, "uid": user.id}).scalar_one_or_none()
     if str(role) != "ADMIN":
@@ -507,6 +507,8 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
 
 def file_download(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
                   file_id: uuid.UUID, user: User, *, preview: bool = False) -> str:
+    if user.system_role == SystemRole.SUPER_ADMIN:
+        raise HTTPException(403, "Kho tài liệu thuộc phạm vi thành viên nhóm Học tập.")
     require_study_group(db, group_id)
     row = db.execute(text("""
         SELECT f.r2_object_key,f.original_name,f.mime_type,d.status,d.uploaded_by
@@ -516,7 +518,7 @@ def file_download(db: Session, group_id: uuid.UUID, document_id: uuid.UUID,
     """), {"fid": file_id, "did": document_id, "gid": group_id}).mappings().first()
     membership = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
                             {"gid": group_id, "uid": user.id}).scalar_one_or_none()
-    is_admin = str(membership) == "ADMIN" or user.system_role == SystemRole.SUPER_ADMIN
+    is_admin = str(membership) == "ADMIN" and user.system_role != SystemRole.SUPER_ADMIN
     if not row or (str(membership) not in {"MEMBER", "ADMIN"} and not is_admin) or (
             row["status"] != "APPROVED" and row["uploaded_by"] != user.id and not is_admin):
         raise HTTPException(404, "Không tìm thấy file.")
@@ -539,7 +541,7 @@ def _get_document_files_for_user(db: Session, group_id: uuid.UUID, document_id: 
     """), {"did": document_id, "gid": group_id}).mappings().first()
     role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
                       {"gid": group_id, "uid": user.id}).scalar_one_or_none()
-    is_admin = str(role) == "ADMIN" or user.system_role == SystemRole.SUPER_ADMIN
+    is_admin = str(role) == "ADMIN" and user.system_role != SystemRole.SUPER_ADMIN
     if not row or (row["status"] != "APPROVED" and row["uploaded_by"] != user.id and not is_admin):
         raise HTTPException(404, "Không tìm thấy tài liệu.")
     files = db.execute(text("""

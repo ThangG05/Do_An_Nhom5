@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
@@ -36,13 +36,13 @@ def leave(group_id: uuid.UUID, current_user: CurrentUser, db: DbSession):
 
 
 @router.get("/{group_id}/posts", response_model=list[ProfilePostResponse])
-def posts(group_id: uuid.UUID, current_user: CurrentUser, db: DbSession, q: str = "", sort: Literal["latest", "featured", "pinned"] = "latest"):
-    return group_service.list_posts(db, group_id, current_user, query=q, sort=sort)
+def posts(group_id: uuid.UUID, current_user: CurrentUser, db: DbSession, q: str = "", sort: Literal["latest", "featured", "pinned"] = "latest", limit: Annotated[int | None, Query(ge=1, le=100)] = None, offset: Annotated[int, Query(ge=0)] = 0):
+    return group_service.list_posts(db, group_id, current_user, query=q, sort=sort, limit=limit, offset=offset)
 
 
 @router.get("/{group_id}/posts/mine", response_model=list[ProfilePostResponse])
-def my_posts(group_id: uuid.UUID, current_user: CurrentUser, db: DbSession):
-    return group_service.list_my_posts(db, group_id, current_user)
+def my_posts(group_id: uuid.UUID, current_user: CurrentUser, db: DbSession, limit: Annotated[int | None, Query(ge=1, le=100)] = None, offset: Annotated[int, Query(ge=0)] = 0):
+    return group_service.list_my_posts(db, group_id, current_user, limit=limit, offset=offset)
 
 
 @router.post("/{group_id}/posts", response_model=ProfilePostResponse, status_code=201)

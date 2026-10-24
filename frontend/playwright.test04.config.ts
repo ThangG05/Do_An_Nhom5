@@ -11,7 +11,7 @@ export default defineConfig({
   webServer: {
     command: 'npm.cmd run dev -- --port 3102',
     url: 'http://localhost:3102/login',
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === '1',
     timeout: 120000,
     env: { NEXT_DIST_DIR: '.next/test04-ui', NEXT_PUBLIC_API_URL: 'http://localhost:8999/api/v1' },
   },

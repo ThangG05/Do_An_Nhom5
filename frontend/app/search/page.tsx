@@ -14,9 +14,13 @@ export default function SearchPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let active = true;
     setLoading(true); setError("");
-    searchUsers(query).then(setItems).catch((e) => setError(e instanceof Error ? e.message : "Không thể tìm kiếm."))
-      .finally(() => setLoading(false));
+    setItems([]);
+    searchUsers(query).then(rows => { if (active) setItems(rows); })
+      .catch((e) => { if (active) setError(e instanceof Error ? e.message : "Không thể tìm kiếm."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [query]);
 
   return <main className="user-search-page">
@@ -26,10 +30,10 @@ export default function SearchPage() {
     {!loading && !error && <section className="user-search-results">
       {items.map(user => <Link href={`/profile/${user.id}`} className="user-search-card" key={user.id}>
         <UserAvatar src={user.avatar} name={user.name} imageClassName="user-search-avatar" fallbackClassName="user-search-avatar user-avatar-initials" />
-        <div><strong>{user.name}</strong><span>@{user.username}{user.studentCode ? ` · ${user.studentCode}` : ""}</span><small>{user.faculty || "Sinh viên HVNH"}</small></div>
+        <div><strong>{user.name}</strong><span>@{user.username}{user.studentCode ? ` · ${user.studentCode}` : ""}</span><small>{user.accountStatus && user.accountStatus !== 'ACTIVE' ? 'Tài khoản tạm ngừng hoạt động' : user.faculty || "Sinh viên HVNH"}</small></div>
         <b>Xem hồ sơ</b>
       </Link>)}
-      {!items.length && <div className="user-search-state">Không tìm thấy sinh viên phù hợp. Người đã chặn bạn hoặc bị bạn chặn sẽ không xuất hiện.</div>}
+      {!items.length && <div className="user-search-state">Không tìm thấy sinh viên phù hợp. Tài khoản bị chặn hoặc tạm ngừng hoạt động mà không phải bạn bè sẽ không xuất hiện.</div>}
     </section>}
   </main>;
 }

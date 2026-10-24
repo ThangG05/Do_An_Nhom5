@@ -9,7 +9,6 @@ import {
   IconMessage,
   IconBell,
   IconProfile,
-  IconSearch,
   IconInfo,
   IconSettings,
   IconLogout,
@@ -20,12 +19,12 @@ import { fetchHeaderUnreadCounts } from '@/lib/api';
 import { useAuthUser } from '@/components/auth/AuthProvider';
 import NavbarQuickPanel from './NavbarQuickPanel';
 import ProfileChatDock from '@/components/chat/ProfileChatDock';
+import GlobalUserSearch from './GlobalUserSearch';
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -158,10 +157,7 @@ export default function Navbar() {
             />
             <span className="brand-title-text">HVNH Hub</span>
           </Link>
-          <form className="global-search-pill" onSubmit={(event) => { event.preventDefault(); const query=searchQuery.trim(); if(query) router.push(`/search?q=${encodeURIComponent(query)}`); }}>
-            <IconSearch size={16} className="search-pill-icon" />
-            <input type="text" className="search-pill-input" placeholder="Tìm kiếm sinh viên" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} aria-label="Tìm kiếm sinh viên" />
-          </form>
+          <GlobalUserSearch />
         </div>
 
         {/* 2. Center Core Navigation Links */}

@@ -30,7 +30,7 @@ def _membership(db: Session, group_id: uuid.UUID, user_id: uuid.UUID) -> str:
 
 def _require_reader(db: Session, group_id: uuid.UUID, user: User) -> None:
     if user.system_role == SystemRole.SUPER_ADMIN:
-        return
+        raise HTTPException(403, "Super Admin xem thông tin nhóm qua trang quản lý nhóm.")
     if _membership(db, group_id, user.id) not in {"MEMBER", "ADMIN"}:
         raise HTTPException(403, "Bạn cần tham gia nhóm để xem và tương tác với bài viết.")
 
@@ -68,6 +68,8 @@ def list_groups(db: Session, user: User) -> list[GroupResponse]:
 
 
 def request_join(db: Session, group_id: uuid.UUID, user: User) -> str:
+    if user.system_role == SystemRole.SUPER_ADMIN:
+        raise HTTPException(403, "Super Admin không tham gia nhóm bằng tài khoản quản trị tổng.")
     _group(db, group_id)
     if _membership(db, group_id, user.id) in {"MEMBER", "ADMIN"}:
         raise HTTPException(409, "Bạn đã là thành viên của nhóm.")
@@ -79,7 +81,7 @@ def request_join(db: Session, group_id: uuid.UUID, user: User) -> str:
 def leave(db: Session, group_id: uuid.UUID, user: User) -> None:
     role = _membership(db, group_id, user.id)
     if role == "ADMIN":
-        raise HTTPException(409, "Super Admin phải thu hồi quyền trước khi admin rời nhóm.")
+        raise HTTPException(409, "Tài khoản quản trị nhóm chuyên trách không thể tự rời nhóm.")
     result = db.execute(text("DELETE FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": group_id, "uid": user.id})
     if not result.rowcount:
         raise HTTPException(404, "Bạn chưa tham gia nhóm.")
@@ -89,8 +91,7 @@ def leave(db: Session, group_id: uuid.UUID, user: User) -> None:
 def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPostCreateRequest):
     from src.services.system_service import enforce_content
     group = _group(db, group_id)
-    if _membership(db, group_id, user.id) not in {"MEMBER", "ADMIN"}:
-        raise HTTPException(403, "Bạn phải là thành viên của nhóm để đăng bài.")
+    _require_reader(db, group_id, user)
     media = list(db.scalars(select(MediaFile).where(MediaFile.id.in_(payload.media_ids))).all()) if payload.media_ids else []
     if len(media) != len(set(payload.media_ids)) or any(item.owner_id != user.id or item.status != MediaStatus.READY for item in media):
         raise HTTPException(400, "Media không hợp lệ hoặc không thuộc tài khoản này.")
@@ -113,11 +114,15 @@ def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPost
     return _serialize(db, post, user.id)
 
 
-def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = False, query: str = "", sort: str = "latest"):
+def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = False, query: str = "", sort: str = "latest", limit: int | None = None, offset: int = 0):
     _group(db, group_id)
     _require_reader(db, group_id, user)
     status = PostStatus.PENDING if pending else PostStatus.APPROVED
     statement = select(Post).where(Post.group_id == group_id, Post.status == status, Post.deleted_at.is_(None))
+    # Moderation must still show the complete queue; ordinary group feeds obey blocks.
+    if not pending:
+        blocked_ids = select(text("CASE WHEN blocker_id=:viewer THEN blocked_id ELSE blocker_id END")).select_from(text("user_blocks")).where(text("blocker_id=:viewer OR blocked_id=:viewer")).params(viewer=user.id)
+        statement = statement.where(Post.author_id.not_in(blocked_ids))
     if query.strip():
         pattern = f"%{query.strip()}%"
         statement = statement.where(or_(Post.content.ilike(pattern), *[
@@ -132,16 +137,22 @@ def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = 
         statement = statement.where(Post.is_pinned.is_(True)).order_by(Post.created_at.desc())
     else:
         statement = statement.order_by(Post.is_pinned.desc(), Post.created_at.desc())
+    statement = statement.order_by(Post.id.desc()).offset(offset)
+    if limit is not None:
+        statement = statement.limit(limit)
     rows = db.scalars(statement).all()
     return _serialize_feed_posts(db, rows, user.id)
 
 
-def list_my_posts(db: Session, group_id: uuid.UUID, user: User):
+def list_my_posts(db: Session, group_id: uuid.UUID, user: User, *, limit: int | None = None, offset: int = 0):
     _group(db, group_id)
     _require_reader(db, group_id, user)
-    rows = db.scalars(select(Post).where(
+    statement = select(Post).where(
         Post.group_id == group_id, Post.author_id == user.id, Post.deleted_at.is_(None)
-    ).order_by(Post.created_at.desc())).all()
+    ).order_by(Post.created_at.desc(), Post.id.desc()).offset(offset)
+    if limit is not None:
+        statement = statement.limit(limit)
+    rows = db.scalars(statement).all()
     return _serialize_feed_posts(db, rows, user.id)
 
 

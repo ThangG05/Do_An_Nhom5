@@ -118,10 +118,6 @@ class AccountStatusRequest(BaseModel):
     reason: str = Field(min_length=3, max_length=1000)
 
 
-class GroupRoleRequest(BaseModel):
-    group_id: uuid.UUID
-    grant: bool
-
 class DisciplineRequest(BaseModel):
     action: Literal["WARN", "SUSPEND", "BAN", "UNLOCK"]
     reason: str = Field(min_length=3, max_length=1000)

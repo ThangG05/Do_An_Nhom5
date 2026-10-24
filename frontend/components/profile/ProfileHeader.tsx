@@ -74,6 +74,7 @@ export default function ProfileHeader({
   };
 
   const renderFriendActionButton = () => {
+    if (profile.accountStatus && profile.accountStatus !== 'ACTIVE' && profile.friendshipStatus !== 'friends') return null;
     switch (profile.friendshipStatus) {
       case 'friends':
         return (
@@ -175,6 +176,7 @@ export default function ProfileHeader({
               <span className="profile-username">Mã sinh viên: {profile.studentCode || profile.username}</span>
               {profile.faculty && <span className="meta-bullet-dot">•</span>}
               {profile.faculty && <span className="profile-faculty-tag">{profile.faculty}</span>}
+              {profile.accountStatus && profile.accountStatus !== 'ACTIVE' && <span className="profile-faculty-tag">Tài khoản tạm ngừng hoạt động</span>}
             </div>
 
             {profile.bio && <p className="profile-bio-snippet">{profile.bio}</p>}
@@ -193,7 +195,7 @@ export default function ProfileHeader({
             ) : (
               <>
                 {renderFriendActionButton()}
-                {onMessage ? <button type="button" className="btn btn-primary" onClick={onMessage}>Nhắn tin</button> : <Link href={`/messages?userId=${profile.id}`} className="btn btn-primary">Nhắn tin</Link>}
+                {(!profile.accountStatus || profile.accountStatus === 'ACTIVE') && (onMessage ? <button type="button" className="btn btn-primary" onClick={onMessage}>Nhắn tin</button> : <Link href={`/messages?userId=${profile.id}`} className="btn btn-primary">Nhắn tin</Link>)}
                 <div className="options-dropdown-container" ref={optionsRef}>
                   <button
                     type="button"

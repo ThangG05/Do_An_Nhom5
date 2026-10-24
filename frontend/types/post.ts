@@ -104,6 +104,8 @@ export interface Post {
   media?: PostMedia[];
   likesCount: number;
   commentsCount: number;
+  sharesCount?: number;
+  sharedPostId?: string | null;
   isLiked?: boolean;
   comments?: Comment[];
   marketListing?: MarketListingData;

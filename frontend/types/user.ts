@@ -49,6 +49,7 @@ export interface UserProfile {
   mutualFriendsCount: number;
   mutualFriendsAvatars: string[];
   friendshipStatus: FriendshipStatus;
+  accountStatus?: 'ACTIVE' | 'PENDING' | 'LOCKED' | 'DISABLED';
   socialLinks?: UserSocialLinks;
   joinedGroups?: { id: string; name: string; slug: string; role: string }[];
 }
@@ -66,6 +67,7 @@ export interface UserFriend {
   hometown?: string | null;
   connectedAt?: string | null;
   friendshipStatus: FriendshipStatus;
+  accountStatus?: 'ACTIVE' | 'PENDING' | 'LOCKED' | 'DISABLED';
 }
 
 export interface UserPhoto {

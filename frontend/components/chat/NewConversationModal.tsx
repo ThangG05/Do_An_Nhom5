@@ -20,7 +20,7 @@ export default function NewConversationModal({ onClose, onStart }: { onClose: ()
       setError("");
       try {
         const rows = await searchUsers(value);
-        if (active) setResults(rows.filter((row) => row.friendshipStatus === "friends"));
+        if (active) setResults(rows.filter((row) => row.friendshipStatus === "friends" && (!row.accountStatus || row.accountStatus === 'ACTIVE')));
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : "Không thể tìm sinh viên.");
       } finally {

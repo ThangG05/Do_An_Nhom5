@@ -323,16 +323,9 @@ def set_status(db: Session, user_id: uuid.UUID, actor: User, value: str, reason:
 
 
 def set_group_admin(db: Session, user_id: uuid.UUID, group_id: uuid.UUID, actor: User, grant: bool) -> None:
-    target=_target(db,user_id,actor)
-    group=db.execute(text("SELECT name,slug FROM groups WHERE id=:id AND status='ACTIVE'"),{"id":group_id}).mappings().first()
-    if not group: raise HTTPException(404,"Không tìm thấy nhóm.")
-    account_slug=target.email.lower().split("@",1)[0].removeprefix("admin-") if target.email.lower().endswith("@hvnh.edu.vn") else ""
-    if grant and account_slug in DEDICATED_ADMIN_SLUGS and target.email.lower().startswith("admin-") and group["slug"]!=account_slug:
-        raise HTTPException(409,"Tài khoản admin chuyên trách chỉ được quản lý nhóm tương ứng với email của mình.")
-    if grant: db.execute(text("INSERT INTO group_members(group_id,user_id,role) VALUES(:gid,:uid,'ADMIN') ON CONFLICT(group_id,user_id) DO UPDATE SET role='ADMIN'"),{"gid":group_id,"uid":target.id})
-    else: db.execute(text("DELETE FROM group_members WHERE group_id=:gid AND user_id=:uid AND role='ADMIN'"),{"gid":group_id,"uid":target.id})
-    _audit(db,actor,"GROUP_ADMIN_GRANTED" if grant else "GROUP_ADMIN_REVOKED",target.id,{"group_id":str(group_id),"group_name":group["name"]})
-    db.commit()
+    # Fail closed for legacy callers. Assignments belong to the provisioning script,
+    # not the runtime Super Admin account management workflow.
+    raise HTTPException(403, "Không hỗ trợ thay đổi phân quyền tài khoản trong hệ thống.")
 
 
 def discipline(db:Session,user_id:uuid.UUID,actor:User,payload:DisciplineRequest)->None:

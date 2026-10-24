@@ -1,7 +1,7 @@
 import unicodedata
 import uuid
 from fastapi import HTTPException
-from sqlalchemy import func, or_, select
+from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session
 from src.db.models.media import MediaFile, MediaStatus
 from src.db.models.post import Post, PostMedia, PostStatus, PostType, PostVisibility
@@ -52,7 +52,20 @@ def serialize_profile(db: Session, user: User, viewer_id: uuid.UUID) -> ProfileR
     profile = user.profile
     if profile is None:
         raise HTTPException(404, "Không tìm thấy hồ sơ người dùng.")
-    friends_count = db.scalar(select(func.count()).select_from(__import__('sqlalchemy').text("friendships")).where(or_(__import__('sqlalchemy').column("user_low_id") == user.id, __import__('sqlalchemy').column("user_high_id") == user.id))) or 0
+    # Keep the profile badge consistent with the visible friends endpoint.
+    friends_count = db.scalar(text("""
+        SELECT count(*)
+        FROM friendships f
+        JOIN users friend ON friend.id = CASE
+            WHEN f.user_low_id = :owner THEN f.user_high_id ELSE f.user_low_id END
+        WHERE (f.user_low_id = :owner OR f.user_high_id = :owner)
+          AND friend.deleted_at IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM user_blocks b
+              WHERE (b.blocker_id = :viewer AND b.blocked_id = friend.id)
+                 OR (b.blocked_id = :viewer AND b.blocker_id = friend.id)
+          )
+    """), {"owner": user.id, "viewer": viewer_id}) or 0
     joined = db.execute(__import__('sqlalchemy').text("SELECT g.id,g.name,g.slug,gm.role FROM group_members gm JOIN groups g ON g.id=gm.group_id WHERE gm.user_id=:uid AND g.status='ACTIVE' ORDER BY g.name"), {"uid": user.id}).mappings().all()
     return ProfileResponse(
         id=str(user.id), name=profile.full_name, username=user.username,
@@ -63,7 +76,7 @@ def serialize_profile(db: Session, user: User, viewer_id: uuid.UUID) -> ProfileR
         workplace=profile.workplace or "", education=SCHOOL_NAME,
         currentCity=profile.current_city or "", hometown=profile.hometown or "", socialLinks=profile.social_links or {},
         isVerified=user.email_verified_at is not None, friendsCount=friends_count,
-        friendshipStatus=friendship_status(db, viewer_id, user.id),
+        friendshipStatus=friendship_status(db, viewer_id, user.id), accountStatus=user.status.value,
         joinedGroups=[JoinedGroupResponse(id=str(row["id"]), name=row["name"], slug=row["slug"], role=str(row["role"])) for row in joined],
     )
 
@@ -98,9 +111,11 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
     folded_pattern = f"%{_fold_vietnamese(term)}%"
     rows = db.execute(
         __import__('sqlalchemy').text("""
-            SELECT u.id, u.username, p.full_name, p.student_code, p.faculty,
+            SELECT u.id, u.username, u.status::text AS account_status,
+                   p.full_name, p.student_code, p.faculty,
                    p.avatar_media_id,
                    CASE
+                     WHEN u.id = :viewer THEN 'self'
                      WHEN EXISTS (
                        SELECT 1 FROM friendships f
                        WHERE (f.user_low_id = :viewer AND f.user_high_id = u.id)
@@ -120,9 +135,12 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
                    END AS friendship_status
             FROM users u
             JOIN profiles p ON p.user_id = u.id
-            WHERE u.id <> :viewer
-              AND u.deleted_at IS NULL
-              AND u.status = 'ACTIVE'
+            WHERE u.deleted_at IS NULL
+              AND (u.status = 'ACTIVE' OR EXISTS (
+                SELECT 1 FROM friendships visible_friend
+                WHERE (visible_friend.user_low_id = :viewer AND visible_friend.user_high_id = u.id)
+                   OR (visible_friend.user_high_id = :viewer AND visible_friend.user_low_id = u.id)
+              ))
               AND NOT EXISTS (
                 SELECT 1 FROM user_blocks b
                 WHERE (b.blocker_id = :viewer AND b.blocked_id = u.id)
@@ -151,7 +169,7 @@ def search_users(db: Session, viewer: User, query: str, limit: int = 20) -> list
             id=str(row["id"]), name=row["full_name"], username=row["username"],
             avatar=create_download_url(avatar) if avatar else "/assets/logo.png",
             mutualCount=0, faculty=row["faculty"], studentCode=row["student_code"],
-            friendshipStatus=row["friendship_status"],
+            friendshipStatus=row["friendship_status"], accountStatus=row["account_status"],
         ))
     return result
 

@@ -8,7 +8,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.db.models.post import Comment, Post
-from src.db.models.user import SystemRole, User
+from src.db.models.user import AccountStatus, SystemRole, User
 from src.models.post import CommentAuthorResponse, CommentResponse, PostAuthorResponse, ProfilePostResponse
 from src.services import friendship_service, report_service
 
@@ -98,7 +98,7 @@ def test_visited_friend_list_uses_viewer_relationships():
     other = [uuid.uuid4() for _ in range(3)]
     now = datetime.now(UTC)
     friend_rows = [{"friend_id": user_id, "created_at": now} for user_id in [viewer.id, *other]]
-    users = [SimpleNamespace(id=user_id, username=f"user_{index}") for index, user_id in enumerate([viewer.id, *other])]
+    users = [SimpleNamespace(id=user_id, username=f"user_{index}", status=AccountStatus.ACTIVE) for index, user_id in enumerate([viewer.id, *other])]
     profiles = [SimpleNamespace(full_name=f"Người {index}", avatar_media_id=None, faculty=None, current_city=None, hometown=None) for index in range(4)]
     responses = [friend_rows, list(zip(users, profiles)), [], [(min(viewer.id, other[0]), max(viewer.id, other[0]))], [(viewer.id, other[1])]]
 

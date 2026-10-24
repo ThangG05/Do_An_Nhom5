@@ -64,6 +64,15 @@ export function IconMessage({ size = 20, color = 'currentColor', strokeWidth = 1
   );
 }
 
+export function IconShare({ size = 20, color = 'currentColor', strokeWidth = 1.8, ...props }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 15V3m0 0L8 7m4-4 4 4" />
+      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+    </svg>
+  );
+}
+
 export function IconProfile({ size = 20, color = 'currentColor', strokeWidth = 1.8, ...props }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" {...props}>

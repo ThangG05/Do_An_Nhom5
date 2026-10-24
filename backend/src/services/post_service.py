@@ -1,17 +1,21 @@
 import base64
 import json
+import re
 import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlalchemy import and_, bindparam, func, or_, select, text
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from src.db.models.chat import Message
 from src.db.models.media import MediaFile, MediaStatus
-from src.db.models.post import Comment, Post, PostLike, PostMedia, PostStatus, PostType, PostVisibility
+from src.db.models.post import Comment, Post, PostLike, PostMedia, PostShare, PostStatus, PostType, PostVisibility
 from src.db.models.user import Profile, SystemRole, User
-from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentMentionResponse, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RoomListingData, StudyListingData, validate_group_fields, UpdatePostRequest
+from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentMentionResponse, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RegisterPostShareRequest, RoomListingData, StudyListingData, validate_group_fields, UpdatePostRequest
 from src.models.user import UserListingResponse, UserPhotoResponse
 from src.services.storage_service import create_download_url
+from src.services.block_service import is_blocked
 
 
 def _are_friends(db: Session, first: uuid.UUID, second: uuid.UUID) -> bool:
@@ -21,12 +25,47 @@ def _are_friends(db: Session, first: uuid.UUID, second: uuid.UUID) -> bool:
 
 
 def _can_view(db: Session, post: Post, viewer_id: uuid.UUID) -> bool:
+    if post.author_id != viewer_id and is_blocked(db, post.author_id, viewer_id):
+        return False
     if post.group_id is None and post.category in {"market", "roommate", "event", "study"}:
         return False  # Legacy rows are attached to groups by migration 0029.
-    viewer = db.get(User, viewer_id)
-    if post.group_id and (not viewer or viewer.system_role != SystemRole.SUPER_ADMIN) and not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": post.group_id, "uid": viewer_id}).first():
-        return False
+    if post.group_id:
+        viewer = db.get(User, viewer_id)
+        if not viewer or viewer.system_role == SystemRole.SUPER_ADMIN:
+            return False
+        if not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid AND role IN ('MEMBER','ADMIN')"), {"gid": post.group_id, "uid": viewer_id}).first():
+            return False
     return post.author_id == viewer_id or post.visibility == PostVisibility.PUBLIC or (post.visibility == PostVisibility.FRIENDS and _are_friends(db, post.author_id, viewer_id))
+
+
+def _contains_post_link(content: str | None, post_id: uuid.UUID) -> bool:
+    """The share destination must contain the canonical original-post path."""
+    return bool(re.search(rf"/posts/{re.escape(str(post_id))}(?=$|[/?#\s.,!;:)])", content or "", flags=re.IGNORECASE))
+
+
+def register_share(db: Session, post_id: uuid.UUID, actor: User, payload: RegisterPostShareRequest) -> int:
+    get_visible_post(db, post_id, actor)
+    if payload.destination_type == "POST":
+        destination = db.get(Post, payload.destination_id)
+        valid = bool(destination and destination.author_id == actor.id and destination.deleted_at is None and destination.status == PostStatus.APPROVED and destination.group_id is None)
+    else:
+        destination = db.get(Message, payload.destination_id)
+        valid = bool(destination and destination.sender_id == actor.id and destination.deleted_at is None)
+    if not valid or not _contains_post_link(destination.content, post_id):
+        raise HTTPException(400, "Bài viết hoặc tin nhắn chia sẻ không hợp lệ.")
+    db.execute(pg_insert(PostShare).values(
+        id=uuid.uuid4(), post_id=post_id, actor_id=actor.id,
+        destination_type=payload.destination_type, destination_id=payload.destination_id,
+    ).on_conflict_do_nothing(constraint="uq_post_share_destination"))
+    recorded = db.scalar(select(PostShare.post_id).where(
+        PostShare.destination_type == payload.destination_type,
+        PostShare.destination_id == payload.destination_id,
+    ))
+    if recorded != post_id:
+        db.rollback()
+        raise HTTPException(409, "Nội dung này đã được ghi nhận cho bài viết khác.")
+    db.commit()
+    return db.scalar(select(func.count()).select_from(PostShare).where(PostShare.post_id == post_id)) or 0
 
 
 def _comment_response(db: Session, comment: Comment) -> CommentResponse:
@@ -138,7 +177,9 @@ def _serialize(db: Session, post: Post, viewer_id: uuid.UUID) -> ProfilePostResp
     liked = db.get(PostLike, (post.id, viewer_id)) is not None
     listing = post.listing_data or {}
     group = db.execute(text("SELECT name,slug FROM groups WHERE id=:gid"), {"gid": post.group_id}).mappings().first() if post.group_id else None
-    return ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=author.profile.full_name if author.profile else author.username, avatar=avatar), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=media_items, likesCount=likes, commentsCount=len(comment_rows), isLiked=liked, comments=_comment_responses(db, comment_rows), groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, studyListing=StudyListingData(**listing) if post.category == "study" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None)
+    shares = db.scalar(select(func.count()).select_from(PostShare).where(PostShare.post_id == post.id)) or 0
+    shared_post_id = db.scalar(select(PostShare.post_id).where(PostShare.destination_type == "POST", PostShare.destination_id == post.id))
+    return ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=author.profile.full_name if author.profile else author.username, avatar=avatar), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=media_items, likesCount=likes, commentsCount=len(comment_rows), sharesCount=shares, sharedPostId=str(shared_post_id) if shared_post_id else None, isLiked=liked, comments=_comment_responses(db, comment_rows), groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, studyListing=StudyListingData(**listing) if post.category == "study" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None)
 
 
 def _media_kind(mime_type: str) -> str:
@@ -178,11 +219,15 @@ def _serialize_feed_posts(db: Session, posts: list[Post], viewer_id: uuid.UUID) 
         select(func.count()).select_from(Comment).where(
             Comment.post_id == Post.id, Comment.deleted_at.is_(None)
         ).scalar_subquery(),
+        select(func.count()).select_from(PostShare).where(PostShare.post_id == Post.id).scalar_subquery(),
         select(PostLike.post_id).where(
             PostLike.post_id == Post.id, PostLike.user_id == viewer_id
         ).exists(),
     ).where(Post.id.in_(post_ids))).all()
-    engagement = {post_id: (likes, comments, liked) for post_id, likes, comments, liked in engagement_rows}
+    engagement = {post_id: (likes, comments, shares, liked) for post_id, likes, comments, shares, liked in engagement_rows}
+    shared_post_ids = dict(db.execute(select(PostShare.destination_id, PostShare.post_id).where(
+        PostShare.destination_type == "POST", PostShare.destination_id.in_(post_ids)
+    )).all())
 
     # A home card only needs a preview. Windowing keeps one popular post from
     # loading thousands of comments during a feed request.
@@ -215,8 +260,8 @@ def _serialize_feed_posts(db: Session, posts: list[Post], viewer_id: uuid.UUID) 
         profile = profiles.get(author.id)
         avatar_media = media_by_id.get(profile.avatar_media_id) if profile and profile.avatar_media_id else None
         listing, group = post.listing_data or {}, groups.get(post.group_id)
-        likes, comments, liked = engagement.get(post.id, (0, 0, False))
-        result.append(ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=profile.full_name if profile else author.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=[PostMediaResponse(id=str(media.id), url=create_download_url(media), type=_media_kind(media.mime_type), name=media.original_name, size=media.file_size) for media in media_by_post[post.id]], likesCount=likes, commentsCount=comments, isLiked=liked, comments=comments_by_post[post.id], groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, studyListing=StudyListingData(**listing) if post.category == "study" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None))
+        likes, comments, shares, liked = engagement.get(post.id, (0, 0, 0, False))
+        result.append(ProfilePostResponse(id=str(post.id), author=PostAuthorResponse(id=str(author.id), name=profile.full_name if profile else author.username, avatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png"), createdAt=post.created_at.isoformat(), content=post.content, category=post.category, privacy=post.visibility.value.lower(), media=[PostMediaResponse(id=str(media.id), url=create_download_url(media), type=_media_kind(media.mime_type), name=media.original_name, size=media.file_size) for media in media_by_post[post.id]], likesCount=likes, commentsCount=comments, sharesCount=shares, sharedPostId=str(shared_post_ids[post.id]) if post.id in shared_post_ids else None, isLiked=liked, comments=comments_by_post[post.id], groupId=str(post.group_id) if post.group_id else None, groupName=group["name"] if group else None, groupSlug=group["slug"] if group else None, status=post.status.value, rejectionReason=post.rejection_reason, isPinned=post.is_pinned, marketListing=MarketListingData(**listing) if post.category == "market" and listing else None, roomListing=RoomListingData(**listing) if post.category == "roommate" and listing else None, eventListing=EventListingData(**listing) if post.category == "event" and listing else None, studyListing=StudyListingData(**listing) if post.category == "study" and listing else None, location=PostLocationData(**post.location_data) if post.location_data else None))
     return result
 
 
@@ -248,6 +293,8 @@ def create_profile_post(db: Session, user: User, payload: CreateProfilePostReque
     category_groups = {"market": "pass-do", "roommate": "ghep-phong-tim-tro", "event": "su-kien", "study": "hoc-tap"}
     group_id = None
     if payload.category in category_groups:
+        if user.system_role == SystemRole.SUPER_ADMIN:
+            raise HTTPException(403, "Super Admin không đăng bài trong nhóm bằng tài khoản quản trị tổng.")
         group_id = db.execute(text("SELECT id FROM groups WHERE slug=:slug AND status='ACTIVE'"), {"slug": category_groups[payload.category]}).scalar_one_or_none()
         if not group_id:
             raise HTTPException(404, "Không tìm thấy nhóm tương ứng với chuyên mục.")
@@ -263,7 +310,7 @@ def create_profile_post(db: Session, user: User, payload: CreateProfilePostReque
     return _serialize(db, post, user.id)
 
 
-def list_profile_posts(db: Session, target: User, viewer: User) -> list[ProfilePostResponse]:
+def list_profile_posts(db: Session, target: User, viewer: User, *, limit: int | None = None, offset: int = 0, category: str = "all") -> list[ProfilePostResponse]:
     allowed = [PostVisibility.PUBLIC]
     if target.id == viewer.id:
         allowed = list(PostVisibility)
@@ -274,7 +321,13 @@ def list_profile_posts(db: Session, target: User, viewer: User) -> list[ProfileP
     # from their own profile timeline.
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
     group_visibility = or_(and_(Post.group_id.is_(None), Post.category.not_in(["market", "roommate", "event", "study"])), Post.group_id.in_(member_group_ids))
-    posts = db.scalars(select(Post).where(Post.author_id == target.id, group_visibility, Post.status == PostStatus.APPROVED, Post.deleted_at.is_(None), Post.visibility.in_(allowed)).order_by(Post.created_at.desc())).all()
+    statement = select(Post).where(Post.author_id == target.id, group_visibility, Post.status == PostStatus.APPROVED, Post.deleted_at.is_(None), Post.visibility.in_(allowed))
+    if category != "all":
+        statement = statement.where(Post.category == category)
+    statement = statement.order_by(Post.created_at.desc(), Post.id.desc()).offset(offset)
+    if limit is not None:
+        statement = statement.limit(limit)
+    posts = db.scalars(statement).all()
     return _serialize_feed_posts(db, posts, viewer.id)
 
 
@@ -301,16 +354,19 @@ def list_user_listings(db: Session, target: User, viewer: User, category: str | 
     return result
 
 
-def list_user_group_posts(db: Session, target: User, viewer: User) -> list[ProfilePostResponse]:
+def list_user_group_posts(db: Session, target: User, viewer: User, *, limit: int | None = None, offset: int = 0) -> list[ProfilePostResponse]:
     """Return approved posts authored by a user inside groups, respecting membership visibility."""
     member_groups = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
-    posts = db.scalars(select(Post).where(
+    statement = select(Post).where(
         Post.author_id == target.id,
         Post.group_id.is_not(None),
         Post.group_id.in_(member_groups),
         Post.status == PostStatus.APPROVED,
         Post.deleted_at.is_(None),
-    ).order_by(Post.created_at.desc())).all()
+    ).order_by(Post.created_at.desc(), Post.id.desc()).offset(offset)
+    if limit is not None:
+        statement = statement.limit(limit)
+    posts = db.scalars(statement).all()
     return _serialize_feed_posts(db, posts, viewer.id)
 
 
@@ -393,8 +449,8 @@ def _notify(db: Session, recipient_id: uuid.UUID, actor: User, kind: str, title:
 
 def add_comment(db: Session, post_id: uuid.UUID, user: User, payload: CommentCreateRequest) -> CommentResponse:
     from src.services.system_service import enforce_content
-    enforce_content(db,payload.content)
     post = get_visible_post(db, post_id, user)
+    enforce_content(db,payload.content)
     parent = None
     if payload.parent_id:
         parent = db.get(Comment, payload.parent_id)

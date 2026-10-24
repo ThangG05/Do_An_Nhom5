@@ -86,6 +86,7 @@ class ProfileResponse(BaseModel):
     mutualFriendsCount: int = 0
     mutualFriendsAvatars: list[str] = Field(default_factory=list)
     friendshipStatus: str
+    accountStatus: str = "ACTIVE"
     socialLinks: dict[str, str] = Field(default_factory=dict)
     joinedGroups: list["JoinedGroupResponse"] = Field(default_factory=list)
 
@@ -140,6 +141,7 @@ class FriendResponse(BaseModel):
     hometown: str | None = None
     connectedAt: str | None = None
     friendshipStatus: str = "friends"
+    accountStatus: str = "ACTIVE"
 
 
 class UserSearchResponse(FriendResponse):

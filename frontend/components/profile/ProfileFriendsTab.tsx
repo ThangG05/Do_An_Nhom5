@@ -112,13 +112,14 @@ export default function ProfileFriendsTab({
               <div className="friend-card-details">
                 <Link href={`/profile/${friend.id}`} className="friend-card-name">{friend.name}</Link>
                 {friend.faculty && <span className="friend-card-faculty">{friend.faculty}</span>}
+                {friend.accountStatus && friend.accountStatus !== 'ACTIVE' && <span className="friend-card-faculty">Tài khoản tạm ngừng hoạt động</span>}
                 {friend.mutualCount > 0 && <span className="friend-card-mutual">{friend.mutualCount} bạn chung</span>}
               </div>
               <div className="friend-card-actions">
-                {status === 'friends' && <Link href={`/messages?userId=${friend.id}`} className="btn btn-secondary btn-sm">Nhắn tin</Link>}
-                {!isOwnProfile && status === 'none' && <button type="button" className="btn btn-primary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'add')}>Thêm bạn bè</button>}
-                {!isOwnProfile && status === 'pending_sent' && <button type="button" className="btn btn-secondary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'cancel')}>Hủy lời mời</button>}
-                {!isOwnProfile && status === 'pending_received' && <button type="button" className="btn btn-primary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'accept')}>Chấp nhận</button>}
+                {status === 'friends' && (!friend.accountStatus || friend.accountStatus === 'ACTIVE') && <Link href={`/messages?userId=${friend.id}`} className="btn btn-secondary btn-sm">Nhắn tin</Link>}
+                {!isOwnProfile && status === 'none' && (!friend.accountStatus || friend.accountStatus === 'ACTIVE') && <button type="button" className="btn btn-primary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'add')}>Thêm bạn bè</button>}
+                {!isOwnProfile && status === 'pending_sent' && (!friend.accountStatus || friend.accountStatus === 'ACTIVE') && <button type="button" className="btn btn-secondary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'cancel')}>Hủy lời mời</button>}
+                {!isOwnProfile && status === 'pending_received' && (!friend.accountStatus || friend.accountStatus === 'ACTIVE') && <button type="button" className="btn btn-primary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'accept')}>Chấp nhận</button>}
                 {isOwnProfile && status === 'friends' && onUnfriend && <button type="button" className="btn btn-secondary btn-sm" onClick={() => onUnfriend(friend.id)} title="Hủy kết bạn">Hủy kết bạn</button>}
               </div>
             </div>;

@@ -1,16 +1,20 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Post, CreatePostPayload } from '@/types/post';
 import { UserProfile } from '@/types/user';
 import CreatePostCard from '@/components/post/CreatePostCard';
 import CreatePostModal from '@/components/post/CreatePostModal';
 import PostCard from '@/components/post/PostCard';
 import { useCreatePost } from '@/hooks/useCreatePost';
+import PostPagination, { type PostPaginationProps } from '@/components/ui/PostPagination';
+import { fetchPost } from '@/lib/api';
 
 interface ProfilePostsTabProps {
   profile: UserProfile;
   posts: Post[];
+  pagination: PostPaginationProps;
   isOwnProfile: boolean;
   postFilter: string;
   onFilterChange: (filter: string) => void;
@@ -20,12 +24,39 @@ interface ProfilePostsTabProps {
 export default function ProfilePostsTab({
   profile,
   posts,
+  pagination,
   isOwnProfile,
   postFilter,
   onFilterChange,
   onCreatePost,
 }: ProfilePostsTabProps) {
   const createPostState = useCreatePost(onCreatePost);
+  const focusedPostId = useSearchParams().get('post');
+  const [focusedPost, setFocusedPost] = useState<Post | null>(null);
+  const [focusError, setFocusError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    setFocusedPost(null);
+    setFocusError('');
+    if (focusedPostId) {
+      void fetchPost(focusedPostId).then(result => {
+        if (!active) return;
+        if (result.author.id !== profile.id || result.groupId) {
+          setFocusError('Bài viết không thuộc trang cá nhân này.');
+        } else {
+          setFocusedPost(result);
+        }
+      }).catch(() => { if (active) setFocusError('Bài viết không khả dụng hoặc bạn không có quyền xem.'); });
+    }
+    return () => { active = false; };
+  }, [focusedPostId, profile.id]);
+
+  useEffect(() => {
+    if (!focusedPost) return;
+    const timer = window.setTimeout(() => document.getElementById(`post-${focusedPost.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+    return () => window.clearTimeout(timer);
+  }, [focusedPost]);
 
   const filteredPosts = posts.filter((p) => {
     if (postFilter === 'market') return p.category === 'market';
@@ -33,6 +64,10 @@ export default function ProfilePostsTab({
     if (postFilter === 'event') return p.category === 'event';
     return true;
   });
+
+  const visiblePosts = focusedPost && !filteredPosts.some(post => post.id === focusedPost.id)
+    ? [focusedPost, ...filteredPosts]
+    : filteredPosts;
 
   return (
     <div className="profile-posts-tab-content">
@@ -49,7 +84,7 @@ export default function ProfilePostsTab({
       <div className="feed-filters-bar-card">
         <div className="profile-feed-heading">
           <h2 className="feed-section-title">Bài viết</h2>
-          <span className="profile-feed-count">{filteredPosts.length} bài</span>
+          <span className="profile-feed-count">{filteredPosts.length} bài trên trang</span>
         </div>
         <div className="filter-chips-row" role="group" aria-label="Lọc bài viết theo danh mục">
           <button
@@ -87,13 +122,16 @@ export default function ProfilePostsTab({
         </div>
       </div>
 
-      {filteredPosts.length > 0 ? (
+      {focusError && <p role="alert" className="profile-post-focus-error">{focusError}</p>}
+      {visiblePosts.length > 0 ? (
         <div className="posts-stream-container list-layout">
-          {filteredPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+          {visiblePosts.map((post) => (
+            <div id={`post-${post.id}`} key={post.id} className={post.id === focusedPostId ? 'notification-target-post' : undefined}>
+              <PostCard post={post} />
+            </div>
           ))}
         </div>
-      ) : (
+      ) : pagination.loading || pagination.error ? null : (
         <div className="empty-feed-card">
           <div className="empty-feed-icon" aria-hidden="true">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -114,6 +152,7 @@ export default function ProfilePostsTab({
         </div>
       )}
 
+      <PostPagination {...pagination} />
       {/* Create Post Modal Integration */}
       {createPostState.isOpen && (
         <CreatePostModal postState={createPostState} />

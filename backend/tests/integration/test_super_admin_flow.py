@@ -64,7 +64,11 @@ def test_super_admin_dashboard_account_role_and_audit_flow(client, db_session, m
         headers=admin_headers,
         json={"group_id": str(active_group["id"]), "grant": True},
     )
-    assert grant.status_code == 204
+    assert grant.status_code in {404, 405}
+    assert client.get(f"/api/v1/groups/{active_group['id']}/admin/members", headers=admin_headers).status_code == 403
+    # Fixture assignment, not a public role-management API.
+    db_session.execute(text("INSERT INTO group_members(group_id,user_id,role) VALUES(:gid,:uid,'ADMIN')"), {"gid": active_group["id"], "uid": target.id})
+    db_session.commit()
     assert client.get(f"/api/v1/groups/{active_group['id']}/admin/members", headers=auth_headers(target)).status_code == 200
     assigned = client.get(f"/api/v1/admin/users?q={target.username}", headers=admin_headers)
     assert assigned.status_code == 200
@@ -110,5 +114,6 @@ def test_super_admin_dashboard_account_role_and_audit_flow(client, db_session, m
     audit = client.get("/api/v1/admin/audit-logs?limit=20", headers=admin_headers)
     assert audit.status_code == 200
     actions = {item["action"] for item in audit.json() if item["target_id"] == str(target.id)}
-    assert {"GROUP_ADMIN_GRANTED", "USER_WARN", "ACCOUNT_STATUS_CHANGED"}.issubset(actions)
+    assert {"USER_WARN", "ACCOUNT_STATUS_CHANGED"}.issubset(actions)
+    assert "GROUP_ADMIN_GRANTED" not in actions
     assert client.patch(f"/api/v1/admin/users/{super_admin.id}/status", headers=admin_headers, json={"status": "LOCKED", "reason": "Không được phép"}).status_code == 403

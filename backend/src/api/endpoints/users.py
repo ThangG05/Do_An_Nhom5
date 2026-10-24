@@ -1,6 +1,6 @@
 import uuid
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated, Literal
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
@@ -78,12 +78,12 @@ def get_profile(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Ses
 
 
 @router.get("/{user_id}/posts", response_model=list[ProfilePostResponse])
-def get_profile_posts(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
+def get_profile_posts(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int | None, Query(ge=1, le=100)] = None, offset: Annotated[int, Query(ge=0)] = 0, filter: Literal["all", "market", "roommate", "event", "study", "general", "avatar"] = "all"):
     target = db.get(User, user_id)
     if target and block_service.is_blocked(db,current_user.id,target.id): raise HTTPException(403,"Không thể xem bài viết do quan hệ chặn.")
     if target is None or target.deleted_at is not None:
         raise HTTPException(404, "Không tìm thấy người dùng.")
-    return post_service.list_profile_posts(db, target, current_user)
+    return post_service.list_profile_posts(db, target, current_user, limit=limit, offset=offset, category=filter)
 
 
 @router.get("/{user_id}/photos", response_model=list[UserPhotoResponse])
@@ -109,13 +109,13 @@ def get_profile_listings(user_id: uuid.UUID, current_user: CurrentUser, db: Anno
 
 
 @router.get("/{user_id}/group-posts", response_model=list[ProfilePostResponse])
-def get_profile_group_posts(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
+def get_profile_group_posts(user_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int | None, Query(ge=1, le=100)] = None, offset: Annotated[int, Query(ge=0)] = 0):
     target = db.get(User, user_id)
     if target is None or target.deleted_at is not None:
         raise HTTPException(404, "Không tìm thấy người dùng.")
     if block_service.is_blocked(db, current_user.id, target.id):
         raise HTTPException(403, "Không thể xem bài đăng hội nhóm do quan hệ chặn.")
-    return post_service.list_user_group_posts(db, target, current_user)
+    return post_service.list_user_group_posts(db, target, current_user, limit=limit, offset=offset)
 
 
 @router.get("/{user_id}/friends", response_model=list[FriendResponse])

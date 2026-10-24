@@ -25,6 +25,7 @@ export default function OwnProfilePage() {
     photos,
     listings,
     groupPosts,
+    groupPagination,
     activeTab,
     isLoading,
     isError,
@@ -32,6 +33,7 @@ export default function OwnProfilePage() {
     isOwnProfile,
     isEditModalOpen,
     postFilter,
+    postPagination,
     friendsSearch,
     friendsFilter,
     photosSubTab,
@@ -131,6 +133,7 @@ export default function OwnProfilePage() {
                 posts={posts}
                 isOwnProfile={isOwnProfile}
                 postFilter={postFilter}
+                pagination={postPagination}
                 onFilterChange={setPostFilter}
                 onCreatePost={handleCreatePost}
               />
@@ -159,6 +162,7 @@ export default function OwnProfilePage() {
         {activeTab === 'listings' && (
           <ProfileListingsTab
             groupPosts={groupPosts}
+            pagination={groupPagination}
           />
         )}
       </main>

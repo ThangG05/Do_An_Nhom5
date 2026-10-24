@@ -8,6 +8,9 @@ import { searchConversationMessages } from "@/lib/api";
 import RelativeTime from "@/components/ui/RelativeTime";
 import BackArrow from "@/components/ui/BackArrow";
 import { useDialog } from "@/components/ui/DialogProvider";
+import PostLinkText from "@/components/post/PostLinkText";
+import SharedPostPreview from "@/components/post/SharedPostPreview";
+import { sharedPostIdFromText } from "@/lib/post-share";
 
 const CHAT_EMOJIS = [
   "😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃",
@@ -201,7 +204,8 @@ export default function ChatWorkspace({
               <div className="bubble-content-wrap">
                 <div className={`chat-bubble ${isMe ? "me" : "them"}`}>
                   {msg.replyTo && <button type="button" className="chat-reply-quote" onClick={() => document.getElementById(`message-${msg.replyTo?.id}`)?.scrollIntoView({behavior:'smooth',block:'center'})}><strong>{msg.replyTo.senderName}</strong><span>{msg.replyTo.content}</span></button>}
-                  <p>{msg.content}</p>
+                  <p><PostLinkText content={msg.content || ''} /></p>
+                  {sharedPostIdFromText(msg.content || '') && <SharedPostPreview postId={sharedPostIdFromText(msg.content || '')!} />}
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="attachment-preview">
                       {msg.attachments[0].type==='image'?<img src={safeImageSrc(msg.attachments[0].url)} alt={msg.attachments[0].name || "Tệp đính kèm"} loading="lazy" />:msg.attachments[0].type==='video'?<video src={safeImageSrc(msg.attachments[0].url)} controls preload="metadata" />:msg.attachments[0].type==='audio'?<audio src={safeImageSrc(msg.attachments[0].url)} controls />:<a className="chat-file-card" href={safeImageSrc(msg.attachments[0].url,'#')} target="_blank" rel="noreferrer"><span className="chat-file-icon">{msg.attachments[0].name.toLowerCase().endsWith('.pdf')?'PDF':'DOC'}</span><span className="chat-file-info"><strong>{msg.attachments[0].name || 'Tệp đính kèm'}</strong><small>{msg.attachments[0].size || 'Nhấn để mở tệp'}</small></span><span className="chat-file-open">↗</span></a>}

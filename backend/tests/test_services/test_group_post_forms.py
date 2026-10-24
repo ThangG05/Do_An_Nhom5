@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 from src.db.models.post import Post, PostStatus, PostVisibility
+from src.db.models.user import SystemRole
 from src.models.group import GroupPostCreateRequest
 from src.models.post import CreateProfilePostRequest, MarketListingData, UpdatePostRequest
 from src.services import group_service, post_service
@@ -35,7 +36,7 @@ def test_each_type_can_be_created_without_attachments(category, slug, field, det
 @pytest.mark.parametrize("category,slug,field,details,content", CASES)
 def test_direct_group_endpoint_persists_details_and_moderation(category, slug, field, details, content):
     db = Mock()
-    user = SimpleNamespace(id=uuid.uuid4())
+    user = SimpleNamespace(id=uuid.uuid4(), system_role=SystemRole.USER)
     group_id = uuid.uuid4()
     payload = GroupPostCreateRequest(form_version=2, content=content, **{field: details})
     with patch.object(group_service, "_group", return_value={"slug": slug}), patch.object(group_service, "_membership", return_value="MEMBER"), patch.object(group_service, "_serialize", return_value="created"), patch("src.services.system_service.enforce_content"):
@@ -84,7 +85,7 @@ def test_direct_group_rejects_details_for_wrong_group():
     db = Mock()
     payload = GroupPostCreateRequest(form_version=2, content="Mô tả", marketListing={"productName": "Máy tính", "price": "0", "location": "Hà Nội"})
     with patch.object(group_service, "_group", return_value={"slug": "hoc-tap"}), patch.object(group_service, "_membership", return_value="MEMBER"), pytest.raises(HTTPException) as caught:
-        group_service.create_post(db, uuid.uuid4(), SimpleNamespace(id=uuid.uuid4()), payload)
+        group_service.create_post(db, uuid.uuid4(), SimpleNamespace(id=uuid.uuid4(), system_role=SystemRole.USER), payload)
     assert caught.value.status_code == 422
     db.add.assert_not_called()
 
@@ -92,13 +93,13 @@ def test_direct_group_rejects_details_for_wrong_group():
 def test_nonmember_cannot_create_structured_post():
     db = Mock()
     with patch.object(group_service, "_group", return_value={"slug": "hoc-tap"}), patch.object(group_service, "_membership", return_value=None), pytest.raises(HTTPException) as caught:
-        group_service.create_post(db, uuid.uuid4(), SimpleNamespace(id=uuid.uuid4()), GroupPostCreateRequest(content="Không có quyền"))
+        group_service.create_post(db, uuid.uuid4(), SimpleNamespace(id=uuid.uuid4(), system_role=SystemRole.USER), GroupPostCreateRequest(content="Không có quyền"))
     assert caught.value.status_code == 403
     db.add.assert_not_called()
 
 
 def test_new_market_can_update_empty_optional_description_without_losing_title():
-    user = SimpleNamespace(id=uuid.uuid4())
+    user = SimpleNamespace(id=uuid.uuid4(), system_role=SystemRole.USER)
     post = Post(id=uuid.uuid4(), author_id=user.id, group_id=uuid.uuid4(), category="market", content="", status=PostStatus.APPROVED, visibility=PostVisibility.PUBLIC, listing_data={"_form_version": 2, "productName": "Bàn phím", "price": "0", "location": "Hà Nội"})
     db = Mock(); db.get.return_value = post
     with patch.object(post_service, "_serialize", return_value="updated"), patch("src.services.system_service.enforce_content"):
@@ -108,7 +109,7 @@ def test_new_market_can_update_empty_optional_description_without_losing_title()
 
 
 def test_cannot_move_existing_post_to_different_group():
-    user = SimpleNamespace(id=uuid.uuid4())
+    user = SimpleNamespace(id=uuid.uuid4(), system_role=SystemRole.USER)
     db = Mock(); db.get.return_value = Post(author_id=user.id, group_id=uuid.uuid4(), category="study")
     with pytest.raises(HTTPException) as caught:
         post_service.update_post(db, uuid.uuid4(), user, UpdatePostRequest(content="Nội dung", category="market"))

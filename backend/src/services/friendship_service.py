@@ -145,6 +145,7 @@ def list_friends(db: Session, owner: User, viewer: User, query: str = "") -> lis
             currentCity=profile.current_city if profile else None,
             hometown=profile.hometown if profile else None,
             connectedAt=connected_at[user.id].isoformat(),
+            accountStatus=user.status.value,
             friendshipStatus=("self" if user.id == viewer.id else "friends" if viewer.id == owner.id or user.id in viewer_friend_ids else pending_by_id.get(user.id, "none")),
         ))
     return sorted(result, key=lambda friend: friend.connectedAt or "", reverse=True)

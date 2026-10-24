@@ -117,6 +117,8 @@ class ProfilePostResponse(BaseModel):
     media: list[PostMediaResponse] = Field(default_factory=list)
     likesCount: int = 0
     commentsCount: int = 0
+    sharesCount: int = 0
+    sharedPostId: str | None = None
     isLiked: bool = False
     comments: list["CommentResponse"] = Field(default_factory=list)
     groupId: str | None = None
@@ -130,6 +132,15 @@ class ProfilePostResponse(BaseModel):
     eventListing: EventListingData | None = None
     studyListing: StudyListingData | None = None
     location: PostLocationData | None = None
+
+
+class RegisterPostShareRequest(BaseModel):
+    destination_type: Literal["POST", "MESSAGE"]
+    destination_id: uuid.UUID
+
+
+class RegisterPostShareResponse(BaseModel):
+    sharesCount: int
 
 
 class UpdatePostRequest(BaseModel):

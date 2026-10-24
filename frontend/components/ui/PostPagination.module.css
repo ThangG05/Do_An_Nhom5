@@ -1,0 +1,8 @@
+.wrapper { padding: 16px 0; color: inherit; }
+.wrapper p { color: #dc3545; text-align: center; }
+.controls { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.wrapper button { border: 1px solid #9cb9d080; border-radius: 12px; padding: 10px 14px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.wrapper button:hover:not(:disabled) { background: #529fd51a; }
+.wrapper button:focus-visible { outline: 2px solid #3188c7; outline-offset: 3px; }
+.wrapper button:disabled { opacity: .45; cursor: default; }
+.controls span { font-size: 14px; min-width: 68px; text-align: center; }

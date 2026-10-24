@@ -58,7 +58,7 @@ def require_group_admin(
     db: Annotated[Session, Depends(get_db)],
 ) -> User:
     if current_user.system_role == SystemRole.SUPER_ADMIN:
-        return current_user
+        raise HTTPException(status_code=403, detail="Thao tác này thuộc quyền Group Admin được phân công.")
     is_admin = db.execute(
         text(
             "SELECT 1 FROM group_members "

@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Post, Comment, CommentMention } from '@/types/post';
-import { IconHeart, IconMessage } from '@/components/ui/Icons';
+import { IconHeart, IconMessage, IconShare } from '@/components/ui/Icons';
 import { addPostComment, fetchPostComments, fetchUserFriends, removeGroupComment, setPostLike } from '@/lib/api';
 import { AuthUser, getAuthUser } from '@/lib/auth';
 import { useAuthUser } from '@/components/auth/AuthProvider';
@@ -14,6 +14,10 @@ import { safeImageSrc } from '@/lib/media';
 import { useDialog } from '@/components/ui/DialogProvider';
 import RelativeTime from '@/components/ui/RelativeTime';
 import type { UserFriend } from '@/types/user';
+import SharePostModal from '@/components/post/SharePostModal';
+import PostLinkText from '@/components/post/PostLinkText';
+import SharedPostPreview from '@/components/post/SharedPostPreview';
+import { shareCaption } from '@/lib/post-share';
 
 function renderCommentContent(content: string, mentions: CommentMention[] = []) {
   const validMentions = [...mentions]
@@ -61,6 +65,8 @@ export default function PostCard({
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
+  const [sharesCount, setSharesCount] = useState(post.sharesCount || 0);
+  useEffect(() => setSharesCount(post.sharesCount || 0), [post.id, post.sharesCount]);
   const [comments, setComments] = useState<Comment[]>(post.comments || []);
   const [loadingAllComments, setLoadingAllComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
@@ -95,6 +101,7 @@ export default function PostCard({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewer, setViewer] = useState<AuthUser | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const removeCommentThread = (id: string) => {
     const removed = new Set([id]);
     let previousSize = 0;
@@ -217,6 +224,7 @@ export default function PostCard({
   const visualMedia = (post.media || []).filter((item) => item.type === 'image' || item.type === 'video');
   const attachmentMedia = (post.media || []).filter((item) => item.type === 'audio' || item.type === 'file');
   const currentPrivacy = privacyLabel[privacy as keyof typeof privacyLabel] || privacyLabel.public;
+  const sharedPostId = post.sharedPostId || null;
 
   useEffect(() => {
     setViewer(authenticatedUser);
@@ -321,7 +329,8 @@ export default function PostCard({
       {/* 2. Post Body Content */}
       <div className="post-card-body">
         <PostCategoryDetails post={post} />
-        <p className="post-text-content">{content}</p>
+        {(sharedPostId ? shareCaption(content) : content) && <p className="post-text-content"><PostLinkText content={sharedPostId ? shareCaption(content) : content} /></p>}
+        {sharedPostId && <SharedPostPreview postId={sharedPostId} />}
 
         {post.category !== 'study' && post.location && (
           post.location.latitude != null && post.location.longitude != null ? (
@@ -371,6 +380,7 @@ export default function PostCard({
           >
             {commentsCount} bình luận
           </button>
+          {sharesCount > 0 && <span className="post-shares-count" aria-label={`${sharesCount} lượt chia sẻ`}>{sharesCount} lượt chia sẻ</span>}
         </div>
 
         <div className="post-action-divider" />
@@ -400,6 +410,7 @@ export default function PostCard({
             <IconMessage size={18} color="#002855" className="action-icon" />
             <span>Bình luận</span>
           </button>
+          {post.status !== 'PENDING' && post.status !== 'REJECTED' && <button type="button" className="post-action-btn post-share-action" onClick={() => setShareOpen(true)} aria-label="Chia sẻ bài viết"><IconShare size={19} className="action-icon" aria-hidden="true" /><span>Chia sẻ</span></button>}
         </div>
 
         {/* 4. Expandable Comment Section */}
@@ -482,6 +493,7 @@ export default function PostCard({
       {lightboxIndex!==null&&imageMedia[lightboxIndex]&&<div className="post-media-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh bài viết" onClick={()=>setLightboxIndex(null)}><button type="button" className="lightbox-close" onClick={()=>setLightboxIndex(null)} aria-label="Đóng">×</button>{imageMedia.length>1&&<button type="button" className="lightbox-prev" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex-1+imageMedia.length)%imageMedia.length);}} aria-label="Ảnh trước">‹</button>}<img src={safeImageSrc(imageMedia[lightboxIndex].url)} alt="Nội dung bài viết" onClick={event=>event.stopPropagation()}/>{imageMedia.length>1&&<button type="button" className="lightbox-next" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex+1)%imageMedia.length);}} aria-label="Ảnh tiếp theo">›</button>}<span className="lightbox-counter">{lightboxIndex+1} / {imageMedia.length}</span></div>}
       <PostActionModal mode={actionMode} post={post} content={content} privacy={privacy} onClose={()=>setActionMode(null)} onUpdated={updated=>{setPost(updated);setContent(updated.content);setPrivacy(updated.privacy);if(updated.status === "PENDING")setIsDeleted(true);}} onDeleted={()=>setIsDeleted(true)} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
       <CommentActionModal comment={commentAction?.comment||null} mode={commentAction?.mode||null} onClose={()=>setCommentAction(null)} onUpdated={updated=>setComments(current=>current.map(item=>item.id===updated.id?updated:item))} onDeleted={()=>{if(commentAction)removeCommentThread(commentAction.comment.id);}} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
+      {shareOpen && <SharePostModal post={post} viewerId={viewer?.id} onClose={() => setShareOpen(false)} onShared={setSharesCount} />}
     </article>
   );
 }

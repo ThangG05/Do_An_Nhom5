@@ -34,6 +34,7 @@ export default function VisitorProfilePage() {
     photos,
     listings,
     groupPosts,
+    groupPagination,
     activeTab,
     isLoading,
     isError,
@@ -41,6 +42,7 @@ export default function VisitorProfilePage() {
     isOwnProfile,
     isEditModalOpen,
     postFilter,
+    postPagination,
     friendsSearch,
     friendsFilter,
     photosSubTab,
@@ -147,6 +149,7 @@ export default function VisitorProfilePage() {
                 posts={posts}
                 isOwnProfile={isOwnProfile}
                 postFilter={postFilter}
+                pagination={postPagination}
                 onFilterChange={setPostFilter}
                 onCreatePost={handleCreatePost}
               />
@@ -175,6 +178,7 @@ export default function VisitorProfilePage() {
         {activeTab === 'listings' && (
           <ProfileListingsTab
             groupPosts={groupPosts}
+            pagination={groupPagination}
           />
         )}
       </main>

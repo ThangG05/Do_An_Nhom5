@@ -7,7 +7,7 @@ from starlette.concurrency import run_in_threadpool
 
 from src.api.dependencies import CurrentUser
 from src.db.session import get_db
-from src.models.post import CommentCreateRequest, CommentResponse, CommentUpdateRequest, LikeRequest, LikeResponse, ProfilePostResponse, UpdatePostRequest
+from src.models.post import CommentCreateRequest, CommentResponse, CommentUpdateRequest, LikeRequest, LikeResponse, ProfilePostResponse, RegisterPostShareRequest, RegisterPostShareResponse, UpdatePostRequest
 from src.services import post_service
 from src.db.models.post import Post
 from src.services.realtime_service import manager
@@ -32,6 +32,11 @@ def comments(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Sessio
 @router.get("/{post_id}", response_model=ProfilePostResponse)
 def get_post(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
     return post_service.get_post_response(db, post_id, current_user)
+
+
+@router.post("/{post_id}/shares", response_model=RegisterPostShareResponse)
+def register_share(post_id: uuid.UUID, payload: RegisterPostShareRequest, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)]):
+    return RegisterPostShareResponse(sharesCount=post_service.register_share(db, post_id, current_user, payload))
 
 
 @router.put("/{post_id}/like", response_model=LikeResponse)

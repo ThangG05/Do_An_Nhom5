@@ -3,15 +3,15 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import event
+from sqlalchemy import event, text
 
 from src.db.models.friendship import FriendRequest, Friendship
 from src.db.models.media import MediaFile, MediaStatus
-from src.db.models.user import Profile
+from src.db.models.user import AccountStatus, Profile
 from src.db.session import engine
 from src.services.friendship_service import list_friends
 from src.services.notification_service import header_unread_counts
-from src.services.user_service import search_users
+from src.services.user_service import search_users, serialize_profile
 
 
 def test_user_search_loads_many_avatars_in_one_batch(db_session, make_user, monkeypatch):
@@ -59,6 +59,32 @@ def test_user_search_loads_many_avatars_in_one_batch(db_session, make_user, monk
     assert all(statuses[str(candidate.id)] == "none" for candidate in candidates[3:])
 
 
+def test_user_search_includes_viewers_own_profile(db_session, make_user):
+    viewer = make_user(name="Nguyen Manh Thang")
+    results = search_users(db_session, viewer, "Nguyen Manh Thang")
+    own = next(item for item in results if item.id == str(viewer.id))
+    assert own.friendshipStatus == "self"
+
+
+def test_user_search_uses_current_name_and_finds_disabled_friend(db_session, make_user):
+    viewer = make_user(name="Search friend viewer")
+    friend = make_user(name="Previous profile name")
+    outsider = make_user(name="Other disabled account")
+    low, high = sorted((viewer.id, friend.id))
+    db_session.add(Friendship(user_low_id=low, user_high_id=high))
+    db_session.get(Profile, friend.id).full_name = "Hoa Son Quy"
+    friend.status = AccountStatus.DISABLED
+    outsider.status = AccountStatus.DISABLED
+    db_session.flush()
+
+    result = search_users(db_session, viewer, "Hoa Son Quy")
+    assert [(item.id, item.name, item.accountStatus) for item in result] == [
+        (str(friend.id), "Hoa Son Quy", "DISABLED")
+    ]
+    assert all(item.id != str(friend.id) for item in search_users(db_session, viewer, "Previous profile name"))
+    assert all(item.id != str(outsider.id) for item in search_users(db_session, viewer, "Other disabled account"))
+
+
 def test_friends_list_batches_mutual_counts(db_session, make_user):
     viewer = make_user(name="Friend list viewer")
     first = make_user(name="Friend list first")
@@ -84,6 +110,29 @@ def test_friends_list_batches_mutual_counts(db_session, make_user):
     assert {item.id for item in friends} == {str(first.id), str(second.id)}
     assert all(item.mutualCount == 1 for item in friends)
     assert count == 3
+
+
+def test_profile_friend_count_matches_visible_list(db_session, make_user):
+    owner = make_user(name="Profile owner")
+    visible = make_user(name="Visible friend")
+    disabled = make_user(name="Disabled friend")
+    blocked = make_user(name="Blocked friend")
+    for friend in (visible, disabled, blocked):
+        low, high = sorted((owner.id, friend.id))
+        db_session.add(Friendship(user_low_id=low, user_high_id=high))
+    disabled.status = AccountStatus.DISABLED
+    db_session.flush()
+    db_session.execute(text("INSERT INTO user_blocks(blocker_id, blocked_id) VALUES (:owner, :friend)"),
+                       {"owner": owner.id, "friend": blocked.id})
+    db_session.flush()
+
+    friends = list_friends(db_session, owner, owner)
+    profile = serialize_profile(db_session, owner, owner.id)
+
+    assert {friend.id for friend in friends} == {str(visible.id), str(disabled.id)}
+    assert next(friend for friend in friends if friend.id == str(disabled.id)).accountStatus == "DISABLED"
+    assert profile.friendsCount == len(friends) == 2
+    assert str(owner.id) in {friend.id for friend in list_friends(db_session, disabled, owner)}
 
 
 def test_chat_and_notification_read_paths(client, make_user, auth_headers, db_session, monkeypatch):

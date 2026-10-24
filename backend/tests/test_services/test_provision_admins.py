@@ -50,4 +50,4 @@ def test_super_admin_cannot_grant_dedicated_account_a_different_group(monkeypatc
 
     with pytest.raises(HTTPException) as exc:
         admin_service.set_group_admin(GroupSession(), target.id, uuid4(), SimpleNamespace(id=uuid4()), True)
-    assert exc.value.status_code == 409
+    assert exc.value.status_code == 403
