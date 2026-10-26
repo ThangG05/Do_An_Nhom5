@@ -6,6 +6,7 @@ import { updateFriendshipStatus } from '@/lib/api';
 import { useAuthUser } from '@/components/auth/AuthProvider';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { IconSearch } from '@/components/ui/Icons';
+import { useDialog } from '@/components/ui/DialogProvider';
 import type { FriendshipStatus, UserFriend } from '@/types/user';
 
 interface ProfileFriendsTabProps {
@@ -32,6 +33,7 @@ export default function ProfileFriendsTab({
   friends, isLoading = false, error = '', onRetry, isOwnProfile, searchQuery, filter, onSearchChange, onFilterChange, onUnfriend,
 }: ProfileFriendsTabProps) {
   const viewer = useAuthUser();
+  const dialog = useDialog();
   const [city, setCity] = useState('');
   const [hometown, setHometown] = useState('');
   const [statusOverrides, setStatusOverrides] = useState<Record<string, FriendshipStatus>>({});
@@ -120,7 +122,7 @@ export default function ProfileFriendsTab({
                 {!isOwnProfile && status === 'none' && (!friend.accountStatus || friend.accountStatus === 'ACTIVE') && <button type="button" className="btn btn-primary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'add')}>Thêm bạn bè</button>}
                 {!isOwnProfile && status === 'pending_sent' && (!friend.accountStatus || friend.accountStatus === 'ACTIVE') && <button type="button" className="btn btn-secondary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'cancel')}>Hủy lời mời</button>}
                 {!isOwnProfile && status === 'pending_received' && (!friend.accountStatus || friend.accountStatus === 'ACTIVE') && <button type="button" className="btn btn-primary btn-sm" disabled={busyId === friend.id} onClick={() => void actOnFriend(friend.id, 'accept')}>Chấp nhận</button>}
-                {isOwnProfile && status === 'friends' && onUnfriend && <button type="button" className="btn btn-secondary btn-sm" onClick={() => onUnfriend(friend.id)} title="Hủy kết bạn">Hủy kết bạn</button>}
+                {isOwnProfile && status === 'friends' && onUnfriend && <button type="button" className="btn btn-secondary btn-sm" onClick={() => { void dialog.confirm({ title: 'Hủy kết bạn?', message: `Bạn và ${friend.name} sẽ không còn trong danh sách bạn bè.`, confirmLabel: 'Hủy kết bạn', tone: 'danger' }).then(confirmed => { if (confirmed) onUnfriend(friend.id); }); }} title="Hủy kết bạn">Hủy kết bạn</button>}
               </div>
             </div>;
           })}

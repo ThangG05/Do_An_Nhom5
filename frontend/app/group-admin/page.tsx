@@ -10,6 +10,7 @@ import {
   decideGroupJoin, fetchGroupJoinRequests, fetchGroupMembers, fetchGroupPosts,
   fetchGroups, fetchPendingGroupPosts, kickGroupMember, moderateGroupPost,
   removeApprovedGroupPost, setGroupPostPinned,
+  fetchReportQueue,
 } from "@/lib/api";
 import {getAuthUser} from "@/lib/auth";
 import type {ApiGroup, GroupJoinRequest, GroupMember, GroupPost} from "@/types/group-api";
@@ -42,6 +43,7 @@ export default function GroupAdminPage() {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState(0);
   const [documentReports, setDocumentReports] = useState(0);
+  const [reportCount, setReportCount] = useState(0);
   const [tab, setTab] = useState<Tab>("overview");
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
@@ -77,15 +79,16 @@ export default function GroupAdminPage() {
     if (!groupId) return;
     setLoadingContent(true);
     try {
-      const [waiting, approved, requests, people] = await Promise.all([
+      const [waiting, approved, requests, people, reports] = await Promise.all([
         fetchPendingGroupPosts(groupId), fetchGroupPosts(groupId),
-        fetchGroupJoinRequests(groupId), fetchGroupMembers(groupId, query),
+        fetchGroupJoinRequests(groupId), fetchGroupMembers(groupId, query), fetchReportQueue('OPEN').catch(() => null),
       ]);
       if (version !== loadVersion.current) return;
       setPending(waiting);
       setPosts(approved);
       setJoins(requests);
       setMembers(people);
+      if (reports) setReportCount(reports.filter(report => report.group_id === groupId).length);
     } finally {
       if (version === loadVersion.current) setLoadingContent(false);
     }
@@ -151,9 +154,9 @@ export default function GroupAdminPage() {
   const navigation: { id: Tab; label: string; count?: number; notification?: boolean }[] = [
     {id: "overview", label: "Tổng quan"},
     {id: "pending", label: "Kiểm duyệt", count: pending.length, notification: true},
-    {id: "posts", label: "Bài đã duyệt"},
+    {id: "posts", label: "Bài đã duyệt", count: posts.length},
     {id: "members", label: "Thành viên", count: active?.member_count ?? members.length},
-    {id: "reports", label: "Báo cáo"},
+    {id: "reports", label: "Báo cáo", count: reportCount, notification: true},
     ...(active?.slug === "hoc-tap" ? [
       {id: "documents" as const, label: "Kho tài liệu", count: pendingDocuments + documentReports, notification: true},
       {id: "subjects" as const, label: "Môn học"},
@@ -174,7 +177,7 @@ export default function GroupAdminPage() {
     {tab === "overview" && <section className="group-admin-panel"><h2>Công việc cần xử lý</h2><div className="admin-task-grid">
       <button type="button" onClick={() => setTab("pending")}><b>{pending.length}</b><span>Bài đang chờ quyết định</span></button>
       <button type="button" onClick={() => setTab("members")}><b>{joins.length}</b><span>Yêu cầu tham gia mới</span></button>
-      <button type="button" onClick={() => setTab("reports")}><b>→</b><span>Mở hàng chờ báo cáo</span></button>
+      <button type="button" onClick={() => setTab("reports")}><b>{reportCount}</b><span>Báo cáo đang chờ</span></button>
     </div></section>}
 
     {tab === "pending" && <section className="group-admin-panel group-pending-panel"><div className="group-pending-heading"><div><span>KIỂM DUYỆT NỘI DUNG</span><h2>Bài viết chờ phê duyệt</h2><p>Xem đầy đủ bài viết trước khi quyết định hiển thị trong nhóm.</p></div><b>{pending.length} bài chờ</b></div>
@@ -190,7 +193,7 @@ export default function GroupAdminPage() {
       {!members.length && <p className="admin-empty-state">Không tìm thấy thành viên.</p>}
     </section>}
 
-    {tab === "reports" && groupId && <ReportQueue groupId={groupId} />}
+    {tab === "reports" && groupId && <ReportQueue groupId={groupId} onCountChange={setReportCount} />}
     {tab === "documents" && active?.slug === "hoc-tap" && <StudyLibrary groupId={groupId} isAdmin canRead pendingCount={pendingDocuments} reportCount={documentReports} />}
     {tab === "subjects" && active?.slug === "hoc-tap" && <SubjectCatalog groupId={groupId} />}
   </main>;

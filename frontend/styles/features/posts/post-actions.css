@@ -3,3 +3,12 @@
 .post-share-icon{font-size:20px;line-height:1;font-weight:500}.shared-post-inline-link{display:inline-flex;align-items:center;margin:2px 0;padding:3px 8px;border-radius:8px;background:#e9f3fb;color:#075481!important;font-weight:750;text-decoration:none;overflow-wrap:anywhere}.shared-post-inline-link:hover{text-decoration:underline}.post-text-content,.chat-bubble p{white-space:pre-wrap;overflow-wrap:anywhere}:root[data-theme="dark"] .shared-post-inline-link{background:#234860;color:#d7efff!important}
 
 .post-stats-row{flex-wrap:wrap;gap:5px 12px}.post-shares-count{white-space:nowrap;color:inherit;font-size:12px}.post-action-btn.post-share-action{gap:7px;border:1px solid transparent;border-radius:10px;color:#175982!important;font-weight:750}.post-action-btn.post-share-action .action-icon{flex:none;stroke:currentColor}.post-action-btn.post-share-action:hover{border-color:#c8e2f1;background:#e8f4fc!important;color:#074d7a!important}.post-action-btn.post-share-action:focus-visible{outline:2px solid #2d85b8;outline-offset:2px}:root[data-theme="dark"] .post-action-btn.post-share-action{color:#a9d9f8!important}:root[data-theme="dark"] .post-action-btn.post-share-action:hover{border-color:#41617b;background:#25435b!important;color:#ecf7ff!important}@media(max-width:520px){.post-action-btn.post-share-action{padding-inline:5px}.post-shares-count{font-size:11px}}
+.post-action-modal{display:flex;flex-direction:column;max-height:calc(100dvh - 40px)}
+.post-action-content{min-height:0;overflow-y:auto}
+.post-action-modal>header,.post-action-modal>footer{flex:none}
+.post-action-modal>footer{gap:16px}
+.edit-media-picker{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0}
+.edit-media-picker>button{min-height:42px;padding:8px 14px;border:1px dashed #8fb4d4;border-radius:10px;background:#edf6fc;color:#075481;font-weight:750;cursor:pointer}
+.edit-media-picker>button:disabled{opacity:.5;cursor:not-allowed}
+.edit-media-picker>small{color:#668099}
+.edit-media-picker>span{width:100%;color:#b42318;font-size:12px}

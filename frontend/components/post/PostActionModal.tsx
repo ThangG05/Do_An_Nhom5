@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { createReport, deletePost, editPost } from '@/lib/api';
+import { createReport, deletePost, editPost, uploadPostMedia } from '@/lib/api';
 import type { Post, PostPrivacy, PostMedia } from '@/types/post';
 import { useCreatePost } from '@/hooks/useCreatePost';
 import { validatePostDraft, type PostFieldErrors } from '@/lib/group-post';
@@ -20,8 +20,12 @@ export default function PostActionModal({ mode, post, content, privacy, onClose,
   const [error, setError] = useState('');
   const [errors, setErrors] = useState<PostFieldErrors>({});
   const [locationOpen, setLocationOpen] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const uploadedIds = useRef(new Map<string, string>());
   useEffect(() => {
     if (!mode) return;
+    fields.resetForm();
+    uploadedIds.current.clear();
     fields.setContent(content); fields.setPrivacy(privacy); fields.setCategory(post.category);
     fields.setMarketListing(post.marketListing || { productName: '', price: '', condition: '', location: '' });
     fields.setRoomListing(post.roomListing || { rentPerMonth: '', area: '', amenities: [], location: '' });
@@ -39,13 +43,22 @@ export default function PostActionModal({ mode, post, content, privacy, onClose,
   const submit = async () => {
     if (busy) return;
     if (mode === 'edit') {
-      const next = validatePostDraft(fields, media.length); setErrors(next);
+      const next = validatePostDraft(fields, media.length + fields.mediaList.length); setErrors(next);
+      if (media.length + fields.mediaList.length > 10) { setError('Mỗi bài được đính kèm tối đa 10 tệp.'); return; }
       if (Object.keys(next).length) { window.setTimeout(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(), 0); return; }
     }
     setBusy(true); setError('');
     try {
       if (mode === 'edit') {
-        const updated = await editPost(post.id, fields.content.trim(), post.groupId ? 'public' : fields.privacy, post.category, media.map(item => item.id), {
+        const newIds = await Promise.all(fields.mediaList.map(async item => {
+          const existing = uploadedIds.current.get(item.id);
+          if (existing) return existing;
+          if (!item.file) throw new Error('Không tìm thấy tệp đã chọn.');
+          const id = await uploadPostMedia(item.file);
+          uploadedIds.current.set(item.id, id);
+          return id;
+        }));
+        const updated = await editPost(post.id, fields.content.trim(), post.groupId ? 'public' : fields.privacy, post.category, [...media.map(item => item.id), ...newIds], {
           marketListing: post.category === 'market' ? fields.marketListing : undefined,
           roomListing: post.category === 'roommate' ? fields.roomListing : undefined,
           eventListing: post.category === 'event' ? fields.eventListing : undefined,
@@ -66,7 +79,9 @@ export default function PostActionModal({ mode, post, content, privacy, onClose,
       {mode === 'edit' && <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         {post.groupId ? <p className={styles.hint}>Bài trong {post.groupName} sẽ được duyệt lại sau khi chỉnh sửa. Không thể chuyển nhóm của bài đã đăng.</p> : <label>Quyền riêng tư<select value={fields.privacy} onChange={e => fields.setPrivacy(e.target.value as PostPrivacy)}><option value="public">Công khai</option><option value="friends">Bạn bè</option><option value="private">Chỉ mình tôi</option></select></label>}
         <GroupPostFields state={fields} errors={errors} onPickLocation={() => setLocationOpen(true)} />
-        {media.length > 0 && <div className="edit-media-list"><b>Tệp trong bài</b>{media.map((item, index) => <article key={item.id}>{item.type === 'image' ? <img src={safeImageSrc(item.url)} alt="" /> : <span>{item.name || (item.type === 'video' ? 'Video' : item.type === 'audio' ? 'Âm thanh' : 'Tài liệu')}</span>}<div><button aria-label="Chuyển tệp lên trước" onClick={() => move(index, -1)} disabled={index === 0}>←</button><button aria-label="Chuyển tệp về sau" onClick={() => move(index, 1)} disabled={index === media.length - 1}>→</button><button className="danger" onClick={() => setMedia(current => current.filter(x => x.id !== item.id))}>Gỡ</button></div></article>)}</div>}
+        {media.length > 0 && <div className="edit-media-list"><b>Tệp trong bài</b>{media.map((item, index) => <article key={item.id}>{item.type === 'image' ? <img src={safeImageSrc(item.url)} alt="" /> : <span>{item.name || (item.type === 'video' ? 'Video' : item.type === 'audio' ? 'Âm thanh' : 'Tài liệu')}</span>}<div><button type="button" aria-label="Chuyển tệp lên trước" onClick={() => move(index, -1)} disabled={index === 0}>←</button><button type="button" aria-label="Chuyển tệp về sau" onClick={() => move(index, 1)} disabled={index === media.length - 1}>→</button><button type="button" className="danger" onClick={() => setMedia(current => current.filter(x => x.id !== item.id))}>Gỡ</button></div></article>)}</div>}
+        <div className="edit-media-picker"><button type="button" onClick={() => fileInput.current?.click()} disabled={media.length + fields.mediaList.length >= 10}>＋ Thêm ảnh, video hoặc tài liệu</button><small>{media.length + fields.mediaList.length}/10 tệp</small><input ref={fileInput} type="file" hidden multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/webm,application/pdf,text/plain,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip" onChange={event => { if (event.target.files) { if (event.target.files.length + media.length + fields.mediaList.length > 10) setError('Mỗi bài được đính kèm tối đa 10 tệp.'); else { setError(''); fields.addMediaFiles(event.target.files); } } event.target.value = ''; }} />{fields.error && <span role="alert">{fields.error}</span>}</div>
+        {fields.mediaList.length > 0 && <div className="edit-media-list"><b>Tệp mới</b>{fields.mediaList.map(item => <article key={item.id}>{item.type === 'image' ? <img src={item.url} alt="" /> : <span>{item.name}</span>}<div><button type="button" className="danger" onClick={() => { fields.removeMedia(item.id); uploadedIds.current.delete(item.id); }}>Gỡ</button></div></article>)}</div>}
       </fieldset>}
       {mode === 'delete' && <div className="post-delete-warning"><strong>Bài viết sẽ bị xóa khỏi bảng tin.</strong><p>Thao tác này không thể hoàn tác.</p></div>}
       {mode === 'report' && <label>Lý do báo cáo<textarea value={reason} onChange={e => setReason(e.target.value)} rows={5} placeholder="Mô tả nội dung vi phạm…" /></label>}

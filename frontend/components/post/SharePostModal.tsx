@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createDirectConversation, createProfilePost, fetchPost, fetchUserFriends, registerPostShare, sendChatMessage } from '@/lib/api';
 import { postPath } from '@/lib/post-share';
 import type { Post, PostPrivacy } from '@/types/post';
 import type { UserFriend } from '@/types/user';
 import styles from './SharePostModal.module.css';
+import { useDialog } from '@/components/ui/DialogProvider';
 
 type ShareTab = 'message' | 'feed' | 'link';
 
@@ -21,6 +22,8 @@ export default function SharePostModal({ post, viewerId, onClose, onShared }: { 
   const [caption, setCaption] = useState('');
   const [privacy, setPrivacy] = useState<PostPrivacy>('friends');
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const dialog = useDialog();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const url = typeof window === 'undefined' ? postPath(originalPost.id) : `${window.location.origin}${postPath(originalPost.id)}`;
@@ -69,9 +72,11 @@ export default function SharePostModal({ post, viewerId, onClose, onShared }: { 
   }, [friends, query]);
   const toggle = (id: string) => setSelected(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
   const send = async () => {
-    if (!selected.length || busy || resolvingOriginal || originalUnavailable) return;
+    if (!selected.length || busyRef.current || resolvingOriginal || originalUnavailable) return;
+    busyRef.current = true;
     setBusy(true); setError(''); setSuccess('');
     let sent = 0;
+    let shareCountErrors = 0;
     let currentId = '';
     let delivered = false;
     try {
@@ -80,13 +85,16 @@ export default function SharePostModal({ post, viewerId, onClose, onShared }: { 
         delivered = false;
         const conversation = await createDirectConversation(id);
         const message = await sendChatMessage(conversation.id, `${caption.trim() ? `${caption.trim()}\n` : ''}${url}`);
-        delivered = true;
         sent += 1;
-        const result = await registerPostShare(originalPost.id, 'MESSAGE', message.id);
-        if (post.id === originalPost.id) onShared?.(result.sharesCount);
+        delivered = true;
+        try {
+          const result = await registerPostShare(originalPost.id, 'MESSAGE', message.id);
+          if (post.id === originalPost.id) onShared?.(result.sharesCount);
+        } catch { shareCountErrors += 1; }
       }
-      setSuccess(`Đã gửi bài viết cho ${sent} người bạn.`);
-      setSelected([]);
+      dialog.notify({ title: `Đã gửi bài viết cho ${sent} người bạn`, tone: 'success' });
+      if (shareCountErrors) dialog.notify({ title: 'Lượt chia sẻ chưa cập nhật', message: 'Tin nhắn đã được gửi; bạn không cần gửi lại.', tone: 'danger' });
+      onClose();
     } catch (cause) {
       setSelected(current => current.slice(sent));
       const detail = cause instanceof Error ? cause.message : 'Không thể gửi bài viết.';
@@ -98,23 +106,25 @@ export default function SharePostModal({ post, viewerId, onClose, onShared }: { 
         setError(`${sent ? `Đã gửi cho ${sent} người. ` : ''}${detail}`);
       }
       if (!sent && viewerId) void fetchUserFriends(viewerId).then(rows => setFriends(rows.filter(row => row.id !== viewerId && (!row.accountStatus || row.accountStatus === 'ACTIVE')))).catch(() => undefined);
-    } finally { setBusy(false); }
+    } finally { busyRef.current = false; setBusy(false); }
   };
   const publish = async () => {
-    if (busy || resolvingOriginal || originalUnavailable) return;
+    if (busyRef.current || resolvingOriginal || originalUnavailable) return;
+    busyRef.current = true;
     setBusy(true); setError(''); setSuccess('');
     try {
       const created = await createProfilePost({ content: `${caption.trim() ? `${caption.trim()}\n` : ''}${url}`, category: 'general', privacy, media: [], taggedFriends: [] });
-      setSuccess('Đã chia sẻ lên trang cá nhân. Tải lại bảng tin để xem bài mới.');
-      setCaption('');
       try {
         const result = await registerPostShare(originalPost.id, 'POST', created.id);
         if (post.id === originalPost.id) onShared?.(result.sharesCount);
       } catch {
-        setError('Bài đã được đăng nhưng lượt chia sẻ chưa cập nhật. Bạn không cần đăng lại.');
+        dialog.notify({ title: 'Bài đã đăng', message: 'Lượt chia sẻ chưa cập nhật. Bạn không cần đăng lại.', tone: 'danger' });
       }
+      window.dispatchEvent(new Event('hvnh-post-shared'));
+      dialog.notify({ title: 'Đã chia sẻ lên trang cá nhân', tone: 'success' });
+      onClose();
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Không thể chia sẻ bài viết.'); }
-    finally { setBusy(false); }
+    finally { busyRef.current = false; setBusy(false); }
   };
   const copy = async () => {
     if (resolvingOriginal || originalUnavailable) return;

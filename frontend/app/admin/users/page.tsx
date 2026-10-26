@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
 
   return <main className="admin-console">
     <header className="admin-page-heading"><div><span>ACCOUNT MANAGEMENT</span><h1>Quản lý tài khoản</h1><p>Tra cứu vai trò hiện tại và xử lý kỷ luật người dùng.</p></div></header>
-    {error && <div className="admin-error" role="alert">{error}</div>}
+    {error && <div className="admin-error" role="alert"><span>{error === 'Failed to fetch' ? 'Không kết nối được backend. Kiểm tra dịch vụ API rồi thử lại.' : error}</span> <button type="button" onClick={() => void load()}>Thử lại</button></div>}
     <section className="admin-users">
       <header><div><h2>Danh sách tài khoản</h2><p>Vai trò được hiển thị để tra cứu, không chỉnh sửa tại đây.</p></div><div><input value={q} onChange={event => { setQ(event.target.value); resetPages(); }} placeholder="Tên, mã SV, email, khoa..." aria-label="Tìm tài khoản"/><select value={status} onChange={event => { setStatus(event.target.value); resetPages(); }} aria-label="Trạng thái tài khoản"><option value="">Mọi trạng thái</option><option value="ACTIVE">Hoạt động</option><option value="LOCKED">Tạm khóa</option><option value="DISABLED">Khóa vĩnh viễn</option></select></div></header>
       <div className="admin-account-tabs" role="tablist" aria-label="Loại tài khoản">
@@ -72,7 +72,7 @@ export default function AdminUsersPage() {
           <div className="admin-role-row"><b>Vai trò hiện tại:</b><span className="admin-role-label">{user.system_role === "SUPER_ADMIN" ? "Super Admin" : user.admin_groups.length ? "Group Admin" : "Người dùng"}</span>{user.system_role !== "SUPER_ADMIN" && user.admin_groups.map(adminGroup => <span className="admin-role-label group" key={adminGroup.id}>{adminGroup.name}</span>)}</div>
           <div className="admin-account-actions">{user.system_role === "SUPER_ADMIN" ? <span>SUPER ADMIN</span> : <DisciplineActions user={user} onDone={load}/>}</div>
         </article>)}
-        {!users.length && <p className="admin-loading">Không tìm thấy tài khoản {group === "ADMIN" ? "Admin" : "người dùng"}.</p>}
+        {!users.length && !error && <p className="admin-loading">Không tìm thấy tài khoản {group === "ADMIN" ? "Admin" : "người dùng"}.</p>}
       </div>}
       {!loading && total > 0 && <nav className="admin-account-pagination" aria-label={`Phân trang tài khoản ${group === "ADMIN" ? "Admin" : "người dùng"}`}><span>{total} tài khoản · Trang {page + 1}/{pageCount}</span><div><button type="button" disabled={page === 0} onClick={() => setPage(page - 1)}>‹ Trước</button><button type="button" disabled={page + 1 >= pageCount} onClick={() => setPage(page + 1)}>Tiếp ›</button></div></nav>}
     </section>

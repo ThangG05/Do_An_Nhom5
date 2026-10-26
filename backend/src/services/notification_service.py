@@ -105,16 +105,23 @@ def unread_count(db: Session, user_id: uuid.UUID) -> int:
 
 def header_unread_counts(db: Session, user_id: uuid.UUID) -> tuple[int, int]:
     """Read both navbar badges in one database round trip."""
-    from src.db.models.chat import MessageReceipt
+    from src.db.models.chat import ConversationMember, Message, MessageReceipt
 
     notifications = select(func.count()).select_from(Notification).where(
         Notification.user_id == user_id,
         Notification.type != NotificationType.MESSAGE,
         Notification.read_at.is_(None),
     ).scalar_subquery()
-    messages = select(func.count()).select_from(MessageReceipt).where(
+    messages = select(func.count()).select_from(MessageReceipt).join(
+        Message, Message.id == MessageReceipt.message_id,
+    ).join(ConversationMember, (
+        ConversationMember.conversation_id == Message.conversation_id
+    ) & (ConversationMember.user_id == MessageReceipt.user_id)).where(
         MessageReceipt.user_id == user_id,
         MessageReceipt.seen_at.is_(None),
+        Message.deleted_at.is_(None),
+        ConversationMember.left_at.is_(None),
+        ConversationMember.is_muted.is_(False),
     ).scalar_subquery()
     notification_count, message_count = db.execute(select(notifications, messages)).one()
     return notification_count, message_count

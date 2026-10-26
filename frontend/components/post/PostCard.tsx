@@ -36,6 +36,26 @@ function renderCommentContent(content: string, mentions: CommentMention[] = []) 
   return parts.length ? parts : content;
 }
 
+function orderCommentThreads(comments: Comment[]): Comment[] {
+  const ids = new Set(comments.map(comment => comment.id));
+  const children = new Map<string, Comment[]>();
+  for (const comment of comments) {
+    const parent = comment.parentId && ids.has(comment.parentId) ? comment.parentId : '';
+    children.set(parent, [...(children.get(parent) || []), comment]);
+  }
+  const result: Comment[] = [];
+  const visited = new Set<string>();
+  const append = (comment: Comment) => {
+    if (visited.has(comment.id)) return;
+    visited.add(comment.id);
+    result.push(comment);
+    for (const child of children.get(comment.id) || []) append(child);
+  };
+  for (const root of children.get('') || []) append(root);
+  for (const comment of comments) append(comment);
+  return result;
+}
+
 const privacyLabel = {
   public: { icon: '🌐', label: 'Công khai' },
   friends: { icon: '👥', label: 'Bạn bè' },
@@ -68,6 +88,7 @@ export default function PostCard({
   const [sharesCount, setSharesCount] = useState(post.sharesCount || 0);
   useEffect(() => setSharesCount(post.sharesCount || 0), [post.id, post.sharesCount]);
   const [comments, setComments] = useState<Comment[]>(post.comments || []);
+  const orderedComments = React.useMemo(() => orderCommentThreads(comments), [comments]);
   const [loadingAllComments, setLoadingAllComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -251,7 +272,9 @@ export default function PostCard({
     } catch (error) {
       setIsLiked(!nextIsLiked);
       setLikesCount((prev) => nextIsLiked ? Math.max(0, prev - 1) : prev + 1);
-      setActionError(error instanceof Error ? error.message : 'Không thể cập nhật lượt thích.');
+      const message = error instanceof Error ? error.message : 'Không thể cập nhật lượt thích.';
+      setActionError(message);
+      dialog.notify({ title: 'Không thể thích bài viết', message, tone: 'danger' });
     } finally { setIsLiking(false); }
   };
 
@@ -460,7 +483,7 @@ export default function PostCard({
             {comments.length > 0 ? (
               <div className="comments-stream-list">
                 {commentsCount > comments.length && <button type="button" className="comments-count-btn" onClick={() => void loadAllComments()} disabled={loadingAllComments}>{loadingAllComments ? 'Đang tải bình luận...' : `Xem thêm ${commentsCount - comments.length} bình luận`}</button>}
-                {comments.map((c) => (
+                {orderedComments.map((c) => (
                   <div id={`comment-${c.id}`} key={c.id} className={`comment-item-row ${c.parentId?'comment-reply-row':''} ${c.id===highlightCommentId?'notification-target-comment':''}`}>
                     <img
                       src={c.author.avatar || '/assets/logo.png'}

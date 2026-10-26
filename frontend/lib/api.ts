@@ -121,6 +121,15 @@ async function uploadWithProgress(file:File,mediaId:string,onProgress?:CreatePos
   return response;
 }
 
+export async function uploadPostMedia(file: File): Promise<string> {
+  const response = await uploadWithProgress(file, file.name);
+  if (!response.ok) {
+    const error = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(error?.detail || 'Không thể tải tệp lên.');
+  }
+  return ((await response.json()) as { media_id: string }).media_id;
+}
+
 export async function createProfilePost(payload: CreatePostPayload, groupId?: string): Promise<Post> {
   const mediaIds = await Promise.all(payload.media.map(async (item) => {
     if(item.uploadedMediaId)return item.uploadedMediaId;
@@ -289,7 +298,16 @@ export async function sendChatMessage(conversationId:string,content:string,file?
   return api(`/chat/conversations/${conversationId}/messages`,{method:'POST',body:JSON.stringify({content,media_ids,reply_to_id:replyToId||null})});
 }
 export async function recallChatMessage(conversationId:string,messageId:string):Promise<import('@/types/message').Message>{
-  return api(`/chat/conversations/${conversationId}/messages/${messageId}`,{method:'DELETE'});
+  try {
+    return await api(`/chat/conversations/${conversationId}/messages/${messageId}`,{method:'DELETE'});
+  } catch (error) {
+    if (!(error instanceof TypeError)) throw error;
+    // A lost response can occur after the server has already committed the recall.
+    const messages = await fetchMessages(conversationId).catch(() => null);
+    const recalled = messages?.find(message => message.id === messageId && message.isRecalled);
+    if (recalled) return recalled;
+    throw new Error('Không kết nối được máy chủ để thu hồi tin nhắn. Vui lòng thử lại.');
+  }
 }
 export async function fetchUnreadMessageCount():Promise<number>{const result=await api<{unread_count:number}>('/chat/unread-count');return result.unread_count;}
 export async function createWebSocketTicket():Promise<string>{const result=await api<{ticket:string;expires_in:number}>('/chat/ws-ticket',{method:'POST'});return result.ticket;}
@@ -370,7 +388,15 @@ export function ragPeriodQuery(period:import('@/types/admin').RagPeriod,startDat
   if(period==='custom'){params.set('start_date',startDate);params.set('end_date',endDate);}
   return params.toString();
 }
-export async function fetchAdminUsers(q='',status='',period:import('@/types/admin').RagPeriod='30d',startDate='',endDate='',role:'ADMIN'|'USER'='USER',offset=0,limit=10):Promise<import('@/types/admin').AdminUserPage>{return api(`/admin/users?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&role=${role}&limit=${limit}&offset=${offset}&${ragPeriodQuery(period,startDate,endDate)}`);}
+export async function fetchAdminUsers(q='',status='',period:import('@/types/admin').RagPeriod='30d',startDate='',endDate='',role:'ADMIN'|'USER'='USER',offset=0,limit=10):Promise<import('@/types/admin').AdminUserPage>{
+  const path = `/admin/users?q=${encodeURIComponent(q)}&status=${encodeURIComponent(status)}&role=${role}&limit=${limit}&offset=${offset}&${ragPeriodQuery(period,startDate,endDate)}`;
+  try { return await api(path); }
+  catch (error) {
+    if (!(error instanceof TypeError)) throw error;
+    await new Promise(resolve => setTimeout(resolve, 400));
+    return api(path);
+  }
+}
 export async function fetchAdminUserRagUsage(userId:string,period:import('@/types/admin').RagPeriod='30d',startDate='',endDate='',offset=0):Promise<import('@/types/admin').RagUserUsage>{return api(`/admin/users/${userId}/rag-usage?${ragPeriodQuery(period,startDate,endDate)}&offset=${offset}`);}
 export async function fetchAdminProfile(userId:string):Promise<import('@/types/admin').AdminProfilePreview>{return api(`/admin/users/${encodeURIComponent(userId)}/profile`);}
 export async function fetchAdminPublicPosts(q='',status:'ALL'|'APPROVED'|'HIDDEN'='ALL',offset=0,limit=10,authorId?:string):Promise<import('@/types/admin').AdminPublicPostPage>{const params=new URLSearchParams({q,status,offset:String(offset),limit:String(limit)});if(authorId)params.set('author_id',authorId);return api(`/admin/public-posts?${params}`);}

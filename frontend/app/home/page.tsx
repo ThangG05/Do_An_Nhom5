@@ -33,6 +33,11 @@ export default function HomePage() {
     setCategory(allowed.includes(requestedCategory as PostCategory) ? requestedCategory as PostCategory : "");
   }, [requestedCategory]);
   useEffect(() => { cursorRef.current = null; setHasMore(true); setPosts([]); void loadMore(true); }, [category, highlightedPostId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const refresh = () => { cursorRef.current = null; setHasMore(true); void loadMore(true); };
+    window.addEventListener('hvnh-post-shared', refresh);
+    return () => window.removeEventListener('hvnh-post-shared', refresh);
+  }, [loadMore]);
   useEffect(() => { if (!highlightedPostId || !posts.some(post => post.id === highlightedPostId)) return; const timer = window.setTimeout(() => document.getElementById(`post-${highlightedPostId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80); return () => window.clearTimeout(timer); }, [highlightedPostId, posts]);
   useEffect(() => { const target = sentinelRef.current; if (!target) return; const observer = new IntersectionObserver(entries => { if (entries[0]?.isIntersecting) void loadMore(); }, { rootMargin: "500px 0px" }); observer.observe(target); return () => observer.disconnect(); }, [loadMore]);
   const handlePostCreated = async (payload: Parameters<typeof createProfilePost>[0]) => { const created = await createProfilePost(payload); if (created.status === 'APPROVED' && (!category || created.category === category)) setPosts(previous => [created, ...previous]); return created; };

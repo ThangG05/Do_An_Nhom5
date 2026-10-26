@@ -28,11 +28,13 @@ def _membership(db: Session, group_id: uuid.UUID, user_id: uuid.UUID) -> str:
     return "PENDING" if pending else "NONE"
 
 
-def _require_reader(db: Session, group_id: uuid.UUID, user: User) -> None:
+def _require_reader(db: Session, group_id: uuid.UUID, user: User) -> str:
     if user.system_role == SystemRole.SUPER_ADMIN:
         raise HTTPException(403, "Super Admin xem thông tin nhóm qua trang quản lý nhóm.")
-    if _membership(db, group_id, user.id) not in {"MEMBER", "ADMIN"}:
+    role = _membership(db, group_id, user.id)
+    if role not in {"MEMBER", "ADMIN"}:
         raise HTTPException(403, "Bạn cần tham gia nhóm để xem và tương tác với bài viết.")
+    return role
 
 
 def list_groups(db: Session, user: User) -> list[GroupResponse]:
@@ -116,11 +118,11 @@ def create_post(db: Session, group_id: uuid.UUID, user: User, payload: GroupPost
 
 def list_posts(db: Session, group_id: uuid.UUID, user: User, *, pending: bool = False, query: str = "", sort: str = "latest", limit: int | None = None, offset: int = 0):
     _group(db, group_id)
-    _require_reader(db, group_id, user)
+    is_admin = _require_reader(db, group_id, user) == "ADMIN"
     status = PostStatus.PENDING if pending else PostStatus.APPROVED
     statement = select(Post).where(Post.group_id == group_id, Post.status == status, Post.deleted_at.is_(None))
     # Moderation must still show the complete queue; ordinary group feeds obey blocks.
-    if not pending:
+    if not pending and not is_admin:
         blocked_ids = select(text("CASE WHEN blocker_id=:viewer THEN blocked_id ELSE blocker_id END")).select_from(text("user_blocks")).where(text("blocker_id=:viewer OR blocked_id=:viewer")).params(viewer=user.id)
         statement = statement.where(Post.author_id.not_in(blocked_ids))
     if query.strip():

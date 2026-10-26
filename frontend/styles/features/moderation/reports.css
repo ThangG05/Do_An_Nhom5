@@ -1,4 +1,9 @@
 .report-list article{align-items:center}
+.group-admin-page .report-queue>header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px;padding-bottom:16px;border-bottom:1px solid #e4edf5}
+.group-admin-page .report-queue>header span{font-size:11px;font-weight:800;letter-spacing:.12em;color:#527a99}
+.group-admin-page .report-queue>header h2{margin:4px 0 0;color:#0b3156;font-size:23px}
+.group-admin-page .report-queue>header>b{flex:none;padding:7px 12px;border-radius:999px;background:#e5f2fb;color:#0b5b8e;font-size:12px}
+.group-admin-page .report-scope-note{color:#56718b}
 .report-copy{min-width:0}
 .report-copy>small{display:block;margin-top:4px;color:#71879a}
 .report-target-link{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;margin:10px 0 5px;padding:11px 13px;border:1px solid #d6e4ef;border-left:3px solid #2374aa;border-radius:9px;background:#f7fbfe;color:#24435e;text-align:left;cursor:pointer}

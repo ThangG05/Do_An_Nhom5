@@ -1,11 +1,13 @@
 import uuid
 from typing import Annotated
-from fastapi import APIRouter,Depends,Query,Response
+from fastapi import APIRouter,BackgroundTasks,Depends,Query,Response
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from src.api.dependencies import CurrentUser
 from src.db.session import get_db
 from src.models.report import ReportCreateRequest,ReportDetailResponse,ReportResolveRequest,ReportResponse
 from src.services import report_service
+from src.services.realtime_service import manager
 
 router=APIRouter(prefix="/reports",tags=["Reports"]);Db=Annotated[Session,Depends(get_db)]
 
@@ -19,4 +21,11 @@ def queue(user:CurrentUser,db:Db,report_status:Annotated[str|None,Query(alias="s
 def detail(report_id:uuid.UUID,user:CurrentUser,db:Db):return report_service.get_detail(db,user,report_id)
 
 @router.patch("/admin/{report_id}")
-def resolve(report_id:uuid.UUID,payload:ReportResolveRequest,user:CurrentUser,db:Db):return {"message":report_service.resolve(db,user,report_id,payload)}
+def resolve(report_id:uuid.UUID,payload:ReportResolveRequest,user:CurrentUser,db:Db,tasks:BackgroundTasks):
+    message=report_service.resolve(db,user,report_id,payload)
+    recipients=db.scalars(text("""SELECT DISTINCT user_id FROM notifications
+        WHERE reference_type='REPORT' AND reference_id=:report_id AND actor_id=:actor_id"""),
+        {"report_id":report_id,"actor_id":user.id}).all()
+    if recipients:
+        tasks.add_task(manager.send_users,list(recipients),{"event":"notification.created","type":"SYSTEM"})
+    return {"message":message}

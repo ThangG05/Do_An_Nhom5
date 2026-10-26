@@ -13,7 +13,7 @@ import type { ApiReport, ReportDetail } from '@/types/report';
 
 const reportTypeLabel = { POST: 'Bài viết', COMMENT: 'Bình luận', USER: 'Tài khoản' } as const;
 
-export default function ReportQueue({ groupId }: { groupId?: string }) {
+export default function ReportQueue({ groupId, onCountChange }: { groupId?: string; onCountChange?: (count: number) => void }) {
   const [items, setItems] = useState<ApiReport[]>([]);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<ApiReport | null>(null);
@@ -26,12 +26,14 @@ export default function ReportQueue({ groupId }: { groupId?: string }) {
   const load = useCallback(async () => {
     try {
       const rows = await fetchReportQueue('OPEN');
-      setItems(groupId ? rows.filter(report => report.group_id === groupId) : rows);
+      const visible = groupId ? rows.filter(report => report.group_id === groupId) : rows;
+      setItems(visible);
+      onCountChange?.(visible.length);
       setError('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Không tải được báo cáo.');
     }
-  }, [groupId]);
+  }, [groupId, onCountChange]);
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
     if (!selected) return;
@@ -96,7 +98,7 @@ export default function ReportQueue({ groupId }: { groupId?: string }) {
   };
 
   return <section className="report-queue">
-    <header><div><span>REPORT MANAGEMENT</span><h2>Báo cáo vi phạm</h2></div><b>{items.length} đang chờ</b></header>
+    <header><div><span>{groupId ? 'KIỂM DUYỆT NỘI DUNG' : 'REPORT MANAGEMENT'}</span><h2>Báo cáo vi phạm</h2></div><b>{items.length} đang chờ</b></header>
     <p className="report-scope-note">{groupId ? 'Báo cáo nội dung trong nhóm này do quản trị nhóm xử lý.' : 'Báo cáo tài khoản, nội dung ngoài nhóm và nhóm chưa có quản trị viên.'}</p>
     {error && <div className="admin-error" role="alert">{error}</div>}
     <div className="report-list">{items.map(item => <article key={item.id}>

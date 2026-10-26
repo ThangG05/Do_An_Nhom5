@@ -232,7 +232,14 @@ def list_conversations(db,user):
         ))
     return sorted(result, key=lambda item: item.lastMessageTime, reverse=True)
 
-def unread_count(db,uid):return db.scalar(select(func.count()).select_from(MessageReceipt).join(Message,Message.id==MessageReceipt.message_id).where(MessageReceipt.user_id==uid,MessageReceipt.seen_at.is_(None),Message.deleted_at.is_(None))) or 0
+def unread_count(db,uid):
+    return db.scalar(select(func.count()).select_from(MessageReceipt)
+        .join(Message,Message.id==MessageReceipt.message_id)
+        .join(ConversationMember,and_(ConversationMember.conversation_id==Message.conversation_id,
+                                       ConversationMember.user_id==MessageReceipt.user_id))
+        .where(MessageReceipt.user_id==uid,MessageReceipt.seen_at.is_(None),
+               Message.deleted_at.is_(None),ConversationMember.left_at.is_(None),
+               ConversationMember.is_muted.is_(False))) or 0
 
 def update_settings(db:Session,cid:uuid.UUID,user:User,payload:ConversationSettingsRequest):
     member=_member(db,cid,user.id);conv=db.get(Conversation,cid)
