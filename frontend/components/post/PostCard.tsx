@@ -99,6 +99,7 @@ export default function PostCard({
   const [mentionFriends, setMentionFriends] = useState<UserFriend[]>([]);
   const [mentionFriendsLoaded, setMentionFriendsLoaded] = useState(false);
   const [mentionLoading, setMentionLoading] = useState(false);
+  const [mentionFriendsError, setMentionFriendsError] = useState("");
   const [mentionActiveIndex, setMentionActiveIndex] = useState(0);
   const [selectedMentions, setSelectedMentions] = useState<CommentMention[]>([]);
   const commentInputRef = useRef<HTMLInputElement>(null);
@@ -144,11 +145,13 @@ export default function PostCard({
     if (mentionQuery === null || !authenticatedUser?.id || mentionFriendsLoaded || mentionFriendsRequestStarted.current) return;
     mentionFriendsRequestStarted.current = true;
     setMentionLoading(true);
+    setMentionFriendsError("");
     void fetchUserFriends(authenticatedUser.id).then((friends) => {
       setMentionFriends(friends);
       setMentionFriendsLoaded(true);
-    }).catch(() => {
+    }).catch((error) => {
       setMentionFriendsLoaded(true);
+      setMentionFriendsError(error instanceof Error ? error.message : "Không tải được danh sách bạn bè.");
     }).finally(() => {
       setMentionLoading(false);
     });
@@ -312,7 +315,7 @@ export default function PostCard({
   if (isDeleted) return null;
 
   return (
-    <article className="post-card-item">
+    <article className={`post-card-item${mentionQuery !== null ? ' mention-menu-open' : ''}`}>
       {/* 1. Post Header */}
       <div className="post-card-header post-card-header-facebook">
         <Link href={`/profile/${post.author.id}`} className="author-avatar-link">
@@ -458,12 +461,14 @@ export default function PostCard({
                   onKeyDown={handleCommentKeyDown}
                   disabled={isSubmittingComment}
                 />
-                {mentionQuery !== null && (mentionLoading || mentionMatches.length > 0) && <div className="comment-mention-menu" role="listbox" aria-label="Gợi ý bạn bè để gắn thẻ">
+                {mentionQuery !== null && <div className="comment-mention-menu" role="listbox" aria-label="Gợi ý bạn bè để gắn thẻ">
                   {mentionLoading && <div className="comment-mention-loading">Đang tìm bạn bè…</div>}
+                  {!mentionLoading && mentionFriendsError && <div className="comment-mention-loading" role="status">{mentionFriendsError}</div>}
                   {!mentionLoading && mentionMatches.map((friend, index) => <button type="button" role="option" aria-selected={index === mentionActiveIndex} className={index === mentionActiveIndex ? 'active' : ''} key={friend.id} onMouseDown={event => event.preventDefault()} onClick={() => insertMention(friend)}>
                     <img src={friend.avatar || '/assets/logo.png'} alt="" />
                     <span><strong>{friend.name}</strong><small>@{friend.username}</small></span>
                   </button>)}
+                  {!mentionLoading && !mentionFriendsError && mentionMatches.length === 0 && <div className="comment-mention-loading">{mentionFriendsLoaded ? (mentionFriends.length ? "Không tìm thấy bạn bè phù hợp." : "Bạn chưa có bạn bè để gắn thẻ.") : "Nhập tên bạn bè sau @ để tìm."}</div>}
                 </div>}
                 <label className="comment-image-button" title="Thêm ảnh" aria-label="Thêm ảnh">📷<input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>{setCommentImage(e.currentTarget.files?.[0]||null);e.currentTarget.value='';}}/></label>
               </div>

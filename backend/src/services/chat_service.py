@@ -148,9 +148,12 @@ def recall(db:Session,cid:uuid.UUID,message_id:uuid.UUID,user:User)->MessageResp
     message=db.get(Message,message_id)
     if not message or message.conversation_id!=cid:raise HTTPException(404,"Không tìm thấy tin nhắn.")
     if message.sender_id!=user.id:raise HTTPException(403,"Bạn chỉ có thể thu hồi tin nhắn của mình.")
-    if message.deleted_at is not None:raise HTTPException(409,"Tin nhắn đã được thu hồi.")
+    # Make retries safe if the server committed the recall but the client lost
+    # the response. The original sender can confirm the already-recalled state.
+    if message.deleted_at is not None:return _message(db,message,user.id)
     message.deleted_at=datetime.now(timezone.utc)
-    message.content=None
+    # Keep the stored content to satisfy ck_message_has_content for TEXT rows.
+    # _messages_batch masks recalled messages and their reply previews from API output.
     db.commit()
     db.refresh(message)
     return _message(db,message,user.id)

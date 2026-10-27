@@ -288,7 +288,7 @@ export async function removeNotification(id: string): Promise<void> {
 
 export async function fetchConversations(): Promise<import('@/types/message').Conversation[]> { return api('/chat/conversations'); }
 export async function createDirectConversation(targetUserId: string): Promise<import('@/types/message').Conversation> { return api('/chat/conversations/direct',{method:'POST',body:JSON.stringify({target_user_id:targetUserId})}); }
-export async function fetchMessages(conversationId: string): Promise<import('@/types/message').Message[]> { return api(`/chat/conversations/${conversationId}/messages`); }
+export async function fetchMessages(conversationId: string): Promise<import('@/types/message').Message[]> { return api(`/chat/conversations/${conversationId}/messages`, { cache: 'no-store' }); }
 export async function searchConversationMessages(conversationId:string,query:string):Promise<import('@/types/message').Message[]>{return api(`/chat/conversations/${conversationId}/messages/search?q=${encodeURIComponent(query)}`);}
 export async function fetchConversationShared(conversationId:string):Promise<{media:import('@/types/message').MessageAttachment[];files:import('@/types/message').MessageAttachment[]}>{return api(`/chat/conversations/${conversationId}/shared`);}
 export async function updateConversationSettings(conversationId:string,payload:{theme?:import('@/types/message').Conversation['theme'];nickname?:string;is_muted?:boolean}):Promise<void>{await api(`/chat/conversations/${conversationId}/settings`,{method:'PATCH',body:JSON.stringify(payload)});}
@@ -299,7 +299,17 @@ export async function sendChatMessage(conversationId:string,content:string,file?
 }
 export async function recallChatMessage(conversationId:string,messageId:string):Promise<import('@/types/message').Message>{
   try {
-    return await api(`/chat/conversations/${conversationId}/messages/${messageId}`,{method:'DELETE'});
+    // Keep this operation same-origin in the browser. The Next route forwards
+    // the bearer token server-to-server, avoiding browser CORS/preflight issues.
+    const response = await authenticatedFetch(`/api/chat/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}`, {
+      method: 'POST',
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { detail?: string } | null;
+      throw new Error(payload?.detail || `Không thể thu hồi tin nhắn (HTTP ${response.status}).`);
+    }
+    return await response.json() as import('@/types/message').Message;
   } catch (error) {
     if (!(error instanceof TypeError)) throw error;
     // A lost response can occur after the server has already committed the recall.

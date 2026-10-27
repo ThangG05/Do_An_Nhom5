@@ -5,6 +5,7 @@ import DisciplineActions from "@/components/admin/DisciplineActions";
 import RagTokenSummary from "@/components/admin/RagTokenSummary";
 import { fetchAdminUsers } from "@/lib/api";
 import type { AdminUser, RagPeriod } from "@/types/admin";
+import "./discipline-actions.css";
 
 type AccountGroup = "ADMIN" | "USER";
 const PAGE_SIZE = 10;
@@ -26,10 +27,10 @@ export default function AdminUsersPage() {
   const validPeriod = period !== "custom" || Boolean(startDate && endDate && startDate <= endDate);
 
   const resetPages = () => setPages({ ADMIN: 0, USER: 0 });
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     const current = ++requestId.current;
     if (!validPeriod) { setLoading(false); return; }
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const result = await fetchAdminUsers(q, status, period, startDate, endDate, group, page * PAGE_SIZE, PAGE_SIZE);
       if (current !== requestId.current) return;
@@ -43,7 +44,7 @@ export default function AdminUsersPage() {
     } catch (cause) {
       if (current === requestId.current) setError(cause instanceof Error ? cause.message : "Không tải được tài khoản.");
     } finally {
-      if (current === requestId.current) setLoading(false);
+      if (current === requestId.current && !silent) setLoading(false);
     }
   }, [q, status, period, startDate, endDate, group, page, validPeriod]);
 
@@ -66,11 +67,11 @@ export default function AdminUsersPage() {
       </div>
       <div className="admin-rag-period"><strong>Token RAG</strong><select value={period} onChange={event => { setPeriod(event.target.value as RagPeriod); resetPages(); }} aria-label="Khoảng thời gian token"><option value="today">Hôm nay</option><option value="7d">7 ngày</option><option value="30d">30 ngày</option><option value="custom">Tùy chọn</option><option value="all">Toàn thời gian</option></select>{period === "custom" && <><input type="date" value={startDate} onChange={event => { setStartDate(event.target.value); resetPages(); }} aria-label="Từ ngày"/><span>đến</span><input type="date" value={endDate} onChange={event => { setEndDate(event.target.value); resetPages(); }} aria-label="Đến ngày"/></>}{!validPeriod && <small>Chọn khoảng ngày hợp lệ.</small>}</div>
       {loading ? <p className="admin-loading" role="status">Đang tải dữ liệu...</p> : <div className="admin-user-list">
-        {users.map(user => <article key={user.id}>
-          <div className="admin-user-main"><div className="admin-avatar">{user.full_name.slice(0, 1).toUpperCase()}</div><div><strong>{user.full_name}</strong><p>{user.email} · @{user.username}</p><small>{user.student_code || "Chưa có mã SV"}{user.faculty ? ` · ${user.faculty}` : ""}</small></div><span className={`admin-status ${user.status.toLowerCase()}`}>{user.status}</span></div>
+        {users.map(user => <article key={user.id} className={user.status === "LOCKED" ? "account-suspended" : user.status === "DISABLED" ? "account-disabled" : ""}>
+          <div className="admin-user-main"><div className="admin-avatar">{user.full_name.slice(0, 1).toUpperCase()}</div><div><strong>{user.full_name}</strong><p>{user.email} · @{user.username}</p><small>{user.student_code || "Chưa có mã SV"}{user.faculty ? ` · ${user.faculty}` : ""}</small></div><span className={`admin-status ${user.status.toLowerCase()}`}>{user.status === "LOCKED" ? "Đang tạm khóa" : user.status === "DISABLED" ? "Đã khóa vĩnh viễn" : user.status === "ACTIVE" ? "Đang hoạt động" : "Chờ kích hoạt"}</span></div>
           <RagTokenSummary user={user} period={period} startDate={startDate} endDate={endDate}/>
           <div className="admin-role-row"><b>Vai trò hiện tại:</b><span className="admin-role-label">{user.system_role === "SUPER_ADMIN" ? "Super Admin" : user.admin_groups.length ? "Group Admin" : "Người dùng"}</span>{user.system_role !== "SUPER_ADMIN" && user.admin_groups.map(adminGroup => <span className="admin-role-label group" key={adminGroup.id}>{adminGroup.name}</span>)}</div>
-          <div className="admin-account-actions">{user.system_role === "SUPER_ADMIN" ? <span>SUPER ADMIN</span> : <DisciplineActions user={user} onDone={load}/>}</div>
+          <div className="admin-account-actions">{user.system_role === "SUPER_ADMIN" ? <span>SUPER ADMIN</span> : <DisciplineActions user={user} onDone={() => load(true)}/>}</div>
         </article>)}
         {!users.length && !error && <p className="admin-loading">Không tìm thấy tài khoản {group === "ADMIN" ? "Admin" : "người dùng"}.</p>}
       </div>}

@@ -80,6 +80,7 @@ async def send_message(conversation_id:uuid.UUID,payload:SendMessageRequest,curr
     await manager.send_users([uid for uid in recipients if uid!=current_user.id],{"event":"notification.created","type":"MESSAGE"})
     return message
 
+@router.post("/conversations/{conversation_id}/messages/{message_id}",response_model=MessageResponse)
 @router.delete("/conversations/{conversation_id}/messages/{message_id}",response_model=MessageResponse)
 async def recall_message(conversation_id:uuid.UUID,message_id:uuid.UUID,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
     def recall_and_recipients():
