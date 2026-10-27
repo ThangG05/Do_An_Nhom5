@@ -10,10 +10,8 @@ import "./admin-feedback.css";
 
 const sections = [
   { href: "/admin", label: "Tổng quan", icon: "▦" },
-  { href: "/admin/analytics", label: "Thống kê", icon: "⌁" },
   { href: "/admin/groups", label: "Quản lý nhóm", icon: "◉" },
   { href: "/admin/users", label: "Tài khoản", icon: "♙" },
-  { href: "/admin/public-posts", label: "Feed công khai", icon: "▤" },
   { href: "/admin/reports", label: "Báo cáo vi phạm", icon: "!" },
   { href: "/admin/audit", label: "Nhật ký quản trị", icon: "≡" },
   { href: "/admin/settings", label: "Cấu hình hệ thống", icon: "⚙" },

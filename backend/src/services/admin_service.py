@@ -124,7 +124,19 @@ def dashboard(db: Session) -> AdminDashboardResponse:
           (SELECT count(*) FROM comments WHERE deleted_at IS NULL) AS total_comments,
           (SELECT count(*) FROM messages WHERE deleted_at IS NULL) AS total_messages
     """)).mappings().one()
-    group_rows = db.execute(text("SELECT g.id,g.name,g.slug,count(DISTINCT gm.user_id) members,count(DISTINCT p.id) FILTER(WHERE p.status='APPROVED' AND p.deleted_at IS NULL) approved_posts,count(DISTINCT p.id) FILTER(WHERE p.status='PENDING' AND p.deleted_at IS NULL) pending_posts FROM groups g LEFT JOIN group_members gm ON gm.group_id=g.id LEFT JOIN posts p ON p.group_id=g.id WHERE g.status='ACTIVE' GROUP BY g.id ORDER BY g.name")).mappings()
+    group_query = text("""
+        SELECT g.id, g.name, g.slug,
+          count(DISTINCT gm.user_id) AS members,
+          count(DISTINCT p.id) FILTER (WHERE p.status='APPROVED' AND p.deleted_at IS NULL) AS approved_posts,
+          count(DISTINCT p.id) FILTER (WHERE p.status='PENDING' AND p.deleted_at IS NULL) AS pending_posts
+        FROM groups g
+        LEFT JOIN group_members gm ON gm.group_id=g.id
+        LEFT JOIN posts p ON p.group_id=g.id
+        WHERE g.status='ACTIVE' AND g.slug IN :main_slugs
+        GROUP BY g.id
+        ORDER BY g.name
+    """).bindparams(bindparam("main_slugs", expanding=True))
+    group_rows = db.execute(group_query, {"main_slugs": tuple(DEDICATED_ADMIN_SLUGS)}).mappings()
     activity_rows = db.execute(text("""
         SELECT day::date AS date,
           (SELECT count(*) FROM users u WHERE u.created_at >= day AND u.created_at < day + interval '1 day' AND u.deleted_at IS NULL) AS new_users,

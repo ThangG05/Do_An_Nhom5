@@ -1,0 +1,33 @@
+.admin-overview-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.admin-overview-panel{min-width:0;padding:24px;border:1px solid #dbe5ee;border-radius:18px;background:#fff;box-shadow:0 8px 28px rgba(10,45,76,.05)}
+.admin-overview-panel-heading span{color:#2872a2;font-size:10px;font-weight:850;letter-spacing:.14em}
+.admin-overview-panel-heading h2{margin:7px 0 5px;color:#11324f;font-size:19px}
+.admin-overview-panel-heading p{margin:0;color:#657b90;font-size:13px}
+.admin-account-chart-content{display:flex;align-items:center;justify-content:space-around;gap:25px;margin-top:25px}
+.admin-account-donut{display:grid;place-items:center;flex:0 0 175px;width:175px;height:175px;border-radius:50%}
+.admin-account-donut>div{display:flex;align-items:center;justify-content:center;flex-direction:column;width:125px;height:125px;border-radius:50%;background:#fff;color:#11324f;box-shadow:0 0 0 1px rgba(255,255,255,.7)}
+.admin-account-donut strong{font-size:28px;line-height:1.15;font-variant-numeric:tabular-nums}
+.admin-account-donut small{margin-top:3px;color:#71869a;font-size:11px}
+.admin-chart-breakdown{display:grid;gap:11px;flex:1;max-width:250px;margin:0;padding:0;list-style:none}
+.admin-chart-breakdown li{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:#4e6680}
+.admin-chart-breakdown li span{display:flex;align-items:center;gap:8px}
+.admin-chart-breakdown li i{display:block;flex:0 0 9px;width:9px;height:9px;border-radius:50%}
+.admin-chart-breakdown li strong{color:#143653;font-variant-numeric:tabular-nums}
+.admin-group-chart{display:grid;align-content:center;gap:17px;min-height:200px;margin-top:19px}
+.admin-group-chart-row>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px;font-size:12px}
+.admin-group-chart-row strong{overflow:hidden;color:#153754;text-overflow:ellipsis;white-space:nowrap}
+.admin-group-chart-row>div:first-child span{flex-shrink:0;color:#667e94;font-variant-numeric:tabular-nums}
+.admin-group-chart-track{height:11px;overflow:hidden;border-radius:999px;background:#eaf1f6}
+.admin-group-chart-track>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#0c4d80,#4aa4d4)}
+.admin-overview-empty{color:#71869a;font-size:13px}
+@media(max-width:1150px){.admin-overview-panels{grid-template-columns:1fr}}
+@media(max-width:650px){.admin-overview-panel{padding:19px}.admin-account-chart-content{flex-wrap:wrap}.admin-chart-breakdown{width:100%;max-width:none}.admin-account-donut{flex-basis:160px;width:160px;height:160px}.admin-account-donut>div{width:114px;height:114px}}
+:root[data-theme="dark"] .admin-overview-panel{background:#192c3e;border-color:#3e5568}
+:root[data-theme="dark"] .admin-overview-panel-heading h2,:root[data-theme="dark"] .admin-chart-breakdown li strong,:root[data-theme="dark"] .admin-group-chart-row strong{color:#ecf5fc}
+:root[data-theme="dark"] .admin-overview-panel-heading p,:root[data-theme="dark"] .admin-chart-breakdown li,:root[data-theme="dark"] .admin-group-chart-row>div:first-child span{color:#a9c0d2}
+:root[data-theme="dark"] .admin-account-donut>div{background:#192c3e;color:#ecf5fc}
+:root[data-theme="dark"] .admin-group-chart-track{background:#30475b}
+:root[data-theme="dark"] .admin-overview-page .admin-page-heading,:root[data-theme="dark"] .admin-overview-page .admin-metric-grid article,:root[data-theme="dark"] .admin-overview-page .admin-charts{background:#192c3e;border-color:#3e5568!important}
+:root[data-theme="dark"] .admin-overview-page .admin-page-heading h1,:root[data-theme="dark"] .admin-overview-page .admin-metric-grid strong,:root[data-theme="dark"] .admin-overview-page .admin-charts h2{color:#ecf5fc}
+:root[data-theme="dark"] .admin-overview-page .admin-page-heading p,:root[data-theme="dark"] .admin-overview-page .admin-metric-grid small,:root[data-theme="dark"] .admin-overview-page .admin-charts p,:root[data-theme="dark"] .admin-overview-page .admin-chart-legend,:root[data-theme="dark"] .admin-overview-page .admin-chart-day small{color:#a9c0d2}
+:root[data-theme="dark"] .admin-overview-page .admin-bar-chart{border-color:#4a6277;background:repeating-linear-gradient(to top,#284054 0,#284054 1px,transparent 1px,transparent 25%)}
