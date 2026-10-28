@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Post, Comment, CommentMention } from '@/types/post';
+import { Post, Comment, CommentMention, PostLikeUser } from '@/types/post';
 import { IconHeart, IconMessage, IconShare } from '@/components/ui/Icons';
-import { addPostComment, fetchPostComments, fetchUserFriends, removeGroupComment, setPostLike } from '@/lib/api';
+import { addPostComment, fetchPostComments, fetchPostLikes, fetchUserFriends, removeGroupComment, setPostLike } from '@/lib/api';
 import { AuthUser, getAuthUser } from '@/lib/auth';
 import { useAuthUser } from '@/components/auth/AuthProvider';
 import PostActionModal from '@/components/post/PostActionModal';
@@ -84,6 +85,12 @@ export default function PostCard({
   const dialog = useDialog();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [likesOpen, setLikesOpen] = useState(false);
+  const [likes, setLikes] = useState<PostLikeUser[]>([]);
+  const [likesTotal, setLikesTotal] = useState(post.likesCount || 0);
+  const [likesOffset, setLikesOffset] = useState(0);
+  const [likesLoading, setLikesLoading] = useState(false);
+  const [likesError, setLikesError] = useState('');
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
   const [sharesCount, setSharesCount] = useState(post.sharesCount || 0);
   useEffect(() => setSharesCount(post.sharesCount || 0), [post.id, post.sharesCount]);
@@ -122,6 +129,26 @@ export default function PostCard({
   const [actionError, setActionError] = useState('');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const loadLikes = async (offset = 0) => {
+    setLikesLoading(true);
+    setLikesError('');
+    try {
+      const result = await fetchPostLikes(post.id, 50, offset);
+      setLikes(current => offset === 0 ? result.items : [...current, ...result.items]);
+      setLikesTotal(result.total);
+      setLikesOffset(result.nextOffset);
+    } catch (error) {
+      setLikesError(error instanceof Error ? error.message : 'Không thể tải danh sách người thích.');
+    } finally {
+      setLikesLoading(false);
+    }
+  };
+
+  const openLikes = () => {
+    setLikesOpen(true);
+    if (!likes.length && !likesLoading) void loadLikes(0);
+  };
   const [viewer, setViewer] = useState<AuthUser | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const removeCommentThread = (id: string) => {
@@ -259,7 +286,33 @@ export default function PostCard({
     const timer = window.setTimeout(() => setActionError(''), 6000);
     return () => window.clearTimeout(timer);
   }, [actionError]);
-  useEffect(()=>{if(lightboxIndex===null)return;const handle=(event:KeyboardEvent)=>{if(event.key==='Escape')setLightboxIndex(null);if(event.key==='ArrowLeft')setLightboxIndex(current=>current===null?null:(current-1+imageMedia.length)%imageMedia.length);if(event.key==='ArrowRight')setLightboxIndex(current=>current===null?null:(current+1)%imageMedia.length);};document.body.style.overflow='hidden';window.addEventListener('keydown',handle);return()=>{document.body.style.overflow='';window.removeEventListener('keydown',handle);};},[lightboxIndex,imageMedia.length]);
+  useEffect(()=>{if(lightboxIndex===null)return;const handle=(event:KeyboardEvent)=>{if(event.key==='Escape')setLightboxIndex(null);if(event.key==='ArrowLeft')setLightboxIndex(current=>current===null?null:(current-1+imageMedia.length)%imageMedia.length);if(event.key==='ArrowRight')setLightboxIndex(current=>current===null?null:(current+1)%imageMedia.length);};window.addEventListener('keydown',handle);return()=>window.removeEventListener('keydown',handle);},[lightboxIndex,imageMedia.length]);
+  const hasBlockingOverlay = likesOpen || lightboxIndex !== null;
+  useEffect(() => {
+    if (!hasBlockingOverlay) return;
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const previous = { position: body.style.position, top: body.style.top, width: body.style.width, overflow: body.style.overflow };
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setLikesOpen(false);
+        setLightboxIndex(null);
+      }
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.removeEventListener('keydown', closeOnEscape);
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.width = previous.width;
+      body.style.overflow = previous.overflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [hasBlockingOverlay]);
 
   const handleLike = async () => {
     if (isLiking) return;
@@ -398,7 +451,9 @@ export default function PostCard({
       <div className="post-card-footer">
         {/* Like & Comment Counters Row */}
         <div className="post-stats-row">
-          <span className="likes-count">👍 {likesCount} lượt thích</span>
+          <button type="button" className="likes-count likes-count-btn" onClick={openLikes} disabled={likesCount === 0} aria-label={`Xem ${likesCount} người đã thích bài viết`}>
+            👍 {likesCount} lượt thích
+          </button>
           <button
             type="button"
             className="comments-count-btn"
@@ -438,6 +493,25 @@ export default function PostCard({
           </button>
           {post.status !== 'PENDING' && post.status !== 'REJECTED' && <button type="button" className="post-action-btn post-share-action" onClick={() => setShareOpen(true)} aria-label="Chia sẻ bài viết"><IconShare size={19} className="action-icon" aria-hidden="true" /><span>Chia sẻ</span></button>}
         </div>
+
+      {likesOpen && <div className="post-likes-backdrop" onClick={() => setLikesOpen(false)}>
+        <section className="post-likes-dialog" role="dialog" aria-modal="true" aria-labelledby={`likes-title-${post.id}`} onClick={event => event.stopPropagation()}>
+          <header className="post-likes-header">
+            <h2 id={`likes-title-${post.id}`}>Người đã thích</h2>
+            <button type="button" className="post-likes-close" onClick={() => setLikesOpen(false)} aria-label="Đóng">×</button>
+          </header>
+          <div className="post-likes-list">
+            {likes.map(user => <Link key={user.id} href={`/profile/${user.id}`} className="post-like-user" onClick={() => setLikesOpen(false)}>
+              <img src={safeImageSrc(user.avatar)} alt="" />
+              <span><strong>{viewer?.id === user.id ? 'Bạn' : user.name}</strong><small>{viewer?.id === user.id ? 'Bạn đã thích bài viết này' : `@${user.username}`}</small></span>
+            </Link>)}
+            {likesLoading && <p className="post-likes-state">Đang tải danh sách…</p>}
+            {likesError && <p className="post-likes-error" role="alert">{likesError}<button type="button" onClick={() => void loadLikes(likesOffset)}>Thử lại</button></p>}
+            {!likesLoading && !likesError && !likes.length && <p className="post-likes-state">Chưa có lượt thích nào.</p>}
+          </div>
+          {!likesLoading && likesOffset < likesTotal && <button type="button" className="post-likes-more" onClick={() => void loadLikes(likesOffset)}>Xem thêm</button>}
+        </section>
+      </div>}
 
         {/* 4. Expandable Comment Section */}
         {isCommentSectionOpen && (
@@ -518,7 +592,16 @@ export default function PostCard({
         )}
         {actionError && <div className="post-error-banner">{actionError}</div>}
       </div>
-      {lightboxIndex!==null&&imageMedia[lightboxIndex]&&<div className="post-media-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh bài viết" onClick={()=>setLightboxIndex(null)}><button type="button" className="lightbox-close" onClick={()=>setLightboxIndex(null)} aria-label="Đóng">×</button>{imageMedia.length>1&&<button type="button" className="lightbox-prev" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex-1+imageMedia.length)%imageMedia.length);}} aria-label="Ảnh trước">‹</button>}<img src={safeImageSrc(imageMedia[lightboxIndex].url)} alt="Nội dung bài viết" onClick={event=>event.stopPropagation()}/>{imageMedia.length>1&&<button type="button" className="lightbox-next" onClick={event=>{event.stopPropagation();setLightboxIndex((lightboxIndex+1)%imageMedia.length);}} aria-label="Ảnh tiếp theo">›</button>}<span className="lightbox-counter">{lightboxIndex+1} / {imageMedia.length}</span></div>}
+      {lightboxIndex !== null && imageMedia[lightboxIndex] && typeof document !== 'undefined' && createPortal(
+        <div className="post-media-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh bài viết" onClick={() => setLightboxIndex(null)}>
+          <button type="button" className="lightbox-close" onClick={() => setLightboxIndex(null)} aria-label="Đóng">×</button>
+          {imageMedia.length > 1 && <button type="button" className="lightbox-prev" onClick={event => { event.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + imageMedia.length) % imageMedia.length); }} aria-label="Ảnh trước">‹</button>}
+          <img src={safeImageSrc(imageMedia[lightboxIndex].url)} alt="Ảnh bài viết ở kích thước đầy đủ" onClick={event => event.stopPropagation()} />
+          {imageMedia.length > 1 && <button type="button" className="lightbox-next" onClick={event => { event.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % imageMedia.length); }} aria-label="Ảnh tiếp theo">›</button>}
+          <span className="lightbox-counter">{lightboxIndex + 1} / {imageMedia.length}</span>
+        </div>,
+        document.body,
+      )}
       <PostActionModal mode={actionMode} post={post} content={content} privacy={privacy} onClose={()=>setActionMode(null)} onUpdated={updated=>{setPost(updated);setContent(updated.content);setPrivacy(updated.privacy);if(updated.status === "PENDING")setIsDeleted(true);}} onDeleted={()=>setIsDeleted(true)} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
       <CommentActionModal comment={commentAction?.comment||null} mode={commentAction?.mode||null} onClose={()=>setCommentAction(null)} onUpdated={updated=>setComments(current=>current.map(item=>item.id===updated.id?updated:item))} onDeleted={()=>{if(commentAction)removeCommentThread(commentAction.comment.id);}} onMessage={message=>dialog.notify({title:message,tone:'success'})}/>
       {shareOpen && <SharePostModal post={post} viewerId={viewer?.id} onClose={() => setShareOpen(false)} onShared={setSharesCount} />}

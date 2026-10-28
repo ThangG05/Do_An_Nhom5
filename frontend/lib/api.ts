@@ -212,6 +212,10 @@ export async function setPostLike(postId: string, isLiked: boolean): Promise<{ i
   return api(`/posts/${postId}/like`, { method: 'PUT', body: JSON.stringify({ is_liked: isLiked }) });
 }
 
+export async function fetchPostLikes(postId: string, limit = 50, offset = 0): Promise<{ items: import('@/types/post').PostLikeUser[]; total: number; nextOffset: number }> {
+  return api(`/posts/${encodeURIComponent(postId)}/likes?limit=${limit}&offset=${offset}`);
+}
+
 export async function addPostComment(postId: string, content: string, parentId?: string, image?: File, mentions: { user_id: string; start: number; end: number }[] = []): Promise<import('@/types/post').Comment> {
   let mediaId: string | undefined;
   if (image) {

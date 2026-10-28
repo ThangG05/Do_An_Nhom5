@@ -65,8 +65,17 @@ async def search_locations(
     q: Annotated[str, Query(min_length=2, max_length=200)],
     limit: Annotated[int, Query(ge=1, le=5)] = 5,
 ) -> list[LocationSuggestion]:
-    payload = await _photon_get("/api/", {"q": _normalize_query(q.strip()), "limit": limit, "bbox": _VIETNAM_BBOX})
-    return [_suggestion(feature) for feature in payload.get("features", []) if (feature.get("geometry") or {}).get("coordinates")]
+    original = q.strip()
+    queries = [original]
+    normalized = _normalize_query(original)
+    if normalized.casefold() != original.casefold():
+        queries.append(normalized)
+    for candidate in queries:
+        payload = await _photon_get("/api/", {"q": candidate, "limit": limit, "bbox": _VIETNAM_BBOX})
+        features = [feature for feature in payload.get("features", []) if (feature.get("geometry") or {}).get("coordinates")]
+        if features:
+            return [_suggestion(feature) for feature in features]
+    return []
 
 
 @router.get("/reverse", response_model=LocationSuggestion | None)

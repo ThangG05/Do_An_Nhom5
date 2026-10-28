@@ -56,8 +56,56 @@
   from { transform: translate3d(0, 0, 0) rotate(-10deg); }
   to { transform: translate3d(-18px, 18px, 0) rotate(12deg); }
 }
+
+/* A little motion on the main discovery flows, while keeping reading surfaces calm. */
+@media (prefers-reduced-motion: no-preference) {
+  .home-welcome,
+  .create-post-card,
+  .live-groups-hero,
+  .live-group-summary {
+    animation: hub-enter 420ms cubic-bezier(.2,.75,.25,1) both;
+  }
+
+  .home-feed > div:nth-child(n+3) .post-card-item,
+  .live-group-feed > .live-post-wrap .post-card-item {
+    animation: hub-enter 440ms cubic-bezier(.2,.75,.25,1) both;
+  }
+  .home-feed > div:nth-child(3) .post-card-item,
+  .live-group-feed > .live-post-wrap:nth-of-type(2) .post-card-item { animation-delay: 45ms; }
+  .home-feed > div:nth-child(4) .post-card-item,
+  .live-group-feed > .live-post-wrap:nth-of-type(3) .post-card-item { animation-delay: 90ms; }
+  .home-feed > div:nth-child(5) .post-card-item,
+  .live-group-feed > .live-post-wrap:nth-of-type(4) .post-card-item { animation-delay: 135ms; }
+
+  .live-group-tabs > button { transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease; }
+  .live-group-tabs > button:hover { transform: translateY(-2px); box-shadow: 0 9px 20px #0b315014; }
+  .post-card-item { transition: box-shadow 220ms ease, border-color 220ms ease; }
+  .post-card-item:hover { border-color: #c7d8e8; box-shadow: 0 12px 28px #0b315015; }
+  .post-action-btn .action-icon { transition: transform 180ms cubic-bezier(.2,.8,.2,1); }
+  .post-action-btn:hover .action-icon { transform: translateY(-1px) scale(1.08); }
+  .post-action-btn.liked .action-icon { animation: hub-like-pop 360ms cubic-bezier(.2,.8,.2,1); }
+  .post-likes-backdrop { animation: hub-overlay-in 180ms ease-out both; }
+  .post-likes-dialog { animation: hub-dialog-in 240ms cubic-bezier(.2,.8,.2,1) both; }
+}
+
+@keyframes hub-enter {
+  from { opacity: 0; transform: translateY(12px) scale(.994); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes hub-like-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+@keyframes hub-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hub-dialog-in { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
 @media (prefers-reduced-motion: reduce) {
   :is(.home-welcome, .live-groups-hero)::before,
   :is(.home-welcome, .live-groups-hero)::after { animation: none; }
-  :is(.live-group-tabs > button, .home-side-card, .home-shortcut-list a, .home-quick-links a, .assistant-welcome button, .btn) { transition: none; }
+  :is(.live-group-tabs > button, .home-side-card, .home-shortcut-list a, .home-quick-links a, .assistant-welcome button, .btn,
+      .post-card-item, .post-action-btn .action-icon) { transition: none; animation: none; }
+  :is(.home-welcome, .create-post-card, .live-groups-hero, .live-group-summary,
+      .home-feed > div .post-card-item, .live-group-feed > .live-post-wrap .post-card-item,
+      .post-likes-backdrop, .post-likes-dialog) { animation: none; }
 }

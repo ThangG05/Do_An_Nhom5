@@ -1,10 +1,12 @@
 """Private, group-scoped document library for the canonical Study group only."""
 import hashlib
 import logging
+import re
 import tempfile
 import uuid
 import zipfile
 from collections import defaultdict
+from xml.etree import ElementTree
 from pathlib import Path
 from urllib.parse import quote
 
@@ -584,8 +586,8 @@ def preview_office_file(db: Session, group_id: uuid.UUID, document_id: uuid.UUID
     if not file:
         raise HTTPException(404, "Không tìm thấy file.")
     extension = file["extension"].lower()
-    if extension not in {"docx", "xlsx"}:
-        raise HTTPException(415, "Xem trước hiện hỗ trợ Word .docx và Excel .xlsx; file .doc/.xls cần tải về.")
+    if extension not in {"docx", "xlsx", "pptx"}:
+        raise HTTPException(415, "Xem trước hỗ trợ .docx, .xlsx và .pptx. Các định dạng Office cũ cần tải về.")
     content = tempfile.SpooledTemporaryFile(max_size=8 * 1024 * 1024, mode="w+b")
     try:
         get_r2_client().download_fileobj(_private_bucket(), file["r2_object_key"], content)
@@ -602,6 +604,36 @@ def preview_office_file(db: Session, group_id: uuid.UUID, document_id: uuid.UUID
                       for table in document.tables[:50]]
             return {"kind": "word", "name": file["original_name"],
                     "paragraphs": paragraphs[:500], "tables": tables[:50]}
+
+        if extension == "pptx":
+            # PPTX is an OOXML ZIP. Bound its expanded size and entry count before
+            # parsing so a compressed upload cannot consume unbounded resources.
+            content.seek(0)
+            with zipfile.ZipFile(content) as archive:
+                entries = archive.infolist()
+                if len(entries) > 2_000 or sum(entry.file_size for entry in entries) > 100 * 1024 * 1024:
+                    raise HTTPException(422, "Tệp PowerPoint quá lớn để xem trước an toàn.")
+                slide_names = []
+                for entry in entries:
+                    match = re.fullmatch(r"ppt/slides/slide(\d+)\.xml", entry.filename)
+                    if match:
+                        slide_names.append((int(match.group(1)), entry.filename))
+                slide_names.sort()
+                slides = []
+                for slide_number, name in slide_names[:100]:
+                    root = ElementTree.fromstring(archive.read(name))
+                    paragraphs = []
+                    for paragraph in root.iter():
+                        if paragraph.tag.endswith("}p"):
+                            value = "".join(
+                                node.text or "" for node in paragraph.iter()
+                                if node.tag.endswith("}t")
+                            ).strip()
+                            if value:
+                                paragraphs.append(value[:5_000])
+                    slides.append({"number": slide_number, "text": "\n".join(paragraphs)[:20_000]})
+            return {"kind": "presentation", "name": file["original_name"],
+                    "slides": slides, "truncated": len(slide_names) > 100}
 
         workbook = load_workbook(content, read_only=True, data_only=True)
         try:

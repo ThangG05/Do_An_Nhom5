@@ -43,6 +43,17 @@ _SOCIAL_PHRASES = {
     "tạm biệt": {"tạm biệt", "tạm biệt bạn", "tạm biệt nhé", "hẹn gặp lại", "bye", "goodbye"},
     "xác nhận": {"ok", "oke", "được rồi", "ừ", "ừ đúng rồi", "đúng rồi", "hay quá", "haha"},
 }
+_SOCIAL_PATTERNS = {
+    "chào": (
+        r"(?:(?:xin )?chào)(?: bạn| trợ lý| bot)?(?: nhé| nha| ạ)?",
+    ),
+    "cảm ơn": (
+        r"(?:cảm|cám) ơn(?: bạn)?(?: rất)?(?: nhiều)?(?: bạn)?(?: nhé| nha| ạ| nè)?",
+    ),
+    "tạm biệt": (
+        r"(?:tạm biệt|hẹn gặp lại)(?: bạn)?(?: nhé| nha| ạ)?",
+    ),
+}
 
 
 def social_reply(question: str) -> str | None:
@@ -51,6 +62,12 @@ def social_reply(question: str) -> str | None:
     normalized = " ".join(re.findall(r"[^\W_]+", normalized, flags=re.UNICODE))
     for kind, phrases in _SOCIAL_PHRASES.items():
         if normalized in phrases:
+            return _SOCIAL_REPLIES[kind]
+    # Accept natural polite particles (e.g. “Cảm ơn nha”) while requiring the
+    # entire message to be social. Mixed factual or security-sensitive prompts
+    # continue through the normal guarded RAG pipeline.
+    for kind, patterns in _SOCIAL_PATTERNS.items():
+        if any(re.fullmatch(pattern, normalized) for pattern in patterns):
             return _SOCIAL_REPLIES[kind]
     return None
 

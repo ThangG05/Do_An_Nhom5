@@ -119,3 +119,10 @@ export interface Post {
   status?: 'APPROVED' | 'PENDING' | 'REJECTED' | 'HIDDEN' | 'DELETED';
   rejectionReason?: string | null;
 }
+
+export interface PostLikeUser {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+}

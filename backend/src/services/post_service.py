@@ -12,7 +12,7 @@ from src.db.models.chat import Message
 from src.db.models.media import MediaFile, MediaStatus
 from src.db.models.post import Comment, Post, PostLike, PostMedia, PostShare, PostStatus, PostType, PostVisibility
 from src.db.models.user import Profile, SystemRole, User
-from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentMentionResponse, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RegisterPostShareRequest, RoomListingData, StudyListingData, validate_group_fields, UpdatePostRequest
+from src.models.post import CommentAuthorResponse, CommentCreateRequest, CommentMentionResponse, CommentResponse, CommentUpdateRequest, CreateProfilePostRequest, EventListingData, MarketListingData, PostAuthorResponse, PostLikeUserResponse, PostLikesResponse, PostLocationData, PostMediaResponse, ProfilePostResponse, RegisterPostShareRequest, RoomListingData, StudyListingData, validate_group_fields, UpdatePostRequest
 from src.models.user import UserListingResponse, UserPhotoResponse
 from src.services.storage_service import create_download_url
 from src.services.block_service import is_blocked
@@ -425,6 +425,25 @@ def list_comments(db: Session, post_id: uuid.UUID, viewer: User, limit: int = 10
         if focused:
             rows = sorted([*rows, focused], key=lambda comment: comment.created_at)
     return _comment_responses(db, rows)
+
+
+def list_post_likes(db: Session, post_id: uuid.UUID, viewer: User, limit: int = 50, offset: int = 0) -> PostLikesResponse:
+    post = get_visible_post(db, post_id, viewer)
+    query = (select(PostLike, User, Profile, MediaFile)
+        .join(User, User.id == PostLike.user_id)
+        .outerjoin(Profile, Profile.user_id == User.id)
+        .outerjoin(MediaFile, MediaFile.id == Profile.avatar_media_id)
+        .where(PostLike.post_id == post.id)
+        .order_by(PostLike.created_at.desc(), PostLike.user_id))
+    total = db.scalar(select(func.count()).select_from(PostLike).where(PostLike.post_id == post.id)) or 0
+    rows = db.execute(query.offset(offset).limit(limit)).all()
+    items = [PostLikeUserResponse(
+        id=str(user.id),
+        name=profile.full_name if profile else user.username,
+        username=user.username,
+        avatar=create_download_url(avatar) if avatar and avatar.status == MediaStatus.READY else "/assets/logo.png",
+    ) for _, user, profile, avatar in rows if not is_blocked(db, viewer.id, user.id)]
+    return PostLikesResponse(items=items, total=total, nextOffset=offset + len(rows))
 
 
 def set_like(db: Session, post_id: uuid.UUID, user: User, desired: bool) -> tuple[bool, int]:

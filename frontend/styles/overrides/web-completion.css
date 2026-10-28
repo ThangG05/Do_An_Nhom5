@@ -156,7 +156,7 @@ body:has(.home-page-single-column){overflow-x:clip}
 .post-card-header{padding:14px 16px 10px!important}
 .post-card-body{padding:2px 16px 12px!important}
 .post-text-content{margin:8px 0 13px!important;color:var(--hub-text)!important;font-size:14px!important;line-height:1.62!important;white-space:pre-wrap;overflow-wrap:anywhere}
-.post-media-gallery{margin-inline:-16px!important;border-radius:0!important}
+.post-media-gallery{width:auto!important;margin-inline:-16px!important;border-radius:0!important}
 .post-card-footer{padding-bottom:6px}
 .post-stats-row{min-height:38px;padding:7px 16px!important}
 .post-action-buttons-row{margin:0 16px!important;padding:4px 0!important}

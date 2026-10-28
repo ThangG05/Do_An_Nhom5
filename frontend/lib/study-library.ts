@@ -119,7 +119,8 @@ export const deleteStudyDocument = (groupId: string, documentId: string) =>
 
 export type OfficePreview =
   | { kind: "word"; name: string; paragraphs: string[]; tables: string[][][] }
-  | { kind: "excel"; name: string; sheets: { name: string; rows: (string | null)[][]; truncated: boolean }[] };
+  | { kind: "excel"; name: string; sheets: { name: string; rows: (string | null)[][]; truncated: boolean }[] }
+  | { kind: "presentation"; name: string; slides: { number: number; text: string }[]; truncated: boolean };
 
 export async function downloadStudyBundle(groupId: string, documentId: string): Promise<Blob> {
   const response = await authenticatedFetch(`${BASE}/groups/${groupId}/library/${documentId}/download-bundle`);

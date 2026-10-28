@@ -7,7 +7,7 @@ from starlette.concurrency import run_in_threadpool
 
 from src.api.dependencies import CurrentUser
 from src.db.session import get_db
-from src.models.post import CommentCreateRequest, CommentResponse, CommentUpdateRequest, LikeRequest, LikeResponse, ProfilePostResponse, RegisterPostShareRequest, RegisterPostShareResponse, UpdatePostRequest
+from src.models.post import CommentCreateRequest, CommentResponse, CommentUpdateRequest, LikeRequest, LikeResponse, PostLikesResponse, ProfilePostResponse, RegisterPostShareRequest, RegisterPostShareResponse, UpdatePostRequest
 from src.services import post_service
 from src.db.models.post import Post
 from src.services.realtime_service import manager
@@ -27,6 +27,11 @@ def feed(response: Response, current_user: CurrentUser, db: Annotated[Session, D
 @router.get("/{post_id}/comments", response_model=list[CommentResponse])
 def comments(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int, Query(ge=1, le=100)] = 100, focus_comment_id: uuid.UUID | None = None):
     return post_service.list_comments(db, post_id, current_user, limit, focus_comment_id)
+
+
+@router.get("/{post_id}/likes", response_model=PostLikesResponse)
+def likes(post_id: uuid.UUID, current_user: CurrentUser, db: Annotated[Session, Depends(get_db)], limit: Annotated[int, Query(ge=1, le=100)] = 50, offset: Annotated[int, Query(ge=0)] = 0):
+    return post_service.list_post_likes(db, post_id, current_user, limit, offset)
 
 
 @router.get("/{post_id}", response_model=ProfilePostResponse)

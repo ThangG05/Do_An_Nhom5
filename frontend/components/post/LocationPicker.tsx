@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import { reverseGeocode, searchLocations, type LocationSuggestion } from "@/lib/api";
 import type { PostLocation } from "@/types/post";
@@ -21,6 +22,7 @@ const toPostLocation = (result: LocationSuggestion): PostLocation => ({
 export default function LocationPicker({ open, onClose, onSelect }: LocationPickerProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<LocationSuggestion[]>([]);
+  const [activeResult, setActiveResult] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [message, setMessage] = useState("");
@@ -32,6 +34,8 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
   useEffect(() => {
     if (!open) {
       gpsRequestId.current += 1;
+      searchRequestId.current += 1;
+      activeFlow.current = null;
       setIsLocating(false);
       return;
     }
@@ -59,7 +63,10 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
       setMessageTone("info");
       try {
         const found = await searchLocations(normalized);
-        if (activeFlow.current === "search" && requestId === searchRequestId.current) setResults(found);
+        if (activeFlow.current === "search" && requestId === searchRequestId.current) {
+          setResults(found);
+          setActiveResult(0);
+        }
       } catch (error) {
         if (activeFlow.current === "search" && requestId === searchRequestId.current) {
           setResults([]);
@@ -76,17 +83,24 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
   if (!open) return null;
 
   const choose = (result: LocationSuggestion) => {
+    activeFlow.current = null;
     onSelect(toPostLocation(result));
     onClose();
   };
 
   const useCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setMessage("Thiết bị hoặc trình duyệt này không hỗ trợ định vị.");
+    if (!window.isSecureContext) {
+      setMessage("Vị trí hiện tại cần HTTPS hoặc localhost. Bạn vẫn có thể tìm địa điểm bên dưới.");
+      setMessageTone("error");
       return;
     }
-    // Invalidate a pending search. Otherwise its late failure can paint a red
-    // error while the browser is still correctly resolving GPS.
+    if (!navigator.geolocation) {
+      setMessage("Trình duyệt này không hỗ trợ định vị. Bạn có thể tìm địa điểm bên dưới.");
+      setMessageTone("error");
+      return;
+    }
+    // A single bounded GPS request prevents the UI waiting through several
+    // consecutive browser timeouts. Typing a place can still be used instead.
     searchRequestId.current += 1;
     const requestId = ++gpsRequestId.current;
     activeFlow.current = "gps";
@@ -95,11 +109,7 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
     setIsLocating(true);
     setMessage("");
     setMessageTone("info");
-    let attempts = 0;
-    const resolvePosition = () => {
-      if (requestId !== gpsRequestId.current) return;
-      attempts += 1;
-      navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         if (requestId !== gpsRequestId.current) return;
         try {
@@ -123,26 +133,47 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
       },
       (error) => {
         if (requestId !== gpsRequestId.current) return;
-        const denied = error.code === error.PERMISSION_DENIED;
-        if (denied) {
-          // The user asked for a silent GPS flow. Re-enable the button
-          // without adding an alert; they can grant the permission and retry.
+        if (error.code !== error.PERMISSION_DENIED && error.code !== error.TIMEOUT) {
           setMessage("");
+          setMessageTone("info");
           setIsLocating(false);
           return;
         }
-        // Keep waiting and retry silently. Windows location providers often
-        // need several attempts after waking from sleep or starting Chrome.
-        if (attempts < 3) window.setTimeout(resolvePosition, 1_500);
-        else { setMessage("Thiết bị chưa cung cấp vị trí. Hãy tìm địa điểm theo tên."); setIsLocating(false); }
+        const detail = error.code === error.PERMISSION_DENIED
+          ? "Bạn chưa cho phép trình duyệt truy cập vị trí. Hãy bật quyền vị trí hoặc tìm địa điểm theo tên."
+          : "Trình duyệt không lấy được vị trí trong 15 giây. Hãy thử lại hoặc tìm địa điểm theo tên.";
+        setMessage(detail);
+        setMessageTone("error");
+        setIsLocating(false);
       },
-      // Ten seconds is often insufficient on desktop devices after a fresh
-      // permission grant. Keep the UI in a loading state rather than showing
-      // a false error while the operating system is still acquiring a fix.
-      { enableHighAccuracy: false, timeout: 30_000, maximumAge: 60_000 },
-      );
-    };
-    resolvePosition();
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 120_000 },
+    );
+  };
+
+  const handleQueryChange = (value: string) => {
+    // If the user starts typing while GPS is resolving, prefer their explicit
+    // search and ignore any late location callback.
+    gpsRequestId.current += 1;
+    searchRequestId.current += 1;
+    activeFlow.current = "search";
+    setIsLocating(false);
+    setMessage("");
+    setMessageTone("info");
+    setQuery(value);
+  };
+
+  const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!results.length) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveResult(index => (index + 1) % results.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveResult(index => (index - 1 + results.length) % results.length);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      choose(results[activeResult] || results[0]);
+    }
   };
 
   return (
@@ -151,10 +182,10 @@ export default function LocationPicker({ open, onClose, onSelect }: LocationPick
         <div className="location-picker-header"><div><h3 id="location-picker-title">Thêm vị trí</h3><p>Chỉ chia sẻ vị trí khi bạn chủ động chọn.</p></div><button type="button" className="location-picker-close" onClick={onClose} aria-label="Đóng chọn vị trí">×</button></div>
         <button type="button" className="current-location-button" disabled={isLocating} onClick={useCurrentLocation}><span aria-hidden="true">⌖</span> {isLocating ? "Đang xác định vị trí..." : "Dùng vị trí hiện tại"}</button>
         <label className="location-search-label" htmlFor="post-location-search">Hoặc tìm địa điểm</label>
-        <input id="post-location-search" autoFocus className="location-search-input" placeholder="Ví dụ: Học viện Ngân hàng, Hà Nội" value={query} onChange={(event) => setQuery(event.target.value)} />
+        <input id="post-location-search" autoFocus className="location-search-input" placeholder="Ví dụ: Học viện Ngân hàng, Hà Nội" value={query} onChange={(event) => handleQueryChange(event.target.value)} onKeyDown={handleSearchKeyDown} role="combobox" aria-autocomplete="list" aria-controls="post-location-results" aria-expanded={results.length > 0} />
         {isSearching && <p className="location-picker-status">Đang tìm địa điểm…</p>}
         {message && <p className={`location-picker-message ${messageTone}`} role="status">{message}</p>}
-        {results.length > 0 && <div className="location-results" role="listbox" aria-label="Gợi ý địa điểm">{results.map((result) => <button type="button" key={`${result.latitude}-${result.longitude}-${result.address}`} className="location-result" onClick={() => choose(result)}><span aria-hidden="true">📍</span><span><strong>{result.name}</strong><small>{result.address}</small></span></button>)}</div>}
+        {results.length > 0 && <div className="location-results" id="post-location-results" role="listbox" aria-label="Gợi ý địa điểm">{results.map((result, index) => <button type="button" role="option" aria-selected={index === activeResult} key={`${result.latitude}-${result.longitude}-${result.address}`} className={`location-result${index === activeResult ? " active" : ""}`} onMouseEnter={() => setActiveResult(index)} onClick={() => choose(result)}><span aria-hidden="true">📍</span><span><strong>{result.name}</strong><small>{result.address}</small></span></button>)}</div>}
         {query.trim().length >= 2 && !isSearching && !message && results.length === 0 && <p className="location-picker-status">Không có địa điểm phù hợp tại Việt Nam.</p>}
       </section>
     </div>

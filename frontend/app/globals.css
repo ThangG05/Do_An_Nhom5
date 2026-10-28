@@ -4726,6 +4726,34 @@ button {
   margin-bottom: 8px;
 }
 
+.likes-count-btn {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.likes-count-btn:disabled { cursor: default; }
+.likes-count-btn:not(:disabled):hover { color: #0b5cad; text-decoration: underline; }
+.post-likes-backdrop { position: fixed; inset: 0; z-index: 1600; display: grid; place-items: center; padding: 20px; background: rgba(12, 28, 48, .48); backdrop-filter: blur(3px); }
+.post-likes-dialog { width: min(100%, 430px); max-height: min(76dvh, 560px); display: flex; flex-direction: column; overflow: hidden; overscroll-behavior: contain; border: 1px solid #d7e2ee; border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(12, 35, 64, .24); }
+.post-likes-header { display: flex; align-items: center; justify-content: space-between; padding: 17px 20px; border-bottom: 1px solid #e7edf4; }
+.post-likes-header h2 { margin: 0; color: #16375d; font-size: 18px; }
+.post-likes-close { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #eef4f9; color: #35536f; font-size: 24px; line-height: 1; cursor: pointer; }
+.post-likes-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 8px 12px; }
+.post-like-user { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-radius: 12px; color: #15385e; text-decoration: none; }
+.post-like-user:hover { background: #f1f6fb; }
+.post-like-user img { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%; object-fit: cover; background: #e8eff6; }
+.post-like-user span { display: grid; gap: 3px; min-width: 0; }
+.post-like-user strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.post-like-user small { color: #73859a; }
+.post-likes-state, .post-likes-error { margin: 0; padding: 18px 8px; color: #718096; text-align: center; }
+.post-likes-error { color: #b42332; }
+.post-likes-error button { margin-left: 8px; border: 0; background: transparent; color: #075b9d; font-weight: 700; cursor: pointer; }
+.post-likes-more { margin: 0 20px 16px; padding: 10px; border: 1px solid #d4e1ee; border-radius: 10px; background: #f5f9fc; color: #134a79; font-weight: 700; cursor: pointer; }
+@media (max-width: 600px) { .post-likes-backdrop { align-items: end; padding: 0; } .post-likes-dialog { width: 100%; max-height: 78dvh; border-radius: 20px 20px 0 0; } }
+
 .post-action-buttons-row {
   display: flex;
   border-top: 1px solid #f0f2f5;

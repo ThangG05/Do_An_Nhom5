@@ -205,6 +205,19 @@ class LikeResponse(BaseModel):
     likesCount: int
 
 
+class PostLikeUserResponse(BaseModel):
+    id: str
+    name: str
+    username: str
+    avatar: str
+
+
+class PostLikesResponse(BaseModel):
+    items: list[PostLikeUserResponse]
+    total: int
+    nextOffset: int
+
+
 class LikeRequest(BaseModel):
     is_liked: bool
 
