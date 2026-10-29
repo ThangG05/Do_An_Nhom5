@@ -1,7 +1,7 @@
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class SubjectResponse(BaseModel):
@@ -32,6 +32,30 @@ class SubjectUpsertRequest(BaseModel):
     category: Literal["GENERAL", "SPECIALIZED"] = "SPECIALIZED"
     needs_review: bool = False
     major_ids: list[uuid.UUID] | None = None
+
+
+class StudyDuplicateCheckRequest(BaseModel):
+    checksums: list[str] = Field(min_length=1, max_length=10)
+
+    @field_validator("checksums")
+    @classmethod
+    def validate_checksums(cls, values: list[str]) -> list[str]:
+        normalized = [value.strip().lower() for value in values]
+        if any(len(value) != 64 or any(char not in "0123456789abcdef" for char in value)
+               for value in normalized):
+            raise ValueError("Mã kiểm tra file không hợp lệ.")
+        return normalized
+
+
+class StudyDuplicateFileMatch(BaseModel):
+    sha256: str
+    duplicate_count: int
+    pending_count: int
+    approved_count: int
+
+
+class StudyDuplicateCheckResponse(BaseModel):
+    matches: list[StudyDuplicateFileMatch]
 
 
 class StudyDocumentFileResponse(BaseModel):

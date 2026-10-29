@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   decideStudyDocument, decideStudyDocumentReport, deleteStudyDocument, downloadStudyBundle, listStudyDocuments,
   myStudyDocuments, openStudyDocumentReports, pendingStudyDocuments, pendingStudyAIAssessments, previewStudyOfficeFile,
-  reportStudyDocument, shareStudyDocument, signedStudyFile,
+  reportStudyDocument, shareStudyDocument, signedStudyFile, checkStudyFileDuplicates,
   documentTypeLabel, assessmentTypeLabel,
   type StudyDocument, type StudyDocumentReport, type StudyFile, type CatalogScope, type OfficePreview,
   type DocumentType, type AssessmentType, type StudyAIAssessment,
@@ -23,6 +23,12 @@ const formatSize = (bytes: number) => bytes >= 1024 * 1024
 const formatDate = (value: string) => new Intl.DateTimeFormat("vi-VN", {
   dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh",
 }).format(new Date(value));
+const sha256File = async (file: File) => {
+  if (!globalThis.crypto?.subtle) throw new Error("Trình duyệt hiện tại không hỗ trợ kiểm tra file an toàn.");
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+};
+type SelectedFileDuplicate = { pending: number; approved: number; withinSelection: boolean };
 
 export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount = 0, reportCount = 0 }: {
   groupId: string; isAdmin: boolean; canRead: boolean; pendingCount?: number; reportCount?: number;
@@ -48,6 +54,9 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [duplicateScan, setDuplicateScan] = useState<"idle" | "checking" | "done" | "failed">("idle");
+  const [duplicateFileStates, setDuplicateFileStates] = useState<Map<File, SelectedFileDuplicate>>(new Map());
+  const duplicateCheckId = useRef(0);
   const [showForm, setShowForm] = useState(false);
   const [rejecting, setRejecting] = useState("");
   const [reason, setReason] = useState("");
@@ -66,6 +75,7 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   const totalBytes = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files]);
 
   const resetUploadForm = () => {
+    duplicateCheckId.current += 1;
     setUploadSubjectId("");
     setUploadSubjectName("");
     setUploadMajorId("");
@@ -74,7 +84,45 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
     setTitle("");
     setDescription("");
     setFiles([]);
+    setDuplicateFileStates(new Map());
+    setDuplicateScan("idle");
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const checkDuplicates = async (selectedFiles: File[]) => {
+    const checkId = ++duplicateCheckId.current;
+    setDuplicateFileStates(new Map());
+    if (!selectedFiles.length) { setDuplicateScan("idle"); return; }
+    setDuplicateScan("checking");
+    try {
+      const fingerprints: { file: File; sha256: string }[] = [];
+      for (const file of selectedFiles) fingerprints.push({ file, sha256: await sha256File(file) });
+      const frequencies = new Map<string, number>();
+      for (const fingerprint of fingerprints) frequencies.set(
+        fingerprint.sha256, (frequencies.get(fingerprint.sha256) ?? 0) + 1,
+      );
+      const existing = await checkStudyFileDuplicates(
+        groupId, [...new Set(fingerprints.map(item => item.sha256))],
+      );
+      if (checkId !== duplicateCheckId.current) return;
+      const matches = new Map(existing.matches.map(match => [match.sha256, match]));
+      const nextStates = new Map<File, SelectedFileDuplicate>();
+      for (const { file, sha256 } of fingerprints) {
+        const match = matches.get(sha256);
+        const withinSelection = (frequencies.get(sha256) ?? 0) > 1;
+        if (match || withinSelection) nextStates.set(file, {
+          pending: match?.pending_count ?? 0,
+          approved: match?.approved_count ?? 0,
+          withinSelection,
+        });
+      }
+      setDuplicateFileStates(nextStates);
+      setDuplicateScan("done");
+    } catch {
+      if (checkId !== duplicateCheckId.current) return;
+      setDuplicateFileStates(new Map());
+      setDuplicateScan("failed");
+    }
   };
 
   const toggleUploadForm = () => {
@@ -88,7 +136,9 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
     // FileList is live: clearing the input below can empty it before React runs the state updater.
     const pickedFiles = Array.from(selected ?? []);
     if (!pickedFiles.length) return;
-    setFiles(current => [...current, ...pickedFiles]);
+    const nextFiles = [...files, ...pickedFiles];
+    setFiles(nextFiles);
+    void checkDuplicates(nextFiles);
     if (!title.trim() && !files.length) {
       const suggestion = pickedFiles[0].name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
       if (suggestion.length >= 5) setTitle(suggestion.slice(0, 120));
@@ -96,7 +146,9 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   };
 
   const removeFile = (index: number) => {
-    setFiles(current => current.filter((_, fileIndex) => fileIndex !== index));
+    const nextFiles = files.filter((_, fileIndex) => fileIndex !== index);
+    setFiles(nextFiles);
+    void checkDuplicates(nextFiles);
   };
 
   useEffect(() => {
@@ -140,6 +192,11 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (duplicateScan === "checking") return;
+    if (duplicateFileStates.size > 0) {
+      setError("Có file trùng trong kho hoặc trong danh sách đang chọn. Hãy gỡ file được cảnh báo trước khi chia sẻ.");
+      return;
+    }
     if (!uploadMajorId || !uploadSubjectId || !documentType || title.trim().length < 5 || !files.length || totalBytes > LIMIT || files.length > 10) return;
     setBusy(true); setError(""); setNotice("");
     try {
@@ -253,14 +310,20 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
       <input ref={fileInputRef} className={styles.fileInput} type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp" aria-label="Chọn tài liệu để chia sẻ" onChange={event => { addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} />
       <button type="button" className={styles.filePick} disabled={busy} onClick={() => fileInputRef.current?.click()}>+ Chọn file PDF, Office hoặc ảnh</button>
       <div className={styles.fileSummary}><span>{files.length ? `${files.length} tệp đã chọn` : "Chưa có file"}</span><strong className={totalBytes > LIMIT ? styles.over : ""}>{formatSize(totalBytes)} / 50 MB</strong></div>
-      {files.length > 0 && <ul className={styles.selectedFiles} aria-label="Tệp đã chọn để chia sẻ">{files.map((file, index) => <li key={`${file.name}-${file.lastModified}-${index}`}><span className={styles.selectedFileIcon} aria-hidden="true">▤</span><span className={styles.selectedFileInfo}><strong title={file.name}>{file.name}</strong><small>{formatSize(file.size)}</small></span><button type="button" disabled={busy} onClick={() => removeFile(index)} aria-label={`Gỡ tệp ${file.name}`} title="Gỡ tệp khỏi danh sách">Gỡ</button></li>)}</ul>}
+      {files.length > 0 && <ul className={styles.selectedFiles} aria-label="Tệp đã chọn để chia sẻ">{files.map((file, index) => {
+        const duplicate = duplicateFileStates.get(file);
+        return <li key={`${file.name}-${file.lastModified}-${index}`}><span className={styles.selectedFileIcon} aria-hidden="true">▤</span><span className={styles.selectedFileInfo}><strong title={file.name}>{file.name}</strong><small>{formatSize(file.size)}</small>{duplicate && <small className={styles.duplicateWarning}>⚠ {duplicate.withinSelection ? "Trùng với file khác đang chọn" : "Đã có file trùng trong kho Học tập"}{duplicate.pending > 0 && ` · ${duplicate.pending} bản chờ duyệt`}{duplicate.approved > 0 && ` · ${duplicate.approved} bản đã duyệt`}</small>}</span><button type="button" disabled={busy} onClick={() => removeFile(index)} aria-label={`Gỡ tệp ${file.name}`} title="Gỡ tệp khỏi danh sách">Gỡ</button></li>;
+      })}</ul>}
+      {files.length > 0 && <p className={duplicateFileStates.size ? styles.duplicateWarning : styles.duplicateStatus} role="status">
+        {duplicateScan === "checking" ? "Đang kiểm tra file trùng trong kho Học tập…" : duplicateFileStates.size ? "Không thể gửi khi còn file trùng. Gỡ các file được cảnh báo để tiếp tục." : duplicateScan === "failed" ? "Chưa kiểm tra được lúc chọn file; hệ thống sẽ kiểm tra lại trước khi tải lên." : duplicateScan === "done" ? "Đã kiểm tra: chưa thấy file trùng trong kho Học tập." : ""}
+      </p>}
       <label>Tiêu đề tài liệu <b>*</b><input value={title} onChange={event => setTitle(event.target.value)} placeholder="Ví dụ: Bài tập SQL chương 1–3" minLength={5} maxLength={120} required /></label>
       <label>Mô tả <span>(tùy chọn)</span><textarea value={description} onChange={event => setDescription(event.target.value)} rows={3} maxLength={500} placeholder="Ví dụ: Tài liệu gồm bài tập SQL chương 1–3, dùng để ôn giữa kỳ." /></label>
       <p className={styles.metadataPreview}>Xem trước: {uploadSubjectName || "Chưa chọn môn"} · {documentType ? documentTypeLabel[documentType] : "Chưa chọn loại"}{assessmentType ? ` · ${assessmentTypeLabel[assessmentType]}` : ""}</p>
       {totalBytes > LIMIT && <p className={styles.fileLimitWarning} role="alert">Tổng dung lượng vượt 50 MB. Hãy gỡ bớt tệp trước khi gửi.</p>}
       {files.length > 10 && <p className={styles.fileLimitWarning} role="alert">Chỉ được chia sẻ tối đa 10 tệp. Hãy gỡ bớt tệp trước khi gửi.</p>}
       {files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || "")) && <p className={styles.error}>Có file không thuộc định dạng được hỗ trợ.</p>}
-      <div className={styles.formFoot}><small>Tối đa 10 file, tổng 50 MB. File gốc được lưu riêng tư trên R2.</small><button className={styles.primary} disabled={busy || !uploadMajorId || !uploadSubjectId || !documentType || title.trim().length < 5 || !files.length || files.length > 10 || totalBytes > LIMIT || files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || ""))}>{busy ? "Đang gửi…" : isAdmin ? "Chia sẻ ngay" : "Gửi tài liệu để duyệt"}</button></div>
+      <div className={styles.formFoot}><small>Tối đa 10 file, tổng 50 MB. File gốc được lưu riêng tư trên R2.</small><button className={styles.primary} disabled={busy || duplicateScan === "checking" || duplicateFileStates.size > 0 || !uploadMajorId || !uploadSubjectId || !documentType || title.trim().length < 5 || !files.length || files.length > 10 || totalBytes > LIMIT || files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || ""))}>{busy ? "Đang gửi…" : duplicateScan === "checking" ? "Đang kiểm tra file…" : isAdmin ? "Chia sẻ ngay" : "Gửi tài liệu để duyệt"}</button></div>
     </form>}
     <nav className={styles.tabs} aria-label="Danh mục kho tài liệu"><button className={tab === "browse" ? styles.active : ""} onClick={() => { setTab("browse"); setOffset(0); }}>Tài liệu đã duyệt</button><button className={tab === "mine" ? styles.active : ""} onClick={() => { setTab("mine"); setOffset(0); }}>Tài liệu của tôi</button>{isAdmin && <><button className={tab === "pending" ? styles.active : ""} onClick={() => { setTab("pending"); setOffset(0); }}>Chờ duyệt{pendingCount > 0 && <span className={styles.pendingBadge}>{pendingCount}</span>}</button><button className={tab === "reports" ? styles.active : ""} onClick={() => { setTab("reports"); setOffset(0); }}>Tố cáo{reportCount > 0 && <span className={styles.pendingBadge}>{reportCount}</span>}</button></>}</nav>
     <div hidden={tab !== "browse"}><div className={styles.filters}><input value={query} onChange={event => { setQuery(event.target.value); setOffset(0); }} placeholder="Tìm tên tài liệu hoặc môn học…" aria-label="Tìm tài liệu"/>
@@ -281,6 +344,13 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
         {aiAssessments[doc.id]?.file_results?.map(file => <div className={styles.aiFile} key={file.file_id}>
           <strong>{file.file_name} · {file.recommendation === "APPROVE" ? "Phù hợp" : file.recommendation === "REJECT" ? "Có dấu hiệu cần từ chối" : "Cần xem kỹ"}</strong>
           <p>{file.reason}{file.sampling_limited && " · Chỉ đọc được một phần, cần kiểm tra file gốc."}</p>{file.evidence_quote && <blockquote>{file.evidence_location && <b>{file.evidence_location}: </b>}“{file.evidence_quote}”</blockquote>}
+          <div className={styles.copyrightSignals}>
+            <strong>Dấu hiệu tác giả / nguồn / bản quyền · {file.copyright_status === "SUSPECTED" ? "Cần xác minh" : "Chưa đủ căn cứ"}</strong>
+            <p>{file.copyright_reason || "Bản đánh giá này chưa có kết quả phân tích dấu hiệu bản quyền."} AI không xác định quyền sử dụng hợp pháp.</p>
+            {file.copyright_evidence && <blockquote>{file.copyright_evidence}</blockquote>}
+            {!!file.attribution_signals?.length && <small>Dòng liên quan trong tài liệu: {file.attribution_signals.join(" · ")}</small>}
+            {!!file.embedded_metadata && Object.keys(file.embedded_metadata).length > 0 && <small>Metadata nhúng: {Object.entries(file.embedded_metadata).map(([key, value]) => `${key}: ${value}`).join(" · ")}</small>}
+          </div>
         </div>)}
         <small>Admin vẫn cần kiểm tra tài liệu trước khi phê duyệt hoặc từ chối.</small>
       </section>}

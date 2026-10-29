@@ -33,12 +33,18 @@ export interface StudyDocument {
   reviewed_at: string | null; rejection_reason: string | null; created_at: string;
   files: StudyFile[];
 }
+export interface StudyDuplicateMatch {
+  sha256: string; duplicate_count: number; pending_count: number; approved_count: number;
+}
 export interface StudyAIFileAssessment {
   file_id: string; file_name: string;
   subject_relevance: "RELEVANT" | "IRRELEVANT" | "UNCERTAIN";
   content_type: "ACADEMIC" | "SPAM" | "UNCERTAIN";
   recommendation: "APPROVE" | "REJECT" | "REVIEW";
   evidence_quote: string | null; evidence_location: string | null;
+  copyright_status?: "SUSPECTED" | "UNCERTAIN";
+  copyright_evidence?: string | null; copyright_reason?: string;
+  attribution_signals?: string[]; embedded_metadata?: Record<string, string>;
   reason: string; error_code: string | null;
   sampling_limited: boolean;
 }
@@ -69,6 +75,10 @@ export const pendingStudyDocuments = (groupId: string, offset = 0, limit = 6) =>
   api<StudyDocument[]>(`/groups/${groupId}/library/admin/pending?limit=${limit}&offset=${offset}`);
 export const pendingStudyDocumentCount = (groupId: string) =>
   api<{ count: number }>(`/groups/${groupId}/library/admin/pending-count`);
+export const checkStudyFileDuplicates = (groupId: string, checksums: string[]) =>
+  api<{ matches: StudyDuplicateMatch[] }>(`/groups/${groupId}/library/check-duplicates`, {
+    method: "POST", body: JSON.stringify({ checksums }),
+  });
 export const pendingStudyAIAssessments = (groupId: string, ids: string[]) =>
   api<StudyAIAssessment[]>(`/groups/${groupId}/library/admin/ai-assessments?${ids.map(id => `document_ids=${encodeURIComponent(id)}`).join("&")}`);
 export const openStudyDocumentReportCount = (groupId: string) =>

@@ -167,6 +167,8 @@ def build_target_metadata() -> MetaData:
         sa.Column("deleted_at", sa.DateTime(timezone=True)),
         sa.CheckConstraint("size_bytes > 0 AND size_bytes <= 52428800", name="ck_study_file_size"),
         sa.Index("idx_study_files_document", "document_id"),
+        sa.Index("idx_study_files_checksum_active", "checksum_sha256",
+                 postgresql_where=sa.text("deleted_at IS NULL")),
     )
     sa.Table(
         "study_document_ai_assessments", metadata,

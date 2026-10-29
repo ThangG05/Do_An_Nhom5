@@ -44,8 +44,11 @@
 @media(max-width:600px){.reportHeading{flex-direction:column}.reportActions{flex-direction:column}.reportActions button{width:100%}}
 .selectedFiles{display:grid;gap:8px;list-style:none;margin:0 0 15px;padding:0}
 .selectedFiles li{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 11px;border:1px solid var(--lib-line);border-radius:11px;background:var(--lib-surface)}
+.duplicateStatus,.duplicateWarning{margin:-5px 0 14px;font-size:12px;line-height:1.5}.duplicateStatus{color:var(--lib-muted)}.duplicateWarning{color:#a45b00;font-weight:700}
+:global(:root[data-theme="dark"]) .duplicateWarning{color:#ffd18a}
 .selectedFileIcon{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:9px;background:#e4f1fa;color:#175d8e}
 .selectedFileInfo{display:block;flex:1;min-width:0}.selectedFileInfo strong,.selectedFileInfo small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selectedFileInfo strong{font-size:12px}.selectedFileInfo small{margin-top:3px;color:var(--lib-muted);font-size:11px}
+.selectedFileInfo small.duplicateWarning{margin:4px 0 0;white-space:normal;overflow:visible;text-overflow:unset}
 .selectedFiles button{flex:none;border:1px solid #f0c9ce;border-radius:8px;padding:7px 10px;background:#fff8f8;color:#a32c39;font-size:12px;font-weight:750;cursor:pointer}.selectedFiles button:hover{background:#ffebee}.selectedFiles button:disabled{opacity:.55;cursor:not-allowed}
 .fileLimitWarning{margin:-4px 0 14px;color:#a32c39;font-size:12px;font-weight:700}
 :global(:root[data-theme="dark"]) .selectedFileIcon{background:#25475e;color:#c9eaff}:global(:root[data-theme="dark"]) .selectedFiles button{background:#402a35;color:#ffd5dd;border-color:#70404e}:global(:root[data-theme="dark"]) .selectedFiles button:hover{background:#50303b}
@@ -62,6 +65,8 @@
 .aiAdvice{margin-top:14px;padding:14px;border:1px solid var(--lib-line);border-radius:13px;background:var(--lib-surface);color:var(--lib-ink)}
 .aiAdviceHead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px}.aiAdviceHead span{padding:5px 9px;border-radius:999px;background:#eaf3fb;color:#14547e;font-size:11px;font-weight:750}
 .aiAdvice p{margin:7px 0!important;font-size:12px}.aiAdvice small{color:var(--lib-muted);font-size:11px}.aiFile{margin-top:9px;padding:10px;border:1px solid var(--lib-line);border-radius:9px}.aiFile strong{font-size:12px;overflow-wrap:anywhere}.aiFile blockquote{margin:7px 0 0;padding:7px 10px;border-left:3px solid #68a1c6;color:var(--lib-ink);background:var(--lib-surface);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.copyrightSignals{display:grid;gap:5px;margin-top:10px;padding:10px;border:1px solid #e7d7a5;border-radius:9px;background:#fffaf0}.copyrightSignals>strong{color:#79570b}.copyrightSignals p{margin:0!important}.copyrightSignals small{overflow-wrap:anywhere;line-height:1.5}
+:global(:root[data-theme="dark"]) .copyrightSignals{background:#302b1e;border-color:#65552d}:global(:root[data-theme="dark"]) .copyrightSignals>strong{color:#ffe3a0}
 :global(:root[data-theme="dark"]) .typePicker button.typeSelected{background:#234b64;color:#d4f2ff}:global(:root[data-theme="dark"]) .documentTags span{background:#25475e;color:#d5efff}
 @media(max-width:800px){.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}}
 @media(max-width:480px){.filters{grid-template-columns:1fr}.filters input{grid-column:auto}}

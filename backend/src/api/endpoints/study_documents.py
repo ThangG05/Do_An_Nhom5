@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from src.api.dependencies import CurrentGroupAdmin, CurrentUser
 from src.db.session import get_db
 from src.models.study_document import (StudyDocumentDecision, StudyDocumentDownload,
-                                       StudyDocumentResponse, SubjectResponse, SubjectUpsertRequest, MajorResponse)
+                                       StudyDocumentResponse, SubjectResponse, SubjectUpsertRequest, MajorResponse,
+                                       StudyDuplicateCheckRequest, StudyDuplicateCheckResponse)
 from src.models.study_document_report import (StudyDocumentReportCreate,
                                               StudyDocumentReportDecision,
                                               StudyDocumentReportResponse)
@@ -81,6 +82,12 @@ def pending_documents(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db,
 @router.get("/groups/{group_id}/library/admin/pending-count")
 def pending_document_count(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db):
     return {"count": library.count_pending_documents(db, group_id, admin)}
+
+
+@router.post("/groups/{group_id}/library/check-duplicates", response_model=StudyDuplicateCheckResponse)
+def check_duplicate_files(group_id: uuid.UUID, payload: StudyDuplicateCheckRequest,
+                          user: CurrentUser, db: Db):
+    return library.check_duplicate_files(db, group_id, user, payload.checksums)
 
 
 @router.get("/groups/{group_id}/library/admin/ai-assessments")

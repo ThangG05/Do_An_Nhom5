@@ -229,6 +229,48 @@ def _validate_file(file: UploadFile) -> dict:
             "size": size, "sha256": digest.hexdigest(), "stream": stream}
 
 
+def _find_existing_file_duplicates(db: Session, group_id: uuid.UUID,
+                                   checksums: list[str], *, lock: bool = False) -> list[dict]:
+    checksums = sorted(set(value.lower() for value in checksums))
+    if not checksums:
+        return []
+    if lock:
+        # Serialize simultaneous submissions of the same bytes until this transaction
+        # commits, so two concurrent uploads cannot both pass the final duplicate check.
+        for checksum in checksums:
+            db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:checksum, 82013))"),
+                       {"checksum": checksum})
+    statement = text("""
+        SELECT f.checksum_sha256,
+               count(*) AS duplicate_count,
+               count(*) FILTER (WHERE d.status='PENDING') AS pending_count,
+               count(*) FILTER (WHERE d.status='APPROVED') AS approved_count
+        FROM study_document_files f
+        JOIN study_documents d ON d.id=f.document_id
+        WHERE d.group_id=:group_id
+          AND d.status IN ('PENDING','APPROVED')
+          AND d.deleted_at IS NULL AND f.deleted_at IS NULL
+          AND f.checksum_sha256 IN :checksums
+        GROUP BY f.checksum_sha256
+    """).bindparams(bindparam("checksums", expanding=True))
+    return [dict(row) for row in db.execute(
+        statement, {"group_id": group_id, "checksums": checksums}
+    ).mappings().all()]
+
+
+def check_duplicate_files(db: Session, group_id: uuid.UUID, user: User,
+                          checksums: list[str]) -> dict:
+    """Return only duplicate state, without exposing other users' pending documents."""
+    require_member(db, group_id, user)
+    matches = _find_existing_file_duplicates(db, group_id, checksums)
+    return {"matches": [{
+        "sha256": row["checksum_sha256"],
+        "duplicate_count": row["duplicate_count"],
+        "pending_count": row["pending_count"],
+        "approved_count": row["approved_count"],
+    } for row in matches]}
+
+
 def _serialize(db: Session, rows: list) -> list[StudyDocumentResponse]:
     if not rows:
         return []
@@ -445,6 +487,17 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
     validated = [_validate_file(file) for file in files]
     if len({item["sha256"] for item in validated}) != len(validated):
         raise HTTPException(400, "Một lượt chia sẻ không thể đính kèm hai file có nội dung trùng nhau.")
+    matches = _find_existing_file_duplicates(
+        db, group_id, [item["sha256"] for item in validated], lock=True
+    )
+    if matches:
+        duplicated = {row["checksum_sha256"] for row in matches}
+        names = [item["name"] for item in validated if item["sha256"] in duplicated]
+        raise HTTPException(
+            409,
+            "Tệp đã có bản trùng trong kho Học tập: " + ", ".join(names[:3])
+            + ". Hãy gỡ tệp trùng trước khi chia sẻ.",
+        )
     total = sum(item["size"] for item in validated)
     if total > MAX_SHARE_BYTES:
         raise HTTPException(400, "Tổng dung lượng một lần chia sẻ không được vượt 50 MB.")

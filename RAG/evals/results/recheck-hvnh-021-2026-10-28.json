@@ -1,0 +1,38 @@
+{
+  "dataset": "evals\\rag-gold.json",
+  "official_score": true,
+  "cases": 1,
+  "passed": 0,
+  "pass_rate": 0.0,
+  "errors": 0,
+  "citation_accuracy": 0.0,
+  "refusal_accuracy": 0.0,
+  "latency": {
+    "mean_ms": 50167.0,
+    "p50_ms": 50167,
+    "p95_ms": 50167,
+    "max_ms": 50167
+  },
+  "results": [
+    {
+      "id": "hvnh-021",
+      "passed": false,
+      "refusal_ok": false,
+      "citation_ok": false,
+      "keywords_ok": true,
+      "refused": true,
+      "expected_refused": false,
+      "facts_ok": false,
+      "fact_coverage": 0.0,
+      "citation_count": 0,
+      "conversation_id": "c9b7ecbc-ce2d-46ec-8281-48f4a0a61dfc",
+      "message_id": "711e4d00-8c73-4e91-bf6c-5d0d8370c10f",
+      "question": "Yêu cầu liên quan đến điều chỉnh chuẩn tiếng anh & tin học năm hoc 2019-2020 cho sinh viên khóa 19-21 là gì?",
+      "response": "Tôi chưa thể tạo câu trả lời có trích dẫn hợp lệ từ các nguồn đã tìm thấy.",
+      "reference": "Sinh viên ngành Hệ thống thông tin quản lý từ khóa K19 được miễn chuẩn đầu ra Kỹ năng sử dụng CNTT trong năm học 2019/2020.",
+      "latency_ms": 50167,
+      "retrieved_contexts": [],
+      "citations": []
+    }
+  ]
+}
