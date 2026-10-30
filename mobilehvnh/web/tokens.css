@@ -1,0 +1,110 @@
+/* Design tokens and base styles - bright & vivid theme */
+:root{
+  /* Palette */
+  --color-primary: #FF6B6B;
+  --color-secondary: #4D96FF;
+  --color-accent: #FFD93D;
+  --color-success: #2BD98B;
+  --color-bg: #FFFFFF;
+  --color-surface: #F7FAFF;
+  --color-text: #0B1A2B;
+  --color-muted: #6B7C93;
+
+  /* Typography */
+  --font-sans: "Inter", "Roboto", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --font-size-h1: 32px;
+  --font-size-h2: 24px;
+  --font-size-body: 16px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Radius */
+  --radius-card: 12px;
+  --radius-input: 8px;
+  --radius-button: 9999px; /* pill */
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(11,26,43,0.06);
+  --shadow-md: 0 6px 20px rgba(11,26,43,0.08);
+}
+
+/* Global base */
+html,body{
+  height:100%;
+}
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  font-size:var(--font-size-body);
+  color:var(--color-text);
+  background:linear-gradient(180deg, var(--color-bg) 0%, #FCFDFF 100%);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Utility classes */
+.container{
+  padding:var(--space-md);
+  max-width:1200px;
+  margin:0 auto;
+}
+n/* Cards */
+.card{
+  background:var(--color-surface);
+  border-radius:var(--radius-card);
+  box-shadow:var(--shadow-sm);
+  padding:var(--space-md);
+  color:var(--color-text);
+}
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 18px;
+  border-radius:var(--radius-button);
+  font-weight:var(--font-weight-medium);
+  cursor:pointer;
+  border:0;
+}
+.btn-primary{
+  background: linear-gradient(90deg,var(--color-primary), #FF8E7E);
+  color:white;
+  box-shadow:var(--shadow-md);
+}
+.btn-secondary{
+  background:transparent;
+  color:var(--color-secondary);
+  border:1px solid rgba(77,150,255,0.12);
+}
+
+/* Inputs */
+.input{
+  display:block;
+  width:100%;
+  padding:10px 12px;
+  border-radius:var(--radius-input);
+  border:1px solid rgba(11,26,43,0.08);
+  background:white;
+}
+
+/* Headings */
+.h1{font-size:var(--font-size-h1);font-weight:var(--font-weight-bold);margin:0 0 var(--space-sm) 0}
+.h2{font-size:var(--font-size-h2);font-weight:var(--font-weight-medium);margin:0 0 var(--space-sm) 0}
+
+/* Small helpers */
+.text-muted{color:var(--color-muted)}
+.align-center{text-align:center}
+
+/* Ensure contrast for important elements */
+a, button{outline: none}
+a:focus, button:focus{box-shadow:0 0 0 3px rgba(77,150,255,0.14);border-radius:6px}

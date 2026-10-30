@@ -54,12 +54,12 @@ export default function CreatePostModal({ postState: s, group }: { postState: Us
   const kind = GROUP_POST_KINDS.find(item => item.category === s.category);
   const availableKinds = GROUP_POST_KINDS.filter(item => {
     const joined = groups.find(candidate => candidate.slug === item.slug);
-    return joined?.membership === 'MEMBER' || joined?.membership === 'ADMIN';
+    return joined?.membership === 'MEMBER' || joined?.membership === 'ADMIN' || joined?.membership === 'PUBLIC';
   });
   const selectedGroup = group || groups.find(item => item.slug === kind?.slug);
   const isGroup = s.category !== 'general';
   const unavailable = isGroup && !group && (groupsLoading || groupsError || !selectedGroup);
-  const needsMembership = isGroup && !!selectedGroup && !['MEMBER', 'ADMIN'].includes(selectedGroup.membership);
+  const needsMembership = isGroup && !!selectedGroup && !['MEMBER', 'ADMIN', 'PUBLIC'].includes(selectedGroup.membership);
   const validate = () => {
     const next = validatePostDraft(s, s.mediaList.length);
     setErrors(next);

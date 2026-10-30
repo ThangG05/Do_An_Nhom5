@@ -33,7 +33,13 @@ def _can_view(db: Session, post: Post, viewer_id: uuid.UUID) -> bool:
         viewer = db.get(User, viewer_id)
         if not viewer or viewer.system_role == SystemRole.SUPER_ADMIN:
             return False
-        if not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid AND role IN ('MEMBER','ADMIN')"), {"gid": post.group_id, "uid": viewer_id}).first():
+        public_event = db.execute(text(
+            "SELECT 1 FROM groups WHERE id=:gid AND slug='su-kien' AND status='ACTIVE'"
+        ), {"gid": post.group_id}).first()
+        is_member = db.execute(text(
+            "SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid AND role IN ('MEMBER','ADMIN')"
+        ), {"gid": post.group_id, "uid": viewer_id}).first()
+        if not public_event and not is_member:
             return False
     return post.author_id == viewer_id or post.visibility == PostVisibility.PUBLIC or (post.visibility == PostVisibility.FRIENDS and _are_friends(db, post.author_id, viewer_id))
 
@@ -298,7 +304,13 @@ def create_profile_post(db: Session, user: User, payload: CreateProfilePostReque
         group_id = db.execute(text("SELECT id FROM groups WHERE slug=:slug AND status='ACTIVE'"), {"slug": category_groups[payload.category]}).scalar_one_or_none()
         if not group_id:
             raise HTTPException(404, "Không tìm thấy nhóm tương ứng với chuyên mục.")
-        if not db.execute(text("SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid"), {"gid": group_id, "uid": user.id}).first():
+        is_public_event = payload.category == "event" and db.execute(text(
+            "SELECT 1 FROM groups WHERE id=:gid AND slug='su-kien' AND status='ACTIVE'"
+        ), {"gid": group_id}).first()
+        is_member = db.execute(text(
+            "SELECT 1 FROM group_members WHERE group_id=:gid AND user_id=:uid"
+        ), {"gid": group_id, "uid": user.id}).first()
+        if not is_public_event and not is_member:
             raise HTTPException(403, "Bạn cần tham gia nhóm trước khi đăng bài trong chuyên mục này.")
     post = Post(group_id=group_id, author_id=user.id, content=payload.content.strip(), category=payload.category, listing_data=_listing_data(payload, payload.category), location_data=payload.location.model_dump() if payload.location and payload.category != "study" else None, post_type=PostType.STANDARD if group_id else PostType.PROFILE_POST, visibility=PostVisibility.PUBLIC if group_id else PostVisibility(payload.privacy.upper()), status=PostStatus.PENDING if group_id else PostStatus.APPROVED)
     db.add(post)
@@ -320,7 +332,8 @@ def list_profile_posts(db: Session, target: User, viewer: User, *, limit: int | 
     # former group_id IS NULL filter made a user's approved group posts vanish
     # from their own profile timeline.
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
-    group_visibility = or_(and_(Post.group_id.is_(None), Post.category.not_in(["market", "roommate", "event", "study"])), Post.group_id.in_(member_group_ids))
+    public_event_ids = select(text("id")).select_from(text("groups")).where(text("slug='su-kien' AND status='ACTIVE'"))
+    group_visibility = or_(and_(Post.group_id.is_(None), Post.category.not_in(["market", "roommate", "event", "study"])), Post.group_id.in_(member_group_ids), Post.group_id.in_(public_event_ids))
     statement = select(Post).where(Post.author_id == target.id, group_visibility, Post.status == PostStatus.APPROVED, Post.deleted_at.is_(None), Post.visibility.in_(allowed))
     if category != "all":
         statement = statement.where(Post.category == category)
@@ -357,10 +370,11 @@ def list_user_listings(db: Session, target: User, viewer: User, category: str | 
 def list_user_group_posts(db: Session, target: User, viewer: User, *, limit: int | None = None, offset: int = 0) -> list[ProfilePostResponse]:
     """Return approved posts authored by a user inside groups, respecting membership visibility."""
     member_groups = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
+    public_event_ids = select(text("id")).select_from(text("groups")).where(text("slug='su-kien' AND status='ACTIVE'"))
     statement = select(Post).where(
         Post.author_id == target.id,
         Post.group_id.is_not(None),
-        Post.group_id.in_(member_groups),
+        or_(Post.group_id.in_(member_groups), Post.group_id.in_(public_event_ids)),
         Post.status == PostStatus.APPROVED,
         Post.deleted_at.is_(None),
     ).order_by(Post.created_at.desc(), Post.id.desc()).offset(offset)
@@ -377,7 +391,8 @@ def list_feed(db: Session, viewer: User, limit: int = 30, offset: int = 0, categ
     # Home includes profile posts and approved posts from groups the viewer belongs to.
     # Pending/rejected posts and posts from unrelated groups must never leak into the feed.
     member_group_ids = select(text("group_id")).select_from(text("group_members")).where(text("user_id=:viewer_id")).params(viewer_id=viewer.id)
-    group_scope = or_(and_(Post.group_id.is_(None), Post.category.not_in(["market", "roommate", "event", "study"])), Post.group_id.in_(member_group_ids))
+    public_event_ids = select(text("id")).select_from(text("groups")).where(text("slug='su-kien' AND status='ACTIVE'"))
+    group_scope = or_(and_(Post.group_id.is_(None), Post.category.not_in(["market", "roommate", "event", "study"])), Post.group_id.in_(member_group_ids), Post.group_id.in_(public_event_ids))
     filters=[group_scope,Post.author_id.not_in(blocked_ids),Post.status == PostStatus.APPROVED,Post.deleted_at.is_(None),visible]
     if category:
         filters.append(Post.category == category)
