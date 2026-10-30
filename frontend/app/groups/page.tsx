@@ -32,7 +32,7 @@ export default function GroupsPage() {
   const [focusError, setFocusError] = useState("");
   const active = groups.find(group => group.id === activeId);
   const isAdmin = active?.membership === "ADMIN" && auth?.system_role !== "SUPER_ADMIN";
-  const canPost = !!active && ["MEMBER", "ADMIN"].includes(active.membership) && auth?.system_role !== "SUPER_ADMIN";
+  const canPost = !!active && ["PUBLIC", "MEMBER", "ADMIN"].includes(active.membership) && auth?.system_role !== "SUPER_ADMIN";
   const canRead = canPost;
   const viewingPosts = canRead && !(active?.slug === 'hoc-tap' && studyTab === 'library');
   const fetchFeedPage = useCallback((limit: number, offset: number) => fetchGroupPosts(activeId, debouncedQuery, sort, limit, offset), [activeId, debouncedQuery, sort]);
@@ -63,13 +63,13 @@ export default function GroupsPage() {
     const selected = groups.find(group => group.id === activeId);
     if (selected?.slug === "hoc-tap" && studyTab === "library") return;
     const admin = selected?.membership === 'ADMIN' && auth?.system_role !== 'SUPER_ADMIN';
-    if (!selected || (!admin && !["MEMBER", "ADMIN"].includes(selected.membership))) {
+    if (!selected || (!admin && !["PUBLIC", "MEMBER", "ADMIN"].includes(selected.membership))) {
       setPending([]); setRequests([]); setMembers([]);
       return;
     }
     // Start moderation requests alongside the feed instead of after it.
     const adminData = admin
-      ? Promise.all([fetchPendingGroupPosts(activeId), fetchGroupJoinRequests(activeId), fetchGroupMembers(activeId)])
+      ? Promise.all([fetchPendingGroupPosts(activeId), selected.slug === "su-kien" ? Promise.resolve([]) : fetchGroupJoinRequests(activeId), fetchGroupMembers(activeId)])
           .then(value => ({ value, error: null }), error => ({ value: null, error }))
       : null;
     if (adminData) {
@@ -95,14 +95,14 @@ export default function GroupsPage() {
   const kickMember = async (member: GroupMember) => { if (!active) return; if (await dialog.confirm({ title: "Xóa thành viên khỏi nhóm?", message: `${member.name} sẽ mất quyền truy cập nội dung dành cho thành viên.`, confirmLabel: "Xóa khỏi nhóm", tone: "danger" })) await act(() => kickGroupMember(active.id, member.id)); };
   return <main className="live-groups-page">
     <section className="live-groups-hero"><span>CỘNG ĐỒNG HVNH</span><h1>Bốn không gian dành cho sinh viên</h1><p>Tham gia nhóm, chia sẻ nội dung và theo dõi kết quả kiểm duyệt minh bạch.</p></section>
-    <nav className="live-group-tabs">{groups.filter(group => order.includes(group.slug)).map(group => <button key={group.id} className={group.id === activeId ? "active" : ""} onClick={() => { setActiveId(group.id); setQuery(""); setDebouncedQuery(""); setShowMine(false); }}><b>{icons[group.slug]} {group.name}</b><small>{group.member_count} thành viên</small></button>)}</nav>
+    <nav className="live-group-tabs">{groups.filter(group => order.includes(group.slug)).map(group => <button key={group.id} className={group.id === activeId ? "active" : ""} onClick={() => { setActiveId(group.id); setQuery(""); setDebouncedQuery(""); setShowMine(false); }}><b>{icons[group.slug]} {group.name}</b><small>{group.slug === "su-kien" ? "Công khai với mọi user" : `${group.member_count} thành viên`}</small></button>)}</nav>
     {active && <>
-      <section className="live-group-summary"><div><h2>{icons[active.slug]} {active.name}</h2><p>{active.description}</p></div><div>{isAdmin && <Link className="group-admin-entry" href={`/group-admin?groupId=${active.id}`}>Mở trung tâm quản trị</Link>}{active.membership === "NONE" && <button disabled={busy} onClick={() => act(() => requestGroupJoin(active.id))}>Tham gia nhóm</button>}{active.membership === "PENDING" && <button disabled>Đang chờ duyệt</button>}{active.membership === "MEMBER" && <button disabled={busy} className="secondary" onClick={() => act(() => leaveGroup(active.id))}>Rời nhóm</button>}{active.membership === "ADMIN" && <span className="live-admin-badge">Group Admin</span>}</div></section>
+      <section className="live-group-summary"><div><h2>{icons[active.slug]} {active.name}</h2><p>{active.description}</p></div><div>{isAdmin && <Link className="group-admin-entry" href={`/group-admin?groupId=${active.id}`}>Mở trung tâm quản trị</Link>}{active.membership === "PUBLIC" && <span className="live-admin-badge">Công khai · Không cần xin tham gia</span>}{active.membership === "NONE" && <button disabled={busy} onClick={() => act(() => requestGroupJoin(active.id))}>Tham gia nhóm</button>}{active.membership === "PENDING" && <button disabled>Đang chờ duyệt</button>}{active.membership === "MEMBER" && active.slug !== "su-kien" && <button disabled={busy} className="secondary" onClick={() => act(() => leaveGroup(active.id))}>Rời nhóm</button>}{active.membership === "ADMIN" && <span className="live-admin-badge">Group Admin</span>}</div></section>
       {active.slug === "hoc-tap" && <nav className="study-group-switch" aria-label="Khu vực nhóm Học tập"><button type="button" className={studyTab === "posts" ? "active" : ""} onClick={() => setStudyTab("posts")}>Bài viết</button><button type="button" className={studyTab === "library" ? "active" : ""} onClick={() => setStudyTab("library")}>Kho tài liệu</button></nav>}
       {active.slug === "hoc-tap" && studyTab === "library" ? <StudyLibrary key={active.id} groupId={active.id} isAdmin={active.membership === "ADMIN"} canRead={canRead} /> : <>
       {canPost && <GroupPostComposer key={active.id} group={active} onSubmitted={() => { setShowMine(true); minePage.reload(); }} />}
       {isAdmin && <section className="live-admin-panel">
-        <header><div><span>TRUNG TÂM KIỂM DUYỆT</span><h2>Quản trị {active.name}</h2></div><nav><button className={tab === "posts" ? "active" : ""} onClick={() => setTab("posts")}>Bài chờ ({pending.length})</button><button className={tab === "requests" ? "active" : ""} onClick={() => setTab("requests")}>Xin vào nhóm ({requests.length})</button><button className={tab === "members" ? "active" : ""} onClick={() => setTab("members")}>Thành viên ({members.length})</button></nav></header>
+        <header><div><span>TRUNG TÂM KIỂM DUYỆT</span><h2>Quản trị {active.name}</h2></div><nav><button className={tab === "posts" ? "active" : ""} onClick={() => setTab("posts")}>Bài chờ ({pending.length})</button>{active.slug !== "su-kien" && <button className={tab === "requests" ? "active" : ""} onClick={() => setTab("requests")}>Xin vào nhóm ({requests.length})</button>}<button className={tab === "members" ? "active" : ""} onClick={() => setTab("members")}>Thành viên ({members.length})</button></nav></header>
         <div className="live-admin-list">
           {tab === "posts" && pending.map(post => <article key={post.id}><div><strong>{post.author.name}</strong><PostCategoryDetails post={post} />{post.content && <p>{post.content}</p>}</div><div><button onClick={() => act(() => moderateGroupPost(active.id, post.id, "APPROVE"))}>Phê duyệt</button><button className="danger" onClick={() => void rejectPost(post)}>Từ chối</button></div></article>)}
           {tab === "requests" && requests.map(request => <article key={request.id}><div><strong>{request.name}</strong><p>@{request.username}</p></div><div><button onClick={() => act(() => decideGroupJoin(active.id, request.id, "APPROVE"))}>Chấp nhận</button><button className="danger" onClick={() => act(() => decideGroupJoin(active.id, request.id, "REJECT"))}>Từ chối</button></div></article>)}

@@ -32,6 +32,8 @@ def _require_reader(db: Session, group_id: uuid.UUID, user: User) -> str:
     if user.system_role == SystemRole.SUPER_ADMIN:
         raise HTTPException(403, "Super Admin xem thông tin nhóm qua trang quản lý nhóm.")
     role = _membership(db, group_id, user.id)
+    if role in {"NONE", "PENDING"} and _group(db, group_id)["slug"] == "su-kien":
+        return "PUBLIC"
     if role not in {"MEMBER", "ADMIN"}:
         raise HTTPException(403, "Bạn cần tham gia nhóm để xem và tương tác với bài viết.")
     return role
@@ -44,7 +46,7 @@ def list_groups(db: Session, user: User) -> list[GroupResponse]:
                COALESCE(
                    (SELECT own.role::text FROM group_members own
                     WHERE own.group_id = g.id AND own.user_id = :uid),
-                   CASE WHEN EXISTS (
+                   CASE WHEN g.slug = 'su-kien' THEN 'PUBLIC' WHEN EXISTS (
                        SELECT 1 FROM group_join_requests request
                        WHERE request.group_id = g.id AND request.user_id = :uid
                          AND request.status = 'PENDING'
@@ -72,7 +74,9 @@ def list_groups(db: Session, user: User) -> list[GroupResponse]:
 def request_join(db: Session, group_id: uuid.UUID, user: User) -> str:
     if user.system_role == SystemRole.SUPER_ADMIN:
         raise HTTPException(403, "Super Admin không tham gia nhóm bằng tài khoản quản trị tổng.")
-    _group(db, group_id)
+    group = _group(db, group_id)
+    if group["slug"] == "su-kien":
+        return "PUBLIC"
     if _membership(db, group_id, user.id) in {"MEMBER", "ADMIN"}:
         raise HTTPException(409, "Bạn đã là thành viên của nhóm.")
     db.execute(text("INSERT INTO group_join_requests(group_id,user_id,status) VALUES(:gid,:uid,'PENDING') ON CONFLICT(group_id,user_id) DO UPDATE SET status='PENDING',reviewed_by=NULL,reviewed_at=NULL,created_at=now()"), {"gid": group_id, "uid": user.id})

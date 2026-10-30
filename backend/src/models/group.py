@@ -10,7 +10,7 @@ class GroupResponse(BaseModel):
     slug: str
     description: str = ""
     member_count: int = 0
-    membership: Literal["NONE", "PENDING", "MEMBER", "ADMIN"] = "NONE"
+    membership: Literal["NONE", "PENDING", "PUBLIC", "MEMBER", "ADMIN"] = "NONE"
 
 
 class GroupPostCreateRequest(BaseModel):

@@ -25,7 +25,9 @@ def groups(current_user: CurrentUser, db: DbSession):
 
 @router.post("/{group_id}/join", response_model=MessageResponse)
 def join(group_id: uuid.UUID, current_user: CurrentUser, db: DbSession):
-    group_service.request_join(db, group_id, current_user)
+    result = group_service.request_join(db, group_id, current_user)
+    if result == "PUBLIC":
+        return MessageResponse(message="Nhóm Sự kiện là nhóm công khai, bạn không cần xin tham gia.")
     return MessageResponse(message="Yêu cầu tham gia đang chờ Group Admin phê duyệt.")
 
 

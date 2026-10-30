@@ -1,6 +1,6 @@
 import type { Post } from '@/types/post';
 
-export type GroupMembership = 'NONE' | 'PENDING' | 'MEMBER' | 'ADMIN';
+export type GroupMembership = 'NONE' | 'PENDING' | 'PUBLIC' | 'MEMBER' | 'ADMIN';
 
 export interface ApiGroup {
   id: string;
