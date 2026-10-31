@@ -7,7 +7,7 @@ abstract interface class FeedRepository {
     String? cursor,
     int limit,
   });
-  Future<void> createPost({
+  Future<Map<String, dynamic>> createPost({
     required String content,
     required List<UploadFile> files,
     String category,
@@ -16,6 +16,11 @@ abstract interface class FeedRepository {
     Map<String, dynamic>? eventListing,
     Map<String, dynamic>? studyListing,
     Map<String, dynamic>? location,
+  });
+  Future<Map<String, dynamic>> registerShare(
+    String postId, {
+    required String destinationType,
+    required String destinationId,
   });
   Future<Map<String, dynamic>> setLike(String postId, bool isLiked);
   Future<Map<String, dynamic>> getPostLikes(

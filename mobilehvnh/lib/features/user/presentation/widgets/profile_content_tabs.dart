@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../../../../core/app_config.dart';
+import '../../../../core/storage/auth_session.dart';
 import '../../../../core/utils/app_date_time.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../../feed/domain/repositories/feed_repository.dart';
-import '../../../feed/feed_page.dart' show CommentSheet;
+import '../../../chat/domain/repositories/chat_repository.dart';
+import '../../../feed/feed_page.dart' show CommentSheet, SharedPostPreview;
 
 /// Reuses the same profile-content API as the web app.  Keeping these tabs
 /// data-driven prevents a profile from becoming a static information screen.
@@ -17,6 +19,7 @@ class ProfileContentTabs extends StatefulWidget {
     required this.userId,
     required this.profile,
     this.feedRepository,
+    this.chatRepository,
     this.aboutPanel,
     this.onOpenFriends,
     this.onOpenFriend,
@@ -26,6 +29,7 @@ class ProfileContentTabs extends StatefulWidget {
   final String userId;
   final Map<String, dynamic> profile;
   final FeedRepository? feedRepository;
+  final ChatRepository? chatRepository;
   final Widget? aboutPanel;
   final VoidCallback? onOpenFriends;
   final ValueChanged<String>? onOpenFriend;
@@ -117,6 +121,8 @@ class _ProfileContentTabsState extends State<ProfileContentTabs> {
                   posts: content.groupPosts,
                   empty: 'Chưa có bài viết hội nhóm.',
                   feedRepository: widget.feedRepository,
+                  userRepository: widget.repository,
+                  chatRepository: widget.chatRepository,
                 ),
                 _ => Column(
                   key: const ValueKey('posts'),
@@ -132,6 +138,8 @@ class _ProfileContentTabsState extends State<ProfileContentTabs> {
                       posts: content.posts,
                       empty: 'Chưa có bài viết công khai.',
                       feedRepository: widget.feedRepository,
+                      userRepository: widget.repository,
+                      chatRepository: widget.chatRepository,
                     ),
                   ],
                 ),
@@ -371,10 +379,14 @@ class _PostsList extends StatelessWidget {
     required this.posts,
     required this.empty,
     this.feedRepository,
+    this.userRepository,
+    this.chatRepository,
   });
   final List<Map<String, dynamic>> posts;
   final String empty;
   final FeedRepository? feedRepository;
+  final UserRepository? userRepository;
+  final ChatRepository? chatRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -387,16 +399,27 @@ class _PostsList extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       itemCount: posts.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, index) =>
-          _PostPreview(post: posts[index], feedRepository: feedRepository),
+      itemBuilder: (context, index) => _PostPreview(
+        post: posts[index],
+        feedRepository: feedRepository,
+        userRepository: userRepository,
+        chatRepository: chatRepository,
+      ),
     );
   }
 }
 
 class _PostPreview extends StatefulWidget {
-  const _PostPreview({required this.post, this.feedRepository});
+  const _PostPreview({
+    required this.post,
+    this.feedRepository,
+    this.userRepository,
+    this.chatRepository,
+  });
   final Map<String, dynamic> post;
   final FeedRepository? feedRepository;
+  final UserRepository? userRepository;
+  final ChatRepository? chatRepository;
 
   @override
   State<_PostPreview> createState() => _PostPreviewState();
@@ -470,16 +493,114 @@ class _PostPreviewState extends State<_PostPreview> {
 
   Future<void> _shareLink() async {
     final id = (widget.post['sharedPostId'] ?? widget.post['id'])?.toString();
-    if (id == null || id.isEmpty) return;
-    final base = Uri.base;
-    final link = (base.scheme == 'http' || base.scheme == 'https')
-        ? base.resolve('/posts/$id').toString()
-        : '/posts/$id';
-    await Clipboard.setData(ClipboardData(text: link));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã sao chép liên kết bài viết gốc.')),
+    final feed = widget.feedRepository;
+    final users = widget.userRepository;
+    if (id == null || id.isEmpty || feed == null || users == null) return;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(
+              title: Text('Chia sẻ bài viết'),
+              subtitle: Text('Bài gốc sẽ được mở khi người nhận chạm vào.'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Chia sẻ lên trang cá nhân'),
+              onTap: () => Navigator.pop(context, 'profile'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.send_outlined),
+              title: const Text('Gửi qua tin nhắn'),
+              enabled: widget.chatRepository != null,
+              onTap: widget.chatRepository == null
+                  ? null
+                  : () => Navigator.pop(context, 'message'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (action == null || !mounted) return;
+    try {
+      final link =
+          '${AppConfig.webBaseUrl.replaceFirst(RegExp(r'/$'), '')}/posts/$id';
+      if (action == 'profile') {
+        final created = await feed.createPost(content: link, files: const []);
+        final destination = created['id']?.toString() ?? '';
+        if (destination.isEmpty) {
+          throw StateError('Không nhận được bài viết chia sẻ.');
+        }
+        await feed.registerShare(
+          id,
+          destinationType: 'POST',
+          destinationId: destination,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã chia sẻ lên trang cá nhân.')),
+          );
+        }
+        return;
+      }
+      final chat = widget.chatRepository!;
+      final me = await AuthSession().userId;
+      if (me == null) return;
+      final friends = await users.getFriends(me);
+      if (!mounted) return;
+      final target = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (context) => SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * .7,
+            child: ListView.builder(
+              itemCount: friends.length,
+              itemBuilder: (context, index) {
+                final friend = friends[index];
+                return ListTile(
+                  leading: AppAvatar(
+                    radius: 20,
+                    url: friend['avatar']?.toString(),
+                    name: friend['name']?.toString(),
+                  ),
+                  title: Text('${friend['name'] ?? 'Sinh viên HVNH'}'),
+                  onTap: () => Navigator.pop(context, friend),
+                );
+              },
+            ),
+          ),
+        ),
       );
+      if (target == null || !mounted) return;
+      final conversation = await chat.createDirectConversation(
+        '${target['id']}',
+      );
+      final message = await chat.sendMessage(
+        '${conversation['id']}',
+        'Đã chia sẻ một bài viết:\n$link',
+        const [],
+      );
+      await feed.registerShare(
+        id,
+        destinationType: 'MESSAGE',
+        destinationId: '${message['id']}',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã gửi bài viết cho ${target['name']}.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     }
   }
 
@@ -548,6 +669,14 @@ class _PostPreviewState extends State<_PostPreview> {
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
+            if (widget.feedRepository != null &&
+                post['sharedPostId']?.toString().isNotEmpty == true) ...[
+              const SizedBox(height: 10),
+              SharedPostPreview(
+                postId: post['sharedPostId'].toString(),
+                repository: widget.feedRepository!,
+              ),
+            ],
             if (thumbnail.startsWith('http')) ...[
               const SizedBox(height: 12),
               ClipRRect(

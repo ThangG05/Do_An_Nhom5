@@ -438,7 +438,7 @@ class ApiClient {
               filename: file.name,
             ),
           );
-        } else if (file.path != null) {
+        } else if (!kIsWeb && file.path != null) {
           request.files.add(
             await http.MultipartFile.fromPath(
               'file',
@@ -512,7 +512,7 @@ class ApiClient {
               filename: file.name,
             ),
           );
-        } else if (file.path != null) {
+        } else if (!kIsWeb && file.path != null) {
           request.files.add(
             await http.MultipartFile.fromPath(
               'files',

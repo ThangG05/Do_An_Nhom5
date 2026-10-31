@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../../feed/domain/repositories/feed_repository.dart';
+import '../../../chat/domain/repositories/chat_repository.dart';
 import '../widgets/profile_content_tabs.dart';
 
 class UserSearchPage extends StatefulWidget {
@@ -15,9 +16,11 @@ class UserSearchPage extends StatefulWidget {
     super.key,
     required this.repository,
     this.feedRepository,
+    this.chatRepository,
   });
   final UserRepository repository;
   final FeedRepository? feedRepository;
+  final ChatRepository? chatRepository;
 
   @override
   State<UserSearchPage> createState() => _UserSearchPageState();
@@ -98,6 +101,7 @@ class _UserSearchPageState extends State<UserSearchPage> {
                           repository: widget.repository,
                           userId: '${_items[index]['id']}',
                           feedRepository: widget.feedRepository,
+                          chatRepository: widget.chatRepository,
                         ),
                       ),
                     ),
@@ -115,10 +119,12 @@ class PublicProfilePage extends StatefulWidget {
     required this.repository,
     required this.userId,
     this.feedRepository,
+    this.chatRepository,
   });
   final UserRepository repository;
   final String userId;
   final FeedRepository? feedRepository;
+  final ChatRepository? chatRepository;
 
   @override
   State<PublicProfilePage> createState() => _PublicProfilePageState();
@@ -376,6 +382,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
             ProfileContentTabs(
               repository: widget.repository,
               feedRepository: widget.feedRepository,
+              chatRepository: widget.chatRepository,
               userId: widget.userId,
               profile: profile,
               onOpenFriends: () => Navigator.of(context).push(
@@ -385,6 +392,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                     userId: widget.userId,
                     title: 'Bạn bè của ${profile['name'] ?? ''}',
                     feedRepository: widget.feedRepository,
+                    chatRepository: widget.chatRepository,
                   ),
                 ),
               ),
@@ -394,6 +402,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                     repository: widget.repository,
                     userId: id,
                     feedRepository: widget.feedRepository,
+                    chatRepository: widget.chatRepository,
                   ),
                 ),
               ),
@@ -414,6 +423,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                             userId: widget.userId,
                             title: 'Bạn bè của ${profile['name'] ?? ''}',
                             feedRepository: widget.feedRepository,
+                            chatRepository: widget.chatRepository,
                           ),
                         ),
                       ),
@@ -449,12 +459,14 @@ class UserFriendsPage extends StatefulWidget {
     required this.userId,
     required this.title,
     this.feedRepository,
+    this.chatRepository,
   });
 
   final UserRepository repository;
   final String userId;
   final String title;
   final FeedRepository? feedRepository;
+  final ChatRepository? chatRepository;
 
   @override
   State<UserFriendsPage> createState() => _UserFriendsPageState();
@@ -500,6 +512,7 @@ class _UserFriendsPageState extends State<UserFriendsPage> {
                       repository: widget.repository,
                       userId: '${_users[index]['id']}',
                       feedRepository: widget.feedRepository,
+                      chatRepository: widget.chatRepository,
                     ),
                   ),
                 ),

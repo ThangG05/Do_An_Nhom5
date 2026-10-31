@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/app_avatar.dart';
-import '../../../../core/widgets/app_back_button.dart';
 import '../../../feed/domain/repositories/feed_repository.dart';
 import '../../../feed/feed_page.dart';
 import '../../domain/repositories/group_repository.dart';
@@ -328,7 +327,7 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
     child: Scaffold(
       appBar: AppBar(
         centerTitle: false,
-        leading: const AppBackButton(),
+        automaticallyImplyLeading: false,
         title: widget.adminGroups.length > 1
             ? DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -428,26 +427,6 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          _Count(
-                            label: 'Chờ duyệt',
-                            value: _pendingPosts.length,
-                            icon: Icons.pending_actions_outlined,
-                          ),
-                          _Count(
-                            label: 'Yêu cầu',
-                            value: _requests.length,
-                            icon: Icons.person_add_alt_1_outlined,
-                          ),
-                          _Count(
-                            label: 'Thành viên',
-                            value: _members.length,
-                            icon: Icons.groups_outlined,
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -479,6 +458,7 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
                                   post: post,
                                   repository: widget.feedRepository,
                                   onLike: () {},
+                                  showReportAction: false,
                                 ),
                                 OverflowBar(
                                   alignment: MainAxisAlignment.end,
@@ -515,6 +495,7 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
                                   post: post,
                                   repository: widget.feedRepository,
                                   onLike: () {},
+                                  showReportAction: false,
                                 ),
                                 Row(
                                   children: [
@@ -712,41 +693,6 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
                 ),
               ],
             ),
-    ),
-  );
-}
-
-class _Count extends StatelessWidget {
-  const _Count({required this.label, required this.value, required this.icon});
-  final String label;
-  final int value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-    child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          children: [
-            Icon(icon, color: const Color(0xffcfe9ff), size: 19),
-            const SizedBox(height: 6),
-            Text(
-              '$value',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xffd5eafa), fontSize: 10),
-            ),
-          ],
-        ),
-      ),
     ),
   );
 }

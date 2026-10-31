@@ -12,6 +12,14 @@ class SendMessageRequest(BaseModel):
     def valid(self):
         if not self.content.strip() and not self.media_ids: raise ValueError("Tin nhắn phải có nội dung hoặc media.")
         return self
+class EditMessageRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=10000)
+    @model_validator(mode="after")
+    def valid(self):
+        self.content = self.content.strip()
+        if not self.content:
+            raise ValueError("Tin nhắn không được để trống.")
+        return self
 class AttachmentResponse(BaseModel): id:str; type:str; url:str; name:str; size:str|None=None
 class SharedAttachmentsResponse(BaseModel): media:list[AttachmentResponse]=Field(default_factory=list); files:list[AttachmentResponse]=Field(default_factory=list)
 class ReplyMessageResponse(BaseModel):
@@ -21,5 +29,6 @@ class MessageResponse(BaseModel):
     attachments:list[AttachmentResponse]=Field(default_factory=list)
     replyTo:ReplyMessageResponse|None=None
     isRecalled:bool=False
+    isEdited:bool=False
 class ConversationResponse(BaseModel): id:str; participantId:str; participantName:str; participantAvatar:str; isOnline:bool=False; lastActive:str="Ngoại tuyến"; lastMessageSnippet:str=""; lastMessageTime:str=""; unreadCount:int=0; bio:str=""; role:str="Sinh viên"; theme:str="blue"; nickname:str|None=None; isMuted:bool=False; sharedMedia:list[AttachmentResponse]=Field(default_factory=list); sharedFiles:list[AttachmentResponse]=Field(default_factory=list)
 class UnreadMessagesResponse(BaseModel): unread_count:int

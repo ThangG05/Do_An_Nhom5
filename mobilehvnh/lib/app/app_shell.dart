@@ -16,6 +16,7 @@ import '../features/feed/feed.dart';
 import '../features/groups/groups.dart';
 import '../features/notifications/notifications.dart';
 import '../features/user/user.dart';
+import '../features/user/presentation/pages/privacy_settings_page.dart';
 import 'di/app_dependencies.dart';
 
 class AppShell extends StatefulWidget {
@@ -79,6 +80,7 @@ class _AppShellState extends State<AppShell> {
         builder: (_) => ProfilePage(
           repository: widget.dependencies.userRepository,
           feedRepository: widget.dependencies.feedRepository,
+          chatRepository: widget.dependencies.chatRepository,
         ),
       ),
     );
@@ -207,6 +209,7 @@ class _AppShellState extends State<AppShell> {
               builder: (_) => UserSearchPage(
                 repository: widget.dependencies.userRepository,
                 feedRepository: widget.dependencies.feedRepository,
+                chatRepository: widget.dependencies.chatRepository,
               ),
             ),
           ),
@@ -236,6 +239,15 @@ class _AppShellState extends State<AppShell> {
           ),
           onSelected: (value) {
             if (value == 'profile') _openProfile();
+            if (value == 'privacy') {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PrivacySettingsPage(
+                    repository: widget.dependencies.userRepository,
+                  ),
+                ),
+              );
+            }
             if (value == 'admin') {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -253,6 +265,13 @@ class _AppShellState extends State<AppShell> {
               child: ListTile(
                 leading: Icon(Icons.person_outline),
                 title: Text('Trang cá nhân'),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'privacy',
+              child: ListTile(
+                leading: Icon(Icons.privacy_tip_outlined),
+                title: Text('Cài đặt quyền riêng tư'),
               ),
             ),
             if (_isSuperAdmin)
@@ -281,6 +300,8 @@ class _AppShellState extends State<AppShell> {
             ? FeedPage(
                 repository: widget.dependencies.feedRepository,
                 groupRepository: widget.dependencies.groupRepository,
+                chatRepository: widget.dependencies.chatRepository,
+                userRepository: widget.dependencies.userRepository,
                 currentUser: _me,
                 refreshSignal: _pageRefreshSignals[0],
                 onOpenGroups: () => _selectTab(1),

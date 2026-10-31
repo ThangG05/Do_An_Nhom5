@@ -64,6 +64,15 @@ def _validate_hvnh_email(value: object) -> str:
     suffix = f"@{settings.ALLOWED_EMAIL_DOMAIN.strip().lower()}"
     if not email or not email.endswith(suffix) or email.count("@") != 1:
         raise ManualAuthenticationError(f"Chỉ chấp nhận email {suffix}.")
+    local_part = email.rsplit("@", 1)[0]
+    # Student identifiers and administrator aliases are full mailbox names;
+    # reject incomplete inputs such as "26@hvnh.edu.vn" before DB lookup.
+    if len(local_part) < 8 and local_part not in {"admin", "root"}:
+        raise ManualAuthenticationError(
+            "Vui lòng nhập đầy đủ email HVNH, ví dụ 26A4041111@hvnh.edu.vn."
+        )
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", local_part):
+        raise ManualAuthenticationError("Địa chỉ email HVNH không hợp lệ.")
     return email
 
 

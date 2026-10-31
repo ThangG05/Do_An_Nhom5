@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class PostComposerSheet extends StatefulWidget {
   const PostComposerSheet({super.key, required this.onSubmit});
@@ -26,13 +27,17 @@ class _PostComposerSheetState extends State<PostComposerSheet> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
       allowMultiple: true,
-      withData: false,
+      withData: kIsWeb,
     );
     if (result == null || !mounted) return;
     setState(() {
-      final knownPaths = _files.map((file) => file.path ?? file.name).toSet();
+      final knownFiles = _files
+          .map((file) => '${file.name}:${file.size}')
+          .toSet();
       _files.addAll(
-        result.files.where((file) => knownPaths.add(file.path ?? file.name)),
+        result.files.where(
+          (file) => knownFiles.add('${file.name}:${file.size}'),
+        ),
       );
     });
   }

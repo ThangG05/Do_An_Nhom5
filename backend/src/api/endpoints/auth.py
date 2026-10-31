@@ -190,7 +190,7 @@ async def health() -> dict[str, str]:
 def forgot_password(payload:PasswordResetRequest,db:DbSession):
     try: auth_service.request_password_reset(payload.email,db)
     except (auth_service.ManualAuthenticationError,auth_service.VerificationCodeCooldownError,email_service.EmailDeliveryError) as exc: raise _manual_auth_error(exc) from exc
-    return MessageResponse(message="Nếu tài khoản hợp lệ, mã khôi phục đã được gửi.")
+    return MessageResponse(message="Nếu tài khoản hợp lệ, mã OTP đã được gửi tới email.")
 
 @router.post("/password/reset",response_model=MessageResponse)
 def reset_password(payload:PasswordResetConfirmRequest,db:DbSession):

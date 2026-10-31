@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/di/app_dependencies.dart';
 import '../../../../core/api_client.dart';
+import '../../../../core/utils/hvnh_email.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_brand_mark.dart';
 import '../../../../core/widgets/app_back_button.dart';
@@ -49,8 +50,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
     });
     try {
       if (_step == 0) {
-        if (!email.endsWith('@hvnh.edu.vn')) {
-          throw const ApiException('Vui lòng dùng email @hvnh.edu.vn.', 400);
+        if (!isValidHvnhEmail(email)) {
+          throw const ApiException(
+            'Nhập đầy đủ email HVNH, ví dụ 26A4041111@hvnh.edu.vn.',
+            400,
+          );
         }
         await widget.dependencies.authRepository.requestRegistrationCode(email);
         setState(() => _step = 1);

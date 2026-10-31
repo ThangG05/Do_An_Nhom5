@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_client.dart';
 import '../../core/chat_realtime.dart';
 import '../../core/utils/app_date_time.dart';
+import '../../core/utils/platform_file_utils.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_back_button.dart';
 import '../../core/widgets/app_network_image.dart';
@@ -15,6 +16,7 @@ import '../../core/theme/app_theme.dart';
 import '../auth/auth_session.dart';
 import '../user/domain/repositories/user_repository.dart';
 import '../feed/domain/repositories/feed_repository.dart';
+import '../notifications/notifications_page.dart' show PostDetailPage;
 import '../user/presentation/pages/social_pages.dart';
 import 'domain/entities/chat_upload_file.dart';
 import 'domain/repositories/chat_repository.dart';
@@ -382,7 +384,9 @@ class _ConversationPageState extends State<ConversationPage> {
       return;
     }
     final message = event['message'];
-    if (event['event'] == 'message.recalled' && message is Map) {
+    if ((event['event'] == 'message.recalled' ||
+            event['event'] == 'message.updated') &&
+        message is Map) {
       final index = _messages.indexWhere(
         (item) => item is Map && item['id'] == message['id'],
       );
@@ -416,6 +420,104 @@ class _ConversationPageState extends State<ConversationPage> {
     }
   }
 
+  Future<void> _editMessage(Map<dynamic, dynamic> item) async {
+    final controller = TextEditingController(
+      text: item['content']?.toString() ?? '',
+    );
+    final content = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sửa tin nhắn'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          minLines: 2,
+          maxLines: 6,
+          maxLength: 10000,
+          decoration: const InputDecoration(hintText: 'Nội dung tin nhắn'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) Navigator.pop(dialogContext, value);
+            },
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (content == null || !mounted) return;
+    try {
+      final updated = await widget.repository.editMessage(
+        '${widget.conversation['id']}',
+        '${item['id']}',
+        content,
+      );
+      final index = _messages.indexWhere(
+        (message) => message is Map && message['id'] == item['id'],
+      );
+      if (index >= 0 && mounted) setState(() => _messages[index] = updated);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
+  }
+
+  Future<void> _insertEmoji() async {
+    const emojis = ['😀', '😂', '🥰', '😍', '👍', '❤️', '🙏', '🎉', '😢', '😮'];
+    final emoji = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
+            children: emojis
+                .map(
+                  (value) => IconButton(
+                    onPressed: () => Navigator.pop(context, value),
+                    icon: Text(value, style: const TextStyle(fontSize: 27)),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ),
+    );
+    if (emoji == null || !mounted) return;
+    final selection = _input.selection;
+    final start = selection.isValid ? selection.start : _input.text.length;
+    final end = selection.isValid ? selection.end : start;
+    _input.value = _input.value.copyWith(
+      text: _input.text.replaceRange(start, end, emoji),
+      selection: TextSelection.collapsed(offset: start + emoji.length),
+    );
+  }
+
+  Future<void> _openSharedPost(String content) async {
+    final match = RegExp(r'/posts/([0-9a-fA-F-]{36})').firstMatch(content);
+    final postId = match?.group(1);
+    if (postId == null || widget.feedRepository == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            PostDetailPage(postId: postId, repository: widget.feedRepository!),
+      ),
+    );
+  }
+
   void _messageActions(Map<dynamic, dynamic> item, bool mine) {
     showModalBottomSheet<void>(
       context: context,
@@ -431,6 +533,15 @@ class _ConversationPageState extends State<ConversationPage> {
                 setState(() => _replyingTo = Map<String, dynamic>.from(item));
               },
             ),
+            if (mine)
+              ListTile(
+                leading: const Icon(Icons.edit_outlined),
+                title: const Text('Sửa tin nhắn'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _editMessage(item);
+                },
+              ),
             if (mine)
               ListTile(
                 leading: const Icon(Icons.undo_rounded),
@@ -516,7 +627,7 @@ class _ConversationPageState extends State<ConversationPage> {
               (file) => ChatUploadFile(
                 name: file.name,
                 size: file.size,
-                path: file.path,
+                path: platformFilePath(file),
                 bytes: file.bytes,
               ),
             )
@@ -867,6 +978,7 @@ class _ConversationPageState extends State<ConversationPage> {
           repository: widget.userRepository,
           userId: userId,
           feedRepository: widget.feedRepository,
+          chatRepository: widget.repository,
         ),
       ),
     );
@@ -1123,12 +1235,26 @@ class _ConversationPageState extends State<ConversationPage> {
                                 if ('${item['content'] ?? ''}'
                                     .trim()
                                     .isNotEmpty)
-                                  Text(
-                                    '${item['content']}',
-                                    style: TextStyle(
-                                      color: mine
-                                          ? Colors.white
-                                          : const Color(0xff18324d),
+                                  InkWell(
+                                    onTap:
+                                        '${item['content']}'.contains('/posts/')
+                                        ? () => _openSharedPost(
+                                            '${item['content']}',
+                                          )
+                                        : null,
+                                    child: Text(
+                                      '${item['content']}',
+                                      style: TextStyle(
+                                        color: mine
+                                            ? Colors.white
+                                            : const Color(0xff18324d),
+                                        decoration:
+                                            '${item['content']}'.contains(
+                                              '/posts/',
+                                            )
+                                            ? TextDecoration.underline
+                                            : null,
+                                      ),
                                     ),
                                   ),
                                 ...attachments.map(
@@ -1142,7 +1268,7 @@ class _ConversationPageState extends State<ConversationPage> {
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  AppDateTime.full(item['timestamp']),
+                                  '${AppDateTime.full(item['timestamp'])}${item['isEdited'] == true ? ' · đã chỉnh sửa' : ''}',
                                   style: TextStyle(
                                     fontSize: 9.5,
                                     color: mine
@@ -1200,6 +1326,11 @@ class _ConversationPageState extends State<ConversationPage> {
               ),
               child: Row(
                 children: [
+                  IconButton(
+                    onPressed: _sending ? null : _insertEmoji,
+                    tooltip: 'Gửi biểu tượng cảm xúc',
+                    icon: const Icon(Icons.emoji_emotions_outlined),
+                  ),
                   IconButton.filledTonal(
                     onPressed: _sending ? null : _pick,
                     icon: const Icon(Icons.add, color: AppTheme.blue),
@@ -1248,16 +1379,41 @@ class _MessageAttachment extends StatelessWidget {
     if (type == 'image' && url.startsWith('http')) {
       return Padding(
         padding: const EdgeInsets.only(top: 7),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: AppNetworkImage(
-            url,
-            width: 220,
-            height: 180,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const SizedBox(
-              height: 80,
-              child: Center(child: Icon(Icons.broken_image_outlined)),
+        child: GestureDetector(
+          onTap: () => showDialog<void>(
+            context: context,
+            builder: (dialogContext) => Dialog.fullscreen(
+              backgroundColor: Colors.black,
+              child: Stack(
+                children: [
+                  InteractiveViewer(
+                    minScale: .8,
+                    maxScale: 5,
+                    child: Center(
+                      child: AppNetworkImage(url, fit: BoxFit.contain),
+                    ),
+                  ),
+                  SafeArea(
+                    child: IconButton.filled(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AppNetworkImage(
+              url,
+              width: 220,
+              height: 180,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => const SizedBox(
+                height: 80,
+                child: Center(child: Icon(Icons.broken_image_outlined)),
+              ),
             ),
           ),
         ),

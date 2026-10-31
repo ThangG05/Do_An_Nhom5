@@ -17,6 +17,11 @@ abstract interface class ChatRepository {
     String conversationId,
     String messageId,
   );
+  Future<Map<String, dynamic>> editMessage(
+    String conversationId,
+    String messageId,
+    String content,
+  );
   Future<Map<String, dynamic>> createDirectConversation(String userId);
   Future<void> updateConversationSettings(
     String conversationId, {

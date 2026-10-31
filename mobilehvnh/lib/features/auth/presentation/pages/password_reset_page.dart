@@ -3,6 +3,7 @@ import '../../../../core/widgets/app_page_bar.dart';
 
 import '../../../../app/di/app_dependencies.dart';
 import '../../../../core/api_client.dart';
+import '../../../../core/utils/hvnh_email.dart';
 
 class PasswordResetPage extends StatefulWidget {
   const PasswordResetPage({super.key, required this.dependencies});
@@ -33,8 +34,10 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
 
   Future<void> _requestCode() async {
     final email = _email.text.trim().toLowerCase();
-    if (!email.endsWith('@hvnh.edu.vn')) {
-      setState(() => _error = 'Vui lòng dùng email @hvnh.edu.vn.');
+    if (!isValidHvnhEmail(email)) {
+      setState(
+        () => _error = 'Nhập đầy đủ email HVNH, ví dụ 26A4041111@hvnh.edu.vn.',
+      );
       return;
     }
     setState(() {
@@ -46,7 +49,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
       if (mounted) {
         setState(() {
           _sent = true;
-          _message = 'Mã khôi phục đã được gửi tới email của bạn.';
+          _message = 'Nếu tài khoản hợp lệ, mã OTP đã được gửi tới email.';
         });
       }
     } on ApiException catch (error) {

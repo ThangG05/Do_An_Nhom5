@@ -31,7 +31,7 @@ class FeedRepositoryImpl implements FeedRepository {
   }
 
   @override
-  Future<void> createPost({
+  Future<Map<String, dynamic>> createPost({
     required String content,
     required List<UploadFile> files,
     String category = 'general',
@@ -54,7 +54,7 @@ class FeedRepositoryImpl implements FeedRepository {
         ),
       );
     }
-    await _remote.create({
+    return _remote.create({
       'content': content,
       'form_version': 2,
       'privacy': 'public',
@@ -67,6 +67,17 @@ class FeedRepositoryImpl implements FeedRepository {
       'location': ?location,
     });
   }
+
+  @override
+  Future<Map<String, dynamic>> registerShare(
+    String postId, {
+    required String destinationType,
+    required String destinationId,
+  }) => _remote.registerShare(
+    postId,
+    destinationType: destinationType,
+    destinationId: destinationId,
+  );
 
   @override
   Future<Map<String, dynamic>> setLike(String id, bool liked) =>

@@ -10,7 +10,7 @@ class GetFeed {
 class CreatePost {
   const CreatePost(this.repository);
   final FeedRepository repository;
-  Future<void> call(String content, List<UploadFile> files) =>
+  Future<Map<String, dynamic>> call(String content, List<UploadFile> files) =>
       repository.createPost(content: content, files: files);
 }
 

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/app_page_bar.dart';
+import '../../../../core/utils/platform_file_utils.dart';
 import '../../domain/entities/group_upload_file.dart';
 import '../../domain/repositories/group_repository.dart';
 
@@ -170,7 +171,7 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
               (file) => GroupUploadFile(
                 name: file.name,
                 size: file.size,
-                path: file.path,
+                path: platformFilePath(file),
                 bytes: file.bytes,
               ),
             )

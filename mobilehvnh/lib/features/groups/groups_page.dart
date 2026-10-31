@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_page_bar.dart';
 import '../../core/widgets/app_state_view.dart';
+import '../../core/utils/platform_file_utils.dart';
 import '../../core/widgets/premium_hero_card.dart';
 import '../../core/theme/app_theme.dart';
 import '../feed/domain/repositories/feed_repository.dart';
@@ -92,10 +93,11 @@ class _GroupsPageState extends State<GroupsPage> {
         (membership != 'MEMBER' &&
             membership != 'ADMIN' &&
             membership != 'PUBLIC')) {
-      if (mounted) setState(() {
-        _previewPosts = [];
-        _previewLoading = false;
-      });
+      if (mounted)
+        setState(() {
+          _previewPosts = [];
+          _previewLoading = false;
+        });
       return;
     }
     if (mounted) {
@@ -635,7 +637,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
             (file) => GroupUploadFile(
               name: file.name,
               size: file.size,
-              path: file.path,
+              path: platformFilePath(file),
               bytes: file.bytes,
             ),
           )
@@ -780,9 +782,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                               ),
                             ),
                           ),
-                          icon: const Icon(
-                            Icons.admin_panel_settings_outlined,
-                          ),
+                          icon: const Icon(Icons.admin_panel_settings_outlined),
                           label: const Text('Quản trị nhóm'),
                         )
                       else if (_membership == 'MEMBER' &&

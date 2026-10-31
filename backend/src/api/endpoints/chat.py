@@ -9,7 +9,7 @@ from src.api.dependencies import CurrentUser
 from src.db.models.chat import ConversationMember
 from src.db.models.user import AccountStatus,User
 from src.db.session import SessionLocal,get_db
-from src.models.chat import ConversationResponse,ConversationSettingsRequest,DirectConversationRequest,MessageResponse,SendMessageRequest,SharedAttachmentsResponse,UnreadMessagesResponse
+from src.models.chat import ConversationResponse,ConversationSettingsRequest,DirectConversationRequest,EditMessageRequest,MessageResponse,SendMessageRequest,SharedAttachmentsResponse,UnreadMessagesResponse
 from src.services import chat_service
 from src.services.realtime_service import manager
 
@@ -91,6 +91,18 @@ async def recall_message(conversation_id:uuid.UUID,message_id:uuid.UUID,current_
         return message,recipients
     message,recipients=await run_in_threadpool(recall_and_recipients)
     await manager.send_users(recipients,{"event":"message.recalled","conversation_id":str(conversation_id),"message":message.model_dump(mode="json")})
+    return message
+
+@router.patch("/conversations/{conversation_id}/messages/{message_id}",response_model=MessageResponse)
+async def edit_message(conversation_id:uuid.UUID,message_id:uuid.UUID,payload:EditMessageRequest,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
+    def edit_and_recipients():
+        message=chat_service.edit_message(db,conversation_id,message_id,current_user,payload.content)
+        recipients=list(db.scalars(select(ConversationMember.user_id).where(
+            ConversationMember.conversation_id==conversation_id,ConversationMember.left_at.is_(None)
+        )).all())
+        return message,recipients
+    message,recipients=await run_in_threadpool(edit_and_recipients)
+    await manager.send_users(recipients,{"event":"message.updated","conversation_id":str(conversation_id),"message":message.model_dump(mode="json")})
     return message
 
 @router.get("/unread-count",response_model=UnreadMessagesResponse)

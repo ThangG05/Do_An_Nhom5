@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_date_time.dart';
+import '../../../../core/utils/platform_file_utils.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../../../core/widgets/app_page_bar.dart';
@@ -9,14 +10,21 @@ import '../../../../core/widgets/app_network_image.dart';
 import '../../domain/entities/avatar_upload_file.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../../feed/domain/repositories/feed_repository.dart';
+import '../../../chat/domain/repositories/chat_repository.dart';
 import 'social_pages.dart';
 import '../widgets/profile_content_tabs.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, required this.repository, this.feedRepository});
+  const ProfilePage({
+    super.key,
+    required this.repository,
+    this.feedRepository,
+    this.chatRepository,
+  });
 
   final UserRepository repository;
   final FeedRepository? feedRepository;
+  final ChatRepository? chatRepository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -117,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
         AvatarUploadFile(
           name: file.name,
           size: file.size,
-          path: file.path,
+          path: platformFilePath(file),
           bytes: file.bytes,
         ),
       );
@@ -152,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
         AvatarUploadFile(
           name: file.name,
           size: file.size,
-          path: file.path,
+          path: platformFilePath(file),
           bytes: file.bytes,
         ),
       );
@@ -561,6 +569,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ProfileContentTabs(
               repository: widget.repository,
               feedRepository: widget.feedRepository,
+              chatRepository: widget.chatRepository,
               userId: '${profile['id']}',
               profile: profile,
               onOpenFriends: () => Navigator.of(context).push(
@@ -570,6 +579,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     userId: '${profile['id']}',
                     title: 'Bạn bè của tôi',
                     feedRepository: widget.feedRepository,
+                    chatRepository: widget.chatRepository,
                   ),
                 ),
               ),
@@ -579,6 +589,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     repository: widget.repository,
                     userId: id,
                     feedRepository: widget.feedRepository,
+                    chatRepository: widget.chatRepository,
                   ),
                 ),
               ),
@@ -606,6 +617,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             userId: '${profile['id']}',
                             title: 'Bạn bè của tôi',
                             feedRepository: widget.feedRepository,
+                            chatRepository: widget.chatRepository,
                           ),
                         ),
                       ),

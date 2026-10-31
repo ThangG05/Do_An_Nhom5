@@ -23,6 +23,14 @@ class FeedRemoteDataSource {
 
   Future<Map<String, dynamic>> create(Map<String, dynamic> body) =>
       _apiClient.post('/users/me/posts', body, authenticated: true);
+  Future<Map<String, dynamic>> registerShare(
+    String id, {
+    required String destinationType,
+    required String destinationId,
+  }) => _apiClient.postAuthenticated('/posts/$id/shares', {
+    'destination_type': destinationType,
+    'destination_id': destinationId,
+  });
   Future<Map<String, dynamic>> like(String id, bool isLiked) =>
       _apiClient.put('/posts/$id/like', {'is_liked': isLiked});
   Future<Map<String, dynamic>> likes(

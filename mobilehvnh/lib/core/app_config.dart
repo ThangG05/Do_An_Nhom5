@@ -19,4 +19,16 @@ class AppConfig {
     return 'http://10.0.2.2:8000/api/v1';
   }
 
+  static const _configuredWebBaseUrl = String.fromEnvironment(
+    'WEB_BASE_URL',
+    defaultValue: '',
+  );
+
+  static String get webBaseUrl {
+    if (_configuredWebBaseUrl.isNotEmpty) return _configuredWebBaseUrl;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      return 'http://localhost:3000';
+    }
+    return 'http://10.0.2.2:3000';
+  }
 }

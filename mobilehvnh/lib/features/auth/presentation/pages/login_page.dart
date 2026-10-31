@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/di/app_dependencies.dart';
 import '../../../../core/api_client.dart';
+import '../../../../core/utils/hvnh_email.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_brand_mark.dart';
 import '../../../../core/widgets/app_page_bar.dart';
@@ -216,13 +217,9 @@ class _LoginPageState extends State<LoginPage> {
                               labelText: 'Email HVNH',
                               prefixIcon: Icon(CupertinoIcons.mail, size: 20),
                             ),
-                            validator: (value) =>
-                                value != null &&
-                                    value.trim().toLowerCase().endsWith(
-                                      '@hvnh.edu.vn',
-                                    )
+                            validator: (value) => isValidHvnhEmail(value)
                                 ? null
-                                : 'Vui lòng dùng email @hvnh.edu.vn',
+                                : 'Nhập đầy đủ email HVNH, ví dụ 26A4041111@hvnh.edu.vn.',
                           ),
                           const SizedBox(height: 14),
                           TextFormField(

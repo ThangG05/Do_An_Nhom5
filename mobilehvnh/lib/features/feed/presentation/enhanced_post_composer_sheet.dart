@@ -108,7 +108,7 @@ class _EnhancedPostComposerSheetState extends State<EnhancedPostComposerSheet> {
     final incoming = result.files
         .where(
           (file) => !_files.any(
-            (current) => current.path == file.path && current.name == file.name,
+            (current) => current.name == file.name && current.size == file.size,
           ),
         )
         .toList();
@@ -374,17 +374,7 @@ class _EnhancedPostComposerSheetState extends State<EnhancedPostComposerSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey.shade200,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 4),
             Text(
               widget.groupName == null
                   ? 'Tạo bài viết'

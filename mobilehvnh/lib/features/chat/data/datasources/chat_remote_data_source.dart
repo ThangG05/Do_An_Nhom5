@@ -22,6 +22,14 @@ class ChatRemoteDataSource {
   Future<Map<String, dynamic>> recall(String id, String messageId) =>
       _api.deleteObject('/chat/conversations/$id/messages/$messageId');
 
+  Future<Map<String, dynamic>> edit(
+    String id,
+    String messageId,
+    String content,
+  ) => _api.patch('/chat/conversations/$id/messages/$messageId', {
+    'content': content,
+  });
+
   Future<Map<String, dynamic>> createDirectConversation(String userId) =>
       _api.postAuthenticated('/chat/conversations/direct', {
         'target_user_id': userId,

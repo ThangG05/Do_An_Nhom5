@@ -60,6 +60,13 @@ class ChatRepositoryImpl implements ChatRepository {
   ) => _remote.recall(conversationId, messageId);
 
   @override
+  Future<Map<String, dynamic>> editMessage(
+    String conversationId,
+    String messageId,
+    String content,
+  ) => _remote.edit(conversationId, messageId, content);
+
+  @override
   Future<Map<String, dynamic>> createDirectConversation(String userId) =>
       _remote.createDirectConversation(userId);
 

@@ -25,8 +25,17 @@ def _send_smtp(email: str, subject: str, body_html: str) -> None:
     message["To"] = email
     message.attach(MIMEText(body_html, "html", "utf-8"))
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as server:
-            server.starttls()
+        if settings.SMTP_PORT == 465:
+            server_context = smtplib.SMTP_SSL(
+                settings.SMTP_HOST, settings.SMTP_PORT, timeout=20
+            )
+        else:
+            server_context = smtplib.SMTP(
+                settings.SMTP_HOST, settings.SMTP_PORT, timeout=20
+            )
+        with server_context as server:
+            if settings.SMTP_PORT != 465:
+                server.starttls()
             server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
             server.sendmail(sender, [email], message.as_string())
     except (OSError, smtplib.SMTPException) as exc:

@@ -101,6 +101,7 @@ def _messages_batch(db: Session, rows: list[Message], viewer_id: uuid.UUID) -> l
             type="image" if files and files[0].type == "image" else "file" if files else "text",
             attachments=files,
             isRecalled=recalled,
+            isEdited=message.edited_at is not None,
             replyTo=ReplyMessageResponse(
                 id=str(reply.id), senderName=reply_profile.full_name if reply_profile else reply_sender.username if reply_sender else "Người dùng",
                 content="Tin nhắn đã được thu hồi" if reply.deleted_at is not None else reply.content or "[Tệp đính kèm]",
@@ -156,6 +157,20 @@ def recall(db:Session,cid:uuid.UUID,message_id:uuid.UUID,user:User)->MessageResp
     # _messages_batch masks recalled messages and their reply previews from API output.
     db.commit()
     db.refresh(message)
+    return _message(db,message,user.id)
+
+def edit_message(db:Session,cid:uuid.UUID,message_id:uuid.UUID,user:User,content:str)->MessageResponse:
+    from src.services.system_service import enforce_content
+    clean=content.strip()
+    if not clean:raise HTTPException(400,"Tin nhắn không được để trống.")
+    enforce_content(db,clean)
+    _member(db,cid,user.id);_ensure_not_blocked(db,cid,user.id)
+    message=db.get(Message,message_id)
+    if not message or message.conversation_id!=cid:raise HTTPException(404,"Không tìm thấy tin nhắn.")
+    if message.sender_id!=user.id:raise HTTPException(403,"Bạn chỉ có thể sửa tin nhắn của mình.")
+    if message.deleted_at is not None:raise HTTPException(400,"Tin nhắn đã thu hồi không thể chỉnh sửa.")
+    message.content=clean;message.edited_at=datetime.now(timezone.utc)
+    db.commit();db.refresh(message)
     return _message(db,message,user.id)
 
 def list_conversations(db,user):

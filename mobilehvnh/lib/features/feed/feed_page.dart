@@ -6,7 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/storage/auth_session.dart';
+import '../../core/app_config.dart';
+import '../../core/api_client.dart';
 import '../../core/utils/app_date_time.dart';
+import '../../core/utils/platform_file_utils.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/widgets/app_network_image.dart';
 import '../../core/widgets/premium_hero_card.dart';
@@ -15,6 +18,8 @@ import '../../core/theme/app_theme.dart';
 import 'domain/entities/upload_file.dart';
 import 'domain/repositories/feed_repository.dart';
 import '../groups/domain/repositories/group_repository.dart';
+import '../chat/domain/repositories/chat_repository.dart';
+import '../user/domain/repositories/user_repository.dart';
 import 'presentation/enhanced_post_composer_sheet.dart';
 
 Future<void> _openMediaUrl(BuildContext context, String value) async {
@@ -34,6 +39,8 @@ class FeedPage extends StatefulWidget {
     super.key,
     required this.repository,
     required this.groupRepository,
+    this.chatRepository,
+    this.userRepository,
     this.currentUser,
     this.refreshSignal,
     this.onOpenGroups,
@@ -41,6 +48,8 @@ class FeedPage extends StatefulWidget {
   });
   final FeedRepository repository;
   final GroupRepository groupRepository;
+  final ChatRepository? chatRepository;
+  final UserRepository? userRepository;
   final Map<String, dynamic>? currentUser;
   final ValueListenable<int>? refreshSignal;
   final VoidCallback? onOpenGroups;
@@ -63,6 +72,7 @@ class _FeedPageState extends State<FeedPage> {
   List<String> _joinedCategories = const [];
   int _loadGeneration = 0;
   final Set<String> _likingPostIds = <String>{};
+  final Set<String> _sharingPostIds = <String>{};
 
   static const _categories = <(String?, String)>[
     (null, 'Tất cả'),
@@ -158,7 +168,7 @@ class _FeedPageState extends State<FeedPage> {
             (file) => UploadFile(
               name: file.name,
               size: file.size,
-              path: file.path,
+              path: platformFilePath(file),
               bytes: file.bytes,
             ),
           )
@@ -171,6 +181,135 @@ class _FeedPageState extends State<FeedPage> {
       location: draft.location,
     );
     await _load();
+  }
+
+  String _postLink(String postId) =>
+      '${AppConfig.webBaseUrl.replaceFirst(RegExp(r'/$'), '')}/posts/$postId';
+
+  Future<void> _sharePost(Map<dynamic, dynamic> post) async {
+    final originalId =
+        (post['sharedPostId'] ?? post['id'])?.toString().trim() ?? '';
+    if (originalId.isEmpty || _myId == null) return;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(
+              title: Text('Chia sẻ bài viết'),
+              subtitle: Text('Chia sẻ bài gốc tới bạn bè hoặc trang cá nhân.'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Chia sẻ lên trang cá nhân'),
+              onTap: () => Navigator.pop(context, 'profile'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.send_outlined),
+              title: const Text('Gửi qua tin nhắn'),
+              onTap: () => Navigator.pop(context, 'message'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (action == null || !mounted) return;
+    setState(() => _sharingPostIds.add(originalId));
+    try {
+      final link = _postLink(originalId);
+      if (action == 'profile') {
+        final created = await widget.repository.createPost(
+          content: link,
+          files: const [],
+        );
+        final destinationId = created['id']?.toString() ?? '';
+        if (destinationId.isEmpty) {
+          throw const ApiException(
+            'Không nhận được mã bài viết đã chia sẻ.',
+            0,
+          );
+        }
+        final result = await widget.repository.registerShare(
+          originalId,
+          destinationType: 'POST',
+          destinationId: destinationId,
+        );
+        post['sharesCount'] = result['sharesCount'];
+        await _load();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã chia sẻ lên trang cá nhân.')),
+          );
+        }
+        return;
+      }
+
+      final chatRepository = widget.chatRepository;
+      final userRepository = widget.userRepository;
+      if (chatRepository == null || userRepository == null) {
+        throw const ApiException('Chức năng tin nhắn chưa sẵn sàng.', 0);
+      }
+      final friends = await userRepository.getFriends(_myId!);
+      if (!mounted) return;
+      final target = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (context) => SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * .7,
+            child: friends.isEmpty
+                ? const Center(child: Text('Bạn chưa có bạn bè để chia sẻ.'))
+                : ListView.builder(
+                    itemCount: friends.length,
+                    itemBuilder: (context, index) {
+                      final friend = friends[index];
+                      return ListTile(
+                        leading: AppAvatar(
+                          radius: 20,
+                          url: friend['avatar']?.toString(),
+                          name: friend['name']?.toString(),
+                        ),
+                        title: Text('${friend['name'] ?? 'Sinh viên HVNH'}'),
+                        subtitle: Text('${friend['studentCode'] ?? ''}'),
+                        onTap: () => Navigator.pop(context, friend),
+                      );
+                    },
+                  ),
+          ),
+        ),
+      );
+      if (target == null || !mounted) return;
+      final conversation = await chatRepository.createDirectConversation(
+        '${target['id']}',
+      );
+      final message = await chatRepository.sendMessage(
+        '${conversation['id']}',
+        'Đã chia sẻ một bài viết:\n$link',
+        const [],
+      );
+      final result = await widget.repository.registerShare(
+        originalId,
+        destinationType: 'MESSAGE',
+        destinationId: '${message['id']}',
+      );
+      post['sharesCount'] = result['sharesCount'];
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã gửi bài viết cho ${target['name']}.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _sharingPostIds.remove(originalId));
+    }
   }
 
   Future<void> _loadJoinedCategories() async {
@@ -224,6 +363,7 @@ class _FeedPageState extends State<FeedPage> {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (_) => FutureBuilder<List<Map<String, dynamic>>>(
         future: groupsFuture,
         builder: (context, snapshot) {
@@ -497,10 +637,14 @@ class _FeedPageState extends State<FeedPage> {
                       final item = _posts[index];
                       return PostCard(
                         key: ValueKey(item['id']),
-                        post: item as Map<dynamic, dynamic>,
+                        post: item,
                         repository: widget.repository,
                         currentUserId: _myId,
                         onLike: () => _like(item),
+                        onShare: () => _sharePost(item),
+                        isSharing: _sharingPostIds.contains(
+                          '${item['sharedPostId'] ?? item['id']}',
+                        ),
                         onChanged: _load,
                       );
                     },
@@ -725,6 +869,9 @@ class PostCard extends StatelessWidget {
     required this.repository,
     required this.onLike,
     this.currentUserId,
+    this.onShare,
+    this.isSharing = false,
+    this.showReportAction = true,
     this.onChanged,
   });
 
@@ -732,6 +879,9 @@ class PostCard extends StatelessWidget {
   final FeedRepository repository;
   final VoidCallback onLike;
   final String? currentUserId;
+  final VoidCallback? onShare;
+  final bool isSharing;
+  final bool showReportAction;
   final Future<void> Function()? onChanged;
 
   Future<void> _showLikes(BuildContext context) async {
@@ -1101,27 +1251,34 @@ class PostCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'edit') _edit(context);
-                if (value == 'delete') _delete(context);
-                if (value == 'report') _report(context);
-              },
-              itemBuilder: (_) => mine
-                  ? const [
-                      PopupMenuItem(value: 'edit', child: Text('Chỉnh sửa')),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Xóa bài viết'),
-                      ),
-                    ]
-                  : const [
-                      PopupMenuItem(
-                        value: 'report',
-                        child: Text('Báo cáo bài viết'),
-                      ),
-                    ],
-            ),
+            trailing: mine || showReportAction
+                ? PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') _edit(context);
+                      if (value == 'delete') _delete(context);
+                      if (value == 'report') _report(context);
+                    },
+                    itemBuilder: (_) => mine
+                        ? const [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Text('Chỉnh sửa'),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Xóa bài viết'),
+                            ),
+                          ]
+                        : showReportAction
+                        ? const [
+                            PopupMenuItem(
+                              value: 'report',
+                              child: Text('Báo cáo bài viết'),
+                            ),
+                          ]
+                        : const [],
+                  )
+                : null,
           ),
           _PostCategoryDetails(post: post),
           if ('${post['content']}'.trim().isNotEmpty)
@@ -1135,6 +1292,11 @@ class PostCard extends StatelessWidget {
                   color: AppTheme.ink,
                 ),
               ),
+            ),
+          if (post['sharedPostId']?.toString().isNotEmpty == true)
+            SharedPostPreview(
+              postId: post['sharedPostId'].toString(),
+              repository: repository,
             ),
           if (media.isNotEmpty) _PostMediaGrid(media: media),
           Padding(
@@ -1175,6 +1337,11 @@ class PostCard extends StatelessWidget {
                   '${post['commentsCount'] ?? 0} bình luận',
                   style: const TextStyle(color: AppTheme.muted, fontSize: 12),
                 ),
+                if ((post['sharesCount'] as num? ?? 0) > 0)
+                  Text(
+                    '${post['sharesCount']} lượt chia sẻ',
+                    style: const TextStyle(color: AppTheme.muted, fontSize: 12),
+                  ),
               ],
             ),
           ),
@@ -1211,6 +1378,20 @@ class PostCard extends StatelessWidget {
                   label: const Text('Bình luận'),
                 ),
               ),
+              if (onShare != null)
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: isSharing ? null : onShare,
+                    icon: isSharing
+                        ? const SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(CupertinoIcons.arrowshape_turn_up_right),
+                    label: const Text('Chia sẻ'),
+                  ),
+                ),
             ],
           ),
         ],
@@ -1226,6 +1407,154 @@ class PostCard extends StatelessWidget {
     backgroundColor: Colors.white,
     builder: (_) =>
         CommentSheet(postId: '${post['id']}', repository: repository),
+  );
+}
+
+class SharedPostPreview extends StatelessWidget {
+  const SharedPostPreview({
+    super.key,
+    required this.postId,
+    required this.repository,
+  });
+
+  final String postId;
+  final FeedRepository repository;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    child: FutureBuilder<Map<String, dynamic>>(
+      future: repository.getPost(postId),
+      builder: (context, snapshot) {
+        final original = snapshot.data;
+        final author = original?['author'] as Map? ?? const {};
+        final media = (original?['media'] as List?) ?? const [];
+        return InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  OriginalPostPage(postId: postId, repository: repository),
+            ),
+          ),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: AppTheme.hairline),
+              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xfff7fafd),
+            ),
+            padding: const EdgeInsets.all(12),
+            child: snapshot.connectionState != ConnectionState.done
+                ? const Text('Đang tải bài viết gốc…')
+                : snapshot.hasError || original == null
+                ? const Text('Chạm để mở bài viết gốc')
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          AppAvatar(
+                            radius: 16,
+                            url: author['avatar']?.toString(),
+                            name: author['name']?.toString(),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${author['name'] ?? 'Sinh viên HVNH'}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.open_in_new_rounded, size: 17),
+                        ],
+                      ),
+                      if ('${original['content'] ?? ''}'.trim().isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '${original['content']}',
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      if (media.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        _PostMediaGrid(media: media),
+                      ],
+                    ],
+                  ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+class OriginalPostPage extends StatelessWidget {
+  const OriginalPostPage({
+    super.key,
+    required this.postId,
+    required this.repository,
+  });
+
+  final String postId;
+  final FeedRepository repository;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Bài viết gốc')),
+    body: FutureBuilder<Map<String, dynamic>>(
+      future: repository.getPost(postId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Center(child: Text('Không thể tải bài viết gốc.'));
+        }
+        final original = snapshot.data!;
+        final author = original['author'] as Map? ?? const {};
+        final media = (original['media'] as List?) ?? const [];
+        return ListView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            Row(
+              children: [
+                AppAvatar(
+                  radius: 22,
+                  url: author['avatar']?.toString(),
+                  name: author['name']?.toString(),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${author['name'] ?? 'Sinh viên HVNH'}',
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      Text(AppDateTime.relative(original['createdAt'])),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text('${original['content'] ?? ''}'),
+            if (media.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              _PostMediaGrid(media: media),
+            ],
+          ],
+        );
+      },
+    ),
   );
 }
 
@@ -1740,7 +2069,7 @@ class _CommentSheetState extends State<CommentSheet> {
             : UploadFile(
                 name: image.name,
                 size: image.size,
-                path: image.path,
+                path: platformFilePath(image),
                 bytes: image.bytes,
               ),
         mentions: mentions,
