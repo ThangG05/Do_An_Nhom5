@@ -76,8 +76,10 @@ class _AppShellState extends State<AppShell> {
   Future<void> _openProfile() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            ProfilePage(repository: widget.dependencies.userRepository),
+        builder: (_) => ProfilePage(
+          repository: widget.dependencies.userRepository,
+          feedRepository: widget.dependencies.feedRepository,
+        ),
       ),
     );
     await _loadProfile();
@@ -181,16 +183,17 @@ class _AppShellState extends State<AppShell> {
                   'HVNH Hub',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
-                Text(
-                  _titles[_index],
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xff62758b),
-                    fontWeight: FontWeight.w600,
+                if (_index != 0)
+                  Text(
+                    _titles[_index],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xff62758b),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -203,6 +206,7 @@ class _AppShellState extends State<AppShell> {
             MaterialPageRoute(
               builder: (_) => UserSearchPage(
                 repository: widget.dependencies.userRepository,
+                feedRepository: widget.dependencies.feedRepository,
               ),
             ),
           ),
@@ -295,6 +299,7 @@ class _AppShellState extends State<AppShell> {
             ? ChatPage(
                 repository: widget.dependencies.chatRepository,
                 userRepository: widget.dependencies.userRepository,
+                feedRepository: widget.dependencies.feedRepository,
                 apiClient: widget.dependencies.apiClient,
                 refreshSignal: _chatSignal,
               )

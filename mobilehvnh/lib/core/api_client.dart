@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 
@@ -430,7 +430,15 @@ class ApiClient {
           'Authorization': 'Bearer $token',
           'X-HVNH-Client': 'mobile',
         });
-        if (file.path != null) {
+        if (kIsWeb && file.bytes != null) {
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              'file',
+              file.bytes!,
+              filename: file.name,
+            ),
+          );
+        } else if (file.path != null) {
           request.files.add(
             await http.MultipartFile.fromPath(
               'file',
@@ -496,7 +504,15 @@ class ApiClient {
       });
       request.fields.addAll(fields);
       for (final file in files) {
-        if (file.path != null) {
+        if (kIsWeb && file.bytes != null) {
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              'files',
+              file.bytes!,
+              filename: file.name,
+            ),
+          );
+        } else if (file.path != null) {
           request.files.add(
             await http.MultipartFile.fromPath(
               'files',

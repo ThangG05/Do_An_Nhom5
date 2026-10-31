@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/utils/app_date_time.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/app_avatar.dart';
 import '../../domain/repositories/user_repository.dart';
+import '../../../feed/domain/repositories/feed_repository.dart';
+import '../../../feed/feed_page.dart' show CommentSheet;
 
 /// Reuses the same profile-content API as the web app.  Keeping these tabs
 /// data-driven prevents a profile from becoming a static information screen.
@@ -13,6 +16,7 @@ class ProfileContentTabs extends StatefulWidget {
     required this.repository,
     required this.userId,
     required this.profile,
+    this.feedRepository,
     this.aboutPanel,
     this.onOpenFriends,
     this.onOpenFriend,
@@ -21,6 +25,7 @@ class ProfileContentTabs extends StatefulWidget {
   final UserRepository repository;
   final String userId;
   final Map<String, dynamic> profile;
+  final FeedRepository? feedRepository;
   final Widget? aboutPanel;
   final VoidCallback? onOpenFriends;
   final ValueChanged<String>? onOpenFriend;
@@ -111,6 +116,7 @@ class _ProfileContentTabsState extends State<ProfileContentTabs> {
                   key: const ValueKey('groups'),
                   posts: content.groupPosts,
                   empty: 'Chưa có bài viết hội nhóm.',
+                  feedRepository: widget.feedRepository,
                 ),
                 _ => Column(
                   key: const ValueKey('posts'),
@@ -125,6 +131,7 @@ class _ProfileContentTabsState extends State<ProfileContentTabs> {
                     _PostsList(
                       posts: content.posts,
                       empty: 'Chưa có bài viết công khai.',
+                      feedRepository: widget.feedRepository,
                     ),
                   ],
                 ),
@@ -359,9 +366,15 @@ class _FriendsList extends StatelessWidget {
 }
 
 class _PostsList extends StatelessWidget {
-  const _PostsList({super.key, required this.posts, required this.empty});
+  const _PostsList({
+    super.key,
+    required this.posts,
+    required this.empty,
+    this.feedRepository,
+  });
   final List<Map<String, dynamic>> posts;
   final String empty;
+  final FeedRepository? feedRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -374,17 +387,105 @@ class _PostsList extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       itemCount: posts.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, index) => _PostPreview(post: posts[index]),
+      itemBuilder: (context, index) =>
+          _PostPreview(post: posts[index], feedRepository: feedRepository),
     );
   }
 }
 
-class _PostPreview extends StatelessWidget {
-  const _PostPreview({required this.post});
+class _PostPreview extends StatefulWidget {
+  const _PostPreview({required this.post, this.feedRepository});
   final Map<String, dynamic> post;
+  final FeedRepository? feedRepository;
+
+  @override
+  State<_PostPreview> createState() => _PostPreviewState();
+}
+
+class _PostPreviewState extends State<_PostPreview> {
+  late bool _liked;
+  late int _likesCount;
+  bool _liking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncPost();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PostPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.post['id'] != widget.post['id'] ||
+        oldWidget.post['isLiked'] != widget.post['isLiked'] ||
+        oldWidget.post['likesCount'] != widget.post['likesCount']) {
+      _syncPost();
+    }
+  }
+
+  void _syncPost() {
+    _liked = widget.post['isLiked'] == true;
+    _likesCount = (widget.post['likesCount'] as num?)?.toInt() ?? 0;
+  }
+
+  Future<void> _toggleLike() async {
+    final repository = widget.feedRepository;
+    if (repository == null || _liking) return;
+    final next = !_liked;
+    setState(() {
+      _liking = true;
+      _liked = next;
+      _likesCount = (_likesCount + (next ? 1 : -1)).clamp(0, 1 << 30);
+    });
+    try {
+      await repository.setLike('${widget.post['id']}', next);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _liked = !next;
+          _likesCount = (_likesCount + (next ? -1 : 1)).clamp(0, 1 << 30);
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _liking = false);
+    }
+  }
+
+  void _openComments() {
+    final repository = widget.feedRepository;
+    if (repository == null) return;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      builder: (_) =>
+          CommentSheet(postId: '${widget.post['id']}', repository: repository),
+    );
+  }
+
+  Future<void> _shareLink() async {
+    final id = (widget.post['sharedPostId'] ?? widget.post['id'])?.toString();
+    if (id == null || id.isEmpty) return;
+    final base = Uri.base;
+    final link = (base.scheme == 'http' || base.scheme == 'https')
+        ? base.resolve('/posts/$id').toString()
+        : '/posts/$id';
+    await Clipboard.setData(ClipboardData(text: link));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đã sao chép liên kết bài viết gốc.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     final media = (post['media'] as List?) ?? const [];
     final thumbnail = media.isEmpty
         ? ''
@@ -462,14 +563,16 @@ class _PostPreview extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(
-                  Icons.thumb_up_alt_outlined,
+                Icon(
+                  Icons.thumb_up_alt,
                   size: 17,
-                  color: Color(0xff63758c),
+                  color: _liked
+                      ? const Color(0xff0866c6)
+                      : const Color(0xff63758c),
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${post['likesCount'] ?? 0}',
+                  '$_likesCount',
                   style: const TextStyle(color: Color(0xff63758c)),
                 ),
                 const SizedBox(width: 16),
@@ -485,6 +588,36 @@ class _PostPreview extends StatelessWidget {
                 ),
               ],
             ),
+            if (widget.feedRepository != null) ...[
+              const Divider(height: 1),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: _liking ? null : _toggleLike,
+                      icon: Icon(
+                        _liked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                      ),
+                      label: Text(_liked ? 'Đã thích' : 'Thích'),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: _openComments,
+                      icon: const Icon(Icons.mode_comment_outlined),
+                      label: const Text('Bình luận'),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: _shareLink,
+                      icon: const Icon(Icons.share_outlined),
+                      label: const Text('Chia sẻ'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -517,14 +650,49 @@ class _PhotoGrid extends StatelessWidget {
       itemBuilder: (context, index) {
         final photo = photos[index];
         final url = photo['url']?.toString() ?? '';
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: url.startsWith('http')
-              ? AppNetworkImage(url, fit: BoxFit.cover)
-              : const ColoredBox(
-                  color: Color(0xffeaf2fb),
-                  child: Icon(Icons.image_outlined),
-                ),
+        return GestureDetector(
+          onTap: () => showDialog<void>(
+            context: context,
+            barrierColor: Colors.black87,
+            builder: (dialogContext) => Dialog.fullscreen(
+              backgroundColor: Colors.black,
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: PageController(initialPage: index),
+                    itemCount: photos.length,
+                    itemBuilder: (context, photoIndex) => InteractiveViewer(
+                      minScale: .8,
+                      maxScale: 5,
+                      child: Center(
+                        child: AppNetworkImage(
+                          photos[photoIndex]['url']?.toString() ?? '',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: MediaQuery.paddingOf(context).top + 8,
+                    right: 12,
+                    child: IconButton.filledTonal(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: url.startsWith('http')
+                ? AppNetworkImage(url, fit: BoxFit.cover)
+                : const ColoredBox(
+                    color: Color(0xffeaf2fb),
+                    child: Icon(Icons.image_outlined),
+                  ),
+          ),
         );
       },
     );

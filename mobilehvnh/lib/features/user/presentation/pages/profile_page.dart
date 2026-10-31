@@ -8,13 +8,15 @@ import '../../../../core/widgets/app_page_bar.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../domain/entities/avatar_upload_file.dart';
 import '../../domain/repositories/user_repository.dart';
+import '../../../feed/domain/repositories/feed_repository.dart';
 import 'social_pages.dart';
 import '../widgets/profile_content_tabs.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key, required this.repository});
+  const ProfilePage({super.key, required this.repository, this.feedRepository});
 
   final UserRepository repository;
+  final FeedRepository? feedRepository;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -558,6 +560,7 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 4),
             ProfileContentTabs(
               repository: widget.repository,
+              feedRepository: widget.feedRepository,
               userId: '${profile['id']}',
               profile: profile,
               onOpenFriends: () => Navigator.of(context).push(
@@ -566,6 +569,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     repository: widget.repository,
                     userId: '${profile['id']}',
                     title: 'Bạn bè của tôi',
+                    feedRepository: widget.feedRepository,
                   ),
                 ),
               ),
@@ -574,6 +578,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   builder: (_) => PublicProfilePage(
                     repository: widget.repository,
                     userId: id,
+                    feedRepository: widget.feedRepository,
                   ),
                 ),
               ),
@@ -600,6 +605,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             repository: widget.repository,
                             userId: '${profile['id']}',
                             title: 'Bạn bè của tôi',
+                            feedRepository: widget.feedRepository,
                           ),
                         ),
                       ),

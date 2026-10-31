@@ -383,12 +383,6 @@ class _FeedPageState extends State<FeedPage> {
                                 physics: const BouncingScrollPhysics(),
                                 scrollDirection: Axis.horizontal,
                                 children: [
-                                  _ComposeAction(
-                                    icon: CupertinoIcons.photo_on_rectangle,
-                                    color: AppTheme.blue,
-                                    label: 'Ảnh / Video',
-                                    onTap: () => _compose('general'),
-                                  ),
                                   if (_joinedCategories.contains('market'))
                                     _ComposeAction(
                                       icon: CupertinoIcons.bag,
@@ -834,7 +828,6 @@ class PostCard extends StatelessWidget {
   Future<void> _edit(BuildContext context) async {
     final controller = TextEditingController(text: '${post['content'] ?? ''}');
     var privacy = post['privacy']?.toString().toLowerCase() ?? 'public';
-    var category = post['category']?.toString() ?? 'general';
     final media = ((post['media'] as List?) ?? const [])
         .map((item) => Map<String, dynamic>.from(item as Map))
         .toList();
@@ -897,30 +890,6 @@ class PostCard extends StatelessWidget {
                       if (value != null) setSheetState(() => privacy = value);
                     },
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: category,
-                    decoration: const InputDecoration(
-                      labelText: 'Danh mục',
-                      prefixIcon: Icon(Icons.category_outlined),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'general',
-                        child: Text('Bài chung'),
-                      ),
-                      DropdownMenuItem(value: 'market', child: Text('Pass đồ')),
-                      DropdownMenuItem(
-                        value: 'roommate',
-                        child: Text('Phòng trọ'),
-                      ),
-                      DropdownMenuItem(value: 'event', child: Text('Sự kiện')),
-                      DropdownMenuItem(value: 'study', child: Text('Học tập')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) setSheetState(() => category = value);
-                    },
-                  ),
                   if (media.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
@@ -968,7 +937,6 @@ class PostCard extends StatelessWidget {
                       Navigator.pop(sheetContext, {
                         'content': content,
                         'privacy': privacy,
-                        'category': category,
                         'mediaIds': retainedIds.toList(),
                       });
                     },
@@ -989,7 +957,6 @@ class PostCard extends StatelessWidget {
         '${post['id']}',
         content: result['content'] as String,
         privacy: result['privacy'] as String,
-        category: result['category'] as String,
         mediaIds: (result['mediaIds'] as List).cast<String>(),
       );
       await onChanged?.call();
@@ -1581,6 +1548,7 @@ class _CommentSheetState extends State<CommentSheet> {
   List<dynamic> _items = [];
   bool _loading = true;
   bool _sending = false;
+  String? _submitError;
   String? _myId;
   Map<String, dynamic>? _replyingTo;
   PlatformFile? _image;
@@ -1703,10 +1671,47 @@ class _CommentSheetState extends State<CommentSheet> {
     }
   }
 
+  List<dynamic> _commentsInThreadOrder() {
+    final roots = <dynamic>[];
+    final children = <String, List<dynamic>>{};
+    for (final item in _items) {
+      if (item is! Map) continue;
+      final parentId = item['parentId']?.toString();
+      if (parentId == null || parentId.isEmpty) {
+        roots.add(item);
+      } else {
+        (children[parentId] ??= <dynamic>[]).add(item);
+      }
+    }
+    final ordered = <dynamic>[];
+    void append(Map parent) {
+      ordered.add(parent);
+      for (final reply in children[parent['id']?.toString()] ?? const []) {
+        if (reply is Map) append(reply);
+      }
+    }
+
+    for (final root in roots) {
+      if (root is Map) append(root);
+    }
+    // Keep orphaned replies visible if their parent was removed or filtered.
+    for (final entry in children.entries) {
+      if (!_items.any(
+        (item) => item is Map && item['id']?.toString() == entry.key,
+      )) {
+        ordered.addAll(entry.value);
+      }
+    }
+    return ordered;
+  }
+
   Future<void> _send() async {
     final content = _text.text.trim();
     if ((content.isEmpty && _image == null) || _sending) return;
-    setState(() => _sending = true);
+    setState(() {
+      _sending = true;
+      _submitError = null;
+    });
     try {
       final image = _image;
       final leadingTrim = _text.text.length - _text.text.trimLeft().length;
@@ -1752,9 +1757,7 @@ class _CommentSheetState extends State<CommentSheet> {
       await _load();
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        setState(() => _submitError = error.toString());
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -1776,34 +1779,77 @@ class _CommentSheetState extends State<CommentSheet> {
 
   Future<void> _editComment(Map item) async {
     final controller = TextEditingController(text: '${item['content'] ?? ''}');
-    final content = await showDialog<String>(
+    var saving = false;
+    String? errorText;
+    await showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Sửa bình luận'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          minLines: 2,
-          maxLines: 5,
-          maxLength: 2000,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            child: const Text('Lưu'),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Sửa bình luận'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  minLines: 2,
+                  maxLines: 5,
+                  maxLength: 2000,
+                ),
+                if (errorText != null) ...[
+                  const SizedBox(height: 8),
+                  Text(errorText!, style: const TextStyle(color: Colors.red)),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(dialogContext),
+                child: const Text('Hủy'),
+              ),
+              FilledButton(
+                onPressed: saving
+                    ? null
+                    : () async {
+                        final value = controller.text.trim();
+                        if (value.isEmpty) return;
+                        setDialogState(() {
+                          saving = true;
+                          errorText = null;
+                        });
+                        try {
+                          await widget.repository.updateComment(
+                            '${item['id']}',
+                            content: value,
+                          );
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+                          await _load();
+                        } catch (error) {
+                          setDialogState(() => errorText = error.toString());
+                        } finally {
+                          if (dialogContext.mounted) {
+                            setDialogState(() => saving = false);
+                          }
+                        }
+                      },
+                child: saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Lưu'),
+              ),
+            ],
+          );
+        },
       ),
     );
     controller.dispose();
-    if (content == null || content.isEmpty) return;
-    await widget.repository.updateComment('${item['id']}', content: content);
-    await _load();
   }
 
   Widget _commentText(Map item) {
@@ -1868,7 +1914,7 @@ class _CommentSheetState extends State<CommentSheet> {
                   ? const Center(child: CircularProgressIndicator())
                   : ListView(
                       controller: _listController,
-                      children: _items.map((value) {
+                      children: _commentsInThreadOrder().map((value) {
                         final item = value as Map;
                         final author = (item['author'] as Map?) ?? {};
                         final mine =
@@ -2000,6 +2046,20 @@ class _CommentSheetState extends State<CommentSheet> {
                       }).toList(),
                     ),
             ),
+            if (_submitError != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xfffff1f0),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  _submitError!,
+                  style: const TextStyle(color: Color(0xffb42318)),
+                ),
+              ),
             if (_replyingTo != null)
               Container(
                 margin: const EdgeInsets.only(bottom: 8),

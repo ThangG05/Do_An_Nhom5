@@ -14,6 +14,7 @@ import '../../core/widgets/app_state_view.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_session.dart';
 import '../user/domain/repositories/user_repository.dart';
+import '../feed/domain/repositories/feed_repository.dart';
 import '../user/presentation/pages/social_pages.dart';
 import 'domain/entities/chat_upload_file.dart';
 import 'domain/repositories/chat_repository.dart';
@@ -37,12 +38,14 @@ class ChatPage extends StatefulWidget {
     required this.repository,
     required this.userRepository,
     required this.apiClient,
+    this.feedRepository,
     this.refreshSignal,
   });
 
   final ChatRepository repository;
   final UserRepository userRepository;
   final ApiClient apiClient;
+  final FeedRepository? feedRepository;
   final ValueListenable<int>? refreshSignal;
 
   @override
@@ -98,6 +101,7 @@ class _ChatPageState extends State<ChatPage> {
               repository: widget.repository,
               userRepository: widget.userRepository,
               apiClient: widget.apiClient,
+              feedRepository: widget.feedRepository,
             ),
           ),
         )
@@ -230,6 +234,7 @@ class _ChatPageState extends State<ChatPage> {
                                   repository: widget.repository,
                                   userRepository: widget.userRepository,
                                   apiClient: widget.apiClient,
+                                  feedRepository: widget.feedRepository,
                                 ),
                               ),
                             )
@@ -303,12 +308,14 @@ class ConversationPage extends StatefulWidget {
     required this.repository,
     required this.userRepository,
     required this.apiClient,
+    this.feedRepository,
   });
 
   final Map<dynamic, dynamic> conversation;
   final ChatRepository repository;
   final UserRepository userRepository;
   final ApiClient apiClient;
+  final FeedRepository? feedRepository;
 
   @override
   State<ConversationPage> createState() => _ConversationPageState();
@@ -326,6 +333,7 @@ class _ConversationPageState extends State<ConversationPage> {
 
   late final ChatRealtime _realtime;
   final _messageScroll = ScrollController();
+  final _messageKeys = <String, GlobalKey>{};
   final _input = TextEditingController();
   final _files = <PlatformFile>[];
   List<dynamic> _messages = [];
@@ -383,8 +391,9 @@ class _ConversationPageState extends State<ConversationPage> {
     }
     if (event['event'] != 'message.created' ||
         message is! Map ||
-        _messages.any((item) => item is Map && item['id'] == message['id']))
+        _messages.any((item) => item is Map && item['id'] == message['id'])) {
       return;
+    }
     if (mounted) setState(() => _messages.add(message));
   }
 
@@ -399,10 +408,11 @@ class _ConversationPageState extends State<ConversationPage> {
       );
       if (index >= 0 && mounted) setState(() => _messages[index] = recalled);
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     }
   }
 
@@ -609,6 +619,7 @@ class _ConversationPageState extends State<ConversationPage> {
   Future<void> _searchMessages() async {
     final query = TextEditingController();
     List<Map<String, dynamic>> results = [];
+    Map<String, dynamic>? selected;
     var loading = false;
     await showModalBottomSheet<void>(
       context: context,
@@ -679,8 +690,11 @@ class _ConversationPageState extends State<ConversationPage> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          subtitle: Text('${item['createdAt'] ?? ''}'),
-                          onTap: () => Navigator.pop(sheetContext),
+                          subtitle: Text(AppDateTime.full(item['timestamp'])),
+                          onTap: () {
+                            selected = item;
+                            Navigator.pop(sheetContext);
+                          },
                         );
                       },
                     ),
@@ -697,6 +711,82 @@ class _ConversationPageState extends State<ConversationPage> {
       ),
     );
     query.dispose();
+    if (selected != null && mounted) await _jumpToMessage(selected!);
+  }
+
+  Future<void> _jumpToMessage(Map<String, dynamic> target) async {
+    final id = target['id']?.toString();
+    final timestamp = target['timestamp']?.toString();
+    if (id == null || timestamp == null) return;
+
+    if (_loadingOlder) return;
+    setState(() => _loadingOlder = true);
+    try {
+      var pages = 0;
+      while (mounted &&
+          !_messages.any(
+            (item) => item is Map && item['id']?.toString() == id,
+          ) &&
+          _hasOlder &&
+          pages < 100) {
+        final before = (_messages.first as Map?)?['timestamp']?.toString();
+        if (before == null || before.compareTo(timestamp) <= 0) break;
+        final older = await widget.repository.getMessages(
+          '${widget.conversation['id']}',
+          before: before,
+          limit: 50,
+        );
+        if (older.isEmpty) {
+          _hasOlder = false;
+          break;
+        }
+        final known = _messages
+            .whereType<Map>()
+            .map((item) => item['id']?.toString())
+            .toSet();
+        final fresh = older
+            .where((item) => !known.contains(item['id']?.toString()))
+            .toList();
+        if (fresh.isEmpty) break;
+        setState(() {
+          _messages.insertAll(0, fresh);
+          _hasOlder = older.length == 50;
+        });
+        pages++;
+      }
+
+      final index = _messages.indexWhere(
+        (item) => item is Map && item['id']?.toString() == id,
+      );
+      if (index < 0 || !_messageScroll.hasClients) return;
+      final reverseIndex = _messages.length - 1 - index;
+      final rowRatio = reverseIndex / (_messages.length - 1).clamp(1, 1 << 30);
+      final estimatedOffset =
+          _messageScroll.position.maxScrollExtent * rowRatio;
+      await _messageScroll.animateTo(
+        estimatedOffset,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+      await WidgetsBinding.instance.endOfFrame;
+      final targetContext = _messageKeys[id]?.currentContext;
+      if (targetContext != null && targetContext.mounted) {
+        await Scrollable.ensureVisible(
+          targetContext,
+          alignment: .45,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể mở vị trí tin nhắn: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingOlder = false);
+    }
   }
 
   Future<void> _changeNickname() async {
@@ -776,6 +866,7 @@ class _ConversationPageState extends State<ConversationPage> {
         builder: (_) => PublicProfilePage(
           repository: widget.userRepository,
           userId: userId,
+          feedRepository: widget.feedRepository,
         ),
       ),
     );
@@ -954,10 +1045,17 @@ class _ConversationPageState extends State<ConversationPage> {
                     itemBuilder: (context, index) {
                       final item =
                           _messages[_messages.length - 1 - index] as Map;
+                      final messageId =
+                          item['id']?.toString() ?? 'index-$index';
+                      final messageKey = _messageKeys.putIfAbsent(
+                        messageId,
+                        GlobalKey.new,
+                      );
                       final mine = item['senderId']?.toString() == _myId;
                       final attachments =
                           (item['attachments'] as List?) ?? const [];
                       return GestureDetector(
+                        key: messageKey,
                         onLongPress: item['isRecalled'] == true
                             ? null
                             : () => _messageActions(item, mine),
