@@ -1,9 +1,11 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 from uuid import uuid4
+from decimal import Decimal
 
 from app.rag.usage import (UsageCollector, activate, capture_deepseek_usage,
                            capture_gemini_usage, reset)
+from app.rag.pricing import estimate_cost
 
 
 def test_records_each_provider_call_with_reported_counts():
@@ -47,3 +49,19 @@ def test_anonymous_calls_are_not_assigned_to_user():
     finally:
         reset(token)
     assert collector.entries == []
+
+
+def test_price_estimate_uses_provider_model_and_token_split():
+    cost, basis = estimate_cost("gemini", "gemini-3.5-flash-lite", 100_000, 10_000)
+    assert cost == Decimal("0.055")
+    assert basis == "PAID_STANDARD"
+
+
+def test_deepseek_price_estimate_accounts_for_reported_cache_hits():
+    cost, basis = estimate_cost("deepseek", "deepseek-flash", 100_000, 10_000, 80_000)
+    assert cost == Decimal("0.01848")
+    assert basis == "PEAK_CONSERVATIVE"
+
+
+def test_unknown_model_is_not_assigned_a_fake_cost():
+    assert estimate_cost("other", "unknown-model", 100, 10) == (None, "UNPRICED")

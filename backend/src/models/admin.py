@@ -36,6 +36,8 @@ class AdminUserResponse(BaseModel):
     rag_input_tokens: int | None = None
     rag_output_tokens: int | None = None
     rag_total_tokens: int | None = None
+    rag_cost_usd: float | None = None
+    rag_pricing_missing: int = 0
     rag_usage_calls: int = 0
     rag_usage_missing: int = 0
 
@@ -92,6 +94,8 @@ class RAGUsageCallResponse(BaseModel):
     total_tokens: int | None
     status: str
     usage_source: str
+    estimated_cost_usd: float | None = None
+    pricing_status: str | None = None
 
 
 class RAGUsageDayResponse(BaseModel):
@@ -100,6 +104,7 @@ class RAGUsageDayResponse(BaseModel):
     output_tokens: int | None
     total_tokens: int | None
     calls: int
+    estimated_cost_usd: float | None = None
 
 
 class RAGUserUsageResponse(BaseModel):
@@ -107,6 +112,8 @@ class RAGUserUsageResponse(BaseModel):
     input_tokens: int | None
     output_tokens: int | None
     total_tokens: int | None
+    estimated_cost_usd: float | None = None
+    pricing_missing_calls: int = 0
     usage_calls: int
     usage_missing: int
     daily: list[RAGUsageDayResponse]

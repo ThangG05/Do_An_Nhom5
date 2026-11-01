@@ -7,6 +7,7 @@ import styles from "./RagTokenSummary.module.css";
 
 const PAGE_SIZE = 10;
 const number = (value: number | null) => value === null ? "—" : new Intl.NumberFormat("vi-VN").format(value);
+const money = (value: number | null) => value === null ? "Chưa định giá" : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(value);
 const dateTime = (value: string) => new Intl.DateTimeFormat("vi-VN", {
   dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh",
 }).format(new Date(value));
@@ -37,13 +38,16 @@ export default function RagTokenSummary({ user, period, startDate, endDate }: {
   const pageCount = Math.ceil((detail?.usage_calls ?? 0) / PAGE_SIZE);
 
   return <div className={styles.summary}>
-    <div className={styles.metrics}><div><small>Input Tokens</small><strong>{number(user.rag_input_tokens)}</strong></div><div><small>Output Tokens</small><strong>{number(user.rag_output_tokens)}</strong></div><div><small>Total Tokens</small><strong>{number(user.rag_total_tokens)}</strong></div><button type="button" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? "Ẩn chi tiết" : "Chi tiết RAG"}</button></div>
+    <div className={styles.metrics}><div><small>Input Tokens</small><strong>{number(user.rag_input_tokens)}</strong></div><div><small>Output Tokens</small><strong>{number(user.rag_output_tokens)}</strong></div><div><small>Total Tokens</small><strong>{number(user.rag_total_tokens)}</strong></div><div><small>Chi phí ước tính (USD)</small><strong>{money(user.rag_cost_usd)}</strong></div><button type="button" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? "Ẩn chi tiết" : "Chi tiết RAG"}</button></div>
     {user.rag_usage_missing > 0 && <p className={styles.notice}>{user.rag_usage_missing} lượt không có usage do provider trả về; không tính là 0 token.</p>}
+    {user.rag_pricing_missing > 0 && <p className={styles.notice}>{user.rag_pricing_missing} lượt chưa có bảng giá model; tổng chi phí hiện chỉ cộng các lượt đã định giá.</p>}
     {open && <div className={styles.detail}>{!validPeriod ? <p>Chọn khoảng ngày hợp lệ để xem chi tiết.</p> : loading ? <p>Đang tải chi tiết…</p> : error ? <p className={styles.error}>{error}</p> : detail && <>
-      <div className={styles.detailTop}><strong>{detail.usage_calls} lượt gọi model</strong><span>Input {number(detail.input_tokens)} · Output {number(detail.output_tokens)} · Total {number(detail.total_tokens)}</span></div>
+      <div className={styles.detailTop}><strong>{detail.usage_calls} lượt gọi model</strong><span>Input {number(detail.input_tokens)} · Output {number(detail.output_tokens)} · Total {number(detail.total_tokens)} · Ước tính {money(detail.estimated_cost_usd)}</span></div>
       <h4>Token theo ngày</h4>
       {detail.daily.length ? <div className={styles.chart}>{detail.daily.map(day => <div key={day.date}><small>{new Date(`${day.date}T00:00:00`).toLocaleDateString("vi-VN")}</small><span><i style={{ width: `${Math.max(2, Math.round((day.total_tokens || 0) / Math.max(1, ...detail.daily.map(item => item.total_tokens || 0)) * 100))}%` }}/></span><b>{number(day.total_tokens)}</b></div>)}</div> : <p>Chưa có usage trong khoảng này.</p>}
-      <h4>Lượt gọi gần nhất</h4><div className={styles.tableWrap}><table><thead><tr><th>Thời gian</th><th>Model</th><th>Input</th><th>Output</th><th>Total</th><th>Trạng thái</th></tr></thead><tbody>{detail.calls.map(call => <tr key={call.id}><td>{dateTime(call.created_at)}</td><td>{call.provider} · {call.model}</td><td>{number(call.input_tokens)}</td><td>{number(call.output_tokens)}</td><td>{number(call.total_tokens)}</td><td>{call.usage_source === "missing" ? "Thiếu usage" : call.status}</td></tr>)}</tbody></table></div>
+      <h4>Lượt gọi gần nhất</h4><div className={styles.tableWrap}><table><thead><tr><th>Thời gian</th><th>Model</th><th>Input</th><th>Output</th><th>Total</th><th>Chi phí ước tính</th><th>Trạng thái</th></tr></thead><tbody>{detail.calls.map(call => <tr key={call.id}><td>{dateTime(call.created_at)}</td><td>{call.provider} · {call.model}</td><td>{number(call.input_tokens)}</td><td>{number(call.output_tokens)}</td><td>{number(call.total_tokens)}</td><td>{money(call.estimated_cost_usd)}{call.pricing_status === "PEAK_CONSERVATIVE" ? " · giá giờ cao điểm" : ""}</td><td>{call.usage_source === "missing" ? "Thiếu usage" : call.status}</td></tr>)}</tbody></table></div>
+      <p className={styles.notice}>Chi phí là ước tính theo giá API niêm yết USD, không phải hóa đơn thực tế. Mức miễn phí, cache, batch, grounding, thuế và chiết khấu theo tài khoản có thể làm số tiền thực khác đi.</p>
+      {detail.pricing_missing_calls > 0 && <p className={styles.notice}>{detail.pricing_missing_calls} lượt chưa có bảng giá nên chưa được cộng vào tổng.</p>}
       {pageCount > 1 && <nav className={styles.pagination} aria-label={`Trang lượt gọi model của ${user.full_name}`}>
         <span>Hiển thị {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, detail.usage_calls)} / {detail.usage_calls} lượt</span>
         <div><button type="button" onClick={() => setPage(value => Math.max(0, value - 1))} disabled={page === 0} aria-label="Trang lượt gọi trước">Trước</button><strong>Trang {page + 1} / {pageCount}</strong><button type="button" onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))} disabled={page >= pageCount - 1} aria-label="Trang lượt gọi tiếp">Tiếp</button></div>

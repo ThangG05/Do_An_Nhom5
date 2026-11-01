@@ -16,6 +16,7 @@ App dùng Flutter Material với `AppTheme.light`, `CupertinoIcons`, `AppPageBar
 | Nút gửi AI rời ô nhập | CTA tròn 46px, keyboard send/drag-dismiss | Trợ lý AI |
 
 ## Quyết định thiết kế và hiệu năng
+
 - Giữ navy/xanh/vàng HVNH làm bộ màu chính; màu phụ chỉ giúp nhận diện nhóm.
 - Không thêm dependency. Hiệu ứng 3D dùng `Matrix4` và `AnimatedContainer` của Flutter, chỉ cho ba hero ở đầu màn hình, không chạy trên feed/chat dài. Khi `disableAnimations` bật, card không tilt và duration về 0.
 - Skeleton tĩnh không shimmer liên tục để giảm repaint và hao pin.

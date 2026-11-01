@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
 from app.models.rag import RAGTokenUsage
+from app.rag.pricing import estimate_cost
 
 
 @dataclass(slots=True)
@@ -18,6 +19,7 @@ class UsageEntry:
     total_tokens: int | None
     usage_source: str
     status: str
+    cached_input_tokens: int | None = None
 
 
 @dataclass(slots=True)
@@ -32,12 +34,17 @@ class UsageCollector:
             self.entries.append(entry)
 
     def _rows(self) -> list[RAGTokenUsage]:
-        return [RAGTokenUsage(user_id=self.user_id, request_id=self.request_id,
-                              call_index=index, provider=item.provider, model=item.model,
-                              input_tokens=item.input_tokens, output_tokens=item.output_tokens,
-                              total_tokens=item.total_tokens, usage_source=item.usage_source,
-                              status=item.status)
-                for index, item in enumerate(self.entries, 1)]
+        rows = []
+        for index, item in enumerate(self.entries, 1):
+            cost, pricing_status = estimate_cost(item.provider, item.model, item.input_tokens,
+                                                 item.output_tokens, item.cached_input_tokens)
+            rows.append(RAGTokenUsage(user_id=self.user_id, request_id=self.request_id,
+                call_index=index, provider=item.provider, model=item.model,
+                input_tokens=item.input_tokens, output_tokens=item.output_tokens,
+                total_tokens=item.total_tokens, cached_input_tokens=item.cached_input_tokens,
+                estimated_cost_usd=cost, pricing_status=pricing_status,
+                usage_source=item.usage_source, status=item.status))
+        return rows
 
     def attach(self, session: AsyncSession) -> None:
         if self.entries:
@@ -77,7 +84,8 @@ def capture_gemini_usage(response: object, model: str) -> None:
     total_tokens = _count(getattr(usage, "total_token_count", None))
     collector.add(UsageEntry("gemini", str(getattr(response, "model_version", None) or model),
                              input_tokens, output_tokens, total_tokens,
-                             "provider" if usage else "missing", "SUCCESS"))
+                             "provider" if usage else "missing", "SUCCESS",
+                             _count(getattr(usage, "cached_content_token_count", None))))
 
 
 def capture_deepseek_usage(data: dict, model: str, status: str = "SUCCESS") -> None:
@@ -85,8 +93,9 @@ def capture_deepseek_usage(data: dict, model: str, status: str = "SUCCESS") -> N
     if collector is None or collector.user_id is None:
         return
     usage = data.get("usage") if isinstance(data.get("usage"), dict) else None
+    cached_tokens = (_count(usage.get("prompt_cache_hit_tokens")) if usage else None)
     collector.add(UsageEntry("deepseek", str(data.get("model") or model),
                              _count(usage.get("prompt_tokens")) if usage else None,
                              _count(usage.get("completion_tokens")) if usage else None,
                              _count(usage.get("total_tokens")) if usage else None,
-                             "provider" if usage else "missing", status))
+                             "provider" if usage else "missing", status, cached_tokens))

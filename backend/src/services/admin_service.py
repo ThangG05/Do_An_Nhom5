@@ -220,7 +220,7 @@ def export_workbook(db: Session) -> BytesIO:
 
 def _serialize_user(row, groups: list[dict], usage: dict | None = None) -> AdminUserResponse:
     usage = usage or {}
-    return AdminUserResponse(id=str(row["id"]),email=row["email"],username=row["username"],full_name=row["full_name"],student_code=row["student_code"],faculty=row["faculty"],status=str(row["status"]),system_role=str(row["system_role"]),admin_groups=groups,created_at=row["created_at"].isoformat(),last_login_at=row["last_login_at"].isoformat() if row["last_login_at"] else None,suspended_until=row["suspended_until"].isoformat() if row["suspended_until"] else None,warning_count=row["warning_count"] or 0,rag_input_tokens=usage.get("input_tokens"),rag_output_tokens=usage.get("output_tokens"),rag_total_tokens=usage.get("total_tokens"),rag_usage_calls=usage.get("usage_calls",0),rag_usage_missing=usage.get("usage_missing",0))
+    return AdminUserResponse(id=str(row["id"]),email=row["email"],username=row["username"],full_name=row["full_name"],student_code=row["student_code"],faculty=row["faculty"],status=str(row["status"]),system_role=str(row["system_role"]),admin_groups=groups,created_at=row["created_at"].isoformat(),last_login_at=row["last_login_at"].isoformat() if row["last_login_at"] else None,suspended_until=row["suspended_until"].isoformat() if row["suspended_until"] else None,warning_count=row["warning_count"] or 0,rag_input_tokens=usage.get("input_tokens"),rag_output_tokens=usage.get("output_tokens"),rag_total_tokens=usage.get("total_tokens"),rag_cost_usd=float(usage["estimated_cost_usd"]) if usage.get("estimated_cost_usd") is not None else None,rag_pricing_missing=usage.get("pricing_missing_calls",0),rag_usage_calls=usage.get("usage_calls",0),rag_usage_missing=usage.get("usage_missing",0))
 
 
 def _usage_bounds(period: str, start_date: date | None, end_date: date | None):
@@ -244,8 +244,9 @@ def _usage_totals(db: Session, user_ids: list[uuid.UUID], start, end) -> dict[uu
         return {}
     statement = text("""
         SELECT user_id,sum(input_tokens)::bigint input_tokens,sum(output_tokens)::bigint output_tokens,
-               sum(total_tokens)::bigint total_tokens,count(*) usage_calls,
-               count(*) FILTER(WHERE total_tokens IS NULL) usage_missing
+               sum(total_tokens)::bigint total_tokens,sum(estimated_cost_usd) estimated_cost_usd,count(*) usage_calls,
+               count(*) FILTER(WHERE total_tokens IS NULL) usage_missing,
+               count(*) FILTER(WHERE pricing_status='UNPRICED') pricing_missing_calls
         FROM rag_token_usage WHERE user_id IN :ids
           AND (:start IS NULL OR created_at >= :start) AND (:end IS NULL OR created_at < :end)
         GROUP BY user_id
@@ -295,24 +296,29 @@ def user_rag_usage(db: Session, user_id: uuid.UUID, period: str = "30d",
     daily = db.execute(text("""
         SELECT timezone('Asia/Ho_Chi_Minh',created_at)::date AS usage_day,
                sum(input_tokens)::bigint input_tokens,sum(output_tokens)::bigint output_tokens,
-               sum(total_tokens)::bigint total_tokens,count(*) calls
+               sum(total_tokens)::bigint total_tokens,sum(estimated_cost_usd) estimated_cost_usd,count(*) calls
         FROM rag_token_usage WHERE user_id=:uid
           AND (:start IS NULL OR created_at >= :start) AND (:end IS NULL OR created_at < :end)
         GROUP BY 1 ORDER BY 1
     """), params).mappings().all()
     calls = db.execute(text("""
-        SELECT id,created_at,provider,model,input_tokens,output_tokens,total_tokens,status,usage_source
+        SELECT id,created_at,provider,model,input_tokens,output_tokens,total_tokens,status,usage_source,
+               estimated_cost_usd,pricing_status
         FROM rag_token_usage WHERE user_id=:uid
           AND (:start IS NULL OR created_at >= :start) AND (:end IS NULL OR created_at < :end)
         ORDER BY created_at DESC,id DESC LIMIT 10 OFFSET :offset
     """), {**params, "offset": offset}).mappings().all()
     return RAGUserUsageResponse(user_id=user_id,input_tokens=totals.get("input_tokens"),
         output_tokens=totals.get("output_tokens"),total_tokens=totals.get("total_tokens"),
+        estimated_cost_usd=float(totals["estimated_cost_usd"]) if totals.get("estimated_cost_usd") is not None else None,
+        pricing_missing_calls=totals.get("pricing_missing_calls", 0),
         usage_calls=totals.get("usage_calls",0),usage_missing=totals.get("usage_missing",0),
         daily=[{"date":row["usage_day"].isoformat(),"input_tokens":row["input_tokens"],
                 "output_tokens":row["output_tokens"],"total_tokens":row["total_tokens"],
-                "calls":row["calls"]} for row in daily],
-        calls=[{**dict(row),"created_at":row["created_at"].isoformat()} for row in calls])
+                "calls":row["calls"],
+                "estimated_cost_usd":float(row["estimated_cost_usd"]) if row["estimated_cost_usd"] is not None else None} for row in daily],
+        calls=[{**dict(row),"created_at":row["created_at"].isoformat(),
+                "estimated_cost_usd":float(row["estimated_cost_usd"]) if row["estimated_cost_usd"] is not None else None} for row in calls])
 
 
 def _target(db: Session, user_id: uuid.UUID, actor: User) -> User:
