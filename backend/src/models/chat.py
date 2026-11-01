@@ -23,7 +23,7 @@ class EditMessageRequest(BaseModel):
 class AttachmentResponse(BaseModel): id:str; type:str; url:str; name:str; size:str|None=None
 class SharedAttachmentsResponse(BaseModel): media:list[AttachmentResponse]=Field(default_factory=list); files:list[AttachmentResponse]=Field(default_factory=list)
 class ReplyMessageResponse(BaseModel):
-    id:str; senderName:str; content:str; isRecalled:bool=False
+    id:str; senderName:str; content:str; timestamp:str; isRecalled:bool=False
 class MessageResponse(BaseModel):
     id:str; conversationId:str; senderId:str; senderName:str; senderAvatar:str; content:str; timestamp:str; status:str; type:str
     attachments:list[AttachmentResponse]=Field(default_factory=list)

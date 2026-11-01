@@ -34,6 +34,7 @@ class FeedRepositoryImpl implements FeedRepository {
   Future<Map<String, dynamic>> createPost({
     required String content,
     required List<UploadFile> files,
+    String privacy = 'public',
     String category = 'general',
     Map<String, dynamic>? marketListing,
     Map<String, dynamic>? roomListing,
@@ -57,7 +58,7 @@ class FeedRepositoryImpl implements FeedRepository {
     return _remote.create({
       'content': content,
       'form_version': 2,
-      'privacy': 'public',
+      'privacy': privacy,
       'category': category,
       'media_ids': ids,
       'marketListing': ?marketListing,

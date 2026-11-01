@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'app_config.dart';
+import 'utils/upload_mime.dart';
 
 class ApiException implements Exception {
   const ApiException(this.message, this.statusCode);
@@ -436,6 +438,7 @@ class ApiClient {
               'file',
               file.bytes!,
               filename: file.name,
+              contentType: MediaType.parse(uploadMimeType(file)),
             ),
           );
         } else if (!kIsWeb && file.path != null) {
@@ -444,6 +447,7 @@ class ApiClient {
               'file',
               file.path!,
               filename: file.name,
+              contentType: MediaType.parse(uploadMimeType(file)),
             ),
           );
         } else if (file.bytes != null) {
@@ -452,6 +456,7 @@ class ApiClient {
               'file',
               file.bytes!,
               filename: file.name,
+              contentType: MediaType.parse(uploadMimeType(file)),
             ),
           );
         } else {
@@ -510,6 +515,7 @@ class ApiClient {
               'files',
               file.bytes!,
               filename: file.name,
+              contentType: MediaType.parse(uploadMimeType(file)),
             ),
           );
         } else if (!kIsWeb && file.path != null) {
@@ -518,6 +524,7 @@ class ApiClient {
               'files',
               file.path!,
               filename: file.name,
+              contentType: MediaType.parse(uploadMimeType(file)),
             ),
           );
         } else if (file.bytes != null) {
@@ -526,6 +533,7 @@ class ApiClient {
               'files',
               file.bytes!,
               filename: file.name,
+              contentType: MediaType.parse(uploadMimeType(file)),
             ),
           );
         } else {

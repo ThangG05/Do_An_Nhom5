@@ -65,13 +65,18 @@ class _GroupsPageState extends State<GroupsPage> {
     if (mounted) setState(() => _loading = true);
     try {
       final groups = await widget.groupRepository.getGroups();
-      groups.sort((a, b) {
+      final visibleGroups = groups
+          .where(
+            (group) => _groupOrder.contains((group as Map)['slug']?.toString()),
+          )
+          .toList();
+      visibleGroups.sort((a, b) {
         final left = _groupOrder.indexOf((a as Map)['slug']?.toString() ?? '');
         final right = _groupOrder.indexOf((b as Map)['slug']?.toString() ?? '');
         return (left < 0 ? 99 : left).compareTo(right < 0 ? 99 : right);
       });
       if (!mounted) return;
-      _groups = groups;
+      _groups = visibleGroups;
       if (!_groups.any((group) => '${group['id']}' == _selectedGroupId)) {
         _selectedGroupId = _groups.isEmpty ? null : '${_groups.first['id']}';
       }

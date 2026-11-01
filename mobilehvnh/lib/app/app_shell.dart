@@ -24,10 +24,12 @@ class AppShell extends StatefulWidget {
     super.key,
     required this.dependencies,
     required this.onLogout,
+    required this.onPasswordChanged,
   });
 
   final AppDependencies dependencies;
   final Future<void> Function() onLogout;
+  final Future<void> Function() onPasswordChanged;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -81,6 +83,7 @@ class _AppShellState extends State<AppShell> {
           repository: widget.dependencies.userRepository,
           feedRepository: widget.dependencies.feedRepository,
           chatRepository: widget.dependencies.chatRepository,
+          onPasswordChanged: widget.onPasswordChanged,
         ),
       ),
     );
@@ -244,6 +247,7 @@ class _AppShellState extends State<AppShell> {
                 MaterialPageRoute(
                   builder: (_) => PrivacySettingsPage(
                     repository: widget.dependencies.userRepository,
+                    onPasswordChanged: widget.onPasswordChanged,
                   ),
                 ),
               );

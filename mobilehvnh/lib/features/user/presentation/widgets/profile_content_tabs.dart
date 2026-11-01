@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/app_config.dart';
 import '../../../../core/storage/auth_session.dart';
 import '../../../../core/utils/app_date_time.dart';
 import '../../../../core/widgets/app_network_image.dart';
@@ -8,7 +7,9 @@ import '../../../../core/widgets/app_avatar.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../../feed/domain/repositories/feed_repository.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
-import '../../../feed/feed_page.dart' show CommentSheet, SharedPostPreview;
+import '../../../feed/feed_page.dart'
+    show CommentSheet, SharedPostPreview, resolveOriginalSharePost;
+import '../../../feed/presentation/share_post_dialog.dart';
 
 /// Reuses the same profile-content API as the web app.  Keeping these tabs
 /// data-driven prevents a profile from becoming a static information screen.
@@ -492,108 +493,39 @@ class _PostPreviewState extends State<_PostPreview> {
   }
 
   Future<void> _shareLink() async {
-    final id = (widget.post['sharedPostId'] ?? widget.post['id'])?.toString();
+    final requestedId = (widget.post['sharedPostId'] ?? widget.post['id'])
+        ?.toString();
     final feed = widget.feedRepository;
-    final users = widget.userRepository;
-    if (id == null || id.isEmpty || feed == null || users == null) return;
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ListTile(
-              title: Text('Chia sẻ bài viết'),
-              subtitle: Text('Bài gốc sẽ được mở khi người nhận chạm vào.'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Chia sẻ lên trang cá nhân'),
-              onTap: () => Navigator.pop(context, 'profile'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.send_outlined),
-              title: const Text('Gửi qua tin nhắn'),
-              enabled: widget.chatRepository != null,
-              onTap: widget.chatRepository == null
-                  ? null
-                  : () => Navigator.pop(context, 'message'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (action == null || !mounted) return;
+    if (requestedId == null ||
+        requestedId.isEmpty ||
+        feed == null ||
+        widget.userRepository == null) {
+      return;
+    }
     try {
-      final link =
-          '${AppConfig.webBaseUrl.replaceFirst(RegExp(r'/$'), '')}/posts/$id';
-      if (action == 'profile') {
-        final created = await feed.createPost(content: link, files: const []);
-        final destination = created['id']?.toString() ?? '';
-        if (destination.isEmpty) {
-          throw StateError('Không nhận được bài viết chia sẻ.');
-        }
-        await feed.registerShare(
-          id,
-          destinationType: 'POST',
-          destinationId: destination,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã chia sẻ lên trang cá nhân.')),
-          );
-        }
-        return;
-      }
-      final chat = widget.chatRepository!;
-      final me = await AuthSession().userId;
-      if (me == null) return;
-      final friends = await users.getFriends(me);
+      final originalPost = await resolveOriginalSharePost(
+        feed,
+        Map<String, dynamic>.from(widget.post),
+      );
       if (!mounted) return;
-      final target = await showModalBottomSheet<Map<String, dynamic>>(
+      final id = originalPost['id']?.toString() ?? '';
+      if (id.isEmpty) {
+        throw StateError('Không tìm thấy bài viết gốc để chia sẻ.');
+      }
+      final me = await AuthSession().userId;
+      if (!mounted || me == null) return;
+      final shared = await showSharePostDialog(
         context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (context) => SafeArea(
-          child: SizedBox(
-            height: MediaQuery.sizeOf(context).height * .7,
-            child: ListView.builder(
-              itemCount: friends.length,
-              itemBuilder: (context, index) {
-                final friend = friends[index];
-                return ListTile(
-                  leading: AppAvatar(
-                    radius: 20,
-                    url: friend['avatar']?.toString(),
-                    name: friend['name']?.toString(),
-                  ),
-                  title: Text('${friend['name'] ?? 'Sinh viên HVNH'}'),
-                  onTap: () => Navigator.pop(context, friend),
-                );
-              },
-            ),
-          ),
-        ),
+        post: originalPost,
+        viewerId: me,
+        feedRepository: feed,
+        chatRepository: widget.chatRepository,
+        userRepository: widget.userRepository,
       );
-      if (target == null || !mounted) return;
-      final conversation = await chat.createDirectConversation(
-        '${target['id']}',
-      );
-      final message = await chat.sendMessage(
-        '${conversation['id']}',
-        'Đã chia sẻ một bài viết:\n$link',
-        const [],
-      );
-      await feed.registerShare(
-        id,
-        destinationType: 'MESSAGE',
-        destinationId: '${message['id']}',
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã gửi bài viết cho ${target['name']}.')),
-        );
+      if (mounted && shared) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã chia sẻ bài viết.')));
       }
     } catch (error) {
       if (mounted) {

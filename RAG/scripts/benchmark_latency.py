@@ -26,6 +26,17 @@ def summarize(values: list[float]) -> dict[str, float] | None:
             "p99_ms": round(percentile(.99), 1), "max_ms": round(ordered[-1], 1)}
 
 
+def summarize_stages(rows: list[dict]) -> dict[str, dict[str, float]]:
+    names = sorted({name for row in rows for name in (row.get("stage_timings_ms") or {})})
+    summary = {}
+    for name in names:
+        values = [row["stage_timings_ms"][name] for row in rows
+                  if row.get("stage_timings_ms") and name in row["stage_timings_ms"]]
+        if values:
+            summary[name] = summarize(values)
+    return summary
+
+
 async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=Path, default=Path("evals/rag-gold.json"))
@@ -54,9 +65,11 @@ async def main() -> None:
                                                       get_llm_provider()).ask(case["question"])
                             from app.models.rag import AIMessage
                             message = await session.get(AIMessage, result.message_id)
+                            elapsed_ms = round((perf_counter() - started) * 1000, 1)
                             rows.append({"run": run_number, "case_id": case["id"],
-                                         "latency_ms": round((perf_counter() - started) * 1000, 1),
+                                         "latency_ms": elapsed_ms,
                                          "generation_latency_ms": message.latency_ms if message else None,
+                                         "stage_timings_ms": result.stage_timings,
                                          "refused": result.refused, "error": None})
                 except Exception as exc:
                     rows.append({"run": run_number, "case_id": case["id"], "latency_ms": None,
@@ -72,11 +85,15 @@ async def main() -> None:
                                                    if row["run"] == 1 and row["latency_ms"] is not None]),
                   "repeat_pass_latency": summarize([row["latency_ms"] for row in rows
                                                     if row["run"] > 1 and row["latency_ms"] is not None]),
+                  "first_pass_stage_latency": summarize_stages([row for row in rows if row["run"] == 1]),
+                  "repeat_pass_stage_latency": summarize_stages([row for row in rows if row["run"] > 1]),
+                  "all_stage_latency": summarize_stages(rows),
                   "results": rows}
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print(json.dumps({key: report[key] for key in (
-            "requests", "success_rate", "latency", "first_pass_latency", "repeat_pass_latency"
+            "requests", "success_rate", "latency", "first_pass_latency", "repeat_pass_latency",
+            "first_pass_stage_latency", "repeat_pass_stage_latency", "all_stage_latency"
         )}, ensure_ascii=False))
         if not values:
             raise SystemExit("All benchmark requests failed; inspect error types in the output file")

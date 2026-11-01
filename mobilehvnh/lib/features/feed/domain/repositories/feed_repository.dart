@@ -10,6 +10,7 @@ abstract interface class FeedRepository {
   Future<Map<String, dynamic>> createPost({
     required String content,
     required List<UploadFile> files,
+    String privacy = 'public',
     String category,
     Map<String, dynamic>? marketListing,
     Map<String, dynamic>? roomListing,

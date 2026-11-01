@@ -6,8 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/storage/auth_session.dart';
-import '../../core/app_config.dart';
-import '../../core/api_client.dart';
 import '../../core/utils/app_date_time.dart';
 import '../../core/utils/platform_file_utils.dart';
 import '../../core/widgets/app_avatar.dart';
@@ -21,6 +19,7 @@ import '../groups/domain/repositories/group_repository.dart';
 import '../chat/domain/repositories/chat_repository.dart';
 import '../user/domain/repositories/user_repository.dart';
 import 'presentation/enhanced_post_composer_sheet.dart';
+import 'presentation/share_post_dialog.dart';
 
 Future<void> _openMediaUrl(BuildContext context, String value) async {
   final uri = Uri.tryParse(value);
@@ -32,6 +31,44 @@ Future<void> _openMediaUrl(BuildContext context, String value) async {
       );
     }
   }
+}
+
+Future<Map<String, dynamic>> resolveOriginalSharePost(
+  FeedRepository repository,
+  Map<String, dynamic> post,
+) async {
+  var current = post;
+  final seen = <String>{};
+  for (var depth = 0; depth < 8; depth++) {
+    final currentId = current['id']?.toString();
+    if (currentId == null || !seen.add(currentId)) {
+      throw StateError('Bài viết chia sẻ không hợp lệ.');
+    }
+    final parentId = current['sharedPostId']?.toString();
+    if (parentId == null || parentId.isEmpty) return current;
+    if (!seen.add(parentId)) {
+      throw StateError('Bài viết chia sẻ có vòng lặp.');
+    }
+    current = await repository.getPost(parentId);
+    // The fetched original can itself be a share; remove it from `seen` so
+    // the next iteration can perform the cycle check uniformly.
+    seen.remove(parentId);
+  }
+  throw StateError('Chuỗi bài viết chia sẻ quá sâu.');
+}
+
+String _shareCaptionForPost(String content, String? sharedPostId) {
+  if (sharedPostId == null || sharedPostId.isEmpty) return content.trim();
+  final urlPattern = RegExp(
+    r'https?://[^\s<>]+/posts/([0-9a-fA-F-]{36})',
+    caseSensitive: false,
+  );
+  return content.replaceAllMapped(urlPattern, (match) {
+    final linkedId = match.group(1);
+    return linkedId?.toLowerCase() == sharedPostId.toLowerCase()
+        ? ''
+        : match.group(0)!;
+  }).trim();
 }
 
 class FeedPage extends StatefulWidget {
@@ -183,123 +220,36 @@ class _FeedPageState extends State<FeedPage> {
     await _load();
   }
 
-  String _postLink(String postId) =>
-      '${AppConfig.webBaseUrl.replaceFirst(RegExp(r'/$'), '')}/posts/$postId';
-
   Future<void> _sharePost(Map<dynamic, dynamic> post) async {
-    final originalId =
+    final requestedId =
         (post['sharedPostId'] ?? post['id'])?.toString().trim() ?? '';
-    if (originalId.isEmpty || _myId == null) return;
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ListTile(
-              title: Text('Chia sẻ bài viết'),
-              subtitle: Text('Chia sẻ bài gốc tới bạn bè hoặc trang cá nhân.'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Chia sẻ lên trang cá nhân'),
-              onTap: () => Navigator.pop(context, 'profile'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.send_outlined),
-              title: const Text('Gửi qua tin nhắn'),
-              onTap: () => Navigator.pop(context, 'message'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (action == null || !mounted) return;
-    setState(() => _sharingPostIds.add(originalId));
+    if (requestedId.isEmpty || _myId == null) return;
+    if (!mounted) return;
+    setState(() => _sharingPostIds.add(requestedId));
     try {
-      final link = _postLink(originalId);
-      if (action == 'profile') {
-        final created = await widget.repository.createPost(
-          content: link,
-          files: const [],
-        );
-        final destinationId = created['id']?.toString() ?? '';
-        if (destinationId.isEmpty) {
-          throw const ApiException(
-            'Không nhận được mã bài viết đã chia sẻ.',
-            0,
-          );
-        }
-        final result = await widget.repository.registerShare(
-          originalId,
-          destinationType: 'POST',
-          destinationId: destinationId,
-        );
-        post['sharesCount'] = result['sharesCount'];
-        await _load();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã chia sẻ lên trang cá nhân.')),
-          );
-        }
-        return;
-      }
-
-      final chatRepository = widget.chatRepository;
-      final userRepository = widget.userRepository;
-      if (chatRepository == null || userRepository == null) {
-        throw const ApiException('Chức năng tin nhắn chưa sẵn sàng.', 0);
-      }
-      final friends = await userRepository.getFriends(_myId!);
+      final originalPost = await resolveOriginalSharePost(
+        widget.repository,
+        Map<String, dynamic>.from(post),
+      );
       if (!mounted) return;
-      final target = await showModalBottomSheet<Map<String, dynamic>>(
+      final originalId = originalPost['id']?.toString() ?? '';
+      if (originalId.isEmpty) {
+        throw StateError('Không tìm thấy bài viết gốc để chia sẻ.');
+      }
+      final shared = await showSharePostDialog(
         context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (context) => SafeArea(
-          child: SizedBox(
-            height: MediaQuery.sizeOf(context).height * .7,
-            child: friends.isEmpty
-                ? const Center(child: Text('Bạn chưa có bạn bè để chia sẻ.'))
-                : ListView.builder(
-                    itemCount: friends.length,
-                    itemBuilder: (context, index) {
-                      final friend = friends[index];
-                      return ListTile(
-                        leading: AppAvatar(
-                          radius: 20,
-                          url: friend['avatar']?.toString(),
-                          name: friend['name']?.toString(),
-                        ),
-                        title: Text('${friend['name'] ?? 'Sinh viên HVNH'}'),
-                        subtitle: Text('${friend['studentCode'] ?? ''}'),
-                        onTap: () => Navigator.pop(context, friend),
-                      );
-                    },
-                  ),
-          ),
-        ),
+        post: originalPost,
+        viewerId: _myId,
+        feedRepository: widget.repository,
+        chatRepository: widget.chatRepository,
+        userRepository: widget.userRepository,
+        onSharesUpdated: (count) => post['sharesCount'] = count,
       );
-      if (target == null || !mounted) return;
-      final conversation = await chatRepository.createDirectConversation(
-        '${target['id']}',
-      );
-      final message = await chatRepository.sendMessage(
-        '${conversation['id']}',
-        'Đã chia sẻ một bài viết:\n$link',
-        const [],
-      );
-      final result = await widget.repository.registerShare(
-        originalId,
-        destinationType: 'MESSAGE',
-        destinationId: '${message['id']}',
-      );
-      post['sharesCount'] = result['sharesCount'];
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã gửi bài viết cho ${target['name']}.')),
-        );
+      if (mounted && shared) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã chia sẻ bài viết.')));
+        await _load();
       }
     } catch (error) {
       if (mounted) {
@@ -308,7 +258,7 @@ class _FeedPageState extends State<FeedPage> {
         ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     } finally {
-      if (mounted) setState(() => _sharingPostIds.remove(originalId));
+      if (mounted) setState(() => _sharingPostIds.remove(requestedId));
     }
   }
 
@@ -559,11 +509,6 @@ class _FeedPageState extends State<FeedPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _HomeCommunityCard(
-                      onOpenGroups: widget.onOpenGroups,
-                      onOpenProfile: widget.onOpenProfile,
-                    ),
-                    const SizedBox(height: 18),
                     SizedBox(
                       height: 42,
                       child: ListView.separated(
@@ -1204,6 +1149,11 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final author = (post['author'] as Map?) ?? {};
     final media = (post['media'] as List?) ?? [];
+    final sharedPostId = post['sharedPostId']?.toString();
+    final postContent = _shareCaptionForPost(
+      post['content']?.toString() ?? '',
+      sharedPostId,
+    );
     final liked = post['isLiked'] == true;
     final mine =
         currentUserId != null && author['id']?.toString() == currentUserId;
@@ -1281,11 +1231,11 @@ class PostCard extends StatelessWidget {
                 : null,
           ),
           _PostCategoryDetails(post: post),
-          if ('${post['content']}'.trim().isNotEmpty)
+          if (postContent.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Text(
-                '${post['content']}',
+                postContent,
                 style: const TextStyle(
                   fontSize: 15,
                   height: 1.5,
@@ -1293,11 +1243,8 @@ class PostCard extends StatelessWidget {
                 ),
               ),
             ),
-          if (post['sharedPostId']?.toString().isNotEmpty == true)
-            SharedPostPreview(
-              postId: post['sharedPostId'].toString(),
-              repository: repository,
-            ),
+          if (sharedPostId?.isNotEmpty == true)
+            SharedPostPreview(postId: sharedPostId!, repository: repository),
           if (media.isNotEmpty) _PostMediaGrid(media: media),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),

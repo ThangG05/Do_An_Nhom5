@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_network_image.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../../feed/domain/repositories/feed_repository.dart';
 import '../../../chat/domain/repositories/chat_repository.dart';
+import '../../../chat/chat_page.dart' show ConversationPage;
 import '../widgets/profile_content_tabs.dart';
 
 class UserSearchPage extends StatefulWidget {
@@ -164,6 +165,31 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
       }
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _message() async {
+    final chat = widget.chatRepository;
+    if (chat == null) return;
+    try {
+      final conversation = await chat.createDirectConversation(widget.userId);
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ConversationPage(
+            conversation: conversation,
+            repository: chat,
+            userRepository: widget.repository,
+            feedRepository: widget.feedRepository,
+          ),
+        ),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
     }
   }
 
@@ -361,9 +387,35 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        _friendButton(
-                          '${profile['friendshipStatus'] ?? 'none'}',
-                        ),
+                        if ('${profile['friendshipStatus'] ?? 'none'}' ==
+                            'pending_received') ...[
+                          _friendButton('pending_received'),
+                          if (widget.chatRepository != null)
+                            OutlinedButton.icon(
+                              onPressed: _message,
+                              icon: const Icon(Icons.chat_bubble_outline),
+                              label: const Text('Nhắn tin'),
+                            ),
+                        ] else
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _friendButton(
+                                  '${profile['friendshipStatus'] ?? 'none'}',
+                                ),
+                              ),
+                              if (widget.chatRepository != null) ...[
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: _message,
+                                    icon: const Icon(Icons.chat_bubble_outline),
+                                    label: const Text('Nhắn tin'),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton.icon(

@@ -34,6 +34,8 @@ class _Groups implements GroupRepository {
     String query = '',
     String sort = 'latest',
     bool mine = false,
+    int limit = 10,
+    int offset = 0,
   }) async {
     requestedPosts.add(groupId);
     return [];

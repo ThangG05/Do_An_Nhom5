@@ -1,0 +1,546 @@
+{
+  "generated_at": "2026-11-01T09:10:00.424188+00:00",
+  "runs": 3,
+  "cases_per_run": 5,
+  "requests": 15,
+  "success_rate": 1.0,
+  "latency": {
+    "mean_ms": 4924.6,
+    "p50_ms": 3387.7,
+    "p95_ms": 5651.0,
+    "p99_ms": 25700.0,
+    "max_ms": 25700.0
+  },
+  "first_pass_latency": {
+    "mean_ms": 8575.8,
+    "p50_ms": 5105.0,
+    "p95_ms": 25700.0,
+    "p99_ms": 25700.0,
+    "max_ms": 25700.0
+  },
+  "repeat_pass_latency": {
+    "mean_ms": 3099.0,
+    "p50_ms": 2879.5,
+    "p95_ms": 5651.0,
+    "p99_ms": 5651.0,
+    "max_ms": 5651.0
+  },
+  "first_pass_stage_latency": {
+    "answer_ms": {
+      "mean_ms": 1334.6,
+      "p50_ms": 1318,
+      "p95_ms": 2049,
+      "p99_ms": 2049,
+      "max_ms": 2049
+    },
+    "embedding_ms": {
+      "mean_ms": 4999.0,
+      "p50_ms": 1577,
+      "p95_ms": 18979,
+      "p99_ms": 18979,
+      "max_ms": 18979
+    },
+    "lexical_ms": {
+      "mean_ms": 830.2,
+      "p50_ms": 334,
+      "p95_ms": 2599,
+      "p99_ms": 2599,
+      "max_ms": 2599
+    },
+    "memory_ms": {
+      "mean_ms": 0.4,
+      "p50_ms": 0,
+      "p95_ms": 2,
+      "p99_ms": 2,
+      "max_ms": 2
+    },
+    "persistence_ms": {
+      "mean_ms": 413.4,
+      "p50_ms": 324,
+      "p95_ms": 770,
+      "p99_ms": 770,
+      "max_ms": 770
+    },
+    "qdrant_ms": {
+      "mean_ms": 635.6,
+      "p50_ms": 424,
+      "p95_ms": 1121,
+      "p99_ms": 1121,
+      "max_ms": 1121
+    },
+    "retrieval_ms": {
+      "mean_ms": 6155.2,
+      "p50_ms": 2637,
+      "p95_ms": 20564,
+      "p99_ms": 20564,
+      "max_ms": 20564
+    },
+    "retrieval_total_ms": {
+      "mean_ms": 6153.8,
+      "p50_ms": 2636,
+      "p95_ms": 20560,
+      "p99_ms": 20560,
+      "max_ms": 20560
+    },
+    "total_ms": {
+      "mean_ms": 7903.8,
+      "p50_ms": 4848,
+      "p95_ms": 23385,
+      "p99_ms": 23385,
+      "max_ms": 23385
+    },
+    "verification_ms": {
+      "mean_ms": 497.4,
+      "p50_ms": 500,
+      "p95_ms": 545,
+      "p99_ms": 545,
+      "max_ms": 545
+    }
+  },
+  "repeat_pass_stage_latency": {
+    "answer_ms": {
+      "mean_ms": 1582.8,
+      "p50_ms": 1311,
+      "p95_ms": 4194,
+      "p99_ms": 4194,
+      "max_ms": 4194
+    },
+    "embedding_ms": {
+      "mean_ms": 0.0,
+      "p50_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "max_ms": 0
+    },
+    "lexical_ms": {
+      "mean_ms": 363.5,
+      "p50_ms": 321,
+      "p95_ms": 501,
+      "p99_ms": 501,
+      "max_ms": 501
+    },
+    "memory_ms": {
+      "mean_ms": 0.1,
+      "p50_ms": 0,
+      "p95_ms": 1,
+      "p99_ms": 1,
+      "max_ms": 1
+    },
+    "persistence_ms": {
+      "mean_ms": 313.1,
+      "p50_ms": 320,
+      "p95_ms": 336,
+      "p99_ms": 336,
+      "max_ms": 336
+    },
+    "qdrant_ms": {
+      "mean_ms": 408.4,
+      "p50_ms": 419,
+      "p95_ms": 1102,
+      "p99_ms": 1102,
+      "max_ms": 1102
+    },
+    "retrieval_ms": {
+      "mean_ms": 931.4,
+      "p50_ms": 928,
+      "p95_ms": 1606,
+      "p99_ms": 1606,
+      "max_ms": 1606
+    },
+    "retrieval_total_ms": {
+      "mean_ms": 931.1,
+      "p50_ms": 928,
+      "p95_ms": 1606,
+      "p99_ms": 1606,
+      "max_ms": 1606
+    },
+    "total_ms": {
+      "mean_ms": 2827.5,
+      "p50_ms": 2614,
+      "p95_ms": 5390,
+      "p99_ms": 5390,
+      "max_ms": 5390
+    },
+    "verification_ms": {
+      "mean_ms": 428.7,
+      "p50_ms": 422,
+      "p95_ms": 581,
+      "p99_ms": 581,
+      "max_ms": 581
+    }
+  },
+  "all_stage_latency": {
+    "answer_ms": {
+      "mean_ms": 1500.1,
+      "p50_ms": 1318,
+      "p95_ms": 2552,
+      "p99_ms": 4194,
+      "max_ms": 4194
+    },
+    "embedding_ms": {
+      "mean_ms": 1666.3,
+      "p50_ms": 0,
+      "p95_ms": 1697,
+      "p99_ms": 18979,
+      "max_ms": 18979
+    },
+    "lexical_ms": {
+      "mean_ms": 519.1,
+      "p50_ms": 327,
+      "p95_ms": 568,
+      "p99_ms": 2599,
+      "max_ms": 2599
+    },
+    "memory_ms": {
+      "mean_ms": 0.2,
+      "p50_ms": 0,
+      "p95_ms": 1,
+      "p99_ms": 2,
+      "max_ms": 2
+    },
+    "persistence_ms": {
+      "mean_ms": 346.5,
+      "p50_ms": 323,
+      "p95_ms": 377,
+      "p99_ms": 770,
+      "max_ms": 770
+    },
+    "qdrant_ms": {
+      "mean_ms": 484.1,
+      "p50_ms": 420,
+      "p95_ms": 1102,
+      "p99_ms": 1121,
+      "max_ms": 1121
+    },
+    "retrieval_ms": {
+      "mean_ms": 2672.7,
+      "p50_ms": 982,
+      "p95_ms": 3206,
+      "p99_ms": 20564,
+      "max_ms": 20564
+    },
+    "retrieval_total_ms": {
+      "mean_ms": 2672.0,
+      "p50_ms": 982,
+      "p95_ms": 3205,
+      "p99_ms": 20560,
+      "max_ms": 20560
+    },
+    "total_ms": {
+      "mean_ms": 4519.6,
+      "p50_ms": 3129,
+      "p95_ms": 5390,
+      "p99_ms": 23385,
+      "max_ms": 23385
+    },
+    "verification_ms": {
+      "mean_ms": 451.6,
+      "p50_ms": 486,
+      "p95_ms": 545,
+      "p99_ms": 581,
+      "max_ms": 581
+    }
+  },
+  "results": [
+    {
+      "run": 1,
+      "case_id": "hvnh-003",
+      "latency_ms": 25700.0,
+      "generation_latency_ms": 22614,
+      "stage_timings_ms": {
+        "memory_ms": 2,
+        "embedding_ms": 18979,
+        "qdrant_ms": 995,
+        "lexical_ms": 2599,
+        "verification_ms": 545,
+        "retrieval_total_ms": 20560,
+        "retrieval_ms": 20564,
+        "answer_ms": 2049,
+        "persistence_ms": 770,
+        "total_ms": 23385
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 1,
+      "case_id": "hvnh-019",
+      "latency_ms": 5105.0,
+      "generation_latency_ms": 4525,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 1561,
+        "qdrant_ms": 1121,
+        "lexical_ms": 568,
+        "verification_ms": 500,
+        "retrieval_total_ms": 3205,
+        "retrieval_ms": 3206,
+        "answer_ms": 1318,
+        "persistence_ms": 323,
+        "total_ms": 4848
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 1,
+      "case_id": "hvnh-023",
+      "latency_ms": 5202.4,
+      "generation_latency_ms": 4558,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 1577,
+        "qdrant_ms": 420,
+        "lexical_ms": 327,
+        "verification_ms": 537,
+        "retrieval_total_ms": 2555,
+        "retrieval_ms": 2555,
+        "answer_ms": 2002,
+        "persistence_ms": 377,
+        "total_ms": 4934
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 1,
+      "case_id": "hvnh-036",
+      "latency_ms": 3183.3,
+      "generation_latency_ms": 2649,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 1697,
+        "qdrant_ms": 424,
+        "lexical_ms": 334,
+        "verification_ms": 498,
+        "retrieval_total_ms": 2636,
+        "retrieval_ms": 2637,
+        "answer_ms": 11,
+        "persistence_ms": 273,
+        "total_ms": 2921
+      },
+      "refused": true,
+      "error": null
+    },
+    {
+      "run": 1,
+      "case_id": "hvnh-042",
+      "latency_ms": 3688.5,
+      "generation_latency_ms": 3107,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 1181,
+        "qdrant_ms": 218,
+        "lexical_ms": 323,
+        "verification_ms": 407,
+        "retrieval_total_ms": 1813,
+        "retrieval_ms": 1814,
+        "answer_ms": 1293,
+        "persistence_ms": 324,
+        "total_ms": 3431
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 2,
+      "case_id": "hvnh-003",
+      "latency_ms": 2990.3,
+      "generation_latency_ms": 2414,
+      "stage_timings_ms": {
+        "memory_ms": 1,
+        "embedding_ms": 0,
+        "qdrant_ms": 225,
+        "lexical_ms": 501,
+        "verification_ms": 422,
+        "retrieval_total_ms": 952,
+        "retrieval_ms": 952,
+        "answer_ms": 1461,
+        "persistence_ms": 322,
+        "total_ms": 2736
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 2,
+      "case_id": "hvnh-019",
+      "latency_ms": 2767.5,
+      "generation_latency_ms": 2170,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 425,
+        "lexical_ms": 369,
+        "verification_ms": 376,
+        "retrieval_total_ms": 822,
+        "retrieval_ms": 822,
+        "answer_ms": 1348,
+        "persistence_ms": 336,
+        "total_ms": 2506
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 2,
+      "case_id": "hvnh-023",
+      "latency_ms": 2879.5,
+      "generation_latency_ms": 2293,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 424,
+        "lexical_ms": 315,
+        "verification_ms": 536,
+        "retrieval_total_ms": 982,
+        "retrieval_ms": 982,
+        "answer_ms": 1311,
+        "persistence_ms": 320,
+        "total_ms": 2614
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 2,
+      "case_id": "hvnh-036",
+      "latency_ms": 1481.6,
+      "generation_latency_ms": 943,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 423,
+        "lexical_ms": 321,
+        "verification_ms": 486,
+        "retrieval_total_ms": 928,
+        "retrieval_ms": 928,
+        "answer_ms": 15,
+        "persistence_ms": 272,
+        "total_ms": 1215
+      },
+      "refused": true,
+      "error": null
+    },
+    {
+      "run": 2,
+      "case_id": "hvnh-042",
+      "latency_ms": 2563.2,
+      "generation_latency_ms": 1866,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 216,
+        "lexical_ms": 310,
+        "verification_ms": 278,
+        "retrieval_total_ms": 597,
+        "retrieval_ms": 597,
+        "answer_ms": 1269,
+        "persistence_ms": 326,
+        "total_ms": 2192
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 3,
+      "case_id": "hvnh-003",
+      "latency_ms": 5651.0,
+      "generation_latency_ms": 5073,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 217,
+        "lexical_ms": 494,
+        "verification_ms": 357,
+        "retrieval_total_ms": 878,
+        "retrieval_ms": 879,
+        "answer_ms": 4194,
+        "persistence_ms": 317,
+        "total_ms": 5390
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 3,
+      "case_id": "hvnh-019",
+      "latency_ms": 3387.7,
+      "generation_latency_ms": 2796,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 1102,
+        "lexical_ms": 379,
+        "verification_ms": 483,
+        "retrieval_total_ms": 1606,
+        "retrieval_ms": 1606,
+        "answer_ms": 1189,
+        "persistence_ms": 334,
+        "total_ms": 3129
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 3,
+      "case_id": "hvnh-023",
+      "latency_ms": 4145.6,
+      "generation_latency_ms": 3574,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 419,
+        "lexical_ms": 323,
+        "verification_ms": 581,
+        "retrieval_total_ms": 1021,
+        "retrieval_ms": 1022,
+        "answer_ms": 2552,
+        "persistence_ms": 315,
+        "total_ms": 3889
+      },
+      "refused": false,
+      "error": null
+    },
+    {
+      "run": 3,
+      "case_id": "hvnh-036",
+      "latency_ms": 1469.1,
+      "generation_latency_ms": 948,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 420,
+        "lexical_ms": 312,
+        "verification_ms": 499,
+        "retrieval_total_ms": 936,
+        "retrieval_ms": 936,
+        "answer_ms": 12,
+        "persistence_ms": 264,
+        "total_ms": 1212
+      },
+      "refused": true,
+      "error": null
+    },
+    {
+      "run": 3,
+      "case_id": "hvnh-042",
+      "latency_ms": 3654.6,
+      "generation_latency_ms": 3068,
+      "stage_timings_ms": {
+        "memory_ms": 0,
+        "embedding_ms": 0,
+        "qdrant_ms": 213,
+        "lexical_ms": 311,
+        "verification_ms": 269,
+        "retrieval_total_ms": 589,
+        "retrieval_ms": 590,
+        "answer_ms": 2477,
+        "persistence_ms": 325,
+        "total_ms": 3392
+      },
+      "refused": false,
+      "error": null
+    }
+  ]
+}

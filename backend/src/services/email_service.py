@@ -44,8 +44,14 @@ def _send_smtp(email: str, subject: str, body_html: str) -> None:
 
 def _send_email(email: str, subject: str, body_html: str) -> None:
     if _smtp_configured():
-        _send_smtp(email, subject, body_html)
-        return
+        try:
+            _send_smtp(email, subject, body_html)
+            return
+        except EmailDeliveryError:
+            # A stale SMTP configuration should not block delivery when the
+            # independently configured Resend provider is available.
+            if not settings.RESEND_API_KEY:
+                raise
     if not settings.RESEND_API_KEY:
         raise EmailDeliveryError("Dịch vụ gửi email chưa được cấu hình.")
     resend.api_key = settings.RESEND_API_KEY

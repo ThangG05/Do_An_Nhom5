@@ -20,11 +20,13 @@ class ProfilePage extends StatefulWidget {
     required this.repository,
     this.feedRepository,
     this.chatRepository,
+    this.onPasswordChanged,
   });
 
   final UserRepository repository;
   final FeedRepository? feedRepository;
   final ChatRepository? chatRepository;
+  final Future<void> Function()? onPasswordChanged;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -375,6 +377,11 @@ class _ProfilePageState extends State<ProfilePage> {
         currentPassword: current.text,
         newPassword: next.text,
       );
+      final onPasswordChanged = widget.onPasswordChanged;
+      if (onPasswordChanged != null) {
+        await onPasswordChanged();
+        return;
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đã đổi mật khẩu thành công.')),

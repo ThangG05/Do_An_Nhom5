@@ -99,7 +99,7 @@ class Citation:
     relevance_score: float
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class RAGResult:
     conversation_id: UUID
     message_id: UUID
@@ -108,6 +108,7 @@ class RAGResult:
     refusal_reason: str | None
     citations: tuple[Citation, ...]
     rewritten_question: str
+    stage_timings: dict[str, int] | None = None
 
 
 class RAGService:
@@ -195,11 +196,19 @@ class RAGService:
         latency_ms = round((generated_at - started) * 1000)
         collector.attach(self.session)
         result = await self._persist(prepared, intent, hits, answer, latency_ms, conversation_id, user_id)
-        collector.saved = True
-        logger.info("rag_request_completed", extra={
+        result.stage_timings = {
             "memory_ms": round((prepared_at - started) * 1000),
+            **self.retriever.last_timings,
             "retrieval_ms": round((retrieved_at - prepared_at) * 1000),
             "answer_ms": round((generated_at - retrieved_at) * 1000),
+            "persistence_ms": round((perf_counter() - generated_at) * 1000),
+            "total_ms": round((perf_counter() - started) * 1000),
+        }
+        collector.saved = True
+        logger.info("rag_request_completed", extra={
+            "memory_ms": result.stage_timings["memory_ms"],
+            "retrieval_ms": round((retrieved_at - prepared_at) * 1000),
+            "answer_ms": result.stage_timings["answer_ms"],
             "persistence_ms": round((perf_counter() - generated_at) * 1000),
             "total_ms": round((perf_counter() - started) * 1000),
             "evidence_count": len(hits), "refused": answer.refused,

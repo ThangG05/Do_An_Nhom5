@@ -223,6 +223,7 @@ class RetrievalService:
         self.embedder = embedder
         self.session = session
         self.client = get_qdrant_client()
+        self.last_timings: dict[str, int] = {}
         if reranker is None and self.settings.retrieval_reranker != "heuristic":
             raise ValueError(f"unsupported reranker: {self.settings.retrieval_reranker}")
         self.reranker = reranker or HeuristicReranker()
@@ -415,4 +416,11 @@ class RetrievalService:
             "retrieval_ms": round((perf_counter() - retrieval_started) * 1000),
             "vector_candidates": len(response.points), "lexical_candidates": len(lexical_hits),
         })
+        self.last_timings = {
+            "embedding_ms": embedding_ms,
+            "qdrant_ms": qdrant_ms,
+            "lexical_ms": lexical_ms,
+            "verification_ms": verification_ms,
+            "retrieval_total_ms": round((perf_counter() - retrieval_started) * 1000),
+        }
         return hits

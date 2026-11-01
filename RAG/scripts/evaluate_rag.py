@@ -91,6 +91,7 @@ async def main() -> None:
                             "question": case["question"], "response": result.answer,
                             "reference": case.get("reference_answer"),
                             "latency_ms": latency_ms,
+                            "stage_timings_ms": result.stage_timings,
                             "retrieved_contexts": retrieved_contexts,
                             "citations": [{"title": citation.title, "source_url": citation.source_url}
                                           for citation in result.citations]})
@@ -109,6 +110,20 @@ async def main() -> None:
                 "p95_ms": ordered[max(0, int(0.95 * len(ordered) + 0.999999) - 1)],
                 "max_ms": max(ordered),
             }
+        stage_summaries = {}
+        stage_names = sorted({name for row in completed
+                              for name in (row.get("stage_timings_ms") or {})})
+        for name in stage_names:
+            values = [row["stage_timings_ms"][name] for row in completed
+                      if row.get("stage_timings_ms") and name in row["stage_timings_ms"]]
+            if values:
+                ordered = sorted(values)
+                stage_summaries[name] = {
+                    "mean_ms": round(statistics.fmean(values), 1),
+                    "p50_ms": round(statistics.median(values), 1),
+                    "p95_ms": ordered[max(0, int(0.95 * len(ordered) + 0.999999) - 1)],
+                    "max_ms": max(values),
+                }
         report = {"dataset": str(args.dataset), "official_score": not args.include_pending,
                   "cases": len(results), "passed": passed, "pass_rate": passed / len(results),
                   "errors": len(results) - len(completed),
@@ -116,7 +131,8 @@ async def main() -> None:
                                         if completed else 0.0),
                   "refusal_accuracy": (sum(row["refusal_ok"] for row in completed) / len(completed)
                                        if completed else 0.0),
-                  "latency": latency_summary, "results": results}
+                  "latency": latency_summary, "stage_latency": stage_summaries,
+                  "results": results}
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"pass_rate={report['pass_rate']:.3f} cases={len(results)} official={str(report['official_score']).lower()} output={args.output}")

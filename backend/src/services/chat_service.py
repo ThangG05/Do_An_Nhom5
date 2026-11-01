@@ -105,6 +105,7 @@ def _messages_batch(db: Session, rows: list[Message], viewer_id: uuid.UUID) -> l
             replyTo=ReplyMessageResponse(
                 id=str(reply.id), senderName=reply_profile.full_name if reply_profile else reply_sender.username if reply_sender else "Người dùng",
                 content="Tin nhắn đã được thu hồi" if reply.deleted_at is not None else reply.content or "[Tệp đính kèm]",
+                timestamp=reply.created_at.isoformat(),
                 isRecalled=reply.deleted_at is not None,
             ) if reply else None,
         ))

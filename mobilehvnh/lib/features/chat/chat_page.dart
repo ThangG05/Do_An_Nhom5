@@ -309,14 +309,14 @@ class ConversationPage extends StatefulWidget {
     required this.conversation,
     required this.repository,
     required this.userRepository,
-    required this.apiClient,
+    this.apiClient,
     this.feedRepository,
   });
 
   final Map<dynamic, dynamic> conversation;
   final ChatRepository repository;
   final UserRepository userRepository;
-  final ApiClient apiClient;
+  final ApiClient? apiClient;
   final FeedRepository? feedRepository;
 
   @override
@@ -333,7 +333,7 @@ class _ConversationPageState extends State<ConversationPage> {
     'amber': Color(0xffd97706),
   };
 
-  late final ChatRealtime _realtime;
+  late final ChatRealtime? _realtime;
   final _messageScroll = ScrollController();
   final _messageKeys = <String, GlobalKey>{};
   final _input = TextEditingController();
@@ -353,7 +353,9 @@ class _ConversationPageState extends State<ConversationPage> {
   void initState() {
     super.initState();
     _theme = widget.conversation['theme']?.toString() ?? 'blue';
-    _realtime = ChatRealtime(widget.apiClient);
+    _realtime = widget.apiClient == null
+        ? null
+        : ChatRealtime(widget.apiClient!);
     _messageScroll.addListener(_onMessageScroll);
     _prepare();
   }
@@ -368,12 +370,12 @@ class _ConversationPageState extends State<ConversationPage> {
   Future<void> _prepare() async {
     _myId = await AuthSession().userId;
     await _load();
-    await _realtime.connect(_onEvent);
+    await _realtime?.connect(_onEvent);
   }
 
   @override
   void dispose() {
-    _realtime.close();
+    _realtime?.close();
     _messageScroll.dispose();
     _input.dispose();
     super.dispose();
@@ -402,6 +404,24 @@ class _ConversationPageState extends State<ConversationPage> {
   }
 
   Future<void> _recall(Map<dynamic, dynamic> item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Thu hồi tin nhắn?'),
+        content: const Text('Tin nhắn sẽ được thay bằng thông báo đã thu hồi.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Thu hồi'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     try {
       final recalled = await widget.repository.recallMessage(
         '${widget.conversation['id']}',
@@ -516,6 +536,23 @@ class _ConversationPageState extends State<ConversationPage> {
             PostDetailPage(postId: postId, repository: widget.feedRepository!),
       ),
     );
+  }
+
+  String? _sharedPostUrl(String content) {
+    final match = RegExp(
+      r'https?://[^\s]+/posts/[0-9a-fA-F-]{36}',
+    ).firstMatch(content);
+    return match?.group(0);
+  }
+
+  String _sharedPostCaption(String content) {
+    final url = _sharedPostUrl(content);
+    if (url == null) return '';
+    final caption = content.replaceFirst(url, '').trim();
+    if (caption == 'Đã chia sẻ một bài viết:') {
+      return '';
+    }
+    return caption;
   }
 
   void _messageActions(Map<dynamic, dynamic> item, bool mine) {
@@ -1195,68 +1232,91 @@ class _ConversationPageState extends State<ConversationPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (item['replyTo'] is Map)
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 7),
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: mine
-                                          ? Colors.white.withValues(alpha: .16)
-                                          : const Color(0xffedf3f8),
-                                      borderRadius: BorderRadius.circular(9),
+                                  InkWell(
+                                    onTap: () => _jumpToMessage(
+                                      Map<String, dynamic>.from(
+                                        item['replyTo'] as Map,
+                                      ),
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${(item['replyTo'] as Map)['senderName'] ?? ''}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 11,
-                                            color: mine
-                                                ? Colors.white
-                                                : AppTheme.ink,
+                                    borderRadius: BorderRadius.circular(9),
+                                    child: Container(
+                                      margin: const EdgeInsets.only(bottom: 7),
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: mine
+                                            ? Colors.white.withValues(
+                                                alpha: .16,
+                                              )
+                                            : const Color(0xffedf3f8),
+                                        borderRadius: BorderRadius.circular(9),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${(item['replyTo'] as Map)['senderName'] ?? ''}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 11,
+                                              color: mine
+                                                  ? Colors.white
+                                                  : AppTheme.ink,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          '${(item['replyTo'] as Map)['content'] ?? ''}',
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: mine
-                                                ? Colors.white70
-                                                : AppTheme.muted,
+                                          Text(
+                                            '${(item['replyTo'] as Map)['content'] ?? ''}',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: mine
+                                                  ? Colors.white70
+                                                  : AppTheme.muted,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 if ('${item['content'] ?? ''}'
                                     .trim()
-                                    .isNotEmpty)
-                                  InkWell(
-                                    onTap:
-                                        '${item['content']}'.contains('/posts/')
-                                        ? () => _openSharedPost(
+                                    .isNotEmpty) ...[
+                                  if (_sharedPostUrl('${item['content']}') !=
+                                      null) ...[
+                                    if (_sharedPostCaption(
+                                      '${item['content']}',
+                                    ).isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
+                                        child: Text(
+                                          _sharedPostCaption(
                                             '${item['content']}',
-                                          )
-                                        : null,
-                                    child: Text(
+                                          ),
+                                          style: TextStyle(
+                                            color: mine
+                                                ? Colors.white
+                                                : const Color(0xff18324d),
+                                          ),
+                                        ),
+                                      ),
+                                    _SharedPostMessageCard(
+                                      onTap: () =>
+                                          _openSharedPost('${item['content']}'),
+                                      mine: mine,
+                                    ),
+                                  ] else
+                                    Text(
                                       '${item['content']}',
                                       style: TextStyle(
                                         color: mine
                                             ? Colors.white
                                             : const Color(0xff18324d),
-                                        decoration:
-                                            '${item['content']}'.contains(
-                                              '/posts/',
-                                            )
-                                            ? TextDecoration.underline
-                                            : null,
                                       ),
                                     ),
-                                  ),
+                                ],
                                 ...attachments.map(
                                   (attachment) => _MessageAttachment(
                                     attachment: Map<String, dynamic>.from(
@@ -1267,14 +1327,76 @@ class _ConversationPageState extends State<ConversationPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 3),
-                                Text(
-                                  '${AppDateTime.full(item['timestamp'])}${item['isEdited'] == true ? ' · đã chỉnh sửa' : ''}',
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                    color: mine
-                                        ? Colors.white70
-                                        : const Color(0xff71839a),
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${AppDateTime.full(item['timestamp'])}${item['isEdited'] == true ? ' · đã chỉnh sửa' : ''}',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        color: mine
+                                            ? Colors.white70
+                                            : const Color(0xff71839a),
+                                      ),
+                                    ),
+                                    PopupMenuButton<String>(
+                                      tooltip: 'Thao tác tin nhắn',
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(
+                                        minWidth: 44,
+                                        minHeight: 36,
+                                      ),
+                                      iconSize: 17,
+                                      icon: Icon(
+                                        Icons.more_horiz_rounded,
+                                        color: mine
+                                            ? Colors.white70
+                                            : const Color(0xff71839a),
+                                      ),
+                                      onSelected: (action) {
+                                        if (action == 'reply') {
+                                          setState(
+                                            () => _replyingTo =
+                                                Map<String, dynamic>.from(item),
+                                          );
+                                        } else if (action == 'edit') {
+                                          _editMessage(item);
+                                        } else if (action == 'recall') {
+                                          _recall(item);
+                                        }
+                                      },
+                                      itemBuilder: (_) => [
+                                        const PopupMenuItem(
+                                          value: 'reply',
+                                          child: ListTile(
+                                            dense: true,
+                                            leading: Icon(Icons.reply_rounded),
+                                            title: Text('Trả lời'),
+                                          ),
+                                        ),
+                                        if (mine && item['isRecalled'] != true)
+                                          const PopupMenuItem(
+                                            value: 'edit',
+                                            child: ListTile(
+                                              dense: true,
+                                              leading: Icon(
+                                                Icons.edit_outlined,
+                                              ),
+                                              title: Text('Sửa tin nhắn'),
+                                            ),
+                                          ),
+                                        if (mine && item['isRecalled'] != true)
+                                          const PopupMenuItem(
+                                            value: 'recall',
+                                            child: ListTile(
+                                              dense: true,
+                                              leading: Icon(Icons.undo_rounded),
+                                              title: Text('Thu hồi'),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -1354,6 +1476,68 @@ class _ConversationPageState extends State<ConversationPage> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SharedPostMessageCard extends StatelessWidget {
+  const _SharedPostMessageCard({required this.onTap, required this.mine});
+
+  final VoidCallback onTap;
+  final bool mine;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      constraints: const BoxConstraints(maxWidth: 250),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: mine ? Colors.white.withValues(alpha: .14) : AppTheme.canvas,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: mine ? Colors.white24 : const Color(0xffdbe6ee),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.article_outlined,
+            color: mine ? Colors.white : AppTheme.blue,
+            size: 21,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bài viết được chia sẻ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                    color: mine ? Colors.white : AppTheme.ink,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Chạm để xem bài viết gốc',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: mine ? Colors.white70 : AppTheme.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.open_in_new_rounded,
+            size: 15,
+            color: mine ? Colors.white70 : AppTheme.muted,
           ),
         ],
       ),

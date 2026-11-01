@@ -113,7 +113,11 @@ export default function SharePostModal({ post, viewerId, onClose, onShared }: { 
     busyRef.current = true;
     setBusy(true); setError(''); setSuccess('');
     try {
-      const created = await createProfilePost({ content: `${caption.trim() ? `${caption.trim()}\n` : ''}${url}`, category: 'general', privacy, media: [], taggedFriends: [] });
+      // The original post is attached through registerPostShare below. Do not
+      // duplicate its URL in the new post body; the feed renders the original
+      // post card from sharedPostId.
+      const shareCaption = caption.trim() || 'Đã chia sẻ bài viết này.';
+      const created = await createProfilePost({ content: shareCaption, category: 'general', privacy, media: [], taggedFriends: [] });
       try {
         const result = await registerPostShare(originalPost.id, 'POST', created.id);
         if (post.id === originalPost.id) onShared?.(result.sharesCount);

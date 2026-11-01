@@ -5,9 +5,14 @@ import '../../domain/repositories/user_repository.dart';
 import 'social_pages.dart';
 
 class PrivacySettingsPage extends StatefulWidget {
-  const PrivacySettingsPage({super.key, required this.repository});
+  const PrivacySettingsPage({
+    super.key,
+    required this.repository,
+    this.onPasswordChanged,
+  });
 
   final UserRepository repository;
+  final Future<void> Function()? onPasswordChanged;
 
   @override
   State<PrivacySettingsPage> createState() => _PrivacySettingsPageState();
@@ -114,9 +119,8 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     next.dispose();
     confirmed.dispose();
     if (changed == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã đổi mật khẩu thành công.')),
-      );
+      final onPasswordChanged = widget.onPasswordChanged;
+      if (onPasswordChanged != null) await onPasswordChanged();
     }
   }
 

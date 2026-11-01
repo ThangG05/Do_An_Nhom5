@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/ai_mascot.dart';
@@ -51,7 +52,7 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
           () => _messages.add({
             'role': 'ai',
             'text': '$answer',
-            'citations': (result['citations'] as List?) ?? const [],
+            'citations': _asList(result['citations']),
           }),
         );
       }
@@ -224,11 +225,9 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
           ..addAll(
             messages.map(
               (message) => {
-                'role': message['role']?.toString() == 'assistant'
-                    ? 'ai'
-                    : 'user',
+                'role': _isAssistantRole(message['role']) ? 'ai' : 'user',
                 'text': message['content']?.toString() ?? '',
-                'citations': (message['citations'] as List?) ?? const [],
+                'citations': _asList(message['citations']),
               },
             ),
           );
@@ -352,47 +351,10 @@ class _AiAssistantPageState extends State<AiAssistantPage> {
                   itemBuilder: (context, index) {
                     final message = _messages[index];
                     final mine = message['role'] == 'user';
-                    return Align(
-                      alignment: mine
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 11),
-                        padding: const EdgeInsets.all(14),
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * .8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: mine ? AppTheme.blue : Colors.white,
-                          borderRadius: BorderRadius.circular(17),
-                          border: mine
-                              ? null
-                              : Border.all(color: const Color(0xffdbe6ee)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              message['text']?.toString() ?? '',
-                              style: TextStyle(
-                                color: mine
-                                    ? Colors.white
-                                    : const Color(0xff18324d),
-                                height: 1.45,
-                              ),
-                            ),
-                            if (!mine &&
-                                ((message['citations'] as List?) ?? const [])
-                                    .isNotEmpty) ...[
-                              const SizedBox(height: 10),
-                              _Citations(
-                                items:
-                                    (message['citations'] as List?) ?? const [],
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+                    return _ChatMessage(
+                      mine: mine,
+                      text: message['text']?.toString() ?? '',
+                      citations: _asList(message['citations']),
                     );
                   },
                 ),
@@ -477,20 +439,187 @@ class _Citations extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        ...items.take(4).map((raw) {
+        ...items.map((raw) {
           final item = Map<String, dynamic>.from(raw as Map);
-          final page = item['page_start'] == null
-              ? ''
-              : ' · trang ${item['page_start']}${item['page_end'] != null && item['page_end'] != item['page_start'] ? '-${item['page_end']}' : ''}';
-          return Padding(
-            padding: const EdgeInsets.only(top: 3),
-            child: Text(
-              '[${item['order'] ?? ''}] ${item['title'] ?? 'Tài liệu HVNH'}$page',
-              style: const TextStyle(fontSize: 12, color: Color(0xff315a83)),
+          final start = item['page_start'];
+          final end = item['page_end'];
+          final page = start == null
+              ? null
+              : 'Trang $start${end != null && end != start ? '–$end' : ''}';
+          final section = item['section_title']?.toString();
+          final details = [
+            if (section != null && section.isNotEmpty) section,
+            if (page != null) page,
+          ].join(' · ');
+          final source = item['source_url']?.toString();
+          return InkWell(
+            borderRadius: BorderRadius.circular(9),
+            onTap: source == null || source.isEmpty
+                ? null
+                : () async {
+                    final uri = Uri.tryParse(source);
+                    if (uri != null && await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
+                  },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 13,
+                    backgroundColor: const Color(0xffdbe9f5),
+                    child: Text(
+                      '${item['order'] ?? ''}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.blue,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item['title']?.toString() ?? 'Tài liệu HVNH',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff183f65),
+                          ),
+                        ),
+                        if (details.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            details,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.muted,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (source != null && source.isNotEmpty)
+                    const Icon(
+                      Icons.open_in_new_rounded,
+                      size: 15,
+                      color: AppTheme.muted,
+                    ),
+                ],
+              ),
             ),
           );
         }),
       ],
     ),
   );
+}
+
+bool _isAssistantRole(Object? role) =>
+    {'assistant', 'ai', 'bot'}.contains(role?.toString().toLowerCase());
+
+List _asList(Object? value) => value is List ? value : const [];
+
+class _ChatMessage extends StatelessWidget {
+  const _ChatMessage({
+    required this.mine,
+    required this.text,
+    required this.citations,
+  });
+
+  final bool mine;
+  final String text;
+  final List citations;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxWidth = MediaQuery.of(context).size.width * .82;
+    final bubble = Container(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+      decoration: BoxDecoration(
+        color: mine ? AppTheme.blue : Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(mine ? 18 : 5),
+          topRight: Radius.circular(mine ? 5 : 18),
+          bottomLeft: const Radius.circular(18),
+          bottomRight: const Radius.circular(18),
+        ),
+        border: mine ? null : Border.all(color: const Color(0xffdbe6ee)),
+      ),
+      child: SelectableText(
+        text,
+        style: TextStyle(
+          color: mine ? Colors.white : const Color(0xff18324d),
+          height: 1.5,
+          fontSize: 14,
+        ),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Row(
+        mainAxisAlignment: mine
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!mine) ...[const AiMascot(size: 30), const SizedBox(width: 8)],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: mine
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5, left: 2, right: 2),
+                  child: Text(
+                    mine ? 'Bạn' : 'Trợ lý HVNH',
+                    style: const TextStyle(
+                      color: AppTheme.muted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                bubble,
+                if (!mine && citations.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    child: _Citations(items: citations),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (mine) ...[
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 15,
+              backgroundColor: AppTheme.softBlue,
+              child: const Text(
+                'Bạn',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.blue,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

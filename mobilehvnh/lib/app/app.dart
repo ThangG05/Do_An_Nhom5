@@ -19,6 +19,7 @@ class _HvnhHubAppState extends State<HvnhHubApp> {
   // A stored token must not skip the introduction on a new app launch.
   // Session restoration only happens after an explicit sign-in/registration.
   bool _signedIn = false;
+  bool _showLoginAfterPasswordChange = false;
   String? _role;
   List<String> _adminGroupSlugs = const [];
 
@@ -45,6 +46,7 @@ class _HvnhHubAppState extends State<HvnhHubApp> {
     if (mounted) {
       setState(() {
         _signedIn = signedIn;
+        if (signedIn) _showLoginAfterPasswordChange = false;
         _role = role;
         _adminGroupSlugs = adminGroups;
       });
@@ -54,6 +56,17 @@ class _HvnhHubAppState extends State<HvnhHubApp> {
   Future<void> _logout() async {
     await widget.dependencies.authRepository.signOut();
     await _restoreSession();
+  }
+
+  Future<void> _passwordChanged() async {
+    await widget.dependencies.authRepository.signOut();
+    if (!mounted) return;
+    setState(() {
+      _signedIn = false;
+      _showLoginAfterPasswordChange = true;
+      _role = null;
+      _adminGroupSlugs = const [];
+    });
   }
 
   @override
@@ -75,7 +88,16 @@ class _HvnhHubAppState extends State<HvnhHubApp> {
                   adminGroupSlugs: _adminGroupSlugs,
                   onLogout: _logout,
                 )
-              : AppShell(dependencies: widget.dependencies, onLogout: _logout)
+              : AppShell(
+                  dependencies: widget.dependencies,
+                  onLogout: _logout,
+                  onPasswordChanged: _passwordChanged,
+                )
+        : _showLoginAfterPasswordChange
+        ? LoginPage(
+            dependencies: widget.dependencies,
+            onSignedIn: _restoreSession,
+          )
         : WelcomePage(
             dependencies: widget.dependencies,
             onSignedIn: _restoreSession,
