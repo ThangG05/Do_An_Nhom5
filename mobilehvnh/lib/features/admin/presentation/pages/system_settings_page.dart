@@ -82,7 +82,6 @@ class _SystemSettingsPageState extends State<SystemSettingsPage> {
                       : '${MaterialLocalizations.of(context).formatMediumDate(expectedEndAt!)} · ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(expectedEndAt!))}',
                 ),
                 trailing: Wrap(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     if (expectedEndAt != null)
                       IconButton(
