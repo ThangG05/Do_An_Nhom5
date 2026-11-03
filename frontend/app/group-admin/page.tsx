@@ -130,13 +130,21 @@ export default function GroupAdminPage() {
     busyRef.current = true;
     setBusy(true);
     setError("");
-    try { await work(); await load(); await loadGroups(); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Không thể thực hiện thao tác."); }
+    try { await work(); await load(); await loadGroups(); return true; }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Không thể thực hiện thao tác."); return false; }
     finally { busyRef.current = false; setBusy(false); }
+  };
+  const togglePin = async (post: GroupPost) => {
+    const isPinned = !post.isPinned;
+    if (await act(() => setGroupPostPinned(groupId, post.id, isPinned))) {
+      dialog.notify({title: isPinned ? "Đã ghim bài viết thành công!" : "Đã gỡ ghim bài viết.", tone: "success"});
+    }
   };
   const removePost = async (post: GroupPost) => {
     const reason = await dialog.prompt({title: "Gỡ bài đã duyệt", message: "Tác giả sẽ nhận được lý do gỡ bài.", placeholder: "Nhập lý do gỡ bài...", multiline: true, minLength: 3, tone: "danger"});
-    if (reason) await act(() => removeApprovedGroupPost(groupId, post.id, reason));
+    if (reason && await act(() => removeApprovedGroupPost(groupId, post.id, reason))) {
+      dialog.notify({title: "Đã gỡ bài viết thành công!", message: "Bài viết đã được gỡ khỏi nhóm.", tone: "success"});
+    }
   };
   const rejectPost = async (post: GroupPost) => {
     const reason = await dialog.prompt({title: "Từ chối bài viết", message: `Nêu lý do để ${post.author.name} biết cách chỉnh sửa.`, placeholder: "Lý do từ chối...", multiline: true, minLength: 3, tone: "danger"});
@@ -185,7 +193,7 @@ export default function GroupAdminPage() {
       {loadingContent ? <p className="admin-empty-state" role="status">Đang tải bài chờ duyệt...</p> : !pending.length && <p className="admin-empty-state">Không có bài chờ duyệt trong nhóm này.</p>}
     </section>}
 
-    {tab === "posts" && <section className="group-admin-panel"><h2>Bài viết đang hiển thị</h2>{posts.map(post => <div className="managed-post" key={post.id}><PostCard post={post} moderatorGroupId={groupId} moderatorActions={{isPinned: post.isPinned, busy, onTogglePin: () => { void act(() => setGroupPostPinned(groupId, post.id, !post.isPinned)); }, onRemove: () => { void removePost(post); }}} /></div>)}{!posts.length && <p className="admin-empty-state">Nhóm chưa có bài đã duyệt.</p>}</section>}
+    {tab === "posts" && <section className="group-admin-panel"><h2>Bài viết đang hiển thị</h2>{posts.map(post => <div className="managed-post" key={post.id}><PostCard post={post} moderatorGroupId={groupId} moderatorActions={{isPinned: post.isPinned, busy, onTogglePin: () => { void togglePin(post); }, onRemove: () => { void removePost(post); }}} /></div>)}{!posts.length && <p className="admin-empty-state">Nhóm chưa có bài đã duyệt.</p>}</section>}
 
     {tab === "members" && <section className="group-admin-panel"><div className="panel-title-row"><h2>Thành viên và yêu cầu gia nhập</h2><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm theo tên hoặc mã sinh viên" /></div>
       {joins.map(request => <article className="moderation-row join" key={request.id}><div><strong>{request.name}</strong><p>@{request.username}</p></div><div><button type="button" disabled={busy} onClick={() => { void act(() => decideGroupJoin(groupId, request.id, "APPROVE")); }}>Chấp nhận</button><button type="button" disabled={busy} className="danger" onClick={() => { void act(() => decideGroupJoin(groupId, request.id, "REJECT")); }}>Từ chối</button></div></article>)}

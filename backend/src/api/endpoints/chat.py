@@ -60,11 +60,22 @@ def shared_attachments(conversation_id:uuid.UUID,current_user:CurrentUser,db:Ann
 @router.patch("/conversations/{conversation_id}/settings",status_code=204)
 async def conversation_settings(conversation_id:uuid.UUID,payload:ConversationSettingsRequest,current_user:CurrentUser,db:Annotated[Session,Depends(get_db)]):
     def update_and_recipients():
-        chat_service.update_settings(db, conversation_id, current_user, payload)
-        return list(db.scalars(select(ConversationMember.user_id).where(
+        rows = chat_service.update_settings(db, conversation_id, current_user, payload)
+        recipients = list(db.scalars(select(ConversationMember.user_id).where(
             ConversationMember.conversation_id == conversation_id, ConversationMember.left_at.is_(None)
         )).all())
-    recipients = await run_in_threadpool(update_and_recipients)
+        messages_by_viewer = {
+            uid: chat_service.serialize_messages_for_viewer(db, rows, uid)
+            for uid in recipients
+        }
+        return messages_by_viewer, recipients
+    messages_by_viewer, recipients = await run_in_threadpool(update_and_recipients)
+    for recipient_id, messages in messages_by_viewer.items():
+        for message in messages:
+            await manager.send_users([recipient_id], {
+                "event": "message.created", "conversation_id": str(conversation_id),
+                "message": message.model_dump(mode="json"),
+            })
     await manager.send_users(recipients,{"event":"conversation.updated","conversation_id":str(conversation_id)})
 
 @router.post("/conversations/{conversation_id}/messages",response_model=MessageResponse,status_code=201)

@@ -818,6 +818,7 @@ class PostCard extends StatelessWidget {
     this.isSharing = false,
     this.showReportAction = true,
     this.onChanged,
+    this.groupAdminActions,
   });
 
   final Map<dynamic, dynamic> post;
@@ -828,6 +829,8 @@ class PostCard extends StatelessWidget {
   final bool isSharing;
   final bool showReportAction;
   final Future<void> Function()? onChanged;
+  final ({bool isPinned, bool busy, VoidCallback onTogglePin, VoidCallback onRemove})?
+  groupAdminActions;
 
   Future<void> _showLikes(BuildContext context) async {
     final likesFuture = repository.getPostLikes('${post['id']}');
@@ -1201,14 +1204,41 @@ class PostCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            trailing: mine || showReportAction
+            trailing: groupAdminActions != null || mine || showReportAction
                 ? PopupMenuButton<String>(
                     onSelected: (value) {
+                      if (value == 'pin') groupAdminActions?.onTogglePin();
+                      if (value == 'remove') groupAdminActions?.onRemove();
                       if (value == 'edit') _edit(context);
                       if (value == 'delete') _delete(context);
                       if (value == 'report') _report(context);
                     },
-                    itemBuilder: (_) => mine
+                    itemBuilder: (_) => groupAdminActions != null
+                        ? [
+                            PopupMenuItem(
+                              value: 'pin',
+                              enabled: !groupAdminActions!.busy,
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.push_pin_outlined, size: 18),
+                                  const SizedBox(width: 10),
+                                  Text(groupAdminActions!.isPinned ? 'Gỡ ghim' : 'Ghim bài'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'remove',
+                              enabled: !groupAdminActions!.busy,
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                  SizedBox(width: 10),
+                                  Text('Gỡ bài', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ]
+                        : mine
                         ? const [
                             PopupMenuItem(
                               value: 'edit',

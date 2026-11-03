@@ -509,9 +509,14 @@ python -m scripts.check_modal_embedding
 The deployment limits each text to 8,192 characters, accepts at most 64 texts and
 100,000 total characters per request, and caps scaling at three GPUs. By default
 `MODAL_EMBEDDING_MIN_CONTAINERS=0`, so the T4 scales to zero while idle. The first
-question after idle may have a cold start. Keeping a worker warm is an explicit
-opt-in (`MODAL_EMBEDDING_MIN_CONTAINERS=1` in the shell running `modal deploy`)
-and incurs GPU cost while idle. Redeploying Modal is required for changes to take effect.
+question after idle may have a cold start. The worker now stays available for
+10 minutes after its last request by default (`MODAL_EMBEDDING_SCALEDOWN_WINDOW_SECONDS=600`),
+then scales to zero; this reduces cold starts during active sessions without
+keeping a GPU running all day. Set it to `300` to return to the previous five-minute
+window or `900` for a longer active-session window (60–1,800 seconds are accepted).
+Keeping a worker always warm remains a separate explicit opt-in
+(`MODAL_EMBEDDING_MIN_CONTAINERS=1` in the shell running `modal deploy`) and incurs
+GPU cost while idle. Redeploying Modal is required for changes to take effect.
 
 The API caches up to 256 query vectors for 15 minutes per process and
 coalesces simultaneous identical embedding calls. It also uses Redis for a

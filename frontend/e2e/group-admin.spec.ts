@@ -20,6 +20,7 @@ test('Group Admin xem hàng chờ, duyệt và ghim bài', async ({ page }) => {
   await expect(approved).toBeVisible();
   await approved.getByRole('button', { name: 'Tùy chọn bài viết' }).click();
   await approved.getByRole('button', { name: 'Ghim bài' }).click();
+  await expect(page.getByText('Đã ghim bài viết thành công!')).toBeVisible();
   await approved.getByRole('button', { name: 'Tùy chọn bài viết' }).click();
   await expect(approved.getByRole('button', { name: 'Bỏ ghim bài' })).toBeVisible();
 });

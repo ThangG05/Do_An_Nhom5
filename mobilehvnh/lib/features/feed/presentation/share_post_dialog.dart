@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/app_config.dart';
+import '../../../core/api_client.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_avatar.dart';
 import '../../chat/domain/repositories/chat_repository.dart';
@@ -148,11 +149,26 @@ class _SharePostDialogState extends State<_SharePostDialog> {
         if (destinationId.isEmpty) {
           throw StateError('Không nhận được mã bài viết chia sẻ.');
         }
-        final result = await widget.feedRepository.registerShare(
-          _postId,
-          destinationType: 'POST',
-          destinationId: destinationId,
-        );
+        Map<String, dynamic> result;
+        try {
+          result = await widget.feedRepository.registerShare(
+            _postId,
+            destinationType: 'POST',
+            destinationId: destinationId,
+          );
+        } catch (error) {
+          // A definite client-side rejection means this destination cannot be
+          // attached to the source post. Remove the caption-only orphan, but
+          // keep it on network/5xx errors where registration may have committed.
+          if (error is ApiException && error.statusCode >= 400 && error.statusCode < 500) {
+            try {
+              await widget.feedRepository.deletePost(destinationId);
+            } catch (_) {
+              // Preserve the original share error for the user.
+            }
+          }
+          rethrow;
+        }
         widget.onSharesUpdated?.call(
           (result['sharesCount'] as num?)?.toInt() ?? 0,
         );

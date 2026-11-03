@@ -1,6 +1,6 @@
 export type MessageStatus = 'sent' | 'delivered' | 'seen';
 
-export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'file';
+export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'file' | 'system';
 
 export interface MessageAttachment {
   id: string;

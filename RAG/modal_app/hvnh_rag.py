@@ -19,6 +19,13 @@ MAX_REQUEST_CHARS = 100_000
 MIN_EMBEDDING_CONTAINERS = int(os.getenv("MODAL_EMBEDDING_MIN_CONTAINERS", "0"))
 if not 0 <= MIN_EMBEDDING_CONTAINERS <= 3:
     raise ValueError("MODAL_EMBEDDING_MIN_CONTAINERS must be between 0 and 3")
+# Keep scale-to-zero as the default; retain a recently-used worker longer to
+# reduce cold starts during active study sessions without paying for an idle GPU all day.
+EMBEDDING_SCALEDOWN_WINDOW_SECONDS = int(
+    os.getenv("MODAL_EMBEDDING_SCALEDOWN_WINDOW_SECONDS", "600")
+)
+if not 60 <= EMBEDDING_SCALEDOWN_WINDOW_SECONDS <= 1800:
+    raise ValueError("MODAL_EMBEDDING_SCALEDOWN_WINDOW_SECONDS must be between 60 and 1800")
 
 
 def download_model() -> None:
@@ -69,7 +76,7 @@ class EmbedResponse(BaseModel):
     image=image,
     gpu="T4",
     timeout=10 * 60,
-    scaledown_window=5 * 60,
+    scaledown_window=EMBEDDING_SCALEDOWN_WINDOW_SECONDS,
     min_containers=MIN_EMBEDDING_CONTAINERS,
     max_containers=3,
 )

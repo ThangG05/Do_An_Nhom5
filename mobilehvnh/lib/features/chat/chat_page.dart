@@ -1201,34 +1201,69 @@ class _ConversationPageState extends State<ConversationPage> {
                         GlobalKey.new,
                       );
                       final mine = item['senderId']?.toString() == _myId;
+                      final isSystem = item['type'] == 'system';
                       final attachments =
                           (item['attachments'] as List?) ?? const [];
                       return GestureDetector(
                         key: messageKey,
-                        onLongPress: item['isRecalled'] == true
+                        onLongPress: isSystem || item['isRecalled'] == true
                             ? null
                             : () => _messageActions(item, mine),
                         child: Align(
-                          alignment: mine
+                          alignment: isSystem
+                              ? Alignment.center
+                              : mine
                               ? Alignment.centerRight
                               : Alignment.centerLeft,
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
-                              vertical: 10,
+                              vertical: 8,
                             ),
                             constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * .76,
+                              maxWidth: MediaQuery.of(context).size.width *
+                                  (isSystem ? .9 : .76),
                             ),
                             decoration: BoxDecoration(
-                              color: mine ? _themeColor : Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: mine
-                                  ? null
-                                  : Border.all(color: const Color(0xffdbe6ee)),
+                              color: isSystem
+                                  ? const Color(0xffedf3f8)
+                                  : mine
+                                      ? _themeColor
+                                      : Colors.white,
+                              borderRadius: BorderRadius.circular(
+                                isSystem ? 999 : 18,
+                              ),
+                              border: isSystem || !mine
+                                  ? Border.all(
+                                      color: const Color(0xffdbe6ee),
+                                    )
+                                  : null,
                             ),
-                            child: Column(
+                            child: isSystem
+                                ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${item['content'] ?? ''}',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: AppTheme.muted,
+                                          fontSize: 12,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        AppDateTime.full(item['timestamp']),
+                                        style: const TextStyle(
+                                          color: Color(0xff8a9bab),
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (item['replyTo'] is Map)

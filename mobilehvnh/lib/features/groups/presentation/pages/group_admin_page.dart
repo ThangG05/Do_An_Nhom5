@@ -239,6 +239,17 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
         pinned: post['isPinned'] != true,
       );
       await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              post['isPinned'] == true
+                  ? 'Đã gỡ ghim bài viết.'
+                  : 'Đã ghim bài viết thành công.',
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -290,6 +301,11 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
         reason: value,
       );
       await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã gỡ bài viết khỏi nhóm thành công.')),
+        );
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -496,32 +512,12 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
                                   repository: widget.feedRepository,
                                   onLike: () {},
                                   showReportAction: false,
-                                ),
-                                Row(
-                                  children: [
-                                    OutlinedButton.icon(
-                                      onPressed: () => _togglePin(post),
-                                      icon: Icon(
-                                        post['isPinned'] == true
-                                            ? Icons.push_pin
-                                            : Icons.push_pin_outlined,
-                                      ),
-                                      label: Text(
-                                        post['isPinned'] == true
-                                            ? 'Bỏ ghim'
-                                            : 'Ghim bài',
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    TextButton.icon(
-                                      onPressed: () => _removePost(post),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.red,
-                                      ),
-                                      icon: const Icon(Icons.delete_outline),
-                                      label: const Text('Gỡ bài'),
-                                    ),
-                                  ],
+                                  groupAdminActions: (
+                                    isPinned: post['isPinned'] == true,
+                                    busy: _loading,
+                                    onTogglePin: () => _togglePin(post),
+                                    onRemove: () => _removePost(post),
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                               ],

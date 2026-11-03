@@ -59,6 +59,23 @@ class _HvnhHubAppState extends State<HvnhHubApp> {
   }
 
   Future<void> _passwordChanged() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+        title: const Text('Đổi mật khẩu thành công'),
+        content: const Text(
+          'Vui lòng đăng nhập lại bằng mật khẩu mới để tiếp tục sử dụng HVNH Hub.',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Đăng nhập lại'),
+          ),
+        ],
+      ),
+    );
     await widget.dependencies.authRepository.signOut();
     if (!mounted) return;
     setState(() {

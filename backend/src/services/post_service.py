@@ -45,7 +45,7 @@ def _can_view(db: Session, post: Post, viewer_id: uuid.UUID) -> bool:
 
 
 def _contains_post_link(content: str | None, post_id: uuid.UUID) -> bool:
-    """The share destination must contain the canonical original-post path."""
+    """A shared message needs a canonical URL; POST destinations use metadata."""
     return bool(re.search(rf"/posts/{re.escape(str(post_id))}(?=$|[/?#\s.,!;:)])", content or "", flags=re.IGNORECASE))
 
 
@@ -57,7 +57,14 @@ def register_share(db: Session, post_id: uuid.UUID, actor: User, payload: Regist
     else:
         destination = db.get(Message, payload.destination_id)
         valid = bool(destination and destination.sender_id == actor.id and destination.deleted_at is None)
-    if not valid or not _contains_post_link(destination.content, post_id):
+    # POST shares are linked by post_shares metadata; their caption must stay
+    # clean because clients render the original post card from sharedPostId.
+    # Message shares still need the canonical URL in message content so the
+    # recipient has a tappable link even outside the shared-post preview.
+    has_required_link = payload.destination_type != "MESSAGE" or _contains_post_link(
+        destination.content, post_id
+    )
+    if not valid or not has_required_link:
         raise HTTPException(400, "Bài viết hoặc tin nhắn chia sẻ không hợp lệ.")
     db.execute(pg_insert(PostShare).values(
         id=uuid.uuid4(), post_id=post_id, actor_id=actor.id,

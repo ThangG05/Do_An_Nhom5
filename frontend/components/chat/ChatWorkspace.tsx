@@ -191,6 +191,13 @@ export default function ChatWorkspace({
         {(searchResults??messages).map((msg) => {
           const isMe = msg.senderId === currentUserId;
 
+          if (msg.type === 'system') {
+            return <div id={`message-${msg.id}`} key={msg.id} className="chat-system-event" role="status">
+              <span>{msg.content}</span>
+              <RelativeTime className="chat-system-event-time" value={msg.timestamp}/>
+            </div>;
+          }
+
           return (
             <div
               id={`message-${msg.id}`}

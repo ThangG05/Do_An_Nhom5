@@ -35,6 +35,43 @@ def test_register_share_rejects_another_users_post() -> None:
     db.execute.assert_not_called()
 
 
+def test_register_post_share_accepts_caption_without_duplicate_url() -> None:
+    actor = SimpleNamespace(id=uuid.uuid4())
+    source_id, destination_id = uuid.uuid4(), uuid.uuid4()
+    db = Mock()
+    db.get.return_value = SimpleNamespace(
+        author_id=actor.id, deleted_at=None, status=PostStatus.APPROVED,
+        group_id=None, content="My caption only",
+    )
+    db.scalar.side_effect = [source_id, 1]
+
+    with patch("src.services.post_service.get_visible_post"):
+        shares_count = register_share(db, source_id, actor, RegisterPostShareRequest(
+            destination_type="POST", destination_id=destination_id,
+        ))
+
+    assert shares_count == 1
+    db.commit.assert_called_once()
+
+
+def test_register_message_share_still_requires_canonical_post_link() -> None:
+    actor = SimpleNamespace(id=uuid.uuid4())
+    source_id, destination_id = uuid.uuid4(), uuid.uuid4()
+    db = Mock()
+    db.get.return_value = SimpleNamespace(
+        sender_id=actor.id, deleted_at=None, content="A message without the link",
+    )
+
+    with patch("src.services.post_service.get_visible_post"):
+        with pytest.raises(HTTPException) as error:
+            register_share(db, source_id, actor, RegisterPostShareRequest(
+                destination_type="MESSAGE", destination_id=destination_id,
+            ))
+
+    assert error.value.status_code == 400
+    db.execute.assert_not_called()
+
+
 def test_post_share_metadata_has_unique_destination() -> None:
     table = PostShare.__table__
     assert {"post_id", "actor_id", "destination_type", "destination_id"} <= set(table.columns.keys())

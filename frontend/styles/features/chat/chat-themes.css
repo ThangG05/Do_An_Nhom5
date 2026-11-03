@@ -21,6 +21,8 @@
 .chat-reply-quote{display:grid;width:100%;min-width:0;gap:2px;margin-bottom:8px;padding:7px 10px;border:0;border-left:3px solid currentColor;border-radius:7px;background:rgba(255,255,255,.2);color:inherit;text-align:left;cursor:pointer}
 .chat-reply-quote strong,.chat-reply-quote span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
 .chat-bubble.them .chat-reply-quote{background:#eaf2f9;color:#244a69}
+.chat-system-event{align-self:center;display:flex;flex-direction:column;align-items:center;gap:3px;max-width:min(92%,620px);margin:7px auto 13px;padding:8px 14px;border:1px solid #dce7f0;border-radius:999px;background:rgba(255,255,255,.82);color:#60758a;font-size:12px;line-height:1.4;text-align:center;box-shadow:0 2px 7px rgba(20,50,80,.04)}
+.chat-system-event-time{font-size:10px;color:#8a9bab}
 .chat-message-actions{display:flex;gap:10px;align-items:center;min-height:20px}
 .outgoing .chat-message-actions{justify-content:flex-end}
 .chat-message-actions button{padding:2px 0;border:0;background:transparent;color:#53718d;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
@@ -36,4 +38,6 @@
 :root[data-theme="dark"] .chat-composer-reply strong,:root[data-theme="dark"] .member-table .member-identity strong{color:#e9f3ff}
 :root[data-theme="dark"] .chat-composer-reply span,:root[data-theme="dark"] .member-table .member-identity small{color:#a9c0d6}
 :root[data-theme="dark"] .chat-bubble.them .chat-reply-quote{background:#253b51;color:#d9ebfa}
+:root[data-theme="dark"] .chat-system-event{background:#203448;border-color:#3b5369;color:#c7d6e3}
+:root[data-theme="dark"] .chat-system-event-time{color:#9fb2c4}
 :root[data-theme="dark"] .message-bubble-row.recalled .chat-bubble{background:#253346!important;border-color:#40546a!important;color:#c3d1df!important}

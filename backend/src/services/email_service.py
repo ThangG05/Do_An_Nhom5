@@ -1,4 +1,5 @@
 import html
+import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -7,6 +8,8 @@ from urllib.parse import quote
 import resend
 
 from src.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class EmailDeliveryError(Exception):
@@ -39,26 +42,54 @@ def _send_smtp(email: str, subject: str, body_html: str) -> None:
             server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
             server.sendmail(sender, [email], message.as_string())
     except (OSError, smtplib.SMTPException) as exc:
+        logger.warning("transactional_email_provider_failed", extra={
+            "provider": "smtp",
+            "error_type": type(exc).__name__,
+            "smtp_code": getattr(exc, "smtp_code", None),
+        })
         raise EmailDeliveryError("Không gửi được email xác thực qua SMTP.") from exc
 
 
 def _send_email(email: str, subject: str, body_html: str) -> None:
+    resend_error: Exception | None = None
+    smtp_error: Exception | None = None
+
+    # Prefer the transactional provider when configured. SMTP remains a fallback,
+    # so a stale Gmail app password cannot prevent delivery through Resend.
+    if settings.RESEND_API_KEY:
+        try:
+            resend.api_key = settings.RESEND_API_KEY
+            resend.Emails.send({
+                "from": settings.RESEND_FROM_EMAIL,
+                "to": [email],
+                "subject": subject,
+                "html": body_html,
+            })
+            return
+        except Exception as exc:
+            resend_error = exc
+            logger.warning("transactional_email_provider_failed", extra={
+                "provider": "resend",
+                "error_type": type(exc).__name__,
+                "status_code": getattr(exc, "status_code", None),
+                "error_code": getattr(exc, "code", None),
+            })
+
     if _smtp_configured():
         try:
             _send_smtp(email, subject, body_html)
             return
-        except EmailDeliveryError:
-            # A stale SMTP configuration should not block delivery when the
-            # independently configured Resend provider is available.
-            if not settings.RESEND_API_KEY:
-                raise
-    if not settings.RESEND_API_KEY:
+        except EmailDeliveryError as exc:
+            smtp_error = exc
+
+    if not settings.RESEND_API_KEY and not _smtp_configured():
         raise EmailDeliveryError("Dịch vụ gửi email chưa được cấu hình.")
-    resend.api_key = settings.RESEND_API_KEY
-    try:
-        resend.Emails.send({"from": settings.RESEND_FROM_EMAIL, "to": [email], "subject": subject, "html": body_html})
-    except Exception as exc:
-        raise EmailDeliveryError("Không gửi được email.") from exc
+
+    logger.error("transactional_email_delivery_exhausted", extra={
+        "resend_error_type": type(resend_error).__name__ if resend_error else None,
+        "smtp_error_type": type(smtp_error).__name__ if smtp_error else None,
+    })
+    raise EmailDeliveryError("Không gửi được email. Vui lòng thử lại sau.") from (resend_error or smtp_error)
 
 
 def _otp_template(*, title: str, intro: str, code: str, expiry_minutes: int, note: str) -> str:

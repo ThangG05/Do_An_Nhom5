@@ -93,12 +93,21 @@ def _messages_batch(db: Session, rows: list[Message], viewer_id: uuid.UUID) -> l
         else:
             viewer_receipt = next((receipt for receipt in message_receipts if receipt.user_id == viewer_id), None)
             status = "seen" if viewer_receipt and viewer_receipt.seen_at else "delivered" if viewer_receipt and viewer_receipt.delivered_at else "sent"
+        content = "Tin nhắn đã được thu hồi" if recalled else message.content or ""
+        if message.message_type == MessageType.SYSTEM and message.sender_id == viewer_id and content:
+            actor_name = (profile.full_name if profile and profile.full_name else
+                          sender.username if sender else "")
+            if actor_name and content.startswith(actor_name):
+                content = "Bạn" + content[len(actor_name):]
+
         result.append(MessageResponse(
             id=str(message.id), conversationId=str(message.conversation_id), senderId=str(message.sender_id or ""),
-            senderName=profile.full_name if profile else sender.username if sender else "Người dùng",
+            senderName=("HVNH Hub" if message.message_type == MessageType.SYSTEM else
+                        profile.full_name if profile else sender.username if sender else "Người dùng"),
             senderAvatar=create_download_url(avatar_media) if avatar_media else "/assets/logo.png",
-            content="Tin nhắn đã được thu hồi" if recalled else message.content or "", timestamp=message.created_at.isoformat(), status=status,
-            type="image" if files and files[0].type == "image" else "file" if files else "text",
+            content=content, timestamp=message.created_at.isoformat(), status=status,
+            type="system" if message.message_type == MessageType.SYSTEM else
+                 "image" if files and files[0].type == "image" else "file" if files else "text",
             attachments=files,
             isRecalled=recalled,
             isEdited=message.edited_at is not None,
@@ -110,6 +119,11 @@ def _messages_batch(db: Session, rows: list[Message], viewer_id: uuid.UUID) -> l
             ) if reply else None,
         ))
     return result
+
+
+def serialize_messages_for_viewer(db: Session, rows: list[Message], viewer_id: uuid.UUID) -> list[MessageResponse]:
+    """Serialize shared chat events with actor-aware wording for each viewer."""
+    return _messages_batch(db, rows, viewer_id)
 
 def list_messages(db,cid,viewer,limit=50,before=None):
     _member(db,cid,viewer.id);_ensure_not_blocked(db,cid,viewer.id);q=select(Message).where(Message.conversation_id==cid);
@@ -260,15 +274,55 @@ def unread_count(db,uid):
                Message.deleted_at.is_(None),ConversationMember.left_at.is_(None),
                ConversationMember.is_muted.is_(False))) or 0
 
-def update_settings(db:Session,cid:uuid.UUID,user:User,payload:ConversationSettingsRequest):
-    member=_member(db,cid,user.id);conv=db.get(Conversation,cid)
-    if payload.theme is not None:conv.theme=payload.theme
-    if payload.is_muted is not None:member.is_muted=payload.is_muted
+def update_settings(db: Session, cid: uuid.UUID, user: User,
+                    payload: ConversationSettingsRequest) -> list[Message]:
+    member = _member(db, cid, user.id)
+    conv = db.get(Conversation, cid)
+    system_messages: list[Message] = []
+    actor_name = user.profile.full_name if user.profile and user.profile.full_name else user.username
+
+    if payload.theme is not None and payload.theme != conv.theme:
+        theme_names = {
+            "blue": "Xanh dương", "indigo": "Chàm", "emerald": "Xanh ngọc",
+            "rose": "Hồng", "violet": "Tím", "amber": "Hổ phách",
+        }
+        conv.theme = payload.theme
+        system_messages.append(Message(
+            conversation_id=cid, sender_id=user.id, message_type=MessageType.SYSTEM,
+            content=f"{actor_name} đã đổi chủ đề cuộc trò chuyện thành {theme_names[payload.theme]}.",
+        ))
+
+    if payload.is_muted is not None:
+        member.is_muted = payload.is_muted
+
     if payload.nickname is not None:
-        other=db.scalar(select(ConversationMember).where(ConversationMember.conversation_id==cid,ConversationMember.user_id!=user.id,ConversationMember.left_at.is_(None)))
-        if not other:raise HTTPException(400,"Không tìm thấy thành viên để đặt biệt danh.")
-        other.nickname=payload.nickname.strip() or None
+        other = db.scalar(select(ConversationMember).where(
+            ConversationMember.conversation_id == cid,
+            ConversationMember.user_id != user.id,
+            ConversationMember.left_at.is_(None),
+        ))
+        if not other:
+            raise HTTPException(400, "Không tìm thấy thành viên để đặt biệt danh.")
+        new_nickname = payload.nickname.strip() or None
+        if other.nickname != new_nickname:
+            target = db.get(User, other.user_id)
+            target_name = (target.profile.full_name if target and target.profile and target.profile.full_name
+                           else target.username if target else "thành viên")
+            other.nickname = new_nickname
+            content = (f'{actor_name} đã đặt biệt danh cho {target_name} là “{new_nickname}”.'
+                       if new_nickname else f"{actor_name} đã xóa biệt danh của {target_name}.")
+            system_messages.append(Message(
+                conversation_id=cid, sender_id=user.id, message_type=MessageType.SYSTEM,
+                content=content,
+            ))
+
+    if system_messages:
+        now = datetime.now(timezone.utc)
+        conv.last_message_at = now
+        conv.updated_at = now
+        db.add_all(system_messages)
     db.commit()
+    return system_messages
 
 def search_messages(db:Session,cid:uuid.UUID,user:User,query:str,limit:int=50):
     _member(db,cid,user.id);_ensure_not_blocked(db,cid,user.id);term=query.strip()
