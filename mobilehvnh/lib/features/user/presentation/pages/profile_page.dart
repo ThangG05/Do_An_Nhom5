@@ -33,6 +33,27 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  static const _faculties = [
+    'Khoa Ngân hàng',
+    'Khoa Tài chính',
+    'Khoa Kế toán - Kiểm toán',
+    'Khoa Quản trị kinh doanh',
+    'Khoa Kinh doanh quốc tế',
+    'Khoa Công nghệ thông tin và Kinh tế số',
+    'Khoa Ngoại ngữ',
+    'Khoa Luật',
+    'Khoa Kinh tế',
+    'Viện Đào tạo quốc tế',
+  ];
+  static const _provinces = [
+    'Hà Nội', 'Cao Bằng', 'Tuyên Quang', 'Điện Biên', 'Lai Châu', 'Sơn La',
+    'Lào Cai', 'Thái Nguyên', 'Lạng Sơn', 'Quảng Ninh', 'Bắc Ninh', 'Phú Thọ',
+    'Hải Phòng', 'Hưng Yên', 'Ninh Bình', 'Thanh Hóa', 'Nghệ An', 'Hà Tĩnh',
+    'Quảng Trị', 'Huế', 'Đà Nẵng', 'Quảng Ngãi', 'Gia Lai', 'Khánh Hòa',
+    'Đắk Lắk', 'Lâm Đồng', 'Đồng Nai', 'Thành phố Hồ Chí Minh', 'Tây Ninh',
+    'Đồng Tháp', 'Vĩnh Long', 'An Giang', 'Cần Thơ', 'Cà Mau',
+  ];
+
   Map<String, dynamic>? _profile;
   String? _error;
   bool _updatingAvatar = false;
@@ -58,59 +79,177 @@ class _ProfilePageState extends State<ProfilePage> {
     if (_profile == null) return;
     final name = TextEditingController(text: _profile!['name']?.toString());
     final bio = TextEditingController(text: _profile!['bio']?.toString());
+    final pronouns = TextEditingController(text: _profile!['pronouns']?.toString());
+    final workplace = TextEditingController(text: _profile!['workplace']?.toString());
+    final facebook = TextEditingController(text: _socialLink('facebook'));
+    final instagram = TextEditingController(text: _socialLink('instagram'));
+    final linkedin = TextEditingController(text: _socialLink('linkedin'));
+    var faculty = _profile!['faculty']?.toString() ?? '';
+    var currentCity = _profile!['currentCity']?.toString() ?? '';
+    var hometown = _profile!['hometown']?.toString() ?? '';
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          20,
-          20,
-          20 + MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Chỉnh sửa hồ sơ',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: name,
-              decoration: const InputDecoration(labelText: 'Họ và tên'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: bio,
-              maxLines: 4,
-              decoration: const InputDecoration(labelText: 'Giới thiệu'),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => Navigator.pop(sheetContext, true),
-              child: const Text('Lưu thay đổi'),
-            ),
-          ],
-        ),
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (sheetContext) => SizedBox(
+          height: (MediaQuery.sizeOf(sheetContext).height -
+                  MediaQuery.of(sheetContext).viewInsets.bottom) *
+              .88,
+          child: StatefulBuilder(
+            builder: (context, setSheetState) => Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 10, bottom: 8),
+                  child: SizedBox(width: 38, child: Divider(thickness: 3)),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Chỉnh sửa hồ sơ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                    children: [
+                      _editSection('Thông tin cơ bản'),
+                      TextField(controller: name, maxLength: 150, decoration: const InputDecoration(labelText: 'Họ và tên')),
+                      const SizedBox(height: 10),
+                      TextField(controller: pronouns, maxLength: 50, decoration: const InputDecoration(labelText: 'Danh xưng / Pronouns', hintText: 'she/her, he/him...')),
+                      const SizedBox(height: 10),
+                      TextField(controller: bio, maxLength: 150, maxLines: 3, decoration: const InputDecoration(labelText: 'Tiểu sử')),
+                      _editSection('Học vấn & công việc'),
+                      DropdownButtonFormField<String>(
+                        value: _dropdownValue(faculty, _faculties),
+                        decoration: const InputDecoration(labelText: 'Khoa / Chuyên ngành'),
+                        items: _dropdownItems(faculty, _faculties, 'Chọn khoa/chuyên ngành'),
+                        onChanged: (value) => setSheetState(() => faculty = value ?? ''),
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(initialValue: 'Học viện Ngân hàng (BAV)', readOnly: true, decoration: const InputDecoration(labelText: 'Trường đại học')),
+                      const SizedBox(height: 10),
+                      TextFormField(initialValue: _courseYear(), readOnly: true, decoration: const InputDecoration(labelText: 'Khóa học', helperText: 'Tự xác định từ mã sinh viên.')),
+                      const SizedBox(height: 10),
+                      TextField(controller: workplace, maxLength: 150, decoration: const InputDecoration(labelText: 'Nơi làm việc / CLB')),
+                      _editSection('Tỉnh / Thành phố'),
+                      DropdownButtonFormField<String>(
+                        value: _dropdownValue(currentCity, _provinces),
+                        decoration: const InputDecoration(labelText: 'Nơi ở hiện tại'),
+                        items: _dropdownItems(currentCity, _provinces, 'Chọn tỉnh/thành phố'),
+                        onChanged: (value) => setSheetState(() => currentCity = value ?? ''),
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<String>(
+                        value: _dropdownValue(hometown, _provinces),
+                        decoration: const InputDecoration(labelText: 'Quê quán'),
+                        items: _dropdownItems(hometown, _provinces, 'Chọn tỉnh/thành phố'),
+                        onChanged: (value) => setSheetState(() => hometown = value ?? ''),
+                      ),
+                      _editSection('Liên kết mạng xã hội'),
+                      TextField(controller: facebook, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Facebook URL', hintText: 'https://facebook.com/...')),
+                      const SizedBox(height: 10),
+                      TextField(controller: instagram, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Instagram URL', hintText: 'https://instagram.com/...')),
+                      const SizedBox(height: 10),
+                      TextField(controller: linkedin, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'LinkedIn URL', hintText: 'https://linkedin.com/in/...')),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(sheetContext, true),
+                      child: const Text('Lưu thay đổi'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
     );
     if (saved == true) {
       try {
         await widget.repository.updateMyProfile({
           'name': name.text.trim(),
           'bio': bio.text.trim(),
+          'pronouns': pronouns.text.trim(),
+          'faculty': faculty,
+          'workplace': workplace.text.trim(),
+          'currentCity': currentCity,
+          'hometown': hometown,
+          'socialLinks': {
+            'facebook': _normalizeUrl(facebook.text),
+            'instagram': _normalizeUrl(instagram.text),
+            'linkedin': _normalizeUrl(linkedin.text),
+          },
         });
         await _load();
       } finally {
         name.dispose();
         bio.dispose();
+        pronouns.dispose();
+        workplace.dispose();
+        facebook.dispose();
+        instagram.dispose();
+        linkedin.dispose();
       }
     } else {
       name.dispose();
       bio.dispose();
+      pronouns.dispose();
+      workplace.dispose();
+      facebook.dispose();
+      instagram.dispose();
+      linkedin.dispose();
     }
+  }
+
+  String _socialLink(String key) {
+    final links = _profile?['socialLinks'];
+    return links is Map ? links[key]?.toString() ?? '' : '';
+  }
+
+  String _courseYear() {
+    final code = _profile?['studentCode']?.toString() ?? '';
+    final match = RegExp(r'^(\d{2})').firstMatch(code.trim());
+    if (match == null) return _profile?['courseYear']?.toString() ?? '';
+    final cohort = int.tryParse(match.group(1)!);
+    if (cohort == null || cohort < 18 || cohort > 60) return '';
+    final start = 1997 + cohort;
+    return 'K$cohort ($start-${start + 4})';
+  }
+
+  String? _dropdownValue(String value, List<String> options) =>
+      value.isNotEmpty && options.contains(value) ? value : null;
+
+  List<DropdownMenuItem<String>> _dropdownItems(
+    String value,
+    List<String> options,
+    String prompt,
+  ) => [
+    DropdownMenuItem<String>(value: '', child: Text(prompt)),
+    if (value.isNotEmpty && !options.contains(value))
+      DropdownMenuItem<String>(value: value, child: Text(value)),
+    ...options.map((option) => DropdownMenuItem(value: option, child: Text(option))),
+  ];
+
+  Widget _editSection(String title) => Padding(
+    padding: const EdgeInsets.only(top: 20, bottom: 10),
+    child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+  );
+
+  String _normalizeUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || RegExp(r'^https?://', caseSensitive: false).hasMatch(trimmed)) return trimmed;
+    return 'https://$trimmed';
   }
 
   Future<void> _pickAvatar() async {
@@ -312,10 +451,14 @@ class _ProfilePageState extends State<ProfilePage> {
     final current = TextEditingController();
     final next = TextEditingController();
     final confirm = TextEditingController();
+    var hideCurrent = true;
+    var hideNext = true;
+    var hideConfirm = true;
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => Padding(
+    builder: (sheetContext) => StatefulBuilder(
+      builder: (context, setSheetState) => Padding(
         padding: EdgeInsets.fromLTRB(
           20,
           20,
@@ -337,21 +480,40 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
             TextField(
               controller: current,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Mật khẩu hiện tại'),
+              obscureText: hideCurrent,
+              decoration: InputDecoration(
+                labelText: 'Mật khẩu hiện tại',
+                suffixIcon: IconButton(
+                  tooltip: 'Hiện/ẩn mật khẩu hiện tại',
+                  onPressed: () => setSheetState(() => hideCurrent = !hideCurrent),
+                  icon: Icon(hideCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: next,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
+              obscureText: hideNext,
+              decoration: InputDecoration(
+                labelText: 'Mật khẩu mới',
+                suffixIcon: IconButton(
+                  tooltip: 'Hiện/ẩn mật khẩu mới',
+                  onPressed: () => setSheetState(() => hideNext = !hideNext),
+                  icon: Icon(hideNext ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: confirm,
-              obscureText: true,
-              decoration: const InputDecoration(
+              obscureText: hideConfirm,
+              decoration: InputDecoration(
                 labelText: 'Nhập lại mật khẩu mới',
+                suffixIcon: IconButton(
+                  tooltip: 'Hiện/ẩn mật khẩu xác nhận',
+                  onPressed: () => setSheetState(() => hideConfirm = !hideConfirm),
+                  icon: Icon(hideConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -361,6 +523,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
+      ),
       ),
     );
     if (saved != true) {

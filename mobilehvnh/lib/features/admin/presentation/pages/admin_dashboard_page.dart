@@ -92,44 +92,64 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     String status = user['status']?.toString() == 'LOCKED'
         ? 'ACTIVE'
         : 'LOCKED';
+    String? validationError;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cập nhật trạng thái tài khoản'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: status,
-              items: const [
-                DropdownMenuItem(value: 'ACTIVE', child: Text('Hoạt động')),
-                DropdownMenuItem(value: 'LOCKED', child: Text('Khóa')),
-                DropdownMenuItem(value: 'DISABLED', child: Text('Vô hiệu hóa')),
-              ],
-              onChanged: (value) => status = value ?? status,
-              decoration: const InputDecoration(labelText: 'Trạng thái'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reason,
-              minLines: 2,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Lý do (ít nhất 3 ký tự)',
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Cập nhật trạng thái tài khoản'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: status,
+                items: const [
+                  DropdownMenuItem(value: 'ACTIVE', child: Text('Hoạt động')),
+                  DropdownMenuItem(value: 'LOCKED', child: Text('Khóa')),
+                  DropdownMenuItem(value: 'DISABLED', child: Text('Vô hiệu hóa')),
+                ],
+                onChanged: (value) => setDialogState(() {
+                  status = value ?? status;
+                }),
+                decoration: const InputDecoration(labelText: 'Trạng thái'),
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reason,
+                minLines: 2,
+                maxLines: 4,
+                maxLength: 2000,
+                onChanged: (_) {
+                  if (validationError != null) {
+                    setDialogState(() => validationError = null);
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: 'Lý do (ít nhất 3 ký tự)',
+                  errorText: validationError,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (reason.text.trim().length < 3) {
+                  setDialogState(
+                    () => validationError = 'Vui lòng nhập lý do từ 3 ký tự.',
+                  );
+                  return;
+                }
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Cập nhật'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Cập nhật'),
-          ),
-        ],
       ),
     );
     if (confirmed != true) {
@@ -501,7 +521,7 @@ class _ReportQueuePageState extends State<_ReportQueuePage> {
   List<Map<String, dynamic>> _reports = [];
   String? _error;
   bool _loading = true;
-  String? _status = 'PENDING';
+  String? _status = 'OPEN';
 
   @override
   void initState() {
@@ -526,7 +546,9 @@ class _ReportQueuePageState extends State<_ReportQueuePage> {
     String decision,
     String action,
   ) async {
-    final alreadyRemoved = report['target_removed'] == true;
+    final targetType = '${report['target_type'] ?? ''}'.toUpperCase();
+    final isContentReport = targetType == 'POST' || targetType == 'COMMENT';
+    final alreadyRemoved = isContentReport && report['target_removed'] == true;
     final note = TextEditingController();
     final confirmed = alreadyRemoved
         ? true
@@ -534,7 +556,7 @@ class _ReportQueuePageState extends State<_ReportQueuePage> {
             context: context,
             builder: (dialogContext) => AlertDialog(
               title: Text(
-                decision == 'REJECT' ? 'Từ chối báo cáo' : 'Xử lý báo cáo',
+                decision == 'REJECT' ? 'Bác bỏ báo cáo' : 'Xử lý báo cáo',
               ),
               content: TextField(
                 controller: note,
@@ -589,19 +611,14 @@ class _ReportQueuePageState extends State<_ReportQueuePage> {
     appBar: const AppPageBar(title: 'Báo cáo vi phạm'),
     body: Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: SegmentedButton<String?>(
-            segments: const [
-              ButtonSegment(value: 'PENDING', label: Text('Chờ xử lý')),
-              ButtonSegment(value: 'RESOLVED', label: Text('Đã xử lý')),
-              ButtonSegment(value: null, label: Text('Tất cả')),
-            ],
-            selected: {_status},
-            onSelectionChanged: (value) {
-              _status = value.first;
-              _load();
-            },
+        const Padding(
+          padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Chip(
+              avatar: Icon(Icons.hourglass_top_rounded, size: 18),
+              label: Text('Chờ xử lý'),
+            ),
           ),
         ),
         Expanded(
@@ -640,42 +657,61 @@ class _ReportQueuePageState extends State<_ReportQueuePage> {
                                       final parts = value.split(':');
                                       _resolve(report, parts[0], parts[1]);
                                     },
-                                    itemBuilder: (_) =>
-                                        report['target_removed'] == true
-                                        ? const [
-                                            PopupMenuItem(
-                                              value: 'RESOLVE:NONE',
-                                              child: Text(
-                                                'Kết thúc · nội dung đã gỡ',
-                                              ),
+                                    itemBuilder: (_) {
+                                      final targetType =
+                                          '${report['target_type'] ?? ''}'
+                                              .toUpperCase();
+                                      final isContentReport =
+                                          targetType == 'POST' ||
+                                          targetType == 'COMMENT';
+                                      if (isContentReport &&
+                                          report['target_removed'] == true) {
+                                        return const [
+                                          PopupMenuItem(
+                                            value: 'RESOLVE:NONE',
+                                            child: Text(
+                                              'Kết thúc · nội dung đã gỡ',
                                             ),
-                                          ]
-                                        : const [
-                                            PopupMenuItem(
-                                              value: 'RESOLVE:NONE',
-                                              child: Text(
-                                                'Đóng, không áp dụng biện pháp',
-                                              ),
+                                          ),
+                                        ];
+                                      }
+                                      if (isContentReport) {
+                                        return const [
+                                          PopupMenuItem(
+                                            value: 'REJECT:NONE',
+                                            child: Text('Bác bỏ'),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'RESOLVE:HIDE_CONTENT',
+                                            child: Text(
+                                              'Xác nhận & gỡ nội dung',
                                             ),
-                                            PopupMenuItem(
-                                              value: 'RESOLVE:HIDE_CONTENT',
-                                              child: Text('Ẩn nội dung'),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'RESOLVE:LOCK_USER',
-                                              child: Text('Khóa tài khoản'),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'RESOLVE:DISABLE_USER',
-                                              child: Text(
-                                                'Vô hiệu hóa tài khoản',
-                                              ),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'REJECT:NONE',
-                                              child: Text('Từ chối báo cáo'),
-                                            ),
-                                          ],
+                                          ),
+                                        ];
+                                      }
+                                      return const [
+                                        PopupMenuItem(
+                                          value: 'RESOLVE:NONE',
+                                          child: Text(
+                                            'Đóng, không áp dụng biện pháp',
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'RESOLVE:LOCK_USER',
+                                          child: Text('Khóa tài khoản'),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'RESOLVE:DISABLE_USER',
+                                          child: Text(
+                                            'Vô hiệu hóa tài khoản',
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'REJECT:NONE',
+                                          child: Text('Bác bỏ'),
+                                        ),
+                                      ];
+                                    },
                                   ),
                                 ],
                               ),

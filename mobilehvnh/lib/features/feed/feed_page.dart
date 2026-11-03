@@ -467,6 +467,7 @@ class _FeedPageState extends State<FeedPage> {
                               padding: EdgeInsets.only(top: 13),
                               child: Divider(),
                             ),
+                            const SizedBox(height: 8),
                             SizedBox(
                               height: 48,
                               child: ListView(
@@ -2083,6 +2084,77 @@ class _CommentSheetState extends State<CommentSheet> {
     await _load();
   }
 
+  Future<void> _reportComment(Map item) async {
+    final controller = TextEditingController();
+    String? errorText;
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Báo cáo bình luận'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                minLines: 3,
+                maxLines: 5,
+                maxLength: 1000,
+                onChanged: (_) {
+                  if (errorText != null) {
+                    setDialogState(() => errorText = null);
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: 'Lý do báo cáo',
+                  hintText: 'Mô tả nội dung bình luận vi phạm...',
+                  errorText: errorText,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = controller.text.trim();
+                if (value.length < 3) {
+                  setDialogState(
+                    () => errorText = 'Vui lòng nhập lý do từ 3 ký tự.',
+                  );
+                  return;
+                }
+                Navigator.pop(dialogContext, value);
+              },
+              child: const Text('Gửi báo cáo'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (reason == null || !mounted) return;
+    try {
+      await widget.repository.reportComment('${item['id']}', reason);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã gửi báo cáo bình luận tới quản trị viên.')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
+  }
+
   Future<void> _editComment(Map item) async {
     final controller = TextEditingController(text: '${item['content'] ?? ''}');
     var saving = false;
@@ -2326,26 +2398,34 @@ class _CommentSheetState extends State<CommentSheet> {
                                   ],
                                 ),
                               ),
-                              if (mine)
-                                PopupMenuButton<String>(
-                                  padding: EdgeInsets.zero,
-                                  onSelected: (value) {
-                                    if (value == 'edit') _editComment(item);
-                                    if (value == 'delete') {
-                                      _remove('${item['id']}');
-                                    }
-                                  },
-                                  itemBuilder: (_) => const [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text('Sửa bình luận'),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('Xóa bình luận'),
-                                    ),
-                                  ],
-                                ),
+                              PopupMenuButton<String>(
+                                padding: EdgeInsets.zero,
+                                tooltip: 'Tùy chọn bình luận',
+                                onSelected: (value) {
+                                  if (value == 'edit') _editComment(item);
+                                  if (value == 'delete') {
+                                    _remove('${item['id']}');
+                                  }
+                                  if (value == 'report') _reportComment(item);
+                                },
+                                itemBuilder: (_) => mine
+                                    ? const [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Text('Sửa bình luận'),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Text('Xóa bình luận'),
+                                        ),
+                                      ]
+                                    : const [
+                                        PopupMenuItem(
+                                          value: 'report',
+                                          child: Text('Báo cáo bình luận'),
+                                        ),
+                                      ],
+                              ),
                             ],
                           ),
                         );

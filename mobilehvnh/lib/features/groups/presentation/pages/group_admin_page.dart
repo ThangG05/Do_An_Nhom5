@@ -69,12 +69,17 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
     }
   }
 
-  Future<void> _moderate(String postId, bool approved) async {
+  Future<void> _moderate(
+    String postId,
+    bool approved, {
+    String? reason,
+  }) async {
     try {
       await widget.groupRepository.moderatePost(
         widget.groupId,
         postId,
         approved: approved,
+        reason: reason,
       );
       await _load();
     } catch (error) {
@@ -84,6 +89,58 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
         ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     }
+  }
+
+  Future<void> _rejectPost(String postId) async {
+    final controller = TextEditingController();
+    String? error;
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Từ chối bài viết'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Nhập lý do để người đăng biết vì sao bài viết bị từ chối.'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                minLines: 2,
+                maxLines: 4,
+                maxLength: 2000,
+                decoration: InputDecoration(
+                  hintText: 'Lý do từ chối...',
+                  errorText: error,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Hủy'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = controller.text.trim();
+                if (value.length < 3) {
+                  setDialogState(() => error = 'Vui lòng nhập lý do từ 3 ký tự.');
+                  return;
+                }
+                Navigator.pop(dialogContext, value);
+              },
+              child: const Text('Xác nhận từ chối'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (reason == null) return;
+    await _moderate(postId, false, reason: reason);
   }
 
   Future<void> _resolveReport(Map<String, dynamic> report, bool hide) async {
@@ -481,7 +538,7 @@ class _GroupAdminPageState extends State<GroupAdminPage> {
                                   children: [
                                     TextButton(
                                       onPressed: () =>
-                                          _moderate('${post['id']}', false),
+                                          _rejectPost('${post['id']}'),
                                       child: const Text('Từ chối'),
                                     ),
                                     FilledButton.icon(

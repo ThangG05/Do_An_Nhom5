@@ -92,7 +92,12 @@ class AdminRepositoryImpl implements AdminRepository {
   Future<Map<String, dynamic>> updateMaintenance({
     required bool enabled,
     required String message,
-  }) => _remote.updateMaintenance(enabled: enabled, message: message);
+    DateTime? expectedEndAt,
+  }) => _remote.updateMaintenance(
+    enabled: enabled,
+    message: message,
+    expectedEndAt: expectedEndAt,
+  );
 
   @override
   Future<List<Map<String, dynamic>>> getKeywords() => _maps(_remote.keywords());

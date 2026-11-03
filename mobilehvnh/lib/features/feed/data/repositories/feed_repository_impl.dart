@@ -148,6 +148,10 @@ class FeedRepositoryImpl implements FeedRepository {
   @override
   Future<void> reportPost(String id, String reason) =>
       _remote.reportPost(id, reason);
+
+  @override
+  Future<void> reportComment(String id, String reason) =>
+      _remote.reportComment(id, reason);
   @override
   Future<Map<String, dynamic>> updateComment(
     String id, {

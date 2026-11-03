@@ -42,6 +42,9 @@ class _SystemSettingsPageState extends State<SystemSettingsPage> {
   Future<void> _editMaintenance() async {
     final current = _maintenance ?? const <String, dynamic>{};
     var enabled = current['enabled'] == true;
+    DateTime? expectedEndAt = DateTime.tryParse(
+      current['expected_end_at']?.toString() ?? '',
+    )?.toLocal();
     final message = TextEditingController(
       text:
           current['message']?.toString() ??
@@ -69,6 +72,62 @@ class _SystemSettingsPageState extends State<SystemSettingsPage> {
                   labelText: 'Thông báo hiển thị cho người dùng',
                 ),
               ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Tự động mở lại'),
+                subtitle: Text(
+                  expectedEndAt == null
+                      ? 'Chưa chọn thời điểm'
+                      : '${MaterialLocalizations.of(context).formatMediumDate(expectedEndAt!)} · ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(expectedEndAt!))}',
+                ),
+                trailing: Wrap(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (expectedEndAt != null)
+                      IconButton(
+                        tooltip: 'Xóa thời điểm mở lại',
+                        onPressed: () => setDialogState(() => expectedEndAt = null),
+                        icon: const Icon(Icons.close),
+                      ),
+                    IconButton(
+                      tooltip: 'Chọn ngày và giờ mở lại',
+                      onPressed: !enabled
+                          ? null
+                          : () async {
+                              final now = DateTime.now();
+                              final today = DateTime(now.year, now.month, now.day);
+                              final proposed = expectedEndAt ?? now.add(const Duration(days: 1));
+                              final initial = proposed.isBefore(today)
+                                  ? now.add(const Duration(days: 1))
+                                  : proposed;
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: initial,
+                                firstDate: DateTime(now.year, now.month, now.day),
+                                lastDate: DateTime(now.year + 5),
+                              );
+                              if (date == null || !context.mounted) return;
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.fromDateTime(initial),
+                              );
+                              if (time == null) return;
+                              setDialogState(() {
+                                expectedEndAt = DateTime(
+                                  date.year,
+                                  date.month,
+                                  date.day,
+                                  time.hour,
+                                  time.minute,
+                                );
+                              });
+                            },
+                      icon: const Icon(Icons.calendar_month_outlined),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
@@ -92,6 +151,7 @@ class _SystemSettingsPageState extends State<SystemSettingsPage> {
         await widget.repository.updateMaintenance(
           enabled: enabled,
           message: message.text.trim(),
+          expectedEndAt: enabled ? expectedEndAt?.toUtc() : null,
         );
         await _load();
       } catch (error) {

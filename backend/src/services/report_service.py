@@ -152,7 +152,18 @@ def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveReques
                      else payload.note.strip())
     db.execute(text("UPDATE reports SET status=:status,handled_by=:admin,resolution_note=:note,handled_at=now() WHERE id=:id"),{"status":final,"admin":user.id,"note":resolution_note,"id":report_id})
     db.execute(text("INSERT INTO audit_logs(actor_id,action,target_type,target_id,metadata) VALUES(:actor,'REPORT_HANDLED','REPORT',:id,CAST(:meta AS jsonb))"),{"actor":user.id,"id":report_id,"meta":json.dumps({"decision":payload.decision,"action":payload.action},ensure_ascii=False)})
-    if report["reporter_id"]: db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Kết quả báo cáo',:content,:actor,'REPORT',:id)"),{"uid":report["reporter_id"],"content":resolution_note,"actor":user.id,"id":report_id})
+    report_target_label = {
+        "POST": "bài viết",
+        "COMMENT": "bình luận",
+        "USER": "người dùng",
+    }.get(str(report["target_type"]), "nội dung")
+    reporter_message = (
+        f"Báo cáo {report_target_label} được phê duyệt."
+        if payload.decision == "RESOLVE"
+        else f"Báo cáo {report_target_label} bị bác bỏ."
+    )
+    if report["reporter_id"]:
+        db.execute(text("INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id) VALUES(:uid,'SYSTEM','Kết quả báo cáo',:content,:actor,'REPORT',:id)"),{"uid":report["reporter_id"],"content":reporter_message,"actor":user.id,"id":report_id})
     if payload.decision == "RESOLVE" and payload.action == "HIDE_CONTENT":
         kind = str(report["target_type"])
         owner_id = db.scalar(text(
@@ -160,10 +171,13 @@ def resolve(db:Session,user:User,report_id:uuid.UUID,payload:ReportResolveReques
             "SELECT user_id FROM comments WHERE id=:id"
         ), {"id": report["target_id"]})
         if owner_id:
-            title = "Bài viết của bạn đã bị gỡ" if kind == "POST" else "Bình luận của bạn đã bị gỡ"
+            actor_label = "Super Admin" if user.system_role == SystemRole.SUPER_ADMIN else "Group Admin"
+            content_label = "Bài viết" if kind == "POST" else "Bình luận"
+            title = f"{content_label} của bạn đã bị gỡ"
+            notification_message = f"{content_label} của bạn đã bị {actor_label} gỡ. Lý do: {resolution_note}"
             db.execute(text("""INSERT INTO notifications(user_id,type,title,content,actor_id,reference_type,reference_id)
                 VALUES(:uid,'SYSTEM',:title,:content,:actor,'REPORT',:id)"""),
-                {"uid": owner_id, "title": title, "content": f"Lý do: {resolution_note}",
+                {"uid": owner_id, "title": title, "content": notification_message,
                  "actor": user.id, "id": report_id})
     db.commit()
     return notice or "Đã xử lý báo cáo."

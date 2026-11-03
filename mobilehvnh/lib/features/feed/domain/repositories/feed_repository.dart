@@ -47,6 +47,7 @@ abstract interface class FeedRepository {
   });
   Future<void> deletePost(String postId);
   Future<void> reportPost(String postId, String reason);
+  Future<void> reportComment(String commentId, String reason);
   Future<Map<String, dynamic>> updateComment(
     String commentId, {
     required String content,

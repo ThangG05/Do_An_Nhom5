@@ -25,6 +25,9 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
     final confirmed = TextEditingController();
     String? error;
     var saving = false;
+    var hideCurrent = true;
+    var hideNext = true;
+    var hideConfirmation = true;
     final changed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -36,23 +39,58 @@ class _PrivacySettingsPageState extends State<PrivacySettingsPage> {
               children: [
                 TextField(
                   controller: current,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: hideCurrent,
+                  decoration: InputDecoration(
                     labelText: 'Mật khẩu hiện tại',
+                    suffixIcon: IconButton(
+                      tooltip: 'Hiện/ẩn mật khẩu hiện tại',
+                      onPressed: () => setDialogState(
+                        () => hideCurrent = !hideCurrent,
+                      ),
+                      icon: Icon(
+                        hideCurrent
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: next,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
+                  obscureText: hideNext,
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu mới',
+                    suffixIcon: IconButton(
+                      tooltip: 'Hiện/ẩn mật khẩu mới',
+                      onPressed: () => setDialogState(
+                        () => hideNext = !hideNext,
+                      ),
+                      icon: Icon(
+                        hideNext
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: confirmed,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: hideConfirmation,
+                  decoration: InputDecoration(
                     labelText: 'Nhập lại mật khẩu mới',
+                    suffixIcon: IconButton(
+                      tooltip: 'Hiện/ẩn mật khẩu xác nhận',
+                      onPressed: () => setDialogState(
+                        () => hideConfirmation = !hideConfirmation,
+                      ),
+                      icon: Icon(
+                        hideConfirmation
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    ),
                   ),
                 ),
                 if (error != null) ...[

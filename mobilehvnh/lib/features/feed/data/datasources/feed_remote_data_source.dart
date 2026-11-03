@@ -73,6 +73,12 @@ class FeedRemoteDataSource {
         'target_id': id,
         'reason': reason,
       });
+  Future<void> reportComment(String id, String reason) async =>
+      _apiClient.postAuthenticated('/reports', {
+        'target_type': 'COMMENT',
+        'target_id': id,
+        'reason': reason,
+      });
   Future<Map<String, dynamic>> updateComment(String id, String content) =>
       _apiClient.patch('/posts/comments/$id', {'content': content});
   Future<void> deleteComment(String id) =>

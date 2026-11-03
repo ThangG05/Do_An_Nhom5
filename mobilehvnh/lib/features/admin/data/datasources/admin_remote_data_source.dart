@@ -91,9 +91,11 @@ class AdminRemoteDataSource {
   Future<Map<String, dynamic>> updateMaintenance({
     required bool enabled,
     required String message,
+    DateTime? expectedEndAt,
   }) => _api.put('/system/admin/maintenance', {
     'enabled': enabled,
     'message': message,
+    'expected_end_at': expectedEndAt?.toIso8601String(),
   });
 
   Future<List<dynamic>> keywords() => _api.getList('/system/admin/keywords');

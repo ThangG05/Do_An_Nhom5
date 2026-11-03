@@ -278,7 +278,36 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
         ),
       ),
     );
-    if (remove == true && mounted) await _friendship('unfriend');
+    if (remove != true || !mounted) return;
+
+    final name = _profile?['full_name']?.toString() ??
+        _profile?['name']?.toString() ??
+        'người này';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.person_remove_outlined, color: Colors.red),
+        title: const Text('Xác nhận hủy kết bạn'),
+        content: Text(
+          'Bạn có chắc muốn hủy kết bạn với $name không? Hai người sẽ không còn hiển thị trong danh sách bạn bè của nhau.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Không'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xffc9363e),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Hủy kết bạn'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) await _friendship('unfriend');
   }
 
   Widget _infoLine(IconData icon, String label, String value) => Padding(

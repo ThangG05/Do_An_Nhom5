@@ -40,6 +40,7 @@ abstract interface class AdminRepository {
   Future<Map<String, dynamic>> updateMaintenance({
     required bool enabled,
     required String message,
+    DateTime? expectedEndAt,
   });
   Future<List<Map<String, dynamic>>> getKeywords();
   Future<void> createKeyword({required String keyword, required String action});
