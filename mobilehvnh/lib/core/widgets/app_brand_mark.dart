@@ -8,7 +8,7 @@ class AppBrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Image.asset(
-    'assets/brand/hvnh-logo.png',
+    'assets/brand/hvnh-official-logo.png',
     width: size,
     height: size,
     fit: BoxFit.contain,

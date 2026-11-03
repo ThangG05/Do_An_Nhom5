@@ -31,7 +31,7 @@ class AppNetworkImage extends StatelessWidget {
     final source = url.trim();
     if (source == '/assets/logo.png') {
       return Image.asset(
-        'assets/brand/hvnh-logo.png',
+        'assets/brand/hvnh-official-logo.png',
         width: width,
         height: height,
         fit: fit,

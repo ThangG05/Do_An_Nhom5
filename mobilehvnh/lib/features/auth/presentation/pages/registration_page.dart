@@ -4,9 +4,6 @@ import '../../../../app/di/app_dependencies.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/utils/hvnh_email.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/app_brand_mark.dart';
-import '../../../../core/widgets/app_back_button.dart';
-import '../../../../core/widgets/app_page_bar.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({
@@ -107,197 +104,373 @@ class _RegistrationPageState extends State<RegistrationPage> {
         ? 'Mã gồm 4 chữ số đã gửi tới ${_email.text.trim()}.'
         : 'Kiểm tra và hoàn tất thông tin tài khoản của bạn.';
     return Scaffold(
-      appBar: AppPageBar(
-        leading: AppBackButton(
-          onPressed: () {
-            if (_busy) return;
-            if (_step > 0) {
-              setState(() {
-                _step--;
-                _error = null;
-              });
-            } else {
-              Navigator.of(context).maybePop();
-            }
-          },
-        ),
-        title: 'Tạo tài khoản',
-      ),
+      backgroundColor: AppTheme.canvas,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      gradient: const LinearGradient(
-                        colors: [Color(0xff071e36), Color(0xff155784)],
-                      ),
-                    ),
-                    child: const Row(
+        child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
                       children: [
-                        AppBrandMark(size: 42),
-                        SizedBox(width: 13),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'HVNH Hub',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              SizedBox(height: 3),
-                              Text(
-                                'Một tài khoản cho mọi kết nối',
-                                style: TextStyle(
-                                  color: Color(0xffc9deec),
-                                  fontSize: 12,
-                                ),
+                        IconButton.filledTonal(
+                          tooltip: _step > 0 ? 'Bước trước' : 'Quay lại',
+                          onPressed: _busy
+                              ? null
+                              : () {
+                                  if (_step > 0) {
+                                    setState(() {
+                                      _step--;
+                                      _error = null;
+                                    });
+                                  } else {
+                                    Navigator.of(context).maybePop();
+                                  }
+                                },
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Tạo tài khoản',
+                            style: TextStyle(
+                              color: AppTheme.ink,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${_step + 1}/3',
+                          style: const TextStyle(
+                            color: AppTheme.muted,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 26),
+                    Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xffe0eaf1)),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x10122f4d),
+                                blurRadius: 12,
+                                offset: Offset(0, 4),
                               ),
                             ],
                           ),
+                          child: Image.asset(
+                            'assets/brand/hvnh-official-logo.png',
+                            fit: BoxFit.contain,
+                            semanticLabel: 'Logo chính thức Học viện Ngân hàng',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'HVNH Hub',
+                              style: TextStyle(
+                                color: AppTheme.ink,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              'KHÔNG GIAN KẾT NỐI SINH VIÊN',
+                              style: TextStyle(
+                                color: AppTheme.muted,
+                                fontSize: 9,
+                                letterSpacing: 1,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(21, 25, 21, 22),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0xffdbe6ee)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'BƯỚC ${_step + 1} / 3',
-                          style: const TextStyle(
-                            color: AppTheme.blue,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1,
+                    const SizedBox(height: 25),
+                    _RegistrationProgress(step: _step),
+                    const SizedBox(height: 17),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(26),
+                        border: Border.all(color: const Color(0xffdfe8ef)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x10122f4d),
+                            blurRadius: 28,
+                            offset: Offset(0, 12),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        LinearProgressIndicator(
-                          value: (_step + 1) / 3,
-                          minHeight: 5,
-                          borderRadius: BorderRadius.circular(5),
-                          backgroundColor: const Color(0xffe6eef3),
-                          color: AppTheme.blue,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          description,
-                          style: const TextStyle(
-                            color: AppTheme.muted,
-                            height: 1.45,
-                          ),
-                        ),
-                        const SizedBox(height: 23),
-                        if (_step == 0)
-                          TextField(
-                            controller: _email,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'Email @hvnh.edu.vn',
-                              prefixIcon: Icon(Icons.mail_outline),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            ['THAM GIA HVNH HUB', 'XÁC MINH EMAIL', 'THÔNG TIN CỦA BẠN'][_step],
+                            style: const TextStyle(
+                              color: AppTheme.blue,
+                              fontSize: 10,
+                              letterSpacing: 1.4,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
-                        if (_step == 1)
-                          TextField(
-                            controller: _code,
-                            keyboardType: TextInputType.number,
-                            maxLength: 4,
-                            autofocus: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Mã OTP',
-                              prefixIcon: Icon(Icons.password_outlined),
-                            ),
-                          ),
-                        if (_step == 2) ...[
-                          TextField(
-                            controller: _name,
-                            textCapitalization: TextCapitalization.words,
-                            decoration: const InputDecoration(
-                              labelText: 'Họ và tên',
-                              prefixIcon: Icon(Icons.person_outline),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _password,
-                            obscureText: _obscure,
-                            decoration: InputDecoration(
-                              labelText: 'Mật khẩu tối thiểu 8 ký tự',
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              suffixIcon: IconButton(
-                                onPressed: () =>
-                                    setState(() => _obscure = !_obscure),
-                                icon: Icon(
-                                  _obscure
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                ),
+                          const SizedBox(height: 8),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            child: Text(
+                              title,
+                              key: ValueKey(_step),
+                              style: const TextStyle(
+                                color: AppTheme.ink,
+                                fontSize: 27,
+                                height: 1.15,
+                                letterSpacing: -.7,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            description,
+                            style: const TextStyle(
+                              color: AppTheme.muted,
+                              height: 1.55,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 25),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                            child: Column(
+                              key: ValueKey('fields-$_step'),
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (_step == 0)
+                                  TextField(
+                                    controller: _email,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.done,
+                                    autocorrect: false,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Email sinh viên',
+                                      hintText: 'mssv@hvnh.edu.vn',
+                                      prefixIcon: Icon(Icons.alternate_email),
+                                      suffixIcon: Icon(Icons.verified_user_outlined),
+                                    ),
+                                  ),
+                                if (_step == 1)
+                                  TextField(
+                                    controller: _code,
+                                    keyboardType: TextInputType.number,
+                                    textInputAction: TextInputAction.done,
+                                    maxLength: 4,
+                                    autofocus: true,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 14,
+                                      color: AppTheme.ink,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Mã xác thực 4 số',
+                                      hintText: '••••',
+                                      counterText: '',
+                                      prefixIcon: Icon(Icons.shield_outlined),
+                                    ),
+                                  ),
+                                if (_step == 2) ...[
+                                  TextField(
+                                    controller: _name,
+                                    textCapitalization: TextCapitalization.words,
+                                    textInputAction: TextInputAction.next,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Họ và tên',
+                                      hintText: 'Tên hiển thị của bạn',
+                                      prefixIcon: Icon(Icons.person_outline),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  TextField(
+                                    controller: _password,
+                                    obscureText: _obscure,
+                                    textInputAction: TextInputAction.done,
+                                    decoration: InputDecoration(
+                                      labelText: 'Mật khẩu',
+                                      hintText: 'Tối thiểu 8 ký tự',
+                                      prefixIcon: const Icon(Icons.lock_outline),
+                                      suffixIcon: IconButton(
+                                        tooltip: _obscure ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
+                                        onPressed: () => setState(() => _obscure = !_obscure),
+                                        icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Hãy dùng mật khẩu riêng, khó đoán để bảo vệ tài khoản.',
+                                    style: TextStyle(color: AppTheme.muted, fontSize: 11, height: 1.45),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 14),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xfffff1f1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xffffd1d1)),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.error_outline, color: Color(0xffbd3434), size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(_error!, style: const TextStyle(color: Color(0xffa52e35), fontSize: 12, height: 1.4))),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 22),
+                          SizedBox(
+                            height: 52,
+                            child: FilledButton.icon(
+                              onPressed: _busy ? null : _continue,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppTheme.navy,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              icon: _busy
+                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : Icon(_step == 2 ? Icons.person_add_alt_1 : Icons.arrow_forward_rounded, size: 19),
+                              label: Text(
+                                _busy
+                                    ? 'Đang xử lý...'
+                                    : _step == 0
+                                    ? 'Gửi mã xác thực'
+                                    : _step == 1
+                                    ? 'Xác nhận email'
+                                    : 'Tạo tài khoản',
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          ),
+                          if (_step == 1)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: TextButton(
+                                onPressed: _busy ? null : () => setState(() { _step = 0; _error = null; }),
+                                child: const Text('Gửi mã tới email khác'),
+                              ),
+                            ),
                         ],
-                        if (_error != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text(
-                              _error!,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        const SizedBox(height: 20),
-                        FilledButton(
-                          onPressed: _busy ? null : _continue,
-                          child: Padding(
-                            padding: const EdgeInsets.all(13),
-                            child: Text(
-                              _busy
-                                  ? 'Đang xử lý...'
-                                  : _step == 2
-                                  ? 'Tạo tài khoản'
-                                  : 'Tiếp tục',
-                            ),
-                          ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.lock_outline, color: AppTheme.muted, size: 14),
+                        SizedBox(width: 6),
+                        Text(
+                          'Chỉ sử dụng email sinh viên @hvnh.edu.vn',
+                          style: TextStyle(color: AppTheme.muted, fontSize: 11),
                         ),
-                        if (_step > 0)
-                          TextButton(
-                            onPressed: _busy
-                                ? null
-                                : () => setState(() => _step--),
-                            child: const Text('Bước trước'),
-                          ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ),
       ),
     );
   }
+}
+
+class _RegistrationProgress extends StatelessWidget {
+  const _RegistrationProgress({required this.step});
+  final int step;
+
+  static const _labels = ['Email', 'Xác thực', 'Hồ sơ'];
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      for (var index = 0; index < _labels.length; index++) ...[
+        Expanded(
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: 27,
+                height: 27,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: index <= step ? AppTheme.navy : Colors.white,
+                  border: Border.all(
+                    color: index <= step ? AppTheme.navy : const Color(0xffd4e0e9),
+                  ),
+                ),
+                child: index < step
+                    ? const Icon(Icons.check_rounded, color: Colors.white, size: 15)
+                    : Text(
+                        '${index + 1}',
+                        style: TextStyle(
+                          color: index == step ? Colors.white : AppTheme.muted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  _labels[index],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: index <= step ? AppTheme.ink : AppTheme.muted,
+                    fontSize: 10,
+                    fontWeight: index == step ? FontWeight.w800 : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (index < _labels.length - 1)
+          Container(
+            width: 20,
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 5),
+            color: index < step ? AppTheme.blue : const Color(0xffdbe4eb),
+          ),
+      ],
+    ],
+  );
 }

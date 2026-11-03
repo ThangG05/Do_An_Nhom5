@@ -67,6 +67,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brand/hvnh-logo.png
+    - assets/brand/hvnh-official-logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
