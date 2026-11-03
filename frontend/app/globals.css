@@ -1052,6 +1052,16 @@ button {
   gap: 24px;
 }
 
+.otp-expiry {
+  margin: -8px 0 -12px;
+  color: #5c7390;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.otp-expiry.is-expired { color: #c53939; }
+
 .code-inputs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

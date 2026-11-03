@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     REGISTRATION_TOKEN_EXPIRE_MINUTES: int = 10
-    OTP_EXPIRE_MINUTES: int = 10
+    OTP_EXPIRE_MINUTES: int = 5
     OTP_RESEND_COOLDOWN_SECONDS: int = 60
     ALLOWED_EMAIL_DOMAIN: str = "hvnh.edu.vn"
     CORS_ORIGINS: str = "http://localhost:3000"

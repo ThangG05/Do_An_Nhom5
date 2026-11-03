@@ -26,6 +26,10 @@ export default function SignupForm() {
     setMessage("");
     try {
       await requestRegistrationCode(normalizedEmail);
+      window.sessionStorage.setItem(
+        `hvnh-registration-otp-expires:${normalizedEmail}`,
+        String(Date.now() + 5 * 60 * 1000),
+      );
       router.push(`/verification?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không thể gửi mã xác thực.");

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/di/app_dependencies.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/utils/hvnh_email.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/otp_code_input.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({
@@ -29,6 +32,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _obscure = true;
   String? _registrationToken;
   String? _error;
+  Timer? _otpTimer;
+  DateTime? _otpExpiresAt;
+  DateTime? _resendAvailableAt;
+  int _otpSecondsLeft = 0;
+  int _resendSecondsLeft = 0;
+  int _otpVersion = 0;
 
   @override
   void dispose() {
@@ -36,7 +45,61 @@ class _RegistrationPageState extends State<RegistrationPage> {
     _code.dispose();
     _name.dispose();
     _password.dispose();
+    _otpTimer?.cancel();
     super.dispose();
+  }
+
+  String _formatDuration(int seconds) =>
+      '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
+
+  void _startOtpCountdown() {
+    _otpTimer?.cancel();
+    final now = DateTime.now();
+    _otpExpiresAt = now.add(const Duration(minutes: 5));
+    _resendAvailableAt = now.add(const Duration(seconds: 60));
+    setState(() {
+      _otpSecondsLeft = 300;
+      _resendSecondsLeft = 60;
+      _otpVersion++;
+      _code.clear();
+    });
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final current = DateTime.now();
+      setState(() {
+        _otpSecondsLeft = _remaining(_otpExpiresAt, current);
+        _resendSecondsLeft = _remaining(_resendAvailableAt, current);
+      });
+      if (_otpSecondsLeft == 0 && _resendSecondsLeft == 0) timer.cancel();
+    });
+  }
+
+  int _remaining(DateTime? deadline, DateTime now) {
+    if (deadline == null) return 0;
+    final seconds = deadline.difference(now).inSeconds;
+    return seconds > 0 ? seconds : 0;
+  }
+
+  Future<void> _resendCode() async {
+    if (_busy || _resendSecondsLeft > 0) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.dependencies.authRepository
+          .requestRegistrationCode(_email.text.trim().toLowerCase());
+      _startOtpCountdown();
+    } on ApiException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Không thể gửi lại mã OTP.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _continue() async {
@@ -54,8 +117,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
           );
         }
         await widget.dependencies.authRepository.requestRegistrationCode(email);
+        _startOtpCountdown();
         setState(() => _step = 1);
       } else if (_step == 1) {
+        if (_otpSecondsLeft <= 0) {
+          throw const ApiException('Mã xác thực đã hết hạn. Hãy gửi lại mã mới.', 400);
+        }
         final data = await widget.dependencies.authRepository
             .verifyRegistrationCode(email, _code.text.trim());
         _registrationToken = data['registration_token']?.toString();
@@ -278,25 +345,40 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                     ),
                                   ),
                                 if (_step == 1)
-                                  TextField(
-                                    controller: _code,
-                                    keyboardType: TextInputType.number,
-                                    textInputAction: TextInputAction.done,
-                                    maxLength: 4,
-                                    autofocus: true,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 14,
-                                      color: AppTheme.ink,
-                                    ),
-                                    decoration: const InputDecoration(
-                                      labelText: 'Mã xác thực 4 số',
-                                      hintText: '••••',
-                                      counterText: '',
-                                      prefixIcon: Icon(Icons.shield_outlined),
-                                    ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.timer_outlined, size: 16, color: AppTheme.blue),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              _otpSecondsLeft > 0
+                                                  ? 'Mã có hiệu lực ${_formatDuration(_otpSecondsLeft)}'
+                                                  : 'Mã OTP đã hết hạn',
+                                              style: TextStyle(
+                                                color: _otpSecondsLeft > 0 ? AppTheme.muted : const Color(0xffbd3434),
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: _busy || _resendSecondsLeft > 0 ? null : _resendCode,
+                                            child: Text(_resendSecondsLeft > 0
+                                                ? 'Gửi lại ${_formatDuration(_resendSecondsLeft)}'
+                                                : 'Gửi lại mã'),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      OtpCodeInput(
+                                        key: ValueKey('registration-otp-$_otpVersion'),
+                                        autofocus: true,
+                                        onChanged: (value) => _code.text = value,
+                                      ),
+                                    ],
                                   ),
                                 if (_step == 2) ...[
                                   TextField(

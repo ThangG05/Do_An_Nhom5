@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/app_page_bar.dart';
 
 import '../../../../app/di/app_dependencies.dart';
 import '../../../../core/api_client.dart';
 import '../../../../core/utils/hvnh_email.dart';
+import '../../../../core/widgets/otp_code_input.dart';
 
 class PasswordResetPage extends StatefulWidget {
   const PasswordResetPage({super.key, required this.dependencies});
@@ -23,13 +26,78 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
   bool _obscure = true;
   String? _message;
   String? _error;
+  Timer? _otpTimer;
+  DateTime? _otpExpiresAt;
+  DateTime? _resendAvailableAt;
+  int _otpSecondsLeft = 0;
+  int _resendSecondsLeft = 0;
+  int _otpVersion = 0;
 
   @override
   void dispose() {
     _email.dispose();
     _code.dispose();
     _password.dispose();
+    _otpTimer?.cancel();
     super.dispose();
+  }
+
+  String _formatDuration(int seconds) =>
+      '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
+
+  int _remaining(DateTime? deadline, DateTime now) {
+    if (deadline == null) return 0;
+    final seconds = deadline.difference(now).inSeconds;
+    return seconds > 0 ? seconds : 0;
+  }
+
+  void _startOtpCountdown() {
+    _otpTimer?.cancel();
+    final now = DateTime.now();
+    _otpExpiresAt = now.add(const Duration(minutes: 5));
+    _resendAvailableAt = now.add(const Duration(seconds: 60));
+    setState(() {
+      _otpSecondsLeft = 300;
+      _resendSecondsLeft = 60;
+      _otpVersion++;
+      _code.clear();
+    });
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final current = DateTime.now();
+      setState(() {
+        _otpSecondsLeft = _remaining(_otpExpiresAt, current);
+        _resendSecondsLeft = _remaining(_resendAvailableAt, current);
+      });
+      if (_otpSecondsLeft == 0 && _resendSecondsLeft == 0) timer.cancel();
+    });
+  }
+
+  Future<void> _resendCode() async {
+    if (_busy || _resendSecondsLeft > 0) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+      _message = null;
+    });
+    try {
+      await widget.dependencies.authRepository.requestPasswordReset(
+        _email.text.trim().toLowerCase(),
+      );
+      _startOtpCountdown();
+      if (mounted) {
+        setState(() => _message = 'Mã OTP mới đã được gửi nếu tài khoản hợp lệ.');
+      }
+    } on ApiException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Không thể gửi lại mã OTP.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _requestCode() async {
@@ -47,6 +115,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
     try {
       await widget.dependencies.authRepository.requestPasswordReset(email);
       if (mounted) {
+        _startOtpCountdown();
         setState(() {
           _sent = true;
           _message = 'Nếu tài khoản hợp lệ, mã OTP đã được gửi tới email.';
@@ -60,6 +129,10 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
   }
 
   Future<void> _reset() async {
+    if (_otpSecondsLeft <= 0) {
+      setState(() => _error = 'Mã OTP đã hết hạn. Hãy gửi lại mã mới.');
+      return;
+    }
     if (_code.text.trim().length != 4 || _password.text.length < 8) {
       setState(
         () => _error = 'Nhập mã gồm 4 chữ số và mật khẩu tối thiểu 8 ký tự.',
@@ -126,15 +199,34 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                 ),
                 if (_sent) ...[
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: _code,
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
+                  Row(
+                    children: [
+                      const Icon(Icons.timer_outlined, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _otpSecondsLeft > 0
+                              ? 'Mã có hiệu lực ${_formatDuration(_otpSecondsLeft)}'
+                              : 'Mã OTP đã hết hạn',
+                          style: TextStyle(
+                            color: _otpSecondsLeft > 0 ? null : Colors.red,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _busy || _resendSecondsLeft > 0 ? null : _resendCode,
+                        child: Text(_resendSecondsLeft > 0
+                            ? 'Gửi lại ${_formatDuration(_resendSecondsLeft)}'
+                            : 'Gửi lại mã'),
+                      ),
+                    ],
+                  ),
+                  OtpCodeInput(
+                    key: ValueKey('password-reset-otp-$_otpVersion'),
                     autofocus: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Mã xác thực',
-                      prefixIcon: Icon(Icons.password_outlined),
-                    ),
+                    onChanged: (value) => _code.text = value,
                   ),
                   const SizedBox(height: 12),
                   TextField(
