@@ -23,12 +23,11 @@ const formatSize = (bytes: number) => bytes >= 1024 * 1024
 const formatDate = (value: string) => new Intl.DateTimeFormat("vi-VN", {
   dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh",
 }).format(new Date(value));
-const sha256File = async (file: File) => {
-  if (!globalThis.crypto?.subtle) throw new Error("Trình duyệt hiện tại không hỗ trợ kiểm tra file an toàn.");
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", await file.arrayBuffer());
-  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+type SelectedFileDuplicate = {
+  exactPending: number; exactApproved: number; exactWithinSelection: boolean;
+  nearCount: number; nearPending: number; nearApproved: number; nearWithinSelection: number;
+  minHamming: number | null; textScanStatus: "SCANNED" | "NO_TEXT" | "UNSUPPORTED";
 };
-type SelectedFileDuplicate = { pending: number; approved: number; withinSelection: boolean };
 
 export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount = 0, reportCount = 0 }: {
   groupId: string; isAdmin: boolean; canRead: boolean; pendingCount?: number; reportCount?: number;
@@ -56,6 +55,7 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   const [files, setFiles] = useState<File[]>([]);
   const [duplicateScan, setDuplicateScan] = useState<"idle" | "checking" | "done" | "failed">("idle");
   const [duplicateFileStates, setDuplicateFileStates] = useState<Map<File, SelectedFileDuplicate>>(new Map());
+  const [nearDuplicateAcknowledged, setNearDuplicateAcknowledged] = useState(false);
   const duplicateCheckId = useRef(0);
   const [showForm, setShowForm] = useState(false);
   const [rejecting, setRejecting] = useState("");
@@ -85,6 +85,7 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
     setDescription("");
     setFiles([]);
     setDuplicateFileStates(new Map());
+    setNearDuplicateAcknowledged(false);
     setDuplicateScan("idle");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -92,30 +93,30 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   const checkDuplicates = async (selectedFiles: File[]) => {
     const checkId = ++duplicateCheckId.current;
     setDuplicateFileStates(new Map());
+    setNearDuplicateAcknowledged(false);
     if (!selectedFiles.length) { setDuplicateScan("idle"); return; }
     setDuplicateScan("checking");
     try {
-      const fingerprints: { file: File; sha256: string }[] = [];
-      for (const file of selectedFiles) fingerprints.push({ file, sha256: await sha256File(file) });
-      const frequencies = new Map<string, number>();
-      for (const fingerprint of fingerprints) frequencies.set(
-        fingerprint.sha256, (frequencies.get(fingerprint.sha256) ?? 0) + 1,
-      );
-      const existing = await checkStudyFileDuplicates(
-        groupId, [...new Set(fingerprints.map(item => item.sha256))],
-      );
+      const existing = await checkStudyFileDuplicates(groupId, selectedFiles);
       if (checkId !== duplicateCheckId.current) return;
-      const matches = new Map(existing.matches.map(match => [match.sha256, match]));
       const nextStates = new Map<File, SelectedFileDuplicate>();
-      for (const { file, sha256 } of fingerprints) {
-        const match = matches.get(sha256);
-        const withinSelection = (frequencies.get(sha256) ?? 0) > 1;
-        if (match || withinSelection) nextStates.set(file, {
-          pending: match?.pending_count ?? 0,
-          approved: match?.approved_count ?? 0,
-          withinSelection,
-        });
-      }
+      selectedFiles.forEach((file, index) => {
+        const match = existing.matches[index];
+        if (!match) return;
+        if (match.exact_duplicate_count || match.exact_within_selection_count || match.near_duplicate_count || match.near_within_selection_count) {
+          nextStates.set(file, {
+            exactPending: match.exact_pending_count,
+            exactApproved: match.exact_approved_count,
+            exactWithinSelection: match.exact_within_selection_count > 0,
+            nearCount: match.near_duplicate_count,
+            nearPending: match.near_pending_count,
+            nearApproved: match.near_approved_count,
+            nearWithinSelection: match.near_within_selection_count,
+            minHamming: match.min_hamming_distance,
+            textScanStatus: match.text_scan_status,
+          });
+        }
+      });
       setDuplicateFileStates(nextStates);
       setDuplicateScan("done");
     } catch {
@@ -193,8 +194,14 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (duplicateScan === "checking") return;
-    if (duplicateFileStates.size > 0) {
-      setError("Có file trùng trong kho hoặc trong danh sách đang chọn. Hãy gỡ file được cảnh báo trước khi chia sẻ.");
+    const exactDuplicate = [...duplicateFileStates.values()].some(item => item.exactPending + item.exactApproved > 0 || item.exactWithinSelection);
+    const nearDuplicate = [...duplicateFileStates.values()].some(item => item.nearCount > 0 || item.nearWithinSelection > 0);
+    if (exactDuplicate) {
+      setError("Phát hiện tài liệu trùng khớp hoàn toàn. Hãy gỡ file trùng trước khi chia sẻ.");
+      return;
+    }
+    if (nearDuplicate && !nearDuplicateAcknowledged) {
+      setError("Vui lòng xác nhận đã xem cảnh báo tài liệu có thể gần trùng.");
       return;
     }
     if (!uploadMajorId || !uploadSubjectId || !documentType || title.trim().length < 5 || !files.length || totalBytes > LIMIT || files.length > 10) return;
@@ -312,18 +319,22 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
       <div className={styles.fileSummary}><span>{files.length ? `${files.length} tệp đã chọn` : "Chưa có file"}</span><strong className={totalBytes > LIMIT ? styles.over : ""}>{formatSize(totalBytes)} / 50 MB</strong></div>
       {files.length > 0 && <ul className={styles.selectedFiles} aria-label="Tệp đã chọn để chia sẻ">{files.map((file, index) => {
         const duplicate = duplicateFileStates.get(file);
-        return <li key={`${file.name}-${file.lastModified}-${index}`}><span className={styles.selectedFileIcon} aria-hidden="true">▤</span><span className={styles.selectedFileInfo}><strong title={file.name}>{file.name}</strong><small>{formatSize(file.size)}</small>{duplicate && <small className={styles.duplicateWarning}>⚠ {duplicate.withinSelection ? "Trùng với file khác đang chọn" : "Đã có file trùng trong kho Học tập"}{duplicate.pending > 0 && ` · ${duplicate.pending} bản chờ duyệt`}{duplicate.approved > 0 && ` · ${duplicate.approved} bản đã duyệt`}</small>}</span><button type="button" disabled={busy} onClick={() => removeFile(index)} aria-label={`Gỡ tệp ${file.name}`} title="Gỡ tệp khỏi danh sách">Gỡ</button></li>;
+        const exact = duplicate && (duplicate.exactPending + duplicate.exactApproved > 0 || duplicate.exactWithinSelection);
+        const near = duplicate && (duplicate.nearCount > 0 || duplicate.nearWithinSelection > 0);
+        const scanNotice = duplicate?.textScanStatus === "OCR_SCANNED" ? "Đã OCR để so SimHash" : duplicate?.textScanStatus === "OCR_UNAVAILABLE" ? "Modal OCR chưa khả dụng · hiện chỉ so SHA-256" : duplicate && ["NO_TEXT", "UNSUPPORTED"].includes(duplicate.textScanStatus) ? "Không trích được chữ · hiện chỉ so SHA-256" : null;
+        return <li key={`${file.name}-${file.lastModified}-${index}`}><span className={styles.selectedFileIcon} aria-hidden="true">▤</span><span className={styles.selectedFileInfo}><strong title={file.name}>{file.name}</strong><small>{formatSize(file.size)}</small>{scanNotice && <small>{scanNotice}</small>}{exact && <small className={styles.duplicateWarning}>⛔ Trùng khớp chính xác SHA-256{duplicate.exactWithinSelection ? " · trùng trong danh sách chọn" : ""}{duplicate.exactPending > 0 && ` · ${duplicate.exactPending} bản chờ duyệt`}{duplicate.exactApproved > 0 && ` · ${duplicate.exactApproved} bản đã duyệt`}</small>}{near && <small className={styles.duplicateWarning}>⚠ Có thể gần trùng (SimHash, khoảng cách {duplicate.minHamming ?? "≤10"}){duplicate.nearWithinSelection > 0 && " · có bản gần giống trong danh sách chọn"}{duplicate.nearPending > 0 && ` · ${duplicate.nearPending} bản chờ duyệt`}{duplicate.nearApproved > 0 && ` · ${duplicate.nearApproved} bản đã duyệt`}</small>}</span><button type="button" disabled={busy} onClick={() => removeFile(index)} aria-label={`Gỡ tệp ${file.name}`} title="Gỡ tệp khỏi danh sách">Gỡ</button></li>;
       })}</ul>}
-      {files.length > 0 && <p className={duplicateFileStates.size ? styles.duplicateWarning : styles.duplicateStatus} role="status">
-        {duplicateScan === "checking" ? "Đang kiểm tra file trùng trong kho Học tập…" : duplicateFileStates.size ? "Không thể gửi khi còn file trùng. Gỡ các file được cảnh báo để tiếp tục." : duplicateScan === "failed" ? "Chưa kiểm tra được lúc chọn file; hệ thống sẽ kiểm tra lại trước khi tải lên." : duplicateScan === "done" ? "Đã kiểm tra: chưa thấy file trùng trong kho Học tập." : ""}
+      {files.length > 0 && <p className={styles.duplicateStatus} role="status">
+        {duplicateScan === "checking" ? "Đang kiểm tra file trùng trong kho Học tập (PDF scan/ảnh có thể cần OCR)…" : duplicateScan === "failed" ? "Chưa kiểm tra được lúc chọn file; hệ thống vẫn kiểm tra SHA-256 trước khi lưu." : duplicateScan === "done" ? "Đã kiểm tra SHA-256 và SimHash. Ảnh/PDF scan được OCR nếu Modal sẵn sàng; nếu OCR lỗi, phần văn bản chỉ được Group Admin xem thủ công." : ""}
       </p>}
+      {duplicateScan === "done" && [...duplicateFileStates.values()].some(item => item.nearCount > 0 || item.nearWithinSelection > 0) && ![...duplicateFileStates.values()].some(item => item.exactPending + item.exactApproved > 0 || item.exactWithinSelection) && <label className={styles.duplicateStatus}><input type="checkbox" checked={nearDuplicateAcknowledged} onChange={event => setNearDuplicateAcknowledged(event.target.checked)} /> Tôi đã xem cảnh báo gần trùng và vẫn muốn gửi để Group Admin xem xét.</label>}
       <label>Tiêu đề tài liệu <b>*</b><input value={title} onChange={event => setTitle(event.target.value)} placeholder="Ví dụ: Bài tập SQL chương 1–3" minLength={5} maxLength={120} required /></label>
       <label>Mô tả <span>(tùy chọn)</span><textarea value={description} onChange={event => setDescription(event.target.value)} rows={3} maxLength={500} placeholder="Ví dụ: Tài liệu gồm bài tập SQL chương 1–3, dùng để ôn giữa kỳ." /></label>
       <p className={styles.metadataPreview}>Xem trước: {uploadSubjectName || "Chưa chọn môn"} · {documentType ? documentTypeLabel[documentType] : "Chưa chọn loại"}{assessmentType ? ` · ${assessmentTypeLabel[assessmentType]}` : ""}</p>
       {totalBytes > LIMIT && <p className={styles.fileLimitWarning} role="alert">Tổng dung lượng vượt 50 MB. Hãy gỡ bớt tệp trước khi gửi.</p>}
       {files.length > 10 && <p className={styles.fileLimitWarning} role="alert">Chỉ được chia sẻ tối đa 10 tệp. Hãy gỡ bớt tệp trước khi gửi.</p>}
       {files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || "")) && <p className={styles.error}>Có file không thuộc định dạng được hỗ trợ.</p>}
-      <div className={styles.formFoot}><small>Tối đa 10 file, tổng 50 MB. File gốc được lưu riêng tư trên R2.</small><button className={styles.primary} disabled={busy || duplicateScan === "checking" || duplicateFileStates.size > 0 || !uploadMajorId || !uploadSubjectId || !documentType || title.trim().length < 5 || !files.length || files.length > 10 || totalBytes > LIMIT || files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || ""))}>{busy ? "Đang gửi…" : duplicateScan === "checking" ? "Đang kiểm tra file…" : isAdmin ? "Chia sẻ ngay" : "Gửi tài liệu để duyệt"}</button></div>
+      <div className={styles.formFoot}><small>Tối đa 10 file, tổng 50 MB. File gốc được lưu riêng tư trên R2.</small><button className={styles.primary} disabled={busy || duplicateScan === "checking" || [...duplicateFileStates.values()].some(item => item.exactPending + item.exactApproved > 0 || item.exactWithinSelection) || ([...duplicateFileStates.values()].some(item => item.nearCount > 0 || item.nearWithinSelection > 0) && !nearDuplicateAcknowledged) || !uploadMajorId || !uploadSubjectId || !documentType || title.trim().length < 5 || !files.length || files.length > 10 || totalBytes > LIMIT || files.some(file => !ALLOWED.has(file.name.split(".").pop()?.toLowerCase() || ""))}>{busy ? "Đang gửi…" : duplicateScan === "checking" ? "Đang kiểm tra file…" : isAdmin ? "Chia sẻ ngay" : "Gửi tài liệu để duyệt"}</button></div>
     </form>}
     <nav className={styles.tabs} aria-label="Danh mục kho tài liệu"><button className={tab === "browse" ? styles.active : ""} onClick={() => { setTab("browse"); setOffset(0); }}>Tài liệu đã duyệt</button><button className={tab === "mine" ? styles.active : ""} onClick={() => { setTab("mine"); setOffset(0); }}>Tài liệu của tôi</button>{isAdmin && <><button className={tab === "pending" ? styles.active : ""} onClick={() => { setTab("pending"); setOffset(0); }}>Chờ duyệt{pendingCount > 0 && <span className={styles.pendingBadge}>{pendingCount}</span>}</button><button className={tab === "reports" ? styles.active : ""} onClick={() => { setTab("reports"); setOffset(0); }}>Tố cáo{reportCount > 0 && <span className={styles.pendingBadge}>{reportCount}</span>}</button></>}</nav>
     <div hidden={tab !== "browse"}><div className={styles.filters}><input value={query} onChange={event => { setQuery(event.target.value); setOffset(0); }} placeholder="Tìm tên tài liệu hoặc môn học…" aria-label="Tìm tài liệu"/>
@@ -343,6 +354,8 @@ export default function StudyLibrary({ groupId, isAdmin, canRead, pendingCount =
         {aiAssessments[doc.id]?.reason && <p>{aiAssessments[doc.id].reason}</p>}
         {aiAssessments[doc.id]?.file_results?.map(file => <div className={styles.aiFile} key={file.file_id}>
           <strong>{file.file_name} · {file.recommendation === "APPROVE" ? "Phù hợp" : file.recommendation === "REJECT" ? "Có dấu hiệu cần từ chối" : "Cần xem kỹ"}</strong>
+          {file.ocr_used && <small>Đã OCR nội dung ảnh/PDF scan{file.ocr_engine ? ` · ${file.ocr_engine}` : ""}.</small>}
+          {file.error_code === "OCR_UNAVAILABLE" && <small>OCR chưa thực hiện được; cần Group Admin xem file gốc.</small>}
           <p>{file.reason}{file.sampling_limited && " · Chỉ đọc được một phần, cần kiểm tra file gốc."}</p>{file.evidence_quote && <blockquote>{file.evidence_location && <b>{file.evidence_location}: </b>}“{file.evidence_quote}”</blockquote>}
           <div className={styles.copyrightSignals}>
             <strong>Dấu hiệu tác giả / nguồn / bản quyền · {file.copyright_status === "SUSPECTED" ? "Cần xác minh" : "Chưa đủ căn cứ"}</strong>

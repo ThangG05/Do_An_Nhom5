@@ -51,6 +51,38 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
   final _files = <PlatformFile>[];
   String? _error;
   bool _submitting = false;
+  bool _checkingDuplicates = false;
+  bool _nearDuplicateAcknowledged = false;
+  List<Map<String, dynamic>> _duplicateMatches = [];
+  int _duplicateCheckId = 0;
+
+  bool get _hasExactDuplicate => _duplicateMatches.any((match) =>
+      (match['exact_duplicate_count'] as num? ?? 0) > 0 ||
+      (match['exact_within_selection_count'] as num? ?? 0) > 0);
+  bool get _hasNearDuplicate => _duplicateMatches.any((match) =>
+      (match['near_duplicate_count'] as num? ?? 0) > 0 ||
+      (match['near_within_selection_count'] as num? ?? 0) > 0);
+
+  Future<void> _checkDuplicates(List<PlatformFile> files) async {
+    final checkId = ++_duplicateCheckId;
+    if (files.isEmpty) {
+      setState(() { _duplicateMatches = []; _checkingDuplicates = false; _nearDuplicateAcknowledged = false; });
+      return;
+    }
+    setState(() { _checkingDuplicates = true; _duplicateMatches = []; _nearDuplicateAcknowledged = false; });
+    try {
+      final result = await widget.repository.checkStudyFileDuplicates(
+        widget.groupId,
+        files.map((file) => GroupUploadFile(name: file.name, size: file.size, path: platformFilePath(file), bytes: file.bytes)).toList(),
+      );
+      if (!mounted || checkId != _duplicateCheckId) return;
+      setState(() => _duplicateMatches = (result['matches'] as List? ?? []).whereType<Map>().map((row) => Map<String, dynamic>.from(row)).toList());
+    } catch (_) {
+      if (mounted && checkId == _duplicateCheckId) setState(() => _error = 'Chưa kiểm tra được tài liệu lúc chọn file; hệ thống vẫn kiểm tra SHA-256 trước khi lưu.');
+    } finally {
+      if (mounted && checkId == _duplicateCheckId) setState(() => _checkingDuplicates = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -126,6 +158,7 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
             );
         }
       });
+      await _checkDuplicates(List<PlatformFile>.from(_files));
     } catch (_) {
       if (mounted)
         setState(() => _error = 'Chưa chọn được tệp. Vui lòng thử lại.');
@@ -134,6 +167,7 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
 
   Future<void> _submit() async {
     if (_submitting) return;
+    if (_checkingDuplicates) return;
     final bytes = _files.fold<int>(0, (sum, file) => sum + file.size);
     String? error;
     if (_major == null)
@@ -146,6 +180,10 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
       error = 'Vui lòng đính kèm ít nhất một tệp.';
     else if (bytes > 50 * 1024 * 1024)
       error = 'Tổng dung lượng vượt 50 MB.';
+    else if (_hasExactDuplicate)
+      error = 'Có tài liệu trùng khớp chính xác. Hãy gỡ tệp trùng trước khi chia sẻ.';
+    else if (_hasNearDuplicate && !_nearDuplicateAcknowledged)
+      error = 'Vui lòng xác nhận đã xem cảnh báo tài liệu có thể gần trùng.';
     else if (_title.text.trim().length < 5 || _title.text.trim().length > 120) {
       error = 'Tiêu đề cần từ 5 đến 120 ký tự.';
     }
@@ -292,6 +330,16 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
                   '${_files.length}/10 tệp · ${(bytes / (1024 * 1024)).toStringAsFixed(1)} / 50 MB',
                   style: const TextStyle(color: Colors.blueGrey, fontSize: 12),
                 ),
+                if (_files.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      _checkingDuplicates
+                          ? 'Đang kiểm tra tài liệu trùng trong kho…'
+                          : 'Đã kiểm tra SHA-256 và SimHash. Ảnh/PDF scan được OCR nếu Modal sẵn sàng.',
+                      style: const TextStyle(color: Colors.blueGrey, fontSize: 12),
+                    ),
+                  ),
                 ..._files.asMap().entries.map(
                   (entry) => ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -301,16 +349,42 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    subtitle: Text('${(entry.value.size / 1024).ceil()} KB'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${(entry.value.size / 1024).ceil()} KB'),
+                        if (entry.key < _duplicateMatches.length && _duplicateMatches[entry.key]['text_scan_status'] == 'OCR_SCANNED')
+                          const Text('Đã OCR để so SimHash', style: TextStyle(color: Colors.blueGrey)),
+                        if (entry.key < _duplicateMatches.length && _duplicateMatches[entry.key]['text_scan_status'] == 'OCR_UNAVAILABLE')
+                          const Text('Modal OCR chưa khả dụng · hiện chỉ so SHA-256', style: TextStyle(color: Colors.deepOrange)),
+                        if (entry.key < _duplicateMatches.length && ['NO_TEXT', 'UNSUPPORTED'].contains(_duplicateMatches[entry.key]['text_scan_status']))
+                          const Text('Không trích được chữ · hiện chỉ so SHA-256', style: TextStyle(color: Colors.blueGrey)),
+                        if (entry.key < _duplicateMatches.length && ((_duplicateMatches[entry.key]['exact_duplicate_count'] as num? ?? 0) > 0 || (_duplicateMatches[entry.key]['exact_within_selection_count'] as num? ?? 0) > 0))
+                          const Text('⛔ Trùng khớp chính xác SHA-256', style: TextStyle(color: Colors.red)),
+                        if (entry.key < _duplicateMatches.length && ((_duplicateMatches[entry.key]['near_duplicate_count'] as num? ?? 0) > 0 || (_duplicateMatches[entry.key]['near_within_selection_count'] as num? ?? 0) > 0))
+                          Text('⚠ Có thể gần trùng (SimHash, khoảng cách ${_duplicateMatches[entry.key]['min_hamming_distance'] ?? '≤10'})', style: const TextStyle(color: Colors.deepOrange)),
+                      ],
+                    ),
                     trailing: IconButton(
                       tooltip: 'Gỡ tệp',
                       onPressed: _submitting
                           ? null
-                          : () => setState(() => _files.removeAt(entry.key)),
+                          : () {
+                              setState(() => _files.removeAt(entry.key));
+                              _checkDuplicates(List<PlatformFile>.from(_files));
+                            },
                       icon: const Icon(CupertinoIcons.xmark_circle),
                     ),
                   ),
                 ),
+                if (!_hasExactDuplicate && _hasNearDuplicate)
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _nearDuplicateAcknowledged,
+                    onChanged: (value) => setState(() => _nearDuplicateAcknowledged = value ?? false),
+                    title: const Text('Tôi đã xem cảnh báo gần trùng và vẫn muốn gửi để Group Admin xem xét.'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
                 const SizedBox(height: 18),
                 _label('Tiêu đề tài liệu *'),
                 TextField(
@@ -360,11 +434,13 @@ class _StudyDocumentSharePageState extends State<StudyDocumentSharePage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
           child: FilledButton(
-            onPressed: _submitting ? null : _submit,
+            onPressed: _submitting || _checkingDuplicates || _hasExactDuplicate || (_hasNearDuplicate && !_nearDuplicateAcknowledged) ? null : _submit,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 13),
               child: Text(
-                _submitting
+                _checkingDuplicates
+                    ? 'Đang kiểm tra tài liệu…'
+                    : _submitting
                     ? 'Đang gửi…'
                     : widget.isAdmin
                     ? 'Chia sẻ tài liệu'

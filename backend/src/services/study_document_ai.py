@@ -23,11 +23,13 @@ from src.config import settings
 from src.db.session import SessionLocal
 from src.services.storage_service import get_r2_client
 from src.services.study_moderation_llm import StudyModerationLLM
+from src.services.study_document_ocr import ModalStudyOCR, StudyOCRResult, ocr_document, pdf_needs_ocr
 
 logger = logging.getLogger(__name__)
-PROMPT_VERSION = "study-file-v2"
+PROMPT_VERSION = "study-file-v3-ocr"
 MAX_SAMPLE_CHARS = 16000
 MAX_FILE_BYTES = 50 * 1024 * 1024
+OCR_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 
 
 class LLMFileResult(BaseModel):
@@ -118,6 +120,14 @@ def extract_text(data: bytes, extension: str) -> tuple[str, bool]:
     return _sample_pages(pages)
 
 
+def _sample_ocr_result(result: StudyOCRResult) -> tuple[str, bool]:
+    if result.page_ranges:
+        pages = [result.content[start:end] for _, start, end in result.page_ranges]
+    else:
+        pages = result.content.split("\n\n")
+    return _sample_pages(pages)
+
+
 def extract_document_metadata(data: bytes, extension: str) -> dict[str, str]:
     """Read embedded attribution fields as clues; they are not proof of ownership."""
     properties: dict[str, object] = {}
@@ -185,14 +195,16 @@ def _find_attribution_signals(sample: str) -> list[str]:
 
 
 def _review_file(file: dict, reason: str, *, error_code: str = "INSUFFICIENT_TEXT",
-                 metadata: dict[str, str] | None = None, sample: str = "") -> dict:
+                 metadata: dict[str, str] | None = None, sample: str = "",
+                 ocr_used: bool = False, ocr_engine: str | None = None) -> dict:
     return {"file_id": str(file["id"]), "file_name": file["original_name"],
             "subject_relevance": "UNCERTAIN", "content_type": "UNCERTAIN",
             "recommendation": "REVIEW", "evidence_quote": None, "evidence_location": None, "reason": reason,
             "copyright_status": "UNCERTAIN", "copyright_evidence": None,
             "copyright_reason": "Chưa đủ căn cứ để kết luận có dấu hiệu; cần admin kiểm tra nội dung và thông tin nhúng.",
             "attribution_signals": _find_attribution_signals(sample),
-            "embedded_metadata": metadata or {}, "error_code": error_code, "sampling_limited": True}
+            "embedded_metadata": metadata or {}, "error_code": error_code, "sampling_limited": True,
+            "ocr_used": ocr_used, "ocr_engine": ocr_engine}
 
 
 def _evidence_location(sample: str, quote: str) -> str | None:
@@ -208,10 +220,11 @@ def _evidence_location(sample: str, quote: str) -> str | None:
 
 
 async def _assess_file(provider, file: dict, subject: dict, sample: str, limited: bool,
-                       metadata: dict[str, str] | None = None) -> dict:
+                       metadata: dict[str, str] | None = None, *,
+                       ocr_used: bool = False, ocr_engine: str | None = None) -> dict:
     if len(sample.strip()) < 150:
         return _review_file(file, "Không trích xuất đủ văn bản để đánh giá; cần admin xem trực tiếp.",
-                            metadata=metadata, sample=sample)
+                            metadata=metadata, sample=sample, ocr_used=ocr_used, ocr_engine=ocr_engine)
     metadata = metadata or {}
     payload = json.dumps({"major": subject["major_name"], "subject_code": subject["subject_code"],
                           "subject_name": subject["subject_name"], "file_name": file["original_name"],
@@ -239,7 +252,8 @@ async def _assess_file(provider, file: dict, subject: dict, sample: str, limited
         normalized_sample = " ".join(sample.split())
         if len(quote) < 12 or quote.casefold() not in normalized_sample.casefold():
             return _review_file(file, "AI không đưa ra được đoạn trích khớp nội dung đã đọc.",
-                                error_code="UNVERIFIED_EVIDENCE", metadata=metadata, sample=sample)
+                                error_code="UNVERIFIED_EVIDENCE", metadata=metadata, sample=sample,
+                                ocr_used=ocr_used, ocr_engine=ocr_engine)
         copyright_evidence = " ".join(result.copyright_evidence.split())
         verified_copyright_evidence = " ".join([sample, *metadata.values()]).casefold()
         copyright_status = result.copyright_status
@@ -267,11 +281,13 @@ async def _assess_file(provider, file: dict, subject: dict, sample: str, limited
                 "reason": result.reason, "copyright_status": copyright_status,
                 "copyright_evidence": copyright_evidence or None, "copyright_reason": copyright_reason,
                 "attribution_signals": _find_attribution_signals(sample),
-                "embedded_metadata": metadata, "error_code": None, "sampling_limited": limited}
+                "embedded_metadata": metadata, "error_code": None, "sampling_limited": limited,
+                "ocr_used": ocr_used, "ocr_engine": ocr_engine}
     except Exception:
         logger.warning("study_moderation_model_failed", exc_info=True)
         return _review_file(file, "AI chưa đánh giá được tệp này; cần admin xem trực tiếp.",
-                            error_code="MODEL_ERROR", metadata=metadata, sample=sample)
+                            error_code="MODEL_ERROR", metadata=metadata, sample=sample,
+                            ocr_used=ocr_used, ocr_engine=ocr_engine)
 
 
 def _claim_one() -> tuple[uuid.UUID, int] | None:
@@ -351,13 +367,46 @@ async def process_one(document_id: uuid.UUID, attempt: int) -> None:
         return
     provider = StudyModerationLLM()
     results = []
+    ocr_provider = None
     try:
         for file in files:
             try:
                 data = await asyncio.to_thread(_read_r2, file)
                 sample, limited = await asyncio.to_thread(extract_text, data, file["extension"])
                 metadata = await asyncio.to_thread(extract_document_metadata, data, file["extension"])
-                results.append(await _assess_file(provider, file, subject, sample, limited, metadata=metadata))
+                extension = file["extension"].casefold()
+                needs_ocr = extension in OCR_IMAGE_EXTENSIONS or (
+                    extension == "pdf" and await asyncio.to_thread(pdf_needs_ocr, data)
+                )
+                ocr_used = False
+                ocr_engine = None
+                ocr_failed = False
+                if needs_ocr and settings.STUDY_MODERATION_OCR_ENABLED:
+                    try:
+                        if ocr_provider is None:
+                            ocr_provider = ModalStudyOCR()
+                        ocr_result = await ocr_document(data, extension, ocr_provider)
+                        sample, ocr_limited = _sample_ocr_result(ocr_result)
+                        limited = limited or ocr_limited
+                        ocr_used = True
+                        ocr_engine = ocr_result.engine
+                    except Exception:
+                        ocr_failed = True
+                        limited = True
+                        logger.warning("study_document_ocr_failed", extra={"file_id": str(file["id"])}, exc_info=True)
+
+                assessment = await _assess_file(
+                    provider, file, subject, sample, limited, metadata=metadata,
+                    ocr_used=ocr_used, ocr_engine=ocr_engine,
+                )
+                if ocr_failed:
+                    assessment["recommendation"] = "REVIEW"
+                    assessment["error_code"] = "OCR_UNAVAILABLE"
+                    assessment["reason"] = "Không OCR được ảnh/PDF scan; admin cần xem file gốc thủ công."
+                    assessment["copyright_status"] = "UNCERTAIN"
+                    assessment["copyright_evidence"] = None
+                    assessment["copyright_reason"] = "Chưa OCR được nội dung ảnh/PDF scan nên chưa đủ căn cứ đánh giá dấu hiệu bản quyền."
+                results.append(assessment)
             except Exception:
                 logger.warning("study_moderation_file_failed", extra={"file_id": str(file["id"])}, exc_info=True)
                 results.append(_review_file(file, "Không đọc được tệp; admin cần xem trực tiếp.", error_code="FILE_ERROR"))

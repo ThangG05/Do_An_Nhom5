@@ -99,6 +99,11 @@ class GroupRemoteDataSource {
     '/groups/$id/library/admin/ai-assessments?${documentIds.map((value) => 'document_ids=${Uri.encodeQueryComponent(value)}').join('&')}',
   );
 
+  Future<Map<String, dynamic>> checkStudyFileDuplicates(
+    String id,
+    List<PlatformFile> files,
+  ) => _api.postFiles('/groups/$id/library/check-duplicates', const {}, files);
+
   Future<Map<String, dynamic>> shareStudyDocument(
     String id,
     String majorId,

@@ -163,12 +163,37 @@ def build_target_metadata() -> MetaData:
         sa.Column("extension", sa.String(10), nullable=False),
         sa.Column("size_bytes", sa.BigInteger(), nullable=False),
         sa.Column("checksum_sha256", sa.String(64), nullable=False),
+        sa.Column("simhash64", sa.String(16)),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("deleted_at", sa.DateTime(timezone=True)),
         sa.CheckConstraint("size_bytes > 0 AND size_bytes <= 52428800", name="ck_study_file_size"),
+        sa.CheckConstraint("simhash64 IS NULL OR simhash64 ~ '^[0-9a-f]{16}$'", name="ck_study_file_simhash64"),
         sa.Index("idx_study_files_document", "document_id"),
         sa.Index("idx_study_files_checksum_active", "checksum_sha256",
                  postgresql_where=sa.text("deleted_at IS NULL")),
+    )
+    sa.Table(
+        "study_document_file_simhash_bands", metadata,
+        sa.Column("file_id", uuid, sa.ForeignKey("study_document_files.id", ondelete="CASCADE"), primary_key=True),
+        sa.Column("group_id", uuid, sa.ForeignKey("groups.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("band_index", sa.SmallInteger(), primary_key=True),
+        sa.Column("band_value", sa.Integer(), nullable=False),
+        sa.CheckConstraint("band_index >= 0 AND band_index < 11", name="ck_study_simhash_band_index"),
+        sa.CheckConstraint("band_value >= 0 AND band_value < 64", name="ck_study_simhash_band_value"),
+        sa.Index("idx_study_simhash_band_lookup", "group_id", "band_index", "band_value"),
+    )
+    sa.Table(
+        "study_document_scan_fingerprint_cache", metadata,
+        sa.Column("checksum_sha256", sa.String(64), primary_key=True),
+        sa.Column("extension", sa.String(10), primary_key=True),
+        sa.Column("algorithm_version", sa.SmallInteger(), primary_key=True),
+        sa.Column("simhash64", sa.String(16)),
+        sa.Column("scan_status", sa.String(24), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.CheckConstraint("checksum_sha256 ~ '^[0-9a-f]{64}$'", name="ck_study_scan_cache_sha256"),
+        sa.CheckConstraint("simhash64 IS NULL OR simhash64 ~ '^[0-9a-f]{16}$'", name="ck_study_scan_cache_simhash64"),
+        sa.CheckConstraint("scan_status IN ('SCANNED','OCR_SCANNED','NO_TEXT','UNSUPPORTED')",
+                           name="ck_study_scan_cache_status"),
     )
     sa.Table(
         "study_document_ai_assessments", metadata,

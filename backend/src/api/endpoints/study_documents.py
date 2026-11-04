@@ -10,7 +10,7 @@ from src.api.dependencies import CurrentGroupAdmin, CurrentUser
 from src.db.session import get_db
 from src.models.study_document import (StudyDocumentDecision, StudyDocumentDownload,
                                        StudyDocumentResponse, SubjectResponse, SubjectUpsertRequest, MajorResponse,
-                                       StudyDuplicateCheckRequest, StudyDuplicateCheckResponse)
+                                       StudyDuplicateCheckResponse)
 from src.models.study_document_report import (StudyDocumentReportCreate,
                                               StudyDocumentReportDecision,
                                               StudyDocumentReportResponse)
@@ -85,9 +85,9 @@ def pending_document_count(group_id: uuid.UUID, admin: CurrentGroupAdmin, db: Db
 
 
 @router.post("/groups/{group_id}/library/check-duplicates", response_model=StudyDuplicateCheckResponse)
-def check_duplicate_files(group_id: uuid.UUID, payload: StudyDuplicateCheckRequest,
-                          user: CurrentUser, db: Db):
-    return library.check_duplicate_files(db, group_id, user, payload.checksums)
+async def check_duplicate_files(group_id: uuid.UUID, user: CurrentUser, db: Db,
+                                files: Annotated[list[UploadFile], File()]):
+    return await library.check_duplicate_files(db, group_id, user, files)
 
 
 @router.get("/groups/{group_id}/library/admin/ai-assessments")
@@ -122,16 +122,16 @@ def decide_document_report(group_id: uuid.UUID, report_id: uuid.UUID,
 
 
 @router.post("/groups/{group_id}/library", response_model=StudyDocumentResponse, status_code=201)
-def share_document(group_id: uuid.UUID, user: CurrentUser, db: Db,
-                   major_id: Annotated[uuid.UUID, Form()], subject_id: Annotated[uuid.UUID, Form()],
-                   document_type: Annotated[Literal["EXAM", "EXERCISE", "LECTURE", "REVIEW", "OTHER"], Form()],
-                   title: Annotated[str, Form(min_length=5, max_length=120)],
-                   files: Annotated[list[UploadFile], File()],
-                   assessment_type: Annotated[Literal["MIDTERM", "FINAL"] | None, Form()] = None,
-                   description: Annotated[str | None, Form(max_length=500)] = None):
-    return library.create_document(db, group_id, user, subject_id, title, description, files,
-                                   major_id=major_id, document_type=document_type,
-                                   assessment_type=assessment_type)
+async def share_document(group_id: uuid.UUID, user: CurrentUser, db: Db,
+                         major_id: Annotated[uuid.UUID, Form()], subject_id: Annotated[uuid.UUID, Form()],
+                         document_type: Annotated[Literal["EXAM", "EXERCISE", "LECTURE", "REVIEW", "OTHER"], Form()],
+                         title: Annotated[str, Form(min_length=5, max_length=120)],
+                         files: Annotated[list[UploadFile], File()],
+                         assessment_type: Annotated[Literal["MIDTERM", "FINAL"] | None, Form()] = None,
+                         description: Annotated[str | None, Form(max_length=500)] = None):
+    return await library.create_document(db, group_id, user, subject_id, title, description, files,
+                                         major_id=major_id, document_type=document_type,
+                                         assessment_type=assessment_type)
 
 
 @router.get("/groups/{group_id}/library/{document_id}/download-bundle")

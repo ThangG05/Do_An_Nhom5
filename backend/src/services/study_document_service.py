@@ -26,6 +26,14 @@ from src.models.study_document import (StudyDocumentFileResponse, StudyDocumentR
 from src.models.study_document_report import (StudyDocumentReportResponse,
                                                StudyDocumentReportDecision)
 from src.services.storage_service import get_r2_client
+from src.services.study_document_dedup import (
+    SIMHASH_HAMMING_LIMIT,
+    SIMHASH_VERSION,
+    compute_simhash64,
+    extract_document_text_for_fingerprint,
+    hamming_distance,
+    simhash_bands,
+)
 
 logger = logging.getLogger(__name__)
 MAX_SHARE_BYTES = 50 * 1024 * 1024
@@ -42,6 +50,31 @@ MIME_BY_EXTENSION = {
 }
 OOXML_PARTS = {"docx": "word/", "xlsx": "xl/", "pptx": "ppt/"}
 IMAGE_FORMATS = {"jpg": "JPEG", "jpeg": "JPEG", "png": "PNG", "webp": "WEBP"}
+
+
+def _cached_file_fingerprint(db: Session, item: dict) -> tuple[str | None, str] | None:
+    row = db.execute(text("""
+        SELECT simhash64,scan_status FROM study_document_scan_fingerprint_cache
+        WHERE checksum_sha256=:sha256 AND extension=:extension AND algorithm_version=:version
+    """), {"sha256": item["sha256"], "extension": item["extension"],
+           "version": SIMHASH_VERSION}).mappings().first()
+    if not row:
+        return None
+    return row["simhash64"], row["scan_status"]
+
+
+def _cache_file_fingerprint(db: Session, item: dict) -> None:
+    if item.get("simhash_scan_status") == "OCR_UNAVAILABLE":
+        return
+    db.execute(text("""
+        INSERT INTO study_document_scan_fingerprint_cache(
+            checksum_sha256,extension,algorithm_version,simhash64,scan_status,updated_at
+        ) VALUES(:sha256,:extension,:version,:simhash64,:status,now())
+        ON CONFLICT(checksum_sha256,extension,algorithm_version) DO UPDATE SET
+            simhash64=EXCLUDED.simhash64,scan_status=EXCLUDED.scan_status,updated_at=now()
+    """), {"sha256": item["sha256"], "extension": item["extension"],
+           "version": SIMHASH_VERSION, "simhash64": item.get("simhash64"),
+           "status": item["simhash_scan_status"]})
 
 
 def _private_bucket() -> str:
@@ -258,17 +291,127 @@ def _find_existing_file_duplicates(db: Session, group_id: uuid.UUID,
     ).mappings().all()]
 
 
-def check_duplicate_files(db: Session, group_id: uuid.UUID, user: User,
-                          checksums: list[str]) -> dict:
-    """Return only duplicate state, without exposing other users' pending documents."""
+async def _compute_file_simhash(item: dict, ocr_provider=None) -> tuple[str | None, str, object | None]:
+    stream = item["stream"]
+    stream.seek(0)
+    try:
+        content = stream.read()
+        extracted, status, ocr_provider = await extract_document_text_for_fingerprint(
+            content, item["extension"], ocr_provider
+        )
+        signature = compute_simhash64(extracted) if status in {"SCANNED", "OCR_SCANNED"} else None
+        if signature is None and status in {"SCANNED", "OCR_SCANNED"}:
+            status = "NO_TEXT"
+        item["simhash64"] = signature
+        item["simhash_scan_status"] = status
+        return signature, status, ocr_provider
+    finally:
+        stream.seek(0)
+
+
+def _find_simhash_candidates(db: Session, group_id: uuid.UUID,
+                             signature: str) -> list[dict]:
+    bands = simhash_bands(signature)
+    values = ",".join(f"(:band_index_{index},:band_value_{index})"
+                      for index in range(len(bands)))
+    params: dict[str, object] = {"group_id": group_id}
+    for index, (band_index, band_value) in enumerate(bands):
+        params[f"band_index_{index}"] = band_index
+        params[f"band_value_{index}"] = band_value
+    statement = text(f"""
+        WITH query_bands(band_index,band_value) AS (VALUES {values})
+        SELECT f.id,f.checksum_sha256,f.simhash64,d.id AS document_id,d.status
+        FROM study_document_file_simhash_bands b
+        JOIN query_bands q ON q.band_index=b.band_index AND q.band_value=b.band_value
+        JOIN study_document_files f ON f.id=b.file_id
+        JOIN study_documents d ON d.id=f.document_id
+        WHERE b.group_id=:group_id AND d.status IN ('PENDING','APPROVED')
+          AND d.deleted_at IS NULL AND f.deleted_at IS NULL
+          AND f.simhash64 IS NOT NULL
+        GROUP BY f.id,f.checksum_sha256,f.simhash64,d.id,d.status
+    """)
+    rows = [dict(row) for row in db.execute(statement, params).mappings().all()]
+    return [row for row in rows
+            if hamming_distance(signature, row["simhash64"]) <= SIMHASH_HAMMING_LIMIT]
+
+
+async def check_duplicate_files(db: Session, group_id: uuid.UUID, user: User,
+                                files: list[UploadFile]) -> dict:
+    """Check exact hashes and text SimHash without revealing document identities."""
     require_member(db, group_id, user)
-    matches = _find_existing_file_duplicates(db, group_id, checksums)
-    return {"matches": [{
-        "sha256": row["checksum_sha256"],
-        "duplicate_count": row["duplicate_count"],
-        "pending_count": row["pending_count"],
-        "approved_count": row["approved_count"],
-    } for row in matches]}
+    if not files or len(files) > MAX_FILES:
+        raise HTTPException(400, "Chọn từ 1 đến 10 file để kiểm tra.")
+    validated = [_validate_file(file) for file in files]
+    if sum(item["size"] for item in validated) > MAX_SHARE_BYTES:
+        raise HTTPException(400, "Tổng dung lượng một lần chia sẻ không được vượt 50 MB.")
+
+    exact_rows = _find_existing_file_duplicates(
+        db, group_id, [item["sha256"] for item in validated]
+    )
+    exact_by_hash = {row["checksum_sha256"]: row for row in exact_rows}
+    db.commit()
+    fingerprints: list[tuple[str | None, str]] = []
+    ocr_provider = None
+    selected_hash_counts: dict[str, int] = defaultdict(int)
+    for item in validated:
+        selected_hash_counts[item["sha256"]] += 1
+    for item in validated:
+        if item["sha256"] in exact_by_hash or selected_hash_counts[item["sha256"]] > 1:
+            fingerprints.append((None, "SCANNED"))
+            continue
+        cached = _cached_file_fingerprint(db, item)
+        if cached is not None:
+            signature, scan_status = cached
+            item["simhash64"] = signature
+            item["simhash_scan_status"] = scan_status
+        else:
+            db.commit()
+            signature, scan_status, ocr_provider = await _compute_file_simhash(item, ocr_provider)
+            _cache_file_fingerprint(db, item)
+        fingerprints.append((signature, scan_status))
+    db.commit()
+    near_rows_by_index: list[list[dict]] = []
+    for item, (signature, _) in zip(validated, fingerprints):
+        candidates = _find_simhash_candidates(db, group_id, signature) if signature else []
+        near_rows_by_index.append([
+            row for row in candidates if row["checksum_sha256"] != item["sha256"]
+        ])
+
+    within_selection: list[list[int]] = [[] for _ in validated]
+    for left in range(len(validated)):
+        left_signature, _ = fingerprints[left]
+        for right in range(left + 1, len(validated)):
+            right_signature, _ = fingerprints[right]
+            if (validated[left]["sha256"] != validated[right]["sha256"]
+                  and left_signature and right_signature
+                  and hamming_distance(left_signature, right_signature) <= SIMHASH_HAMMING_LIMIT):
+                within_selection[left].append(right)
+                within_selection[right].append(left)
+
+    results = []
+    for index, item in enumerate(validated):
+        exact = exact_by_hash.get(item["sha256"], {})
+        near = near_rows_by_index[index]
+        pending_count = sum(row["status"] == "PENDING" for row in near)
+        approved_count = sum(row["status"] == "APPROVED" for row in near)
+        distances = [hamming_distance(fingerprints[index][0], row["simhash64"])
+                     for row in near if fingerprints[index][0]]
+        results.append({
+            "sha256": item["sha256"],
+            "exact_duplicate_count": exact.get("duplicate_count", 0),
+            "exact_pending_count": exact.get("pending_count", 0),
+            "exact_approved_count": exact.get("approved_count", 0),
+            "exact_within_selection_count": sum(
+                validated[other]["sha256"] == item["sha256"] for other in range(len(validated)) if other != index
+            ),
+            "near_duplicate_count": len(near),
+            "near_pending_count": pending_count,
+            "near_approved_count": approved_count,
+            "near_within_selection_count": len(within_selection[index]),
+            "min_hamming_distance": min(distances) if distances else None,
+            "text_scan_status": fingerprints[index][1],
+        })
+    return {"matches": results}
 
 
 def _serialize(db: Session, rows: list) -> list[StudyDocumentResponse]:
@@ -458,10 +601,10 @@ def get_document(db: Session, group_id: uuid.UUID, document_id: uuid.UUID, user:
     return _serialize(db, [row])[0]
 
 
-def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uuid.UUID,
-                    title: str, description: str | None, files: list[UploadFile], *,
-                    major_id: uuid.UUID, document_type: str,
-                    assessment_type: str | None = None) -> StudyDocumentResponse:
+async def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uuid.UUID,
+                          title: str, description: str | None, files: list[UploadFile], *,
+                          major_id: uuid.UUID, document_type: str,
+                          assessment_type: str | None = None) -> StudyDocumentResponse:
     require_member(db, group_id, user)
     group_role = db.execute(text("SELECT role FROM group_members WHERE group_id=:gid AND user_id=:uid"),
                             {"gid": group_id, "uid": user.id}).scalar_one_or_none()
@@ -485,8 +628,29 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
     if not subject:
         raise HTTPException(400, "Môn học không thuộc ngành đã chọn hoặc không còn sử dụng.")
     validated = [_validate_file(file) for file in files]
+    total = sum(item["size"] for item in validated)
+    if total > MAX_SHARE_BYTES:
+        raise HTTPException(400, "Tổng dung lượng một lần chia sẻ không được vượt 50 MB.")
     if len({item["sha256"] for item in validated}) != len(validated):
         raise HTTPException(400, "Một lượt chia sẻ không thể đính kèm hai file có nội dung trùng nhau.")
+    matches = _find_existing_file_duplicates(db, group_id, [item["sha256"] for item in validated])
+    if matches:
+        duplicated = {row["checksum_sha256"] for row in matches}
+        names = [item["name"] for item in validated if item["sha256"] in duplicated]
+        raise HTTPException(
+            409,
+            "Tệp đã có bản trùng trong kho Học tập: " + ", ".join(names[:3])
+            + ". Hãy gỡ tệp trùng trước khi chia sẻ.",
+        )
+    ocr_provider = None
+    for item in validated:
+        cached = _cached_file_fingerprint(db, item)
+        if cached is not None:
+            item["simhash64"], item["simhash_scan_status"] = cached
+        else:
+            db.commit()
+            _, _, ocr_provider = await _compute_file_simhash(item, ocr_provider)
+            _cache_file_fingerprint(db, item)
     matches = _find_existing_file_duplicates(
         db, group_id, [item["sha256"] for item in validated], lock=True
     )
@@ -498,9 +662,6 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
             "Tệp đã có bản trùng trong kho Học tập: " + ", ".join(names[:3])
             + ". Hãy gỡ tệp trùng trước khi chia sẻ.",
         )
-    total = sum(item["size"] for item in validated)
-    if total > MAX_SHARE_BYTES:
-        raise HTTPException(400, "Tổng dung lượng một lần chia sẻ không được vượt 50 MB.")
     document_id = uuid.uuid4()
     uploaded: list[str] = []
     bucket = _private_bucket()
@@ -529,10 +690,19 @@ def create_document(db: Session, group_id: uuid.UUID, user: User, subject_id: uu
         for item in validated:
             db.execute(text("""
                 INSERT INTO study_document_files(id,document_id,r2_object_key,original_name,mime_type,
-                                                 extension,size_bytes,checksum_sha256)
-                VALUES(:id,:did,:key,:name,:mime,:extension,:size,:sha256)
+                                                 extension,size_bytes,checksum_sha256,simhash64)
+                VALUES(:id,:did,:key,:name,:mime,:extension,:size,:sha256,:simhash64)
             """), {"did": document_id, **{key: item[key] for key in
-                    ("id", "key", "name", "mime", "extension", "size", "sha256")}})
+                    ("id", "key", "name", "mime", "extension", "size", "sha256", "simhash64")}})
+            if item["simhash64"]:
+                db.execute(text("""
+                    INSERT INTO study_document_file_simhash_bands(file_id,group_id,band_index,band_value)
+                    VALUES(:file_id,:group_id,:band_index,:band_value)
+                """), [
+                    {"file_id": item["id"], "group_id": group_id,
+                     "band_index": band_index, "band_value": band_value}
+                    for band_index, band_value in simhash_bands(item["simhash64"])
+                ])
         if not auto_approved and settings.STUDY_MODERATION_ENABLED:
             db.execute(text("""
                 INSERT INTO study_document_ai_assessments(document_id,status)

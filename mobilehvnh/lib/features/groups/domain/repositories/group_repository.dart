@@ -63,6 +63,10 @@ abstract interface class GroupRepository {
     String groupId,
     List<String> documentIds,
   );
+  Future<Map<String, dynamic>> checkStudyFileDuplicates(
+    String groupId,
+    List<GroupUploadFile> files,
+  );
   Future<void> shareStudyDocument(
     String groupId,
     String majorId,

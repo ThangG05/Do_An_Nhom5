@@ -172,6 +172,14 @@ class GroupRepositoryImpl implements GroupRepository {
     List<String> documentIds,
   ) => _maps(_remote.studyAIAssessments(groupId, documentIds));
   @override
+  Future<Map<String, dynamic>> checkStudyFileDuplicates(
+    String groupId,
+    List<GroupUploadFile> files,
+  ) => _remote.checkStudyFileDuplicates(
+    groupId,
+    files.map((file) => PlatformFile(name: file.name, size: file.size, path: file.path, bytes: file.bytes)).toList(),
+  );
+  @override
   Future<void> shareStudyDocument(
     String groupId,
     String majorId,

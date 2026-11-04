@@ -49,9 +49,16 @@ class StudyDuplicateCheckRequest(BaseModel):
 
 class StudyDuplicateFileMatch(BaseModel):
     sha256: str
-    duplicate_count: int
-    pending_count: int
-    approved_count: int
+    exact_duplicate_count: int = 0
+    exact_pending_count: int = 0
+    exact_approved_count: int = 0
+    exact_within_selection_count: int = 0
+    near_duplicate_count: int = 0
+    near_pending_count: int = 0
+    near_approved_count: int = 0
+    near_within_selection_count: int = 0
+    min_hamming_distance: int | None = None
+    text_scan_status: Literal["SCANNED", "OCR_SCANNED", "NO_TEXT", "UNSUPPORTED", "OCR_UNAVAILABLE"]
 
 
 class StudyDuplicateCheckResponse(BaseModel):

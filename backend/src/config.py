@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     STUDY_MODERATION_ENABLED: bool = True
     STUDY_MODERATION_TIMEOUT_SECONDS: float = 30.0
     STUDY_MODERATION_MAX_RETRIES: int = 2
+    STUDY_MODERATION_OCR_ENABLED: bool = True
+    STUDY_MODERATION_OCR_APP: str = "hvnh_rag"
+    STUDY_MODERATION_OCR_CLASS: str = "PdfOCR"
+    STUDY_MODERATION_OCR_TIMEOUT_SECONDS: int = 900
+    STUDY_MODERATION_OCR_MAX_RETRIES: int = 2
+    STUDY_MODERATION_OCR_MAX_PAGES: int = 80
     GOOGLE_CLIENT_ID: str = ""
     JWT_SECRET_KEY: str = "change-this-secret-in-production"
     JWT_ALGORITHM: str = "HS256"
