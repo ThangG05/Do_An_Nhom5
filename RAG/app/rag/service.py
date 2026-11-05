@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 import logging
 import re
+from hashlib import sha256
 from time import perf_counter
 import unicodedata
 from uuid import UUID
@@ -13,15 +14,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.llm.contracts import ContextBlock, LLMAnswer, LLMProvider, LLMServiceError
+from app.llm.prompts import SYSTEM_INSTRUCTION, answer_guidance
 from app.llm.security import InputKind, PromptGuard, PromptSecurityError
 from app.models.enums import AIMessageRole
 from app.models.rag import AIConversation, AIMessage, AIMessageCitation
 from app.memory.conversation import ConversationMemoryService, PreparedQuestion
 from app.rag.retriever import AccessScope, RetrievalHit, RetrievalService, analyze_query
+from app.rag.answer_cache import GroundedAnswerCache, answer_cache_key
 from app.rag.citation_verifier import verify_claim_citations
 from app.rag.casual import is_casual_conversation
 from app.rag.usage import UsageCollector, activate, reset
 from app.services.rate_limit import enforce_casual_daily_limit
+from app.services.redis import get_redis_client
 
 
 _CAPITALIZED_WORD = r"[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠƯẠ-Ỹ][\wÀ-ỹ]*"
@@ -184,11 +188,33 @@ class RAGService:
         unsupported_entities = unsupported_named_entities(intent.normalized_query, hits)
         if unsupported_entities:
             hits = []
+        answer_cache_hit = False
         if hits:
             blocks = [ContextBlock(id=str(index), content=hit.content,
                                    source_label=self._source_label(hit), source_key=hit.document_id)
                       for index, hit in enumerate(hits, 1)]
-            answer = await self._answer_with_contract_retry(intent.normalized_query, blocks)
+            can_cache = (self.settings.rag_answer_cache_enabled and conversation_id is None
+                         and not prepared.depends_on_history)
+            cache = GroundedAnswerCache(get_redis_client(),
+                                        self.settings.rag_answer_cache_ttl_seconds,
+                                        self.settings.rag_answer_cache_timeout_seconds) if can_cache else None
+            provider_name = f"{self.settings.llm_provider}:{self.settings.llm_model}"
+            prompt_fingerprint = sha256(
+                f"{SYSTEM_INSTRUCTION}\0{answer_guidance(intent.normalized_query)}".encode("utf-8")
+            ).hexdigest()
+            key = answer_cache_key(intent.normalized_query, blocks, provider_name, prompt_fingerprint)
+            answer = await cache.get(key) if cache else None
+            if answer is not None:
+                try:
+                    self._validate_answer_citations(answer, len(blocks), blocks, intent.normalized_query)
+                    answer_cache_hit = True
+                except LLMServiceError:
+                    answer = None
+            if answer is None:
+                answer = await self._answer_with_contract_retry(intent.normalized_query, blocks)
+                if cache and not answer.refused:
+                    # Only persist output that passed the citation/faithfulness contract.
+                    await cache.set(key, answer)
         else:
             answer = LLMAnswer(answer="Tôi chưa tìm thấy thông tin phù hợp trong các nguồn chính thức đã được lập chỉ mục.",
                                refused=True, refusal_reason="insufficient_context", cited_context_ids=[])
@@ -212,6 +238,7 @@ class RAGService:
             "persistence_ms": round((perf_counter() - generated_at) * 1000),
             "total_ms": round((perf_counter() - started) * 1000),
             "evidence_count": len(hits), "refused": answer.refused,
+            "answer_cache_hit": answer_cache_hit,
         })
         return result
 

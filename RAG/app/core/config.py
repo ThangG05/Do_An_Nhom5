@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     retrieval_query_cache_ttl_seconds: int = Field(default=900, ge=0, le=86400)
     retrieval_shared_embedding_cache_enabled: bool = True
     retrieval_shared_embedding_cache_timeout_seconds: float = Field(default=0.25, gt=0, le=2)
+    rag_answer_cache_enabled: bool = True
+    rag_answer_cache_ttl_seconds: int = Field(default=600, ge=0, le=86400)
+    rag_answer_cache_timeout_seconds: float = Field(default=0.15, gt=0, le=2)
     conversation_recent_messages: int = Field(default=8, ge=2, le=20)
     conversation_summary_trigger_messages: int = Field(default=12, ge=4, le=100)
     conversation_summary_max_chars: int = Field(default=4000, ge=500, le=20000)

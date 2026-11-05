@@ -528,6 +528,16 @@ with a 250 ms budget for each cache operation. Set
 `RETRIEVAL_QUERY_CACHE_ENTRIES=0` and `RETRIEVAL_QUERY_CACHE_TTL_SECONDS=0`
 to disable both caches. Optional PostgreSQL lexical search
 has a three-second timeout and falls back to vector results when it stalls.
+For stateless questions, a Redis grounded-answer cache can also skip the LLM call
+when the normalized question, ordered retrieved evidence (including its content),
+model/provider and answer prompt are identical. Retrieval and visibility checks
+still run on every request, so changed or newly selected evidence creates a new
+cache key; conversation-dependent questions, refusals and invalid answers are not
+cached. Entries expire after 10 minutes by default. Tune with
+`RAG_ANSWER_CACHE_ENABLED`, `RAG_ANSWER_CACHE_TTL_SECONDS` and
+`RAG_ANSWER_CACHE_TIMEOUT_SECONDS` (set TTL to `0` to disable); Redis failures
+fall back to normal generation. `rag_request_completed` logs
+`answer_cache_hit` for measuring effectiveness.
 Structured logs `rag_retrieval_completed` and `rag_request_completed` report
 embedding, Qdrant, lexical, vector verification, retrieval, answer-generation and
 persistence timings without logging questions or source text. Compare these stages
