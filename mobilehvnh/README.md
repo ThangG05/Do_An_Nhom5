@@ -81,3 +81,48 @@ Flutter đọc Web Client ID hiện tại từ endpoint công khai `/system/publ
 Khi tạo keystore phát hành, cần tạo thêm Android OAuth credential cho package trên với SHA-1/SHA-256 của keystore release.
 
 App truyền Web Client ID vừa đọc được bằng `serverClientId`, nên không bắt buộc có `google-services.json` chỉ để đăng nhập Google. Nếu cửa sổ chọn tài khoản đóng ngay sau khi chọn, đó **cũng có thể là lỗi OAuth Android**, không nhất thiết là người dùng tự hủy. Hãy kiểm tra package, SHA-1, Web Client ID, Google Play services và log `Google Sign-In Android` trong Debug Console. Backend vẫn chỉ chấp nhận tài khoản Google Workspace `@hvnh.edu.vn`.
+
+### Đóng gói Android release
+
+Bản release phải dùng upload keystore riêng; không dùng debug keystore để phát hành. Từ PowerShell tại thư mục `mobilehvnh`, tạo keystore (Keytool sẽ hỏi mật khẩu, không đưa mật khẩu vào dòng lệnh):
+
+```powershell
+keytool -genkeypair -v -keystore android/app/hvnhhub-upload.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias hvnhhub-upload
+```
+
+Tạo `android/key.properties` cục bộ, điền mật khẩu vừa chọn và nội dung:
+
+```properties
+storePassword=<mật khẩu keystore>
+keyPassword=<mật khẩu key>
+keyAlias=hvnhhub-upload
+storeFile=app/hvnhhub-upload.jks
+```
+
+`key.properties` và keystore đã được loại khỏi Git. Sao lưu keystore và mật khẩu an toàn; mất chúng sẽ khiến không thể ký bản cập nhật bằng cùng một khóa. Tạo Android OAuth credential với package `vn.edu.hvnh.hub` và SHA-1 của keystore phát hành trước khi kiểm tra Google Login trên APK/AAB.
+
+Tạo Android App Bundle để phát hành hoặc APK để cài thử:
+
+```powershell
+flutter build appbundle --release --dart-define=API_BASE_URL=https://hvnhhub.id.vn/api/v1 --dart-define=WEB_BASE_URL=https://hvnhhub.id.vn
+```
+
+```powershell
+flutter build apk --release --dart-define=API_BASE_URL=https://hvnhhub.id.vn/api/v1 --dart-define=WEB_BASE_URL=https://hvnhhub.id.vn
+```
+
+Khi phát hành bản cập nhật, tăng `version` trong `pubspec.yaml` (đặc biệt là số build sau dấu `+`).
+
+### Build IPA bằng GitHub Actions
+
+Workflow `.github/workflows/ios_build.yml` chạy thủ công trên runner macOS, build IPA ký Ad Hoc và lưu artifact `hvnhhub-ios-ipa`. Cấu hình repository GitHub ở chế độ private và thêm các GitHub Actions secrets sau trong **Settings → Secrets and variables → Actions**:
+
+- `IOS_TEAM_ID`: Team ID trong Apple Developer account.
+- `IOS_CERTIFICATE_BASE64`: certificate Apple Distribution dạng `.p12`, mã hóa Base64.
+- `IOS_CERTIFICATE_PASSWORD`: mật khẩu export file `.p12`.
+- `IOS_PROVISIONING_PROFILE_BASE64`: Ad Hoc provisioning profile đã chứa App ID `vn.edu.hvnh.hub` và UDID iPhone cần cài.
+- `IOS_PROFILE_NAME`: tên profile đúng như trường `Name` trong provisioning profile.
+- `IOS_GOOGLE_CLIENT_ID`: iOS OAuth Client ID tạo với Bundle ID `vn.edu.hvnh.hub`.
+- `IOS_GOOGLE_REVERSED_CLIENT_ID`: URL scheme đảo của iOS OAuth Client ID.
+
+Không commit certificate, provisioning profile hoặc thông tin ký vào Git. Tài khoản Apple Developer phải có quyền tạo certificate/profile Ad Hoc; thêm UDID từng iPhone vào profile rồi tải lại profile sau khi có thay đổi. Trong GitHub, mở **Actions → Build HVNH Hub iOS IPA → Run workflow**. Tải `.ipa` ở mục Artifacts sau khi job thành công. Cài trực tiếp lên các thiết bị đã đăng ký trong profile; workflow không tự gửi app lên App Store/TestFlight.

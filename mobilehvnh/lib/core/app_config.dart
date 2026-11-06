@@ -13,6 +13,7 @@ class AppConfig {
   // phone must still receive the computer LAN address through --dart-define.
   static String get apiBaseUrl {
     if (_configuredApiBaseUrl.isNotEmpty) return _configuredApiBaseUrl;
+    if (kReleaseMode) return 'https://hvnhhub.id.vn/api/v1';
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return 'http://127.0.0.1:8000/api/v1';
     }
@@ -26,6 +27,7 @@ class AppConfig {
 
   static String get webBaseUrl {
     if (_configuredWebBaseUrl.isNotEmpty) return _configuredWebBaseUrl;
+    if (kReleaseMode) return 'https://hvnhhub.id.vn';
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return 'http://localhost:3000';
     }

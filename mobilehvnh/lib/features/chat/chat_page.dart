@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -323,7 +325,8 @@ class ConversationPage extends StatefulWidget {
   State<ConversationPage> createState() => _ConversationPageState();
 }
 
-class _ConversationPageState extends State<ConversationPage> {
+class _ConversationPageState extends State<ConversationPage>
+    with WidgetsBindingObserver {
   static const _themes = <String, Color>{
     'blue': Color(0xff0866c6),
     'indigo': Color(0xff4f46e5),
@@ -352,6 +355,7 @@ class _ConversationPageState extends State<ConversationPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _theme = widget.conversation['theme']?.toString() ?? 'blue';
     _realtime = widget.apiClient == null
         ? null
@@ -370,12 +374,24 @@ class _ConversationPageState extends State<ConversationPage> {
   Future<void> _prepare() async {
     _myId = await AuthSession().userId;
     await _load();
-    await _realtime?.connect(_onEvent);
+    await _realtime?.connect(
+      _onEvent,
+      onConnected: () => unawaited(_syncLatest()),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final realtime = _realtime;
+      if (realtime != null) unawaited(realtime.reconnect());
+    }
   }
 
   @override
   void dispose() {
-    _realtime?.close();
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_realtime?.close() ?? Future<void>.value());
     _messageScroll.dispose();
     _input.dispose();
     super.dispose();
@@ -401,6 +417,42 @@ class _ConversationPageState extends State<ConversationPage> {
       return;
     }
     if (mounted) setState(() => _messages.add(message));
+  }
+
+  Future<void> _syncLatest() async {
+    try {
+      final latest = await widget.repository.getMessages(
+        '${widget.conversation['id']}',
+        limit: 50,
+      );
+      if (!mounted) return;
+
+      final merged = <String, Map<String, dynamic>>{};
+      for (final item in _messages.whereType<Map>()) {
+        final id = item['id']?.toString();
+        if (id != null && id.isNotEmpty) {
+          merged[id] = Map<String, dynamic>.from(item);
+        }
+      }
+      for (final item in latest.whereType<Map>()) {
+        final id = item['id']?.toString();
+        if (id != null && id.isNotEmpty) {
+          merged[id] = Map<String, dynamic>.from(item);
+        }
+      }
+      final messages = merged.values.toList()
+        ..sort(
+          (left, right) => '${left['timestamp'] ?? ''}'.compareTo(
+            '${right['timestamp'] ?? ''}',
+          ),
+        );
+      setState(() {
+        _messages = messages;
+        _hasOlder = _hasOlder || latest.length >= 50;
+      });
+    } catch (_) {
+      // Keep the open conversation usable if a background resync is unavailable.
+    }
   }
 
   Future<void> _recall(Map<dynamic, dynamic> item) async {
@@ -1222,22 +1274,21 @@ class _ConversationPageState extends State<ConversationPage> {
                               vertical: 8,
                             ),
                             constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width *
+                              maxWidth:
+                                  MediaQuery.of(context).size.width *
                                   (isSystem ? .9 : .76),
                             ),
                             decoration: BoxDecoration(
                               color: isSystem
                                   ? const Color(0xffedf3f8)
                                   : mine
-                                      ? _themeColor
-                                      : Colors.white,
+                                  ? _themeColor
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(
                                 isSystem ? 999 : 18,
                               ),
                               border: isSystem || !mine
-                                  ? Border.all(
-                                      color: const Color(0xffdbe6ee),
-                                    )
+                                  ? Border.all(color: const Color(0xffdbe6ee))
                                   : null,
                             ),
                             child: isSystem
@@ -1264,177 +1315,195 @@ class _ConversationPageState extends State<ConversationPage> {
                                     ],
                                   )
                                 : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (item['replyTo'] is Map)
-                                  InkWell(
-                                    onTap: () => _jumpToMessage(
-                                      Map<String, dynamic>.from(
-                                        item['replyTo'] as Map,
-                                      ),
-                                    ),
-                                    borderRadius: BorderRadius.circular(9),
-                                    child: Container(
-                                      margin: const EdgeInsets.only(bottom: 7),
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: mine
-                                            ? Colors.white.withValues(
-                                                alpha: .16,
-                                              )
-                                            : const Color(0xffedf3f8),
-                                        borderRadius: BorderRadius.circular(9),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (item['replyTo'] is Map)
+                                        InkWell(
+                                          onTap: () => _jumpToMessage(
+                                            Map<String, dynamic>.from(
+                                              item['replyTo'] as Map,
+                                            ),
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            9,
+                                          ),
+                                          child: Container(
+                                            margin: const EdgeInsets.only(
+                                              bottom: 7,
+                                            ),
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: mine
+                                                  ? Colors.white.withValues(
+                                                      alpha: .16,
+                                                    )
+                                                  : const Color(0xffedf3f8),
+                                              borderRadius:
+                                                  BorderRadius.circular(9),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '${(item['replyTo'] as Map)['senderName'] ?? ''}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 11,
+                                                    color: mine
+                                                        ? Colors.white
+                                                        : AppTheme.ink,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '${(item['replyTo'] as Map)['content'] ?? ''}',
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: mine
+                                                        ? Colors.white70
+                                                        : AppTheme.muted,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      if ('${item['content'] ?? ''}'
+                                          .trim()
+                                          .isNotEmpty) ...[
+                                        if (_sharedPostUrl(
+                                              '${item['content']}',
+                                            ) !=
+                                            null) ...[
+                                          if (_sharedPostCaption(
+                                            '${item['content']}',
+                                          ).isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 8,
+                                              ),
+                                              child: Text(
+                                                _sharedPostCaption(
+                                                  '${item['content']}',
+                                                ),
+                                                style: TextStyle(
+                                                  color: mine
+                                                      ? Colors.white
+                                                      : const Color(0xff18324d),
+                                                ),
+                                              ),
+                                            ),
+                                          _SharedPostMessageCard(
+                                            onTap: () => _openSharedPost(
+                                              '${item['content']}',
+                                            ),
+                                            mine: mine,
+                                          ),
+                                        ] else
                                           Text(
-                                            '${(item['replyTo'] as Map)['senderName'] ?? ''}',
+                                            '${item['content']}',
                                             style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 11,
                                               color: mine
                                                   ? Colors.white
-                                                  : AppTheme.ink,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${(item['replyTo'] as Map)['content'] ?? ''}',
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: mine
-                                                  ? Colors.white70
-                                                  : AppTheme.muted,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                if ('${item['content'] ?? ''}'
-                                    .trim()
-                                    .isNotEmpty) ...[
-                                  if (_sharedPostUrl('${item['content']}') !=
-                                      null) ...[
-                                    if (_sharedPostCaption(
-                                      '${item['content']}',
-                                    ).isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 8,
-                                        ),
-                                        child: Text(
-                                          _sharedPostCaption(
-                                            '${item['content']}',
-                                          ),
-                                          style: TextStyle(
-                                            color: mine
-                                                ? Colors.white
-                                                : const Color(0xff18324d),
-                                          ),
-                                        ),
-                                      ),
-                                    _SharedPostMessageCard(
-                                      onTap: () =>
-                                          _openSharedPost('${item['content']}'),
-                                      mine: mine,
-                                    ),
-                                  ] else
-                                    Text(
-                                      '${item['content']}',
-                                      style: TextStyle(
-                                        color: mine
-                                            ? Colors.white
-                                            : const Color(0xff18324d),
-                                      ),
-                                    ),
-                                ],
-                                ...attachments.map(
-                                  (attachment) => _MessageAttachment(
-                                    attachment: Map<String, dynamic>.from(
-                                      attachment as Map,
-                                    ),
-                                    mine: mine,
-                                    themeColor: _themeColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '${AppDateTime.full(item['timestamp'])}${item['isEdited'] == true ? ' · đã chỉnh sửa' : ''}',
-                                      style: TextStyle(
-                                        fontSize: 9.5,
-                                        color: mine
-                                            ? Colors.white70
-                                            : const Color(0xff71839a),
-                                      ),
-                                    ),
-                                    PopupMenuButton<String>(
-                                      tooltip: 'Thao tác tin nhắn',
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(
-                                        minWidth: 44,
-                                        minHeight: 36,
-                                      ),
-                                      iconSize: 17,
-                                      icon: Icon(
-                                        Icons.more_horiz_rounded,
-                                        color: mine
-                                            ? Colors.white70
-                                            : const Color(0xff71839a),
-                                      ),
-                                      onSelected: (action) {
-                                        if (action == 'reply') {
-                                          setState(
-                                            () => _replyingTo =
-                                                Map<String, dynamic>.from(item),
-                                          );
-                                        } else if (action == 'edit') {
-                                          _editMessage(item);
-                                        } else if (action == 'recall') {
-                                          _recall(item);
-                                        }
-                                      },
-                                      itemBuilder: (_) => [
-                                        const PopupMenuItem(
-                                          value: 'reply',
-                                          child: ListTile(
-                                            dense: true,
-                                            leading: Icon(Icons.reply_rounded),
-                                            title: Text('Trả lời'),
-                                          ),
-                                        ),
-                                        if (mine && item['isRecalled'] != true)
-                                          const PopupMenuItem(
-                                            value: 'edit',
-                                            child: ListTile(
-                                              dense: true,
-                                              leading: Icon(
-                                                Icons.edit_outlined,
-                                              ),
-                                              title: Text('Sửa tin nhắn'),
-                                            ),
-                                          ),
-                                        if (mine && item['isRecalled'] != true)
-                                          const PopupMenuItem(
-                                            value: 'recall',
-                                            child: ListTile(
-                                              dense: true,
-                                              leading: Icon(Icons.undo_rounded),
-                                              title: Text('Thu hồi'),
+                                                  : const Color(0xff18324d),
                                             ),
                                           ),
                                       ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                      ...attachments.map(
+                                        (attachment) => _MessageAttachment(
+                                          attachment: Map<String, dynamic>.from(
+                                            attachment as Map,
+                                          ),
+                                          mine: mine,
+                                          themeColor: _themeColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '${AppDateTime.full(item['timestamp'])}${item['isEdited'] == true ? ' · đã chỉnh sửa' : ''}',
+                                            style: TextStyle(
+                                              fontSize: 9.5,
+                                              color: mine
+                                                  ? Colors.white70
+                                                  : const Color(0xff71839a),
+                                            ),
+                                          ),
+                                          PopupMenuButton<String>(
+                                            tooltip: 'Thao tác tin nhắn',
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(
+                                              minWidth: 44,
+                                              minHeight: 36,
+                                            ),
+                                            iconSize: 17,
+                                            icon: Icon(
+                                              Icons.more_horiz_rounded,
+                                              color: mine
+                                                  ? Colors.white70
+                                                  : const Color(0xff71839a),
+                                            ),
+                                            onSelected: (action) {
+                                              if (action == 'reply') {
+                                                setState(
+                                                  () => _replyingTo =
+                                                      Map<String, dynamic>.from(
+                                                        item,
+                                                      ),
+                                                );
+                                              } else if (action == 'edit') {
+                                                _editMessage(item);
+                                              } else if (action == 'recall') {
+                                                _recall(item);
+                                              }
+                                            },
+                                            itemBuilder: (_) => [
+                                              const PopupMenuItem(
+                                                value: 'reply',
+                                                child: ListTile(
+                                                  dense: true,
+                                                  leading: Icon(
+                                                    Icons.reply_rounded,
+                                                  ),
+                                                  title: Text('Trả lời'),
+                                                ),
+                                              ),
+                                              if (mine &&
+                                                  item['isRecalled'] != true)
+                                                const PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: ListTile(
+                                                    dense: true,
+                                                    leading: Icon(
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    title: Text('Sửa tin nhắn'),
+                                                  ),
+                                                ),
+                                              if (mine &&
+                                                  item['isRecalled'] != true)
+                                                const PopupMenuItem(
+                                                  value: 'recall',
+                                                  child: ListTile(
+                                                    dense: true,
+                                                    leading: Icon(
+                                                      Icons.undo_rounded,
+                                                    ),
+                                                    title: Text('Thu hồi'),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       );
