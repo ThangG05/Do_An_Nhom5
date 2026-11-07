@@ -15,4 +15,24 @@ setup môi trường
 python -m venv .venv
 .venv\Scripts\activate
 cd backend 
+<<<<<<< Updated upstream
 pip install -r requirements.txt
+=======
+pip install -r requirements.txt  m
+
+nếu fe báo lỗi hãy chạy : taskkill /PID 1628 /F sau đó lại npm run dev lại
+
+super-admin@hvnh.edu.vn
+admin-hoc-tap@hvnh.edu.vn
+admin-su-kien@hvnh.edu.vn
+admin-ghep-phong-tim-tro@hvnh.edu.vn
+admin-pass-do@hvnh.edu.vn
+Hvnh1234
+
+----IOS
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+>>>>>>> Stashed changes

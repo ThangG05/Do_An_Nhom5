@@ -78,3 +78,5 @@ docs/CODEX_PLAN.md
 
 .agents/skills/
 .tmp/
+backend/.env
+mobilehvnh/.dart_tool/
